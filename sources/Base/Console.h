@@ -10,7 +10,7 @@
 
 
 #include <string>
-
+#include <initializer_list>
 
 //class ErrorReporter;
 
@@ -34,6 +34,8 @@ void Error(const std::string& message, bool isFatal = false, bool appendPrefix =
 void Success(const std::string& message);
 
 //void Message(const CompilerMessage& Msg);
+
+void Messages(const std::initializer_list<std::string>& messages);
 
 void UpperIndent();
 void LowerIndent();

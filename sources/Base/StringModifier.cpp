@@ -120,11 +120,29 @@ std::string ReplaceString(
     return Subject;
 }
 
+bool IsWhiteSpace(char chr)
+{
+    return chr == ' ' || chr == '\t' || chr == '\r' || chr == '\n';
+}
+
+bool HasWhiteSpaces(const std::string& str)
+{
+    for (const auto& chr : str)
+    {
+        if (IsWhiteSpace(chr))
+            return true;
+    }
+    return false;
+}
+
 std::string RemoveWhiteSpaces(std::string Str)
 {
     auto it = std::remove_if(
         Str.begin(), Str.end(),
-        [](char Chr) { return Chr == ' ' || Chr == '\t'; }
+        [](char Chr)
+        {
+            return Chr == ' ' || Chr == '\t';
+        }
     );
         
     Str.erase(it, Str.end());

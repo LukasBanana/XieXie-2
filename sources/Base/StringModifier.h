@@ -48,6 +48,8 @@ std::string ReplaceString(
     std::string Subject, const std::string& Search, const std::string& Replace
 );
 
+bool IsWhiteSpace(char chr);
+bool HasWhiteSpaces(const std::string& str);
 std::string RemoveWhiteSpaces(std::string Str);
 
 std::string NumberOffset(

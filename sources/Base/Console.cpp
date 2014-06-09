@@ -13,7 +13,7 @@
 #include <algorithm>
 
 
-namespace ConsoleOutput
+namespace Console
 {
 
 
@@ -44,9 +44,9 @@ void EndLn()
     std::cout << std::endl;
 }
 
-void Print(const std::string& Msg)
+void Print(const std::string& text)
 {
-    std::cout << Msg;
+    std::cout << text;
 }
 
 void PrintLn(const std::string& text)
@@ -99,6 +99,12 @@ void Success(const std::string& message)
     //...
 }*/
 
+void Messages(const std::initializer_list<std::string>& messages)
+{
+    for (const auto& msg : messages)
+        Message(msg);
+}
+
 void UpperIndent()
 {
     consoleState.indent += consoleState.indentModifier;
@@ -119,7 +125,7 @@ void Wait()
 }
 
 
-} // /namespace ConsoleOutput
+} // /namespace Console
 
 
 
