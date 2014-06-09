@@ -1,0 +1,62 @@
+
+
+extern class Timer {
+	
+	[[deprecated("Use \"foo bar\" instead")]]
+	static float ElapsedTime()
+	
+	static float CurrentTime()
+	
+	static String Date()
+	
+}
+
+class Mouse {
+
+    public:
+
+        static Mouse@ instance {
+            public get {
+                if instance = null {
+                    instance := new Mouse()
+                }
+                return instance
+            }
+            private set
+        } := null
+
+    private:
+
+        init() { /* dummy */ }
+        release { /* dummy */ }
+
+}
+
+class AppTest {
+	
+    int result := 3
+	
+	int Main(String[] args) {
+		foreach String arg : args {
+			if x > y > z or ( y = 3 and z = 4 ) {
+				IO.Log.Write("A")
+			} else if arg.Size() > 10 {
+				IO.Log.Write("B")
+			} else {
+				IO.Log.Write("C")
+			}
+		}
+		
+		foreach int i : { 1, 2, 3, 4, 5 } {
+			IO.Log.Write(i + ", ")
+		}
+
+		for int i := 0; i < 10; i++ {
+			IO.Log.WriteLine("Hello, World")
+		}
+
+		return result
+	}
+	
+}
+
