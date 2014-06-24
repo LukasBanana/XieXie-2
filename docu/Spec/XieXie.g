@@ -5,7 +5,7 @@
 grammar XieXie;
 
 options {
-//	language = Cpp;
+	language = Cpp;
 	backtrack = true;
 	memoize = true;
 	k = 2;
@@ -228,11 +228,11 @@ CHAR_LITERAL:	'\'' ( EscapeCharacter | ~( '\'' | '\\' | '\r' | '\n' ) ) '\'';
 
 
 STRING_LITERAL	: STANDARD_STRING_LITERAL
-				//| VERBATIM_STRING_LITERAL;
+				| VERBATIM_STRING_LITERAL;
 				;
 
 STANDARD_STRING_LITERAL:	'"' ( EscapeCharacter | ~('\\' | '"' | '\r' | '\n') )* '"';
-//VERBATIM_STRING_LITERAL:	'@' '"' ( ~('\\' | '"') )* '"';
+VERBATIM_STRING_LITERAL:	'@' '"' ( ~('\\' | '"') )* '"';
 
 fragment
 EscapeCharacter	: '\\' ('b' | 't' | 'n' | 'f' | 'r' | '\"' | '\'' | '\\')

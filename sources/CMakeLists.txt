@@ -19,9 +19,18 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 # === Global files ===
 
-file(GLOB_RECURSE FilesAll				${PROJECT_SOURCE_DIR}/*.*)
+file(GLOB_RECURSE FilesBaseAll				${PROJECT_SOURCE_DIR}/Base/*.*)
+file(GLOB_RECURSE FilesCompilerAll			${PROJECT_SOURCE_DIR}/Compiler/*.*)
+file(GLOB_RECURSE FilesShellAll				${PROJECT_SOURCE_DIR}/Shell/*.*)
+file(GLOB_RECURSE FilesVirtualMachineAll	${PROJECT_SOURCE_DIR}/VirtualMachine/*.*)
 
-#file(GLOB FilesBase					Base/*.*)
+set(
+	FilesAll
+	
+	${FilesBaseAll}
+	${FilesCompilerAll}
+	${FilesShellAll}
+)
 
 
 # === Source group folders ===
@@ -48,13 +57,15 @@ include_directories("${PROJECT_SOURCE_DIR}/Compiler/CodeGenerator")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/ContextualAnalyzer")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/SyntacticAnalyzer")
 include_directories("${PROJECT_SOURCE_DIR}/Shell")
-include_directories("${PROJECT_SOURCE_DIR}/VirtualMachine")
+#include_directories("${PROJECT_SOURCE_DIR}/VirtualMachine")
 
 
 # === Executable ===
 
 add_executable(xxc ${FilesAll})
+add_executable(xvm ${FilesVirtualMachineAll})
 
 set_target_properties(xxc PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(xvm PROPERTIES LINKER_LANGUAGE C)
 
 
