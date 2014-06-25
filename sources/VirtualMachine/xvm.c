@@ -7,6 +7,13 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <setjmp.h>
+
+
+/* ----- Helper macros ----- */
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 
 /* ----- Registers ----- */
@@ -15,8 +22,10 @@ typedef unsigned char   reg_t;
 typedef int             regi_t;
 typedef float           regf_t;
 
-#define NUM_REGISTERS   16
-#define IS_REG_FLOAT(r) ((r) >= REG_F0)
+#define NUM_REGISTERS       16
+#define IS_REG_FLOAT(r)     ((r) >= REG_F0)
+#define REG_TO_STACK_PTR(r) ((stack_word_t*)(*(r)))
+
 
 typedef enum
 {
@@ -144,6 +153,40 @@ typedef enum
 opcode_special;
 
 
+/* ----- Virtual machine exit codes ----- */
+
+typedef enum
+{
+    VMEXITCODE_SUCCESS          = 0,
+    VMEXITCODE_INVALID_BYTECODE = -1,
+    VMEXITCODE_INVALID_STACK    = -2,
+    VMEXITCODE_INVALID_OPCODE   = -3,
+    VMEXITCODE_STACK_OVERFLOW   = -4,
+    VMEXITCODE_STACK_UNDERFLOW  = -5,
+    VMEXITCODE_DIVISION_BY_ZERO = -6,
+}
+vm_exit_codes;
+
+
+/* ----- Debug log ----- */
+
+static void log_print(const char* str)
+{
+    printf(str);
+}
+
+static void log_println(const char* str)
+{
+    printf(str);
+    printf("\n");
+}
+
+static void log_error(const char* str)
+{
+    printf("ERROR: %s!", str);
+}
+
+
 /* ----- Instruction ----- */
 
 typedef unsigned int instr_t;
@@ -168,7 +211,7 @@ static unsigned int instr_get_value18(const instr_t instr)
     return (instr & 0x0003ffff);
 }
 
-static unsigned int instr_get_sgn_value26(const instr_t instr)
+static int instr_get_sgn_value26(const instr_t instr)
 {
     unsigned int val = instr_get_value26(instr);
 
@@ -178,7 +221,7 @@ static unsigned int instr_get_sgn_value26(const instr_t instr)
     return (int)val;
 }
 
-static unsigned int instr_get_sgn_value22(const instr_t instr)
+static int instr_get_sgn_value22(const instr_t instr)
 {
     unsigned int val = instr_get_value22(instr);
 
@@ -188,7 +231,7 @@ static unsigned int instr_get_sgn_value22(const instr_t instr)
     return (int)val;
 }
 
-static unsigned int instr_get_sgn_value18(const instr_t instr)
+static int instr_get_sgn_value18(const instr_t instr)
 {
     unsigned int val = instr_get_value18(instr);
 
@@ -318,6 +361,18 @@ static int vm_bytecode_read_from_file(vm_bytecode* byte_code, const char* filena
 }
 
 
+/* ----- Exception handling ----- */
+
+jmp_buf vm_exception_envbuf;
+const char* vm_exception_err = "";
+
+static void vm_exception_throw(const char* error_message, int error_code)
+{
+    vm_exception_err = error_message;
+    longjmp(vm_exception_envbuf, error_code);
+}
+
+
 /* ----- Stack ----- */
 
 typedef int stack_word_t;
@@ -326,29 +381,43 @@ typedef struct
 {
     size_t          stack_size;
     stack_word_t*   storage;
-    stack_word_t*   ptr;
 }
 vm_stack;
 
+/**
+Initializes the specified stack object.
+\see vm_stack_create
+*/
 static int vm_stack_init(vm_stack* stack)
 {
     if (stack != NULL)
     {
         stack->stack_size   = 0;
         stack->storage      = NULL;
-        stack->ptr          = NULL;
         return 1;
     }
     return 0;
 }
 
+/**
+Creats a new stack for the virtual machine.
+\param[out] stack Pointer to the resulting stack object.
+\param[in] stack_size Specifies the stack size or rather the number of WORD (32-bit) entries.
+\remarks Example:
+\code
+vm_stack stack;
+vm_stack_init(&stack);
+vm_stack_create(&stack, 256);
+// ...
+vm_stack_free(&stack);
+\endcode
+*/
 static int vm_stack_create(vm_stack* stack, size_t stack_size)
 {
     if (stack != NULL && stack->storage == NULL && stack_size != 0)
     {
         stack->stack_size   = stack_size;
         stack->storage      = (stack_word_t*)malloc(sizeof(stack_word_t)*stack_size);
-        stack->ptr          = stack->storage;
         return 1;
     }
     return 0;
@@ -363,36 +432,46 @@ static int vm_stack_free(vm_stack* stack)
 
         stack->stack_size   = 0;
         stack->storage      = NULL;
-        stack->ptr          = NULL;
 
         return 1;
     }
     return 0;
 }
 
-static void vm_stack_push(vm_stack* stack, stack_word_t value)
+static void vm_stack_push(vm_stack* stack, regi_t* reg_sp, stack_word_t value)
 {
-    *stack->ptr = value;
-    ++stack->ptr;
+    stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
+    if (stack_ptr < stack->storage + stack->stack_size)
+    {
+        *stack_ptr = value;
+        ++(*reg_sp);
+    }
+    else
+        vm_exception_throw("Stack overflow", VMEXITCODE_STACK_OVERFLOW);
 }
 
-static stack_word_t vm_stack_pop(vm_stack* stack)
+static stack_word_t vm_stack_pop(vm_stack* stack, regi_t* reg_sp)
 {
-    --stack->ptr;
-    return *stack->ptr;
+    stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
+    if (stack_ptr > stack->storage)
+        --(*reg_sp);
+    else
+        vm_exception_throw("Stack underflow", VMEXITCODE_STACK_OVERFLOW);
+    return *REG_TO_STACK_PTR(reg_sp);
+}
+
+static void vm_stack_debug(vm_stack* stack, size_t num_entries)
+{
+    if (stack != NULL)
+    {
+        const size_t n = MIN(num_entries, stack->stack_size);
+        for (size_t i = 0; i < n; ++i)
+            printf("stack[%i] = %i\n", i, stack->storage[i]);
+    }
 }
 
 
 /* ----- Virtual machine ----- */
-
-typedef enum
-{
-    VMEXITCODE_SUCCESS          = 0,
-    VMEXITCODE_INVALID_BYTECODE = -1,
-    VMEXITCODE_INVALID_STACK    = -2,
-    VMEXITCODE_INVALID_OPCODE   = -3,
-}
-vm_exit_codes;
 
 typedef struct
 {
@@ -432,18 +511,30 @@ static vm_exit_codes vm_execute_program(
     const instr_t* const instr_ptr = byte_code->instructions;
     const int num_instr = byte_code->num_instructions;
 
+    int sgn_value;
     opcode_t opcode;
     reg_t reg0, reg1;
+
+    regi_t* const reg_lb = (reg.i + REG_LB);
+    regi_t* const reg_sp = (reg.i + REG_SP);
     regi_t* const reg_pc = (reg.i + REG_PC);
 
     /* --- Initialize VM (only reset reserved registers) --- */
-    reg.i[REG_LB] = 0;
-    reg.i[REG_SP] = 0;
+    *reg_lb = (regi_t)stack->storage;
+    *reg_sp = (regi_t)stack->storage;
 
     if (exe_state != NULL)
-        reg.i[REG_PC] = exe_state->pc_reset;
+        *reg_pc = exe_state->pc_reset;
     else
-        reg.i[REG_PC] = 0;
+        *reg_pc = 0;
+
+    /* --- Catch exceptions --- */
+    int exception_val = setjmp(vm_exception_envbuf);
+    if (exception_val != 0)
+    {
+        log_error(vm_exception_err);
+        return exception_val;
+    }
 
     /* --- Start with program execution --- */
     while (*reg_pc < num_instr)
@@ -457,6 +548,7 @@ static vm_exit_codes vm_execute_program(
         switch (opcode)
         {
             /* --- opcode_reg2 --- */
+
             case OPCODE_MOV2:
             {
                 reg0 = instr_get_reg0(instr);
@@ -595,6 +687,7 @@ static vm_exit_codes vm_execute_program(
             break;
             
             /* --- opcode_reg1 --- */
+
             case OPCODE_MOV1:
             {
                 reg0 = instr_get_reg0(instr);
@@ -602,29 +695,103 @@ static vm_exit_codes vm_execute_program(
             }
             break;
 
+            // Undefined behavior for floats
             case OPCODE_AND1:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg.i[reg0] &= instr_get_sgn_value22(instr);
+            }
+            break;
+
+            // Undefined behavior for floats
             case OPCODE_OR1:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg.i[reg0] |= instr_get_sgn_value22(instr);
+            }
+            break;
+
+            // Undefined behavior for floats
             case OPCODE_XOR1:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg.i[reg0] ^= instr_get_sgn_value22(instr);
+            }
+            break;
+
+            // Undefined behavior for floats
             case OPCODE_ADD1:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg.i[reg0] += instr_get_sgn_value22(instr);
+            }
+            break;
+
+            // Undefined behavior for floats
             case OPCODE_SUB1:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg.i[reg0] -= instr_get_sgn_value22(instr);
+            }
+            break;
+
+            // Undefined behavior for floats
             case OPCODE_MUL1:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg.i[reg0] *= instr_get_sgn_value22(instr);
+            }
+            break;
+
+            // Undefined behavior for floats
             case OPCODE_DIV1:
+            {
+                reg0 = instr_get_reg0(instr);
+                sgn_value = instr_get_sgn_value22(instr);
+                if (sgn_value == 0)
+                    vm_exception_throw("Division by zero", VMEXITCODE_DIVISION_BY_ZERO);
+                reg.i[reg0] /= sgn_value;
+            }
+            break;
+
+            // Undefined behavior for floats
             case OPCODE_MOD1:
+            {
+                reg0 = instr_get_reg0(instr);
+                sgn_value = instr_get_sgn_value22(instr);
+                if (sgn_value == 0)
+                    vm_exception_throw("Division by zero", VMEXITCODE_DIVISION_BY_ZERO);
+                reg.i[reg0] %= sgn_value;
+            }
+            break;
+
+            // Undefined behavior for floats
             case OPCODE_SLL1:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg.i[reg0] <<= instr_get_sgn_value22(instr);
+            }
+            break;
+
+            // Undefined behavior for floats
             case OPCODE_SLR1:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg.i[reg0] >>= instr_get_sgn_value22(instr);
+            }
             break;
 
             case OPCODE_PUSH:
             {
                 reg0 = instr_get_reg0(instr);
-                vm_stack_push(stack, reg.i[reg0]);
+                vm_stack_push(stack, reg_sp, reg.i[reg0]);
             }
             break;
 
             case OPCODE_POP:
             {
                 reg0 = instr_get_reg0(instr);
-                reg.i[reg0] = vm_stack_pop(stack);
+                reg.i[reg0] = vm_stack_pop(stack, reg_sp);
             }
             break;
 
@@ -649,6 +816,7 @@ static vm_exit_codes vm_execute_program(
             break;
 
             /* --- opcode_jump --- */
+
             case OPCODE_JMP:
             case OPCODE_JE:
             case OPCODE_JNE:
@@ -660,6 +828,7 @@ static vm_exit_codes vm_execute_program(
             break;
 
             /* --- opcode_mem --- */
+
             case OPCODE_LDB:
             case OPCODE_STB:
             case OPCODE_LDW:
@@ -667,6 +836,7 @@ static vm_exit_codes vm_execute_program(
             break;
 
             /* --- opcode_memoff --- */
+
             case OPCODE_LDBO:
             case OPCODE_STBO:
             case OPCODE_LDWO:
@@ -674,13 +844,20 @@ static vm_exit_codes vm_execute_program(
             break;
 
             /* --- opcode_special --- */
+
             case OPCODE_STOP:
             {
                 return VMEXITCODE_SUCCESS;
             }
 
             case OPCODE_RET:
+            break;
+
             case OPCODE_PUSHC:
+            {
+                sgn_value = instr_get_sgn_value26(instr);
+                vm_stack_push(stack, reg_sp, sgn_value);
+            }
             break;
 
             default:
@@ -716,7 +893,7 @@ int main(int argc, char* argv[])
 
     vm_bytecode byte_code;
     vm_bytecode_init(&byte_code);
-    vm_bytecode_create(&byte_code, 7);
+    vm_bytecode_create(&byte_code, 20);
 
     byte_code.instructions[0] = instr_make_reg1(OPCODE_MOV1, REG_I0, 5);
     byte_code.instructions[1] = instr_make_reg1(OPCODE_MOV1, REG_I1, 7);
@@ -726,19 +903,17 @@ int main(int argc, char* argv[])
     byte_code.instructions[5] = instr_make_reg1(OPCODE_PUSH, REG_I1, 0);
     byte_code.instructions[6] = instr_make_reg1(OPCODE_PUSH, REG_I2, 0);
 
+    byte_code.instructions[7] = instr_make_reg1(OPCODE_POP, REG_I3, 0);
+    byte_code.instructions[8] = instr_make_reg1(OPCODE_POP, REG_I3, 0);
+    byte_code.instructions[9] = instr_make_reg1(OPCODE_POP, REG_I3, 0);
+    byte_code.instructions[10] = instr_make_special1(OPCODE_STOP, 0);
+
     const vm_exit_codes exitCode = vm_execute_program(&byte_code, &stack, NULL);
 
     if (exitCode != VMEXITCODE_SUCCESS)
-    {
         printf("\nProgram terminated with error code: %i\n\n", exitCode);
-    }
-    else
-    {
-        printf(
-            "\ni0 = %i, i1 = %i, i2 = %i\n\n",
-            stack.storage[0], stack.storage[1], stack.storage[2]
-        );
-    }
+
+    vm_stack_debug(&stack, 10);
 
     vm_stack_free(&stack);
     vm_bytecode_free(&byte_code);
