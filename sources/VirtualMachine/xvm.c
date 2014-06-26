@@ -180,6 +180,13 @@ Library.
 #include <stdlib.h>
 #include <stdio.h>
 #include <setjmp.h>
+#include <string.h>
+
+
+/* ----- Compilation configuration ----- */
+
+#define _ENABLE_INLINEING_
+#define _OPTIMIZE_OPCODE_EXTRACTION_
 
 
 /* ----- Helper macros ----- */
@@ -187,16 +194,16 @@ Library.
 #define XVM_MIN(a, b) ((a) < (b) ? (a) : (b))
 #define XVM_MAX(a, b) ((a) > (b) ? (a) : (b))
 
-#if 0
+#ifdef _ENABLE_INLINEING_
 #   define INLINE __inline
 #else
-#   define INLINE /* No inlining */
+#   define INLINE // No inlining
 #endif
 
 
 /* ----- Helper functions ----- */
 
-static int flt2int_signum(float val)
+INLINE static int flt2int_signum(float val)
 {
     if (val > 0.0f)
         return 1;
@@ -219,128 +226,307 @@ typedef int             word_t;
 #define IS_REG_FLOAT(r)     ((r) >= REG_F0)
 #define REG_TO_STACK_PTR(r) ((stack_word_t*)(*(r)))
 
-
 typedef enum
 {
-    REG_I0 = 0x00, //!< Integer register 0.
-    REG_I1 = 0x01, //!< Integer register 1.
-    REG_I2 = 0x02, //!< Integer register 2.
-    REG_I3 = 0x03, //!< Integer register 3.
-    REG_I4 = 0x04, //!< Integer register 4.
-    REG_I5 = 0x05, //!< Integer register 5.
+    REG_I0 = 0x00, // i0  ->  Integer register 0.
+    REG_I1 = 0x01, // i1  ->  Integer register 1.
+    REG_I2 = 0x02, // i2  ->  Integer register 2.
+    REG_I3 = 0x03, // i3  ->  Integer register 3.
+    REG_I4 = 0x04, // i4  ->  Integer register 4.
+    REG_I5 = 0x05, // i5  ->  Integer register 5.
 
-    REG_CF = 0x06, //!< Conditional flags: used for jump conditions.
-    REG_LB = 0x07, //!< Local base pointer: pointer to the current local stack base.
-    REG_SP = 0x08, //!< Stack-pointer.
-    REG_PC = 0x09, //!< Program-counter.
+    REG_CF = 0x06, // cf  ->  Conditional flags: used for jump conditions.
+    REG_LB = 0x07, // lb  ->  Local base pointer: pointer to the current local stack base.
+    REG_SP = 0x08, // sp  ->  Stack-pointer.
+    REG_PC = 0x09, // pc  ->  Program-counter.
 
-    REG_F0 = 0x0a, //!< Floating-point register 0.
-    REG_F1 = 0x0b, //!< Floating-point register 1.
-    REG_F2 = 0x0c, //!< Floating-point register 2.
-    REG_F3 = 0x0d, //!< Floating-point register 3.
-    REG_F4 = 0x0e, //!< Floating-point register 4.
-    REG_F5 = 0x0f, //!< Floating-point register 5.
+    REG_F0 = 0x0a, // f0  ->  Floating-point register 0.
+    REG_F1 = 0x0b, // f1  ->  Floating-point register 1.
+    REG_F2 = 0x0c, // f2  ->  Floating-point register 2.
+    REG_F3 = 0x0d, // f3  ->  Floating-point register 3.
+    REG_F4 = 0x0e, // f4  ->  Floating-point register 4.
+    REG_F5 = 0x0f, // f5  ->  Floating-point register 5.
 }
 register_id;
 
 
 /* ----- OP-codes ----- */
 
+/**
+
+This is full documentation of the 32-bit instruction set of the XieXie 2.0 VirtualMachine.
+Currently only single precision floats are supported. There are also no instructions that can handle 64 bit integers.
+
+BYTES are 8 bits wide
+WORDS are 32 bits wide.
+FLOATS are 32 bits wide.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                        2 Register Instruction Opcodes:                                                        |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Mnemonic | Opcode      | Dest.   | Source  | Unused                              | Description                                                |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|          | 31.......26 | 25...22 | 21...18 | 17................................0 |                                                            |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| MOV      | 0 0 0 0 0 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Move register source to destination.                       |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| NOT      | 0 0 0 0 1 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise NOT.                                               |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| AND      | 0 0 0 0 1 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise AND.                                               |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| OR       | 0 0 0 1 0 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise OR.                                                |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| XOR      | 0 0 0 1 0 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise XOR.                                               |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| ADD      | 0 0 0 1 1 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic addition.                                       |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| SUB      | 0 0 0 1 1 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic subtraction.                                    |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| MUL      | 0 0 1 0 0 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic multiplication.                                 |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| DIV      | 0 0 1 0 0 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic division.                                       |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| MOD      | 0 0 1 0 1 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic modulo.                                         |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| SLL      | 0 0 1 0 1 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Shift locial left.                                         |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| SLR      | 0 0 1 1 0 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Shift locial right.                                        |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| CMP      | 0 0 1 1 0 1 | X X X X | Y Y Y Y | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Compares the two registers and stores the result in "cf".  |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| FTI      | 0 0 1 1 1 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Float to integer.                                          |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| ITF      | 0 0 1 1 1 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Integer to float (Flags like FTI).                         |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                        1 Register Instruction Opcodes:                                                        |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Mnemonic | Opcode      | Reg.    | Value                                       | Description                                                  |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|          | 31.......26 | 25...22 | 21........................................0 |                                                              |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| MOV      | 0 1 0 0 0 0 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Move value to register.                                      |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| AND      | 0 1 0 0 0 1 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Bitwise AND.                                                 |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| OR       | 0 1 0 0 1 0 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Bitwise OR.                                                  |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| XOR      | 0 1 0 0 1 1 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Bitwise XOR.                                                 |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| ADD      | 0 1 0 1 0 0 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Arithmetic addition.                                         |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| SUB      | 0 1 0 1 0 1 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Arithmetic subtraction.                                      |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| MUL      | 0 1 0 1 1 0 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Arithmetic multiplication.                                   |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| DIV      | 0 1 0 1 1 1 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Arithmetic division.                                         |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| MOD      | 0 1 1 0 0 0 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Arithmetic modulo.                                           |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| SLL      | 0 1 1 0 0 1 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Shift locial left.                                           |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| SLR      | 0 1 1 0 1 0 | D D D D | V V V V V V V V V V V V V V V V V V V V V V | Shift locial right.                                          |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| PUSH     | 0 1 1 0 1 1 | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Push source register onto stack.                             |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| POP      | 0 1 1 1 0 0 | D D D D | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Pop destination register from stack.                         |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| INC      | 0 1 1 1 0 1 | D D D D | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Increment integral register.                                 |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| DEC      | 0 1 1 1 1 0 | D D D D | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Decrement integral register.                                 |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                           Jump Instruction Opcodes:                                                           |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Mnemonic | Opcode      | Reg.    | Offset                                      | Description                                                  |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|          | 31.......26 | 25...22 | 21........................................0 |                                                              |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| JMP      | 1 0 0 0 0 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Always jump to the labled address.                           |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| JE       | 1 0 0 0 0 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if greater.                                             |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| JNE      | 1 0 0 0 1 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if not-equal.                                           |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| JG       | 1 0 0 0 1 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if greater.                                             |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| JL       | 1 0 0 1 0 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if less.                                                |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| JGE      | 1 0 0 1 0 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if greater or equal.                                    |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| JLE      | 1 0 0 1 1 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if less or equal.                                       |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| CALL     | 1 0 0 1 1 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Calls the routine at the address, stored in the register 'S' |
+|          |             |         |                                             | + the offset 'O', and pushes 'lb' and 'pc' onto the stack.   |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                        Load/Store Instruction Opcodes:                                                        |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Mnemonic | Opcode      | Reg.    | Address                                     | Description                                                  |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|          | 31.......26 | 25...22 | 21........................................0 |                                                              |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| LDB      | 1 1 1 0 0 0 | D D D D | A A A A A A A A A A A A A A A A A A A A A A | Load byte from memory to register.                           |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| STB      | 1 1 1 0 0 1 | S S S S | A A A A A A A A A A A A A A A A A A A A A A | Store byte from register to memory.                          |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| LDW      | 1 1 1 0 1 0 | D D D D | A A A A A A A A A A A A A A A A A A A A A A | Load word from memory to register.                           |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| STW      | 1 1 1 0 1 1 | S S S S | A A A A A A A A A A A A A A A A A A A A A A | Store word from register to memory.                          |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                   Load/Store (Offset) Instruction Opcodes:                                                    |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Mnemonic | Opcode      | Dest.   | AddrReg | Offset                              | Description                                                |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|          | 31.......26 | 25...22 | 21...18 | 17................................0 |                                                            |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| LDB      | 1 1 1 1 0 0 | D D D D | A A A A | O O O O O O O O O O O O O O O O O O | Load byte from memory to register.                         |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| STB      | 1 1 1 1 0 1 | S S S S | A A A A | O O O O O O O O O O O O O O O O O O | Store byte from register to memory.                        |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| LDW      | 1 1 1 1 1 0 | D D D D | A A A A | O O O O O O O O O O O O O O O O O O | Load word from memory to register.                         |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| STW      | 1 1 1 1 1 1 | S S S S | A A A A | O O O O O O O O O O O O O O O O O O | Store word from register to memory.                        |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                         Special Instruction Opcodes:                                                          |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Mnemonic | Opcode      | Value or Unused                                     | Description                                                    |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|          | 31.......26 | 25................................................0 |                                                                |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| STOP     | 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Stops program execution.                                       |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| PUSH     | 1 1 0 0 0 1 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Pushes the value onto the stack.                               |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Mnemonic | Opcode      | Result Size     | Arguments Size                      | Description                                                  |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|          | 31.......26 | 25...........18 | 17................................0 |                                                              |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| RET      | 1 1 0 0 0 0 | R R R R R R R R | A A A A A A A A A A A A A A A A A A | Pops R words from the stack and buffers them. Pops the cur-  |
+|          |             |                 |                                     | rent stack frame and pops A argument words from the stack.   |
+|          |             |                 |                                     | Then pushes the R words back onto the stack and restores     |
+|          |             |                 |                                     | the 'lb' and 'pc' registers.                                 |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+*/
+
+#ifdef _OPTIMIZE_OPCODE_EXTRACTION_
+typedef unsigned int opcode_t;
+#else
 typedef unsigned char opcode_t;
+#endif
+
+#ifdef _OPTIMIZE_OPCODE_EXTRACTION_
+#   define GEN_OPCODE(op) ((op) << 26)
+#else
+#   define GEN_OPCODE(op) (op)
+#endif
 
 typedef enum
 {
-    OPCODE_MOV2     = 0x01, // MOV  reg0, reg1  ->  *reg0 = *reg1
-    OPCODE_NOT2     = 0x02, // NOT  reg0, reg1  ->  *reg0 = ~*reg1
-    OPCODE_AND2     = 0x03, // AND  reg0, reg1  ->  *reg0 &= *reg1
-    OPCODE_OR2      = 0x04, // OR   reg0, reg1  ->  *reg0 |= *reg1
-    OPCODE_XOR2     = 0x05, // XOR  reg0, reg1  ->  *reg0 ^= *reg1
-    OPCODE_ADD2     = 0x06, // ADD  reg0, reg1  ->  *reg0 += *reg1
-    OPCODE_SUB2     = 0x07, // SUB  reg0, reg1  ->  *reg0 -= *reg1
-    OPCODE_MUL2     = 0x08, // MUL  reg0, reg1  ->  *reg0 *= *reg1
-    OPCODE_DIV2     = 0x09, // DIV  reg0, reg1  ->  *reg0 /= *reg1
-    OPCODE_MOD2     = 0x0a, // MOD  reg0, reg1  ->  *reg0 %= *reg1
-    OPCODE_SLL2     = 0x0b, // SLL  reg0, reg1  ->  *reg0 <<= *reg1
-    OPCODE_SLR2     = 0x0c, // SLR  reg0, reg1  ->  *reg0 >>= *reg1
-    OPCODE_CMP      = 0x0d, // CMP  reg0, reg1  ->  REG_CF = (*reg0 - *reg1)
-    OPCODE_FTI      = 0x0e, // FTI  reg0, reg1  ->  *reg0 = (int)*reg1
-    OPCODE_ITF      = 0x0f, // ITF  reg0, reg1  ->  *reg0 = (float)*reg1
+    OPCODE_MOV2     = GEN_OPCODE(0x01), // MOV  reg0, reg1  ->  *reg0 = *reg1
+    OPCODE_NOT2     = GEN_OPCODE(0x02), // NOT  reg0, reg1  ->  *reg0 = ~*reg1
+    OPCODE_AND2     = GEN_OPCODE(0x03), // AND  reg0, reg1  ->  *reg0 &= *reg1
+    OPCODE_OR2      = GEN_OPCODE(0x04), // OR   reg0, reg1  ->  *reg0 |= *reg1
+    OPCODE_XOR2     = GEN_OPCODE(0x05), // XOR  reg0, reg1  ->  *reg0 ^= *reg1
+    OPCODE_ADD2     = GEN_OPCODE(0x06), // ADD  reg0, reg1  ->  *reg0 += *reg1
+    OPCODE_SUB2     = GEN_OPCODE(0x07), // SUB  reg0, reg1  ->  *reg0 -= *reg1
+    OPCODE_MUL2     = GEN_OPCODE(0x08), // MUL  reg0, reg1  ->  *reg0 *= *reg1
+    OPCODE_DIV2     = GEN_OPCODE(0x09), // DIV  reg0, reg1  ->  *reg0 /= *reg1
+    OPCODE_MOD2     = GEN_OPCODE(0x0a), // MOD  reg0, reg1  ->  *reg0 %= *reg1
+    OPCODE_SLL2     = GEN_OPCODE(0x0b), // SLL  reg0, reg1  ->  *reg0 <<= *reg1
+    OPCODE_SLR2     = GEN_OPCODE(0x0c), // SLR  reg0, reg1  ->  *reg0 >>= *reg1
+    OPCODE_CMP      = GEN_OPCODE(0x0d), // CMP  reg0, reg1  ->  REG_CF = (*reg0 - *reg1)
+    OPCODE_FTI      = GEN_OPCODE(0x0e), // FTI  reg0, reg1  ->  *reg0 = (int)*reg1
+    OPCODE_ITF      = GEN_OPCODE(0x0f), // ITF  reg0, reg1  ->  *reg0 = (float)*reg1
 }
 opcode_reg2;
 
 typedef enum
 {
-    OPCODE_MOV1     = 0x10, // MOV  reg, c  ->  *reg = c
-    OPCODE_AND1     = 0x11, // AND  reg, c  ->  *reg &= c
-    OPCODE_OR1      = 0x12, // OR   reg, c  ->  *reg |= c
-    OPCODE_XOR1     = 0x13, // XOR  reg, c  ->  *reg ^= c
-    OPCODE_ADD1     = 0x14, // ADD  reg, c  ->  *reg += c
-    OPCODE_SUB1     = 0x15, // SUB  reg, c  ->  *reg -= c
-    OPCODE_MUL1     = 0x16, // MUL  reg, c  ->  *reg *= c
-    OPCODE_DIV1     = 0x17, // DIV  reg, c  ->  *reg /= c
-    OPCODE_MOD1     = 0x18, // MOD  reg, c  ->  *reg %= c
-    OPCODE_SLL1     = 0x19, // SLL  reg, c  ->  *reg <<= c
-    OPCODE_SLR1     = 0x1a, // SLR  reg, c  ->  *reg >>= c
-    OPCODE_PUSH     = 0x1b, // PUSH reg     ->  stack.push(*reg)
-    OPCODE_POP      = 0x1c, // POP  reg     ->  *reg = stack.pop()
-    OPCODE_INC      = 0x1d, // INC  reg     ->  ++*reg
-    OPCODE_DEC      = 0x1e, // DEV  reg     ->  --*reg
+    OPCODE_MOV1     = GEN_OPCODE(0x10), // MOV  reg, c  ->  *reg = c
+    OPCODE_AND1     = GEN_OPCODE(0x11), // AND  reg, c  ->  *reg &= c
+    OPCODE_OR1      = GEN_OPCODE(0x12), // OR   reg, c  ->  *reg |= c
+    OPCODE_XOR1     = GEN_OPCODE(0x13), // XOR  reg, c  ->  *reg ^= c
+    OPCODE_ADD1     = GEN_OPCODE(0x14), // ADD  reg, c  ->  *reg += c
+    OPCODE_SUB1     = GEN_OPCODE(0x15), // SUB  reg, c  ->  *reg -= c
+    OPCODE_MUL1     = GEN_OPCODE(0x16), // MUL  reg, c  ->  *reg *= c
+    OPCODE_DIV1     = GEN_OPCODE(0x17), // DIV  reg, c  ->  *reg /= c
+    OPCODE_MOD1     = GEN_OPCODE(0x18), // MOD  reg, c  ->  *reg %= c
+    OPCODE_SLL1     = GEN_OPCODE(0x19), // SLL  reg, c  ->  *reg <<= c
+    OPCODE_SLR1     = GEN_OPCODE(0x1a), // SLR  reg, c  ->  *reg >>= c
+    OPCODE_PUSH     = GEN_OPCODE(0x1b), // PUSH reg     ->  stack.push(*reg)
+    OPCODE_POP      = GEN_OPCODE(0x1c), // POP  reg     ->  *reg = stack.pop()
+    OPCODE_INC      = GEN_OPCODE(0x1d), // INC  reg     ->  ++*reg
+    OPCODE_DEC      = GEN_OPCODE(0x1e), // DEV  reg     ->  --*reg
 }
 opcode_reg1;
 
 typedef enum
 {
-    OPCODE_JMP      = 0x20, // JMP  addr  -> goto addr
-    OPCODE_JE       = 0x21, // JE   addr  -> if (REG_CF == 0) then goto addr
-    OPCODE_JNE      = 0x22, // JNE  addr  -> if (REG_CF != 0) then goto addr
-    OPCODE_JG       = 0x23, // JG   addr  -> if (REG_CF  > 0) then goto addr
-    OPCODE_JL       = 0x24, // JL   addr  -> if (REG_CF  < 0) then goto addr
-    OPCODE_JGE      = 0x25, // JGE  addr  -> if (REG_CF >= 0) then goto addr
-    OPCODE_JLE      = 0x26, // JLE  addr  -> if (REG_CF <= 0) then goto addr
-    OPCODE_CALL     = 0x27, // CALL addr  -> PUSH pc ; PUSH lb ; JMP addr
+    OPCODE_JMP      = GEN_OPCODE(0x20), // JMP  addr  -> goto addr
+    OPCODE_JE       = GEN_OPCODE(0x21), // JE   addr  -> if (REG_CF == 0) then goto addr
+    OPCODE_JNE      = GEN_OPCODE(0x22), // JNE  addr  -> if (REG_CF != 0) then goto addr
+    OPCODE_JG       = GEN_OPCODE(0x23), // JG   addr  -> if (REG_CF  > 0) then goto addr
+    OPCODE_JL       = GEN_OPCODE(0x24), // JL   addr  -> if (REG_CF  < 0) then goto addr
+    OPCODE_JGE      = GEN_OPCODE(0x25), // JGE  addr  -> if (REG_CF >= 0) then goto addr
+    OPCODE_JLE      = GEN_OPCODE(0x26), // JLE  addr  -> if (REG_CF <= 0) then goto addr
+    OPCODE_CALL     = GEN_OPCODE(0x27), // CALL addr  -> PUSH pc ; PUSH lb ; JMP addr
     /*
-    Unused          = 0x28,
-    Unused          = 0x29,
-    Unused          = 0x2a,
-    Unused          = 0x2b,
-    Unused          = 0x2c,
-    Unused          = 0x2d,
-    Unused          = 0x2e,
-    Unused          = 0x2f,
+    Unused          = GEN_OPCODE(0x28),
+    Unused          = GEN_OPCODE(0x29),
+    Unused          = GEN_OPCODE(0x2a),
+    Unused          = GEN_OPCODE(0x2b),
+    Unused          = GEN_OPCODE(0x2c),
+    Unused          = GEN_OPCODE(0x2d),
+    Unused          = GEN_OPCODE(0x2e),
+    Unused          = GEN_OPCODE(0x2f),
     */
 }
 opcode_jump;
 
 typedef enum
 {
-    OPCODE_LDB      = 0x38, // LDB reg0, addr  ->  *reg0 = programDataSectionByteAligned[addr]
-    //Unused        = 0x39,
-    OPCODE_LDW      = 0x3a, // STB reg0, addr  ->  *reg0 = programDataSectionWorldAligned[addr]
-    //Unused        = 0x3b,
+    OPCODE_LDB      = GEN_OPCODE(0x38), // LDB reg0, addr  ->  *reg0 = programDataSectionByteAligned[addr]
+    //Unused        = GEN_OPCODE(0x39),
+    OPCODE_LDW      = GEN_OPCODE(0x3a), // STB reg0, addr  ->  *reg0 = programDataSectionWorldAligned[addr]
+    //Unused        = GEN_OPCODE(0x3b),
 }
 opcode_mem;
 
 typedef enum
 {
-    OPCODE_LDBO     = 0x3c, // LDB reg0, (reg1) c  ->  *reg0 = dynamicMemoryByteAligned[*reg1 + c]
-    OPCODE_STBO     = 0x3d, // STB reg0, (reg1) c  ->  dynamicMemoryByteAligned[*reg1 + c] = *reg0
-    OPCODE_LDWO     = 0x3e, // LDW reg0, (reg1) c  ->  *reg0 = dynamicMemoryWordAligned[*reg1 + c]
-    OPCODE_STWO     = 0x3f, // STW reg0, (reg1) c  ->  dynamicMemoryWordAligned[*reg1 + c] = *reg0
+    OPCODE_LDBO     = GEN_OPCODE(0x3c), // LDB reg0, (reg1) c  ->  *reg0 = dynamicMemoryByteAligned[*reg1 + c]
+    OPCODE_STBO     = GEN_OPCODE(0x3d), // STB reg0, (reg1) c  ->  dynamicMemoryByteAligned[*reg1 + c] = *reg0
+    OPCODE_LDWO     = GEN_OPCODE(0x3e), // LDW reg0, (reg1) c  ->  *reg0 = dynamicMemoryWordAligned[*reg1 + c]
+    OPCODE_STWO     = GEN_OPCODE(0x3f), // STW reg0, (reg1) c  ->  dynamicMemoryWordAligned[*reg1 + c] = *reg0
 }
 opcode_memoff;
 
 typedef enum
 {
-    OPCODE_STOP     = 0x00, // STOP          ->  exit(0)
-    OPCODE_RET      = 0x30, // RET  (c0) c1  ->  return
-    OPCODE_PUSHC    = 0x31, // PUSH c        ->  stack.push(c)
+    OPCODE_STOP     = GEN_OPCODE(0x00), // STOP          ->  exit(0)
+    OPCODE_RET      = GEN_OPCODE(0x30), // RET  (c0) c1  ->  return
+    OPCODE_PUSHC    = GEN_OPCODE(0x31), // PUSH c        ->  stack.push(c)
     /*
-    Unused          = 0x32,
-    Unused          = 0x33,
-    Unused          = 0x34,
-    Unused          = 0x35,
-    Unused          = 0x36,
-    Unused          = 0x37,
+    Unused          = GEN_OPCODE(0x32),
+    Unused          = GEN_OPCODE(0x33),
+    Unused          = GEN_OPCODE(0x34),
+    Unused          = GEN_OPCODE(0x35),
+    Unused          = GEN_OPCODE(0x36),
+    Unused          = GEN_OPCODE(0x37),
     */
 }
 opcode_special;
@@ -350,15 +536,37 @@ opcode_special;
 
 typedef enum
 {
-    VMEXITCODE_SUCCESS          = 0,
-    VMEXITCODE_INVALID_BYTECODE = -1,
-    VMEXITCODE_INVALID_STACK    = -2,
-    VMEXITCODE_INVALID_OPCODE   = -3,
-    VMEXITCODE_STACK_OVERFLOW   = -4,
-    VMEXITCODE_STACK_UNDERFLOW  = -5,
-    VMEXITCODE_DIVISION_BY_ZERO = -6,
+    EXITCODE_SUCCESS            = 0,
+    EXITCODE_INVALID_BYTECODE   = -1,
+    EXITCODE_INVALID_STACK      = -2,
+    EXITCODE_INVALID_OPCODE     = -3,
+    EXITCODE_STACK_OVERFLOW     = -4,
+    EXITCODE_STACK_UNDERFLOW    = -5,
+    EXITCODE_DIVISION_BY_ZERO   = -6,
 }
 xvm_exit_codes;
+
+static const char* exitcode_to_string(const xvm_exit_codes exit_code)
+{
+    switch (exit_code)
+    {
+        case EXITCODE_SUCCESS:
+            return "success";
+        case EXITCODE_INVALID_BYTECODE:
+            return "invalid byte code";
+        case EXITCODE_INVALID_STACK:
+            return "invalid stack";
+        case EXITCODE_INVALID_OPCODE:
+            return "invalid opcode";
+        case EXITCODE_STACK_OVERFLOW:
+            return "stack overflow";
+        case EXITCODE_STACK_UNDERFLOW:
+            return "stack underflow";
+        case EXITCODE_DIVISION_BY_ZERO:
+            return "division by zero";
+    }
+    return NULL;
+}
 
 
 /* ----- Debug log ----- */
@@ -376,7 +584,19 @@ INLINE static void log_println(const char* str)
 
 INLINE static void log_error(const char* str)
 {
-    printf("ERROR: %s!", str);
+    printf("ERROR: %s!\n", str);
+}
+
+INLINE static void log_readfile_error(const char* filename)
+{
+    printf("ERROR: Reading file \"%s\" failed!\n", filename);
+}
+
+INLINE static void log_exitcode_error(const xvm_exit_codes exit_code)
+{
+    const char* err = exitcode_to_string(exit_code);
+    if (err != NULL)
+        printf("ERROR: Program terminated with error: \"%s\"!\n", err);
 }
 
 
@@ -386,7 +606,11 @@ typedef unsigned int instr_t;
 
 INLINE static opcode_t instr_get_opcode(const instr_t instr)
 {
+    #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
+    return (instr & 0xfc000000);
+    #else
     return (instr & 0xfc000000) >> 26;
+    #endif
 }
 
 INLINE static unsigned int instr_get_value26(const instr_t instr)
@@ -434,6 +658,11 @@ INLINE static int instr_get_sgn_value18(const instr_t instr)
     return (int)val;
 }
 
+INLINE static int instr_get_extra_value8(const instr_t instr)
+{
+    return (instr & 0x03fc0000) >> 18;
+}
+
 INLINE static reg_t instr_get_reg0(const instr_t instr)
 {
     return (instr & 0x03c00000) >> 22;
@@ -450,7 +679,11 @@ INLINE static reg_t instr_get_reg1(const instr_t instr)
 static instr_t instr_make_reg2(opcode_reg2 opcode, reg_t reg0, reg_t reg1, unsigned int flags)
 {
     return (instr_t)(
+        #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
+        opcode                        |
+        #else
         ((opcode & 0x3f      ) << 26) |
+        #endif
         ((reg0   & 0x0f      ) << 22) |
         ((reg1   & 0x0f      ) << 18) |
          (flags  & 0x0003ffff)
@@ -460,7 +693,11 @@ static instr_t instr_make_reg2(opcode_reg2 opcode, reg_t reg0, reg_t reg1, unsig
 static instr_t instr_make_reg1(opcode_reg1 opcode, reg_t reg, unsigned int value)
 {
     return (instr_t)(
+        #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
+        opcode                        |
+        #else
         ((opcode & 0x3f      ) << 26) |
+        #endif
         ((reg    & 0x0f      ) << 22) |
          (value  & 0x003fffff)
     );
@@ -484,7 +721,11 @@ static instr_t instr_make_memoff(opcode_memoff opcode, reg_t reg0, reg_t reg1, u
 static instr_t instr_make_special1(opcode_special opcode, unsigned int value)
 {
     return (instr_t)(
+        #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
+        opcode                        |
+        #else
         ((opcode & 0x3f      ) << 26) |
+        #endif
          (value  & 0x03ffffff)
     );
 }
@@ -492,7 +733,11 @@ static instr_t instr_make_special1(opcode_special opcode, unsigned int value)
 static instr_t instr_make_special2(opcode_special opcode, unsigned int result_size, unsigned int arg_size)
 {
     return (instr_t)(
+        #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
+        opcode                        |
+        #else
         ((opcode      & 0x3f      ) << 26) |
+        #endif
         ((result_size & 0x000000ff) << 18) |
          (arg_size    & 0x0003ffff)
     );
@@ -512,6 +757,7 @@ static int xvm_bytecode_init(xvm_bytecode* byte_code)
 {
     if (byte_code != NULL)
     {
+        // Initialize byte code data
         byte_code->num_instructions = 0;
         byte_code->instructions     = NULL;
         return 1;
@@ -537,6 +783,7 @@ static int xvm_bytecode_free(xvm_bytecode* byte_code)
         if (byte_code->instructions != NULL)
             free(byte_code->instructions);
 
+        // Reset byte code data
         byte_code->num_instructions = 0;
         byte_code->instructions     = NULL;
 
@@ -561,6 +808,7 @@ const char* xvm_exception_err = "";
 
 static void xvm_exception_throw(const char* error_message, int error_code)
 {
+    // Setup exception error message and make a long jump
     xvm_exception_err = error_message;
     longjmp(xvm_exception_envbuf, error_code);
 }
@@ -585,6 +833,7 @@ static int xvm_stack_init(xvm_stack* stack)
 {
     if (stack != NULL)
     {
+        // Initialize stack data
         stack->stack_size   = 0;
         stack->storage      = NULL;
         return 1;
@@ -623,6 +872,7 @@ static int xvm_stack_free(xvm_stack* stack)
         if (stack->storage != NULL)
             free(stack->storage);
 
+        // Reset stack data
         stack->stack_size   = 0;
         stack->storage      = NULL;
 
@@ -631,7 +881,7 @@ static int xvm_stack_free(xvm_stack* stack)
     return 0;
 }
 
-static void xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t value)
+INLINE static void xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t value)
 {
     stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
     if (stack_ptr < stack->storage + stack->stack_size)
@@ -640,16 +890,16 @@ static void xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t value)
         (*reg_sp) += sizeof(stack_word_t);
     }
     else
-        xvm_exception_throw("Stack overflow", VMEXITCODE_STACK_OVERFLOW);
+        xvm_exception_throw("Stack overflow", EXITCODE_STACK_OVERFLOW);
 }
 
-static stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
+INLINE static stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
 {
     stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
     if (stack_ptr > stack->storage)
         (*reg_sp) -= sizeof(stack_word_t);
     else
-        xvm_exception_throw("Stack underflow", VMEXITCODE_STACK_OVERFLOW);
+        xvm_exception_throw("Stack underflow", EXITCODE_STACK_OVERFLOW);
     return *REG_TO_STACK_PTR(reg_sp);
 }
 
@@ -657,11 +907,77 @@ static void xvm_stack_debug(xvm_stack* stack, size_t num_entries)
 {
     if (stack != NULL)
     {
+        // Print all n-th stack entries
         const size_t n = XVM_MIN(num_entries, stack->stack_size);
         for (size_t i = 0; i < n; ++i)
             printf("stack[%i] = %i\n", i, stack->storage[i]);
     }
 }
+
+
+/* ----- Intrinsics ----- */
+
+typedef enum
+{
+    INTR_RESERVED       = 0x001fff00, // Start address of reserved primitive procedures.
+
+    /* --- Dynamic memory intrinsics --- */
+    INTR_ALLOC_MEM      = 0x001fff00, // void* AllocMem(uint sizeInBytes).
+    INTR_FREE_MEM       = 0x001fff01, // void FreeMem(void* memoryAddress).
+    INTR_COPY_MEM       = 0x001fff02, // void CopyMem(const void* srcMemAddr, void* dstMemAddr, uint sizeInBytes);
+    
+    /* --- Console intrinsics --- */
+    INTR_SYS_CALL       = 0x001fff20, // void SysCall(const byte* stringAddress).
+    INTR_CLEAR          = 0x001fff21, // void ClearTerm().
+    INTR_PRINT          = 0x001fff22, // void Print(const byte* stringAddress).
+    INTR_PRINT_LN       = 0x001fff23, // void PrintLn(const byte* stringAddress).
+    INTR_PRINT_INT      = 0x001fff24, // void PrintInt(int value);
+    INTR_PRINT_FLOAT    = 0x001fff25, // void PrintFloat(float value);
+    INTR_INPUT_INT      = 0x001fff26, // int InputInt();
+    INTR_INPUT_FLOAT    = 0x001fff27, // float InputFloat();
+
+    /* --- Conditional intrinsics --- */
+    // Only for XieXie 1.0 compatibility, don't use them for performance seasons.
+    // Make use of CMP instruction and conditional jump instructions (see 'opcode_jump' enumeration).
+    INTR_CMP_E          = 0x001fff30,
+    INTR_CMP_NE         = 0x001fff31,
+    INTR_CMP_L          = 0x001fff32,
+    INTR_CMP_LE         = 0x001fff33,
+    INTR_CMP_G          = 0x001fff34,
+    INTR_CMP_GE         = 0x001fff35,
+    INTR_LOGIC_OR       = 0x001fff36,
+    INTR_LOGIC_AND      = 0x001fff37,
+    INTR_LOGIC_NOT      = 0x001fff38,
+
+    /* --- File intrinsics --- */
+    INTR_CREATE_FILE    = 0x001fff40, // int CreateFile(const byte* stringAddress).
+    INTR_DELETE_FILE    = 0x001fff41, // int DeleteFile(const byte* stringAddress).
+    INTR_OPEN_FILE      = 0x001fff42, // void* OpenFile(const byte* stringAddress).
+    INTR_CLOSE_FILE     = 0x001fff43, // void CloseFile(void* fileHandle).
+    INTR_FILE_SIZE      = 0x001fff44, // int FileSize(const void* fileHandle).
+    INTR_SET_FILE_POS   = 0x001fff45, // void FileSetPos(const void* fileHandle, int pos).
+    INTR_GET_FILE_POS   = 0x001fff46, // int FileGetPos(const void* fileHandle).
+    INTR_FileEOF        = 0x001fff47, // int FileEOF(const void* fileHandle).
+    INTR_WRITE_BYTE     = 0x001fff48, // void WriteByte(const void* fileHandle, const void* memoryAddress).
+    INTR_WRITE_INT      = 0x001fff49, // void WriteWord(const void* fileHandle, const void* memoryAddress).
+    INTR_WRITE_FLOAT    = 0x001fff4a, // void WriteFloat(const void* fileHandle, const void* memoryAddress).
+    INTR_READ_BYTE      = 0x001fff4b, // void ReadByte(const void* fileHandle, void* memoryAddress).
+    INTR_READ_INT       = 0x001fff4c, // void ReadWord(const void* fileHandle, void* memoryAddress).
+    INTR_READ_FLOAT     = 0x001fff4d, // void ReadFloat(const void* fileHandle, void* memoryAddress).
+
+    /* --- Math intrinsics --- */
+    // Use every 2nd address to allow extension when
+    // double precision floating points are supported in future.
+    INTR_SIN            = 0x001fff80, // float Sin(float x).
+    INTR_COS            = 0x001fff82, // float Cos(float x).
+    INTR_TAN            = 0x001fff84, // float Tan(float x).
+    INTR_ASIN           = 0x001fff86, // float ASin(float x).
+    INTR_ACOS           = 0x001fff88, // float ACos(float x).
+    INTR_ATAN           = 0x001fff8a, // float ATan(float x).
+    INTR_POW            = 0x001fff8c, // float Pow(float base, float exp).
+    INTR_SQRT           = 0x001fff8e, // float Sqrt(float x).
+}
+intrinsic_addr;
 
 
 /* ----- Virtual machine ----- */
@@ -678,6 +994,8 @@ Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Vir
 \param[in] byte_code Pointer to the byte code to execute.
 \param[in] stack Pointer to the stack which is to be used during execution.
 \param[in,out] exe_state Optional pointer to the execution state. This may also be NULL.
+\remakrs This is the main function for the entire virtual machine.
+All instructions are implemented inside this function and its large switch-case statement.
 \see xvm_bytecode_create
 \see xvm_stack_create
 */
@@ -687,9 +1005,9 @@ static xvm_exit_codes xvm_execute_program(
     xvm_execution_state* const exe_state)
 {
     if (byte_code == NULL)
-        return VMEXITCODE_INVALID_BYTECODE;
+        return EXITCODE_INVALID_BYTECODE;
     if (stack == NULL)
-        return VMEXITCODE_INVALID_STACK;
+        return EXITCODE_INVALID_STACK;
 
     /* --- VM internals --- */
     union
@@ -707,7 +1025,7 @@ static xvm_exit_codes xvm_execute_program(
     regi_t* const reg_sp = (reg.i + REG_SP);
     regi_t* const reg_pc = (reg.i + REG_PC);
 
-    //! Program start pointer is used to load memory from program "DATA" section.
+    // Program start pointer is used to load memory from program "DATA" section
     const byte_t* const program_start_ptr = (const byte_t*)instr_ptr;
 
     /* --- Temporary memory --- */
@@ -724,6 +1042,7 @@ static xvm_exit_codes xvm_execute_program(
 
     int             sgn_value;
     unsigned int    unsgn_value;
+    int             extra_value;
 
     /* --- Initialize VM (only reset reserved registers) --- */
     *reg_lb = (regi_t)stack->storage;
@@ -963,7 +1282,7 @@ static xvm_exit_codes xvm_execute_program(
                 reg0 = instr_get_reg0(instr);
                 sgn_value = instr_get_sgn_value22(instr);
                 if (sgn_value == 0)
-                    xvm_exception_throw("Division by zero", VMEXITCODE_DIVISION_BY_ZERO);
+                    xvm_exception_throw("Division by zero", EXITCODE_DIVISION_BY_ZERO);
                 reg.i[reg0] /= sgn_value;
             }
             break;
@@ -974,7 +1293,7 @@ static xvm_exit_codes xvm_execute_program(
                 reg0 = instr_get_reg0(instr);
                 sgn_value = instr_get_sgn_value22(instr);
                 if (sgn_value == 0)
-                    xvm_exception_throw("Division by zero", VMEXITCODE_DIVISION_BY_ZERO);
+                    xvm_exception_throw("Division by zero", EXITCODE_DIVISION_BY_ZERO);
                 reg.i[reg0] %= sgn_value;
             }
             break;
@@ -1128,6 +1447,26 @@ static xvm_exit_codes xvm_execute_program(
 
             // Undefined behavior for floats
             case OPCODE_CALL:
+            {
+                // Store dynamic link (PUSH lb, PUSH pc)
+                sgn_value = *reg_lb;
+                *reg_lb = *reg_sp;
+                xvm_stack_push(stack, reg_sp, sgn_value);
+                xvm_stack_push(stack, reg_sp, *reg_pc);
+                
+                // Call procedure
+                sgn_value = instr_get_sgn_value22(instr);
+
+                if (sgn_value < INTR_RESERVED)
+                {
+                    reg0 = instr_get_reg0(instr);
+                    *reg_pc = reg.i[reg0] + sgn_value;
+                }
+                /*else
+                    xvm_call_intrinsic(sgn_value);*/
+
+                continue;
+            }
             break;
 
             /* --- opcode_mem --- */
@@ -1217,10 +1556,16 @@ static xvm_exit_codes xvm_execute_program(
 
             case OPCODE_STOP:
             {
-                return VMEXITCODE_SUCCESS;
+                return EXITCODE_SUCCESS;
             }
 
             case OPCODE_RET:
+            {
+                extra_value = instr_get_extra_value8(instr);
+                sgn_value = instr_get_value18(instr);
+
+                //.....
+            }
             break;
 
             case OPCODE_PUSHC:
@@ -1232,20 +1577,137 @@ static xvm_exit_codes xvm_execute_program(
 
             default:
             {
-                /* Unknown opcode -> return with error */
-                return VMEXITCODE_INVALID_OPCODE;
+                // Unknown opcode -> return with error
+                return EXITCODE_INVALID_OPCODE;
             }
         }
 
-        /* Increase program-counter register */
+        // Increase program-counter register
         ++(*reg_pc);
     }
 
-    /* Return program counter if set */
+    // Return program counter if set
     if (exe_state != NULL)
         exe_state->pc_reset = *reg_pc;
 
-    return VMEXITCODE_SUCCESS;
+    return EXITCODE_SUCCESS;
+}
+
+
+/* ----- Shell ----- */
+
+static void shell_print_help()
+{
+    log_println("Usage: xvm [options] file");
+    log_println("Options:");
+    log_println("  -h --help                Prints the help information");
+    log_println("  -v --version             Prints the version and license note");
+    log_println("  -st --stack-size <arg>   Sets the stack size (by default 256)");
+}
+
+static void shell_print_version()
+{
+    log_println("XieXie 2.0 VirtualMachine (XVM)");
+    log_println("GNU LESSER GENERAL PUBLIC LICENSE Version 3 (LGPLv3)");
+    log_println("Copyright (c) 2014  Lukas Hermanns");
+}
+
+static int shell_parse_args(int argc, char* argv[])
+{
+    const char* arg;
+
+    if (argc <= 0)
+    {
+        shell_print_help();
+        return 0;
+    }
+
+    // Configuration memory
+    const char* filename = NULL;
+    size_t stack_size = 256;
+
+    // Parse all arguments
+    while (argc > 0)
+    {
+        // Store current argument
+        arg = *argv;
+
+        // Get next argument
+        ++argv;
+        --argc;
+
+        // Parse current argument
+        if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0)
+            shell_print_help();
+        else if (strcmp(arg, "-v") == 0 || strcmp(arg, "--version") == 0)
+            shell_print_version();
+        else if (strcmp(arg, "-st") == 0 || strcmp(arg, "--stack-size") == 0)
+        {
+            if (argc > 0)
+            {
+                // Get parameter from next argument
+                arg = *argv;
+                int param = atoi(arg);
+
+                if (param <= 0)
+                {
+                    log_error("Stack size must be greater than zero");
+                    return 0;
+                }
+                else
+                    stack_size = (size_t)param;
+
+                // Get next argument
+                ++argv;
+                --argc;
+            }
+            else
+            {
+                log_error("Expected argument after \"-st\" and \"--stack-size\" flag");
+                return 0;
+            }
+        }
+        else if (strlen(arg) > 0)
+        {
+            if (filename != NULL)
+            {
+                log_error("Only a single program can be executed at a time");
+                return 0;
+            }
+            else
+                filename = arg;
+        }
+    }
+
+    // Execute shell command
+    if (filename != NULL)
+    {
+        // Read byte code from file
+        xvm_bytecode byte_code;
+        if (xvm_bytecode_read_from_file(&byte_code, filename) == 0)
+        {
+            log_readfile_error(filename);
+            return 0;
+        }
+
+        // Create stack
+        xvm_stack stack;
+        xvm_stack_init(&stack);
+        xvm_stack_create(&stack, stack_size);
+
+        // Execute program
+        xvm_execution_state exe_state;
+        const xvm_exit_codes exit_code = xvm_execute_program(&byte_code, &stack, &exe_state);
+
+        if (exit_code != EXITCODE_SUCCESS)
+            log_exitcode_error(exit_code);
+
+        // Clean up
+        xvm_bytecode_free(&byte_code);
+        xvm_stack_free(&stack);
+    }
+
+    return 1;
 }
 
 
@@ -1253,8 +1715,10 @@ static xvm_exit_codes xvm_execute_program(
 
 int main(int argc, char* argv[])
 {
-    
-    #if 1
+    // Ignore program path argument, then parse all other arguments
+    shell_parse_args(--argc, ++argv);
+
+    #ifdef _DEBUG
 
     // Create a virtual stack
     xvm_stack stack;
@@ -1287,7 +1751,7 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_reg1(OPCODE_MOV1, REG_I0, 0))
     ADD_INSTR(instr_make_reg1(OPCODE_MOV1, REG_I1, 10))
     ADD_INSTR(instr_make_reg2(OPCODE_CMP, REG_I0, REG_I1, 0))
-    ADD_INSTR(instr_make_jump(OPCODE_JGE, REG_PC, 5))
+    ADD_INSTR(instr_make_jump(OPCODE_JGE, REG_PC, 4))
     ADD_INSTR(instr_make_reg1(OPCODE_PUSH, REG_I0, 0))
     ADD_INSTR(instr_make_reg1(OPCODE_INC, REG_I0, 0))
     ADD_INSTR(instr_make_reg1(OPCODE_JMP, REG_PC, (unsigned int)(-4)))
@@ -1298,7 +1762,7 @@ int main(int argc, char* argv[])
     // Execute the virtual program
     const xvm_exit_codes exitCode = xvm_execute_program(&byte_code, &stack, NULL);
 
-    if (exitCode != VMEXITCODE_SUCCESS)
+    if (exitCode != EXITCODE_SUCCESS)
         printf("\nProgram terminated with error code: %i\n\n", exitCode);
 
     // Show stack output for the 20th first values
