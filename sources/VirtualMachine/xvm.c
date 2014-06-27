@@ -541,9 +541,10 @@ typedef enum
     EXITCODE_INVALID_BYTECODE   = -1,
     EXITCODE_INVALID_STACK      = -2,
     EXITCODE_INVALID_OPCODE     = -3,
-    EXITCODE_STACK_OVERFLOW     = -4,
-    EXITCODE_STACK_UNDERFLOW    = -5,
-    EXITCODE_DIVISION_BY_ZERO   = -6,
+    EXITCODE_INVALID_INTRINSIC  = -4,
+    EXITCODE_STACK_OVERFLOW     = -5,
+    EXITCODE_STACK_UNDERFLOW    = -6,
+    EXITCODE_DIVISION_BY_ZERO   = -7,
 }
 xvm_exit_codes;
 
@@ -559,6 +560,8 @@ static const char* exitcode_to_string(const xvm_exit_codes exit_code)
             return "invalid stack";
         case EXITCODE_INVALID_OPCODE:
             return "invalid opcode";
+        case EXITCODE_INVALID_INTRINSIC:
+            return "invalid intrinsic";
         case EXITCODE_STACK_OVERFLOW:
             return "stack overflow";
         case EXITCODE_STACK_UNDERFLOW:
@@ -608,6 +611,10 @@ typedef unsigned int instr_t;
 INLINE static opcode_t instr_get_opcode(const instr_t instr)
 {
     #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
+    /*
+    This is the optimization for '_OPTIMIZE_OPCODE_EXTRACTION_'.
+    This removes one SLL instruction in x86 for every virtual instruction executed.
+    */
     return (instr & 0xfc000000);
     #else
     return (instr & 0xfc000000) >> 26;
@@ -735,7 +742,7 @@ static instr_t instr_make_special2(opcode_special opcode, unsigned int result_si
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
-        opcode                        |
+        opcode                             |
         #else
         ((opcode      & 0x3f      ) << 26) |
         #endif
@@ -919,25 +926,25 @@ INLINE static stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
     return *REG_TO_STACK_PTR(reg_sp);
 }
 
-INLINE static stack_word_t xvm_stack_read(regi_t reg_sp, int offset)
+INLINE static stack_word_t xvm_stack_read(regi_t reg_sp, int word_offset)
 {
     stack_word_t* stack_ptr = (stack_word_t*)reg_sp;
-    return stack_ptr[offset];
+    return stack_ptr[word_offset];
 }
 
-INLINE static void xvm_stack_write(regi_t reg_sp, int offset, stack_word_t value)
+INLINE static void xvm_stack_write(regi_t reg_sp, int word_offset, stack_word_t value)
 {
     stack_word_t* stack_ptr = (stack_word_t*)reg_sp;
-    stack_ptr[offset] = value;
+    stack_ptr[word_offset] = value;
 }
 
-static void xvm_stack_debug(xvm_stack* stack, size_t num_entries)
+static void xvm_stack_debug(xvm_stack* stack, size_t first_entry, size_t num_entries)
 {
     if (stack != NULL)
     {
         // Print all n-th stack entries
-        const size_t n = XVM_MIN(num_entries, stack->stack_size);
-        for (size_t i = 0; i < n; ++i)
+        const size_t n = XVM_MIN(first_entry + num_entries, stack->stack_size);
+        for (size_t i = first_entry; i < n; ++i)
             printf("stack[%i] = %i\n", i, stack->storage[i]);
     }
 }
@@ -1016,6 +1023,80 @@ typedef struct
     //int max_num_cycles;
 }
 xvm_execution_state;
+
+static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_t* reg_sp)
+{
+    //xvm_stack_read(*reg_sp, -1);
+
+    switch (intrinsic_addr)
+    {
+        /* --- Dynamic memory intrinsics --- */
+
+        case INTR_ALLOC_MEM:
+        case INTR_FREE_MEM:
+        case INTR_COPY_MEM:
+        break;
+
+        /* --- Console intrinsics --- */
+
+        case INTR_SYS_CALL:
+        case INTR_CLEAR:
+        case INTR_PRINT:
+        case INTR_PRINT_LN:
+        case INTR_PRINT_INT:
+        case INTR_PRINT_FLOAT:
+        case INTR_INPUT_INT:
+        case INTR_INPUT_FLOAT:
+        break;
+
+        /* --- Conditional intrinsics --- */
+
+        case INTR_CMP_E:
+        case INTR_CMP_NE:
+        case INTR_CMP_L:
+        case INTR_CMP_LE:
+        case INTR_CMP_G:
+        case INTR_CMP_GE:
+        case INTR_LOGIC_OR:
+        case INTR_LOGIC_AND:
+        case INTR_LOGIC_NOT:
+        break;
+
+        /* --- File intrinsics --- */
+
+        case INTR_CREATE_FILE:
+        case INTR_DELETE_FILE:
+        case INTR_OPEN_FILE:
+        case INTR_CLOSE_FILE:
+        case INTR_FILE_SIZE:
+        case INTR_SET_FILE_POS:
+        case INTR_GET_FILE_POS:
+        case INTR_FileEOF:
+        case INTR_WRITE_BYTE:
+        case INTR_WRITE_INT:
+        case INTR_WRITE_FLOAT:
+        case INTR_READ_BYTE:
+        case INTR_READ_INT:
+        case INTR_READ_FLOAT:
+        break;
+
+        /* --- Math intrinsics --- */
+
+        case INTR_SIN:
+        case INTR_COS:
+        case INTR_TAN:
+        case INTR_ASIN:
+        case INTR_ACOS:
+        case INTR_ATAN:
+        case INTR_POW:
+        case INTR_SQRT:
+        break;
+
+        default:
+            xvm_exception_throw("Invalid intrinsic", EXITCODE_INVALID_INTRINSIC);
+            break;
+    }
+}
 
 /**
 Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Virtual Machine).
@@ -1494,7 +1575,7 @@ static xvm_exit_codes xvm_execute_program(
                 else
                 {
                     // Call intrinsic procedure
-                    //xvm_call_intrinsic(sgn_value);
+                    xvm_call_intrinsic(sgn_value, stack, reg_sp);
                 }
             }
             break;
@@ -1589,6 +1670,8 @@ static xvm_exit_codes xvm_execute_program(
 
             case OPCODE_RET:
             {
+                // Get result size (extra_value) and argument size (unsgn_value)
+                // These sizes are in words (i.e. 4 bytes)
                 extra_value = instr_get_extra_value8(instr);
                 unsgn_value = instr_get_value18(instr);
 
@@ -1777,32 +1860,36 @@ int main(int argc, char* argv[])
     #if 0 //TEST1
 
     /*
+    // Counts from 0 to n
     for int i := 0 ; i < 10 ; i++ {
         Stack.Push(i)
     }
     */
+
     /*
-            mov i0, 0
-            mov i1, 10
-    l_for:  cmp i0, i1
-            jge l_end
-            push i0
-            inc i0
-            jmp l_for
-    l_end:  stop
+    00          mov i0, 0
+    01          mov i1, 10
+    02  l_for:  cmp i0, i1
+    03          jge l_end   ; jge (pc) 4
+    04          push i0
+    05          inc i0
+    06          jmp l_for   ; jmp (pc) -4
+    07  l_end:  stop
     */
-    ADD_INSTR(instr_make_reg1(OPCODE_MOV1, REG_I0, 0))
-    ADD_INSTR(instr_make_reg1(OPCODE_MOV1, REG_I1, 10))
-    ADD_INSTR(instr_make_reg2(OPCODE_CMP, REG_I0, REG_I1, 0))
-    ADD_INSTR(instr_make_jump(OPCODE_JGE, REG_PC, 4))
-    ADD_INSTR(instr_make_reg1(OPCODE_PUSH, REG_I0, 0))
-    ADD_INSTR(instr_make_reg1(OPCODE_INC, REG_I0, 0))
-    ADD_INSTR(instr_make_reg1(OPCODE_JMP, REG_PC, (unsigned int)(-4)))
-    ADD_INSTR(instr_make_special1(OPCODE_STOP, 0))
+
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_I0, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_I1, 10                ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_I0, REG_I1, 0         ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 4                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_I0, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_I0, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-4)))
+    ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                         ))
 
     #else //TEST2
 
     /*
+    // Computes the first n-th squares: 0, 1, 4, 9, 16 ...
     int Func(int x) {
         return x*x
     }
@@ -1810,40 +1897,42 @@ int main(int argc, char* argv[])
         Stack.Push(Func(i))
     }
     */
+
     /*
     00  main:   add sp, 8       ; int i, n
     01          xor i0, i0      ; i = 0
     02          mov i1, 10      ; n = 10
     03  .for0:  cmp i0, i1
-    04          jge .end0       ; if i >= n then goto l_end
+    04          jge .end0       ; if i >= n then goto l_end ; jge (pc) 7
     05          stw i0 (lb) 0   ; store i
     06          push i0
-    07          call func       ; keep_result_on_stack = func(i)
+    07          call func       ; Stack.Push(func(i)) (actually 'pop i0' after call, but we keep it on stack) ; call (pc) 5
     08          ldw i0, (lb) 0  ; load i
     09          inc i0          ; i++
-    10          jmp .for0
+    10          jmp .for0       ; jmp (pc) -7
     11  .end0:  stop            ; exit
     12  func:   ldw i0, (lb) -4 ; load x
     13          mul i0, i0      ; x *= x
     14          push i0
-    15          ret (1) 1       ; return result -> (x*x)
+    15          ret (1) 1       ; return result ((x*x) = 1 word) and pop arguments (x = 1 word)
     */
-    ADD_INSTR(instr_make_reg1(OPCODE_ADD1, REG_SP, 8))
-    ADD_INSTR(instr_make_reg2(OPCODE_XOR2, REG_I0, REG_I0, 0))
-    ADD_INSTR(instr_make_reg1(OPCODE_MOV1, REG_I1, 10))
-    ADD_INSTR(instr_make_reg2(OPCODE_CMP, REG_I0, REG_I1, 0))
-    ADD_INSTR(instr_make_jump(OPCODE_JGE, REG_PC, 7))
-    ADD_INSTR(instr_make_memoff(OPCODE_STWO, REG_I0, REG_LB, 0))
-    ADD_INSTR(instr_make_reg1(OPCODE_PUSH, REG_I0, 0))
-    ADD_INSTR(instr_make_jump(OPCODE_CALL, REG_PC, 5))
-    ADD_INSTR(instr_make_memoff(OPCODE_LDWO, REG_I0, REG_LB, 0))
-    ADD_INSTR(instr_make_reg1(OPCODE_INC, REG_I0, 0))
-    ADD_INSTR(instr_make_jump(OPCODE_JMP, REG_PC, -7))
-    ADD_INSTR(instr_make_special1(OPCODE_STOP, 0))
-    ADD_INSTR(instr_make_memoff(OPCODE_LDWO, REG_I0, REG_LB, (unsigned int)(-4)))
-    ADD_INSTR(instr_make_reg2(OPCODE_MUL2, REG_I0, REG_I0, 0))
-    ADD_INSTR(instr_make_reg1(OPCODE_PUSH, REG_I0, 0))
-    ADD_INSTR(instr_make_special2(OPCODE_RET, 1, 1))
+
+    ADD_INSTR(instr_make_reg1       (OPCODE_ADD1, REG_SP, 8                         ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_XOR2, REG_I0, REG_I0, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_I1, 10                        ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_I0, REG_I1, 0                 ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 7                         ))
+    ADD_INSTR(instr_make_memoff     (OPCODE_STWO, REG_I0, REG_LB, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_I0, 0                         ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, 5                         ))
+    ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_I0, REG_LB, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_I0, 0                         ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JMP,  REG_PC, -7                        ))
+    ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                                 ))
+    ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_I0, REG_LB, (unsigned int)(-4)))
+    ADD_INSTR(instr_make_reg2       (OPCODE_MUL2, REG_I0, REG_I0, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_I0, 0                         ))
+    ADD_INSTR(instr_make_special2   (OPCODE_RET,  1, 1                              ))
 
     #endif
     
@@ -1857,7 +1946,7 @@ int main(int argc, char* argv[])
 
     // Show stack output for the 20th first values
     log_println("-- Stack content: --");
-    xvm_stack_debug(&stack, 20);
+    xvm_stack_debug(&stack, 2, 10);
 
     xvm_stack_free(&stack);
     xvm_bytecode_free(&byte_code);
