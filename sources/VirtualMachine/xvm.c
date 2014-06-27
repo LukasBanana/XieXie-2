@@ -414,10 +414,11 @@ FLOATS are 32 bits wide.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 |          | 31.......26 | 25...........18 | 17................................0 |                                                              |
 -------------------------------------------------------------------------------------------------------------------------------------------------
-| RET      | 1 1 0 0 0 0 | R R R R R R R R | A A A A A A A A A A A A A A A A A A | Pops R words from the stack and buffers them. Pops the cur-  |
-|          |             |                 |                                     | rent stack frame and pops A argument words from the stack.   |
-|          |             |                 |                                     | Then pushes the R words back onto the stack and restores     |
-|          |             |                 |                                     | the 'lb' and 'pc' registers.                                 |
+| RET      | 1 1 0 0 0 0 | R R R R R R R R | A A A A A A A A A A A A A A A A A A | Pops R words from the stack and buffers them.                |
+|          |             |                 |                                     | Pops the current stack frame.                                |
+|          |             |                 |                                     | Pops A words from the stack.                                 |
+|          |             |                 |                                     | Pushes the R words back onto the stack.                      |
+|          |             |                 |                                     | Restores the 'lb' and 'pc' registers.                        |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 */
@@ -820,8 +821,8 @@ typedef int stack_word_t;
 
 typedef struct
 {
-    size_t          stack_size;
-    stack_word_t*   storage;
+    size_t          stack_size; // Number of entries in the stack.
+    stack_word_t*   storage;    // Stack data storage.
 }
 xvm_stack;
 
@@ -836,6 +837,21 @@ static int xvm_stack_init(xvm_stack* stack)
         // Initialize stack data
         stack->stack_size   = 0;
         stack->storage      = NULL;
+        return 1;
+    }
+    return 0;
+}
+
+/**
+Clears all entries in the stack with the specified value
+\see xvm_stack_create
+*/
+static int xvm_stack_clear(xvm_stack* stack, stack_word_t value)
+{
+    if (stack != NULL && stack->stack_size > 0 && stack->storage != NULL)
+    {
+        for (size_t i = 0; i < stack->stack_size; ++i)
+            stack->storage[i] = value;
         return 1;
     }
     return 0;
@@ -901,6 +917,18 @@ INLINE static stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
     else
         xvm_exception_throw("Stack underflow", EXITCODE_STACK_OVERFLOW);
     return *REG_TO_STACK_PTR(reg_sp);
+}
+
+INLINE static stack_word_t xvm_stack_read(regi_t reg_sp, int offset)
+{
+    stack_word_t* stack_ptr = (stack_word_t*)reg_sp;
+    return stack_ptr[offset];
+}
+
+INLINE static void xvm_stack_write(regi_t reg_sp, int offset, stack_word_t value)
+{
+    stack_word_t* stack_ptr = (stack_word_t*)reg_sp;
+    stack_ptr[offset] = value;
 }
 
 static void xvm_stack_debug(xvm_stack* stack, size_t num_entries)
@@ -1448,24 +1476,26 @@ static xvm_exit_codes xvm_execute_program(
             // Undefined behavior for floats
             case OPCODE_CALL:
             {
-                // Store dynamic link (PUSH lb, PUSH pc)
-                sgn_value = *reg_lb;
-                *reg_lb = *reg_sp;
-                xvm_stack_push(stack, reg_sp, sgn_value);
-                xvm_stack_push(stack, reg_sp, *reg_pc);
-                
-                // Call procedure
                 sgn_value = instr_get_sgn_value22(instr);
 
                 if (sgn_value < INTR_RESERVED)
                 {
+                    // Push dynamic link (lb and pc registers)
+                    extra_value = *reg_lb;
+                    *reg_lb = *reg_sp;
+                    xvm_stack_push(stack, reg_sp, extra_value);
+                    xvm_stack_push(stack, reg_sp, *reg_pc);
+
+                    // Jump to procedure address
                     reg0 = instr_get_reg0(instr);
                     *reg_pc = reg.i[reg0] + sgn_value;
+                    continue;
                 }
-                /*else
-                    xvm_call_intrinsic(sgn_value);*/
-
-                continue;
+                else
+                {
+                    // Call intrinsic procedure
+                    //xvm_call_intrinsic(sgn_value);
+                }
             }
             break;
 
@@ -1555,17 +1585,29 @@ static xvm_exit_codes xvm_execute_program(
             /* --- opcode_special --- */
 
             case OPCODE_STOP:
-            {
                 return EXITCODE_SUCCESS;
-            }
 
             case OPCODE_RET:
             {
                 extra_value = instr_get_extra_value8(instr);
-                sgn_value = instr_get_value18(instr);
+                unsgn_value = instr_get_value18(instr);
 
-                //.....
+                stack_word_t* stack_frame_ptr = REG_TO_STACK_PTR(reg_lb);
+
+                // Pop stack frame
+                stack_word_t* stack_result_ptr = REG_TO_STACK_PTR(reg_sp) - extra_value;
+                stack_word_t* stack_args_ptr = REG_TO_STACK_PTR(reg_lb) - unsgn_value;
+                *reg_sp = (regi_t)(stack_args_ptr + extra_value);
+
+                // Pop dynamic link (pc and lb registers)
+                *reg_lb = (regi_t)(stack_frame_ptr[0]);
+                *reg_pc = (regi_t)(stack_frame_ptr[1]);
+
+                // Move result memory
+                if (extra_value > 0)
+                    memcpy(stack_args_ptr, stack_result_ptr, sizeof(stack_word_t) * extra_value);
             }
+            // Don't 'continue' -> pc has old value and must be increased for the next instruction!
             break;
 
             case OPCODE_PUSHC:
@@ -1576,10 +1618,8 @@ static xvm_exit_codes xvm_execute_program(
             break;
 
             default:
-            {
                 // Unknown opcode -> return with error
                 return EXITCODE_INVALID_OPCODE;
-            }
         }
 
         // Increase program-counter register
@@ -1724,6 +1764,7 @@ int main(int argc, char* argv[])
     xvm_stack stack;
     xvm_stack_init(&stack);
     xvm_stack_create(&stack, 256);
+    //xvm_stack_clear(&stack, 0xdeadbeef);
 
     // Create the byte code
     xvm_bytecode byte_code;
@@ -1733,14 +1774,16 @@ int main(int argc, char* argv[])
     size_t i = 0;
     #define ADD_INSTR(INSTR) byte_code.instructions[i++] = INSTR;
 
+    #if 0 //TEST1
+
     /*
-    for int i := 0 ; i < 10; i++ {
+    for int i := 0 ; i < 10 ; i++ {
         Stack.Push(i)
     }
     */
     /*
-            i0 = 0
-            i1 = 10
+            mov i0, 0
+            mov i1, 10
     l_for:  cmp i0, i1
             jge l_end
             push i0
@@ -1756,6 +1799,53 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_reg1(OPCODE_INC, REG_I0, 0))
     ADD_INSTR(instr_make_reg1(OPCODE_JMP, REG_PC, (unsigned int)(-4)))
     ADD_INSTR(instr_make_special1(OPCODE_STOP, 0))
+
+    #else //TEST2
+
+    /*
+    int Func(int x) {
+        return x*x
+    }
+    for int i := 0 ; i < 10 ; i++ {
+        Stack.Push(Func(i))
+    }
+    */
+    /*
+    00  main:   add sp, 8       ; int i, n
+    01          xor i0, i0      ; i = 0
+    02          mov i1, 10      ; n = 10
+    03  .for0:  cmp i0, i1
+    04          jge .end0       ; if i >= n then goto l_end
+    05          stw i0 (lb) 0   ; store i
+    06          push i0
+    07          call func       ; keep_result_on_stack = func(i)
+    08          ldw i0, (lb) 0  ; load i
+    09          inc i0          ; i++
+    10          jmp .for0
+    11  .end0:  stop            ; exit
+    12  func:   ldw i0, (lb) -4 ; load x
+    13          mul i0, i0      ; x *= x
+    14          push i0
+    15          ret (1) 1       ; return result -> (x*x)
+    */
+    ADD_INSTR(instr_make_reg1(OPCODE_ADD1, REG_SP, 8))
+    ADD_INSTR(instr_make_reg2(OPCODE_XOR2, REG_I0, REG_I0, 0))
+    ADD_INSTR(instr_make_reg1(OPCODE_MOV1, REG_I1, 10))
+    ADD_INSTR(instr_make_reg2(OPCODE_CMP, REG_I0, REG_I1, 0))
+    ADD_INSTR(instr_make_jump(OPCODE_JGE, REG_PC, 7))
+    ADD_INSTR(instr_make_memoff(OPCODE_STWO, REG_I0, REG_LB, 0))
+    ADD_INSTR(instr_make_reg1(OPCODE_PUSH, REG_I0, 0))
+    ADD_INSTR(instr_make_jump(OPCODE_CALL, REG_PC, 5))
+    ADD_INSTR(instr_make_memoff(OPCODE_LDWO, REG_I0, REG_LB, 0))
+    ADD_INSTR(instr_make_reg1(OPCODE_INC, REG_I0, 0))
+    ADD_INSTR(instr_make_jump(OPCODE_JMP, REG_PC, -7))
+    ADD_INSTR(instr_make_special1(OPCODE_STOP, 0))
+    ADD_INSTR(instr_make_memoff(OPCODE_LDWO, REG_I0, REG_LB, (unsigned int)(-4)))
+    ADD_INSTR(instr_make_reg2(OPCODE_MUL2, REG_I0, REG_I0, 0))
+    ADD_INSTR(instr_make_reg1(OPCODE_PUSH, REG_I0, 0))
+    ADD_INSTR(instr_make_special2(OPCODE_RET, 1, 1))
+
+    #endif
     
     #undef ADD_INSTR
 
