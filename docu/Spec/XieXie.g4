@@ -13,6 +13,7 @@ code_block:	'{' stmnt_list? '}';
 // STATEMENTS
 stmnt_list:				stmnt+;
 decl_stmnt_list: 		decl_stmnt+;
+extern_decl_stmnt_list:	extern_decl_stmnt+;
 class_decl_stmnt_list:	class_decl_stmnt+;
 
 stmnt	: decl_stmnt
@@ -26,6 +27,11 @@ decl_stmnt	: variable_decl_stmnt
 			| enum_decl_stmnt
 			| flags_decl_stmnt
 			| function_decl_stmnt;
+
+extern_decl_stmnt	: extern_class_decl_stmnt
+					| extern_function_decl_stmnt
+					| enum_decl_stmnt
+					| flags_decl_stmnt;
 
 branch_stmnt	: if_stmnt
 				| switch_stmnt;
@@ -104,10 +110,12 @@ variable_decl_stmnt:	type_denoter IDENT variable_init?;
 variable_init:			':=' expr;
 
 // CLASSES
-class_decl_stmnt:	class_modifier? 'class' class_name type_inheritance? class_body;
-class_modifier:		'extern';
-class_body:			'{' decl_stmnt_list? '}';
-class_name:			IDENT;
+class_decl_stmnt:			intern_class_decl_stmnt | extern_class_decl_stmnt;
+intern_class_decl_stmnt:	'class' class_name type_inheritance? class_body;
+extern_class_decl_stmnt:	'extern' 'class' class_name extern_class_body;
+class_body:					'{' decl_stmnt_list? '}';
+extern_class_body:			'{' extern_decl_stmnt_list? '}';
+class_name:					IDENT;
 
 type_inheritance:		':' variable_ident;
 type_multi_inheritance:	':' variable_ident (',' variable_ident)*;
@@ -126,11 +134,12 @@ flags_entry_list:	flags_entry (',' flags_entry)*;
 flags_entry:		IDENT;
 
 // FUNCTIONS
-function_decl_stmnt:	attribute_prefix? function_head code_block;
-function_head:			function_modifier? type_denoter variable_name '(' parameter_list? ')';
-function_modifier:		'static';
-parameter_list:			parameter (',' parameter)*;
-parameter:				type_denoter variable_name (':=' expr)?;
+function_decl_stmnt:		attribute_prefix? function_head code_block;
+extern_function_decl_stmnt:	attribute_prefix? 'extern' function_head;
+function_head:				function_modifier? type_denoter variable_name '(' parameter_list? ')';
+function_modifier:			'static';
+parameter_list:				parameter (',' parameter)*;
+parameter:					type_denoter variable_name (':=' expr)?;
 
 // EXPRESSIONS
 expr_list:	expr (',' expr)*;
