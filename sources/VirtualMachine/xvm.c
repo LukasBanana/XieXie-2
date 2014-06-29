@@ -222,9 +222,10 @@ typedef float           regf_t;
 typedef char            byte_t;
 typedef int             word_t;
 
-#define NUM_REGISTERS       16
-#define IS_REG_FLOAT(r)     ((r) >= REG_F0)
-#define REG_TO_STACK_PTR(r) ((stack_word_t*)(*(r)))
+#define NUM_REGISTERS               16
+#define IS_REG_FLOAT(r)             ((r) >= REG_F0)
+#define REG_TO_STACK_PTR(r)         ((stack_word_t*)(*(r)))
+#define GET_PARAM_FROM_STACK(p, i)  (*((p) - (i)))
 
 typedef enum
 {
@@ -236,9 +237,9 @@ typedef enum
     REG_I5 = 0x05, // i5  ->  Integer register 5.
 
     REG_CF = 0x06, // cf  ->  Conditional flags: used for jump conditions.
-    REG_LB = 0x07, // lb  ->  Local base pointer: pointer to the current local stack base.
-    REG_SP = 0x08, // sp  ->  Stack-pointer.
-    REG_PC = 0x09, // pc  ->  Program-counter.
+    REG_LB = 0x07, // lb  ->  Local base pointer: POINTER to the current stack frame base.
+    REG_SP = 0x08, // sp  ->  Stack-pointer: POINTER to the top of the stack storage.
+    REG_PC = 0x09, // pc  ->  Program-counter: INDEX (beginning with 0) to the byte-code instruction list.
 
     REG_F0 = 0x0a, // f0  ->  Floating-point register 0.
     REG_F1 = 0x0b, // f1  ->  Floating-point register 1.
@@ -346,7 +347,7 @@ FLOATS are 32 bits wide.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 |          | 31.......26 | 25...22 | 21........................................0 |                                                              |
 -------------------------------------------------------------------------------------------------------------------------------------------------
-| JMP      | 1 0 0 0 0 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Always jump to the labled address.                           |
+| JMP      | 1 0 0 0 0 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump to address, stored in register 'S' + offset 'O'.        |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | JE       | 1 0 0 0 0 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if greater.                                             |
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -403,13 +404,15 @@ FLOATS are 32 bits wide.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 |                                                         Special Instruction Opcodes:                                                          |
 -------------------------------------------------------------------------------------------------------------------------------------------------
-| Mnemonic | Opcode      | Value or Unused                                     | Description                                                    |
+| Mnemonic | Opcode      | Unused or Value                                     | Description                                                    |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 |          | 31.......26 | 25................................................0 |                                                                |
 -------------------------------------------------------------------------------------------------------------------------------------------------
-| STOP     | 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Stops program execution.                                       |
+| STOP     | 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Stop program execution.                                        |
 -------------------------------------------------------------------------------------------------------------------------------------------------
-| PUSH     | 1 1 0 0 0 1 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Pushes the value onto the stack.                               |
+| PUSH     | 1 1 0 0 0 1 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Push value 'V' onto stack.                                     |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| INVK     | 1 1 0 0 1 0 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Invoke external procedure with ID 'V'.                         |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Mnemonic | Opcode      | Result Size     | Arguments Size                      | Description                                                  |
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -473,29 +476,29 @@ typedef enum
     OPCODE_POP      = GEN_OPCODE(0x1c), // POP  reg     ->  *reg = stack.pop()
     OPCODE_INC      = GEN_OPCODE(0x1d), // INC  reg     ->  ++*reg
     OPCODE_DEC      = GEN_OPCODE(0x1e), // DEV  reg     ->  --*reg
-    //Unused        = GEN_OPCODE(0x1f),
+    //Reserved      = GEN_OPCODE(0x1f),
 }
 opcode_reg1;
 
 typedef enum
 {
-    OPCODE_JMP      = GEN_OPCODE(0x20), // JMP  addr  -> goto addr
-    OPCODE_JE       = GEN_OPCODE(0x21), // JE   addr  -> if (REG_CF == 0) then goto addr
-    OPCODE_JNE      = GEN_OPCODE(0x22), // JNE  addr  -> if (REG_CF != 0) then goto addr
-    OPCODE_JG       = GEN_OPCODE(0x23), // JG   addr  -> if (REG_CF  > 0) then goto addr
-    OPCODE_JL       = GEN_OPCODE(0x24), // JL   addr  -> if (REG_CF  < 0) then goto addr
-    OPCODE_JGE      = GEN_OPCODE(0x25), // JGE  addr  -> if (REG_CF >= 0) then goto addr
-    OPCODE_JLE      = GEN_OPCODE(0x26), // JLE  addr  -> if (REG_CF <= 0) then goto addr
-    OPCODE_CALL     = GEN_OPCODE(0x27), // CALL addr  -> PUSH pc ; PUSH lb ; JMP addr
+    OPCODE_JMP      = GEN_OPCODE(0x20), // JMP  addr    -> goto addr
+    OPCODE_JE       = GEN_OPCODE(0x21), // JE   addr    -> if (REG_CF == 0) then goto addr
+    OPCODE_JNE      = GEN_OPCODE(0x22), // JNE  addr    -> if (REG_CF != 0) then goto addr
+    OPCODE_JG       = GEN_OPCODE(0x23), // JG   addr    -> if (REG_CF  > 0) then goto addr
+    OPCODE_JL       = GEN_OPCODE(0x24), // JL   addr    -> if (REG_CF  < 0) then goto addr
+    OPCODE_JGE      = GEN_OPCODE(0x25), // JGE  addr    -> if (REG_CF >= 0) then goto addr
+    OPCODE_JLE      = GEN_OPCODE(0x26), // JLE  addr    -> if (REG_CF <= 0) then goto addr
+    OPCODE_CALL     = GEN_OPCODE(0x27), // CALL addr    -> PUSH pc ; PUSH lb ; MOV lb, sp ; JMP addr
     /*
-    Unused          = GEN_OPCODE(0x28),
-    Unused          = GEN_OPCODE(0x29),
-    Unused          = GEN_OPCODE(0x2a),
-    Unused          = GEN_OPCODE(0x2b),
-    Unused          = GEN_OPCODE(0x2c),
-    Unused          = GEN_OPCODE(0x2d),
-    Unused          = GEN_OPCODE(0x2e),
-    Unused          = GEN_OPCODE(0x2f),
+    Reserved        = GEN_OPCODE(0x28),
+    Reserved        = GEN_OPCODE(0x29),
+    Reserved        = GEN_OPCODE(0x2a),
+    Reserved        = GEN_OPCODE(0x2b),
+    Reserved        = GEN_OPCODE(0x2c),
+    Reserved        = GEN_OPCODE(0x2d),
+    Reserved        = GEN_OPCODE(0x2e),
+    Reserved        = GEN_OPCODE(0x2f),
     */
 }
 opcode_jump;
@@ -504,14 +507,14 @@ typedef enum
 {
     OPCODE_STOP     = GEN_OPCODE(0x00), // STOP          ->  exit(0)
     OPCODE_RET      = GEN_OPCODE(0x30), // RET  (c0) c1  ->  return
-    OPCODE_PUSHC    = GEN_OPCODE(0x31), // PUSH c        ->  stack.push(c)
+    OPCODE_PUSHC    = GEN_OPCODE(0x31), // PUSH value    ->  stack.push(value)
+    OPCODE_INVK     = GEN_OPCODE(0x32), // INVK addr     ->  invoke external procedure (no jump, no stack change)
     /*
-    Unused          = GEN_OPCODE(0x32),
-    Unused          = GEN_OPCODE(0x33),
-    Unused          = GEN_OPCODE(0x34),
-    Unused          = GEN_OPCODE(0x35),
-    Unused          = GEN_OPCODE(0x36),
-    Unused          = GEN_OPCODE(0x37),
+    Reserved        = GEN_OPCODE(0x33),
+    Reserved        = GEN_OPCODE(0x34),
+    Reserved        = GEN_OPCODE(0x35),
+    Reserved        = GEN_OPCODE(0x36),
+    Reserved        = GEN_OPCODE(0x37),
     */
 }
 opcode_special;
@@ -519,9 +522,9 @@ opcode_special;
 typedef enum
 {
     OPCODE_LDB      = GEN_OPCODE(0x38), // LDB reg0, addr  ->  *reg0 = programDataSectionByteAligned[addr]
-    //Unused        = GEN_OPCODE(0x39),
+    //Reserved      = GEN_OPCODE(0x39),
     OPCODE_LDW      = GEN_OPCODE(0x3a), // STB reg0, addr  ->  *reg0 = programDataSectionWorldAligned[addr]
-    //Unused        = GEN_OPCODE(0x3b),
+    //Reserved      = GEN_OPCODE(0x3b),
 }
 opcode_mem;
 
@@ -1099,6 +1102,21 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
             break;
     }
 }
+
+/**
+"Invoke extern" procedure signature.
+\param[in] proc_id Specifies the external procedure which is to be invoked.
+\param[in] stack_ptr Pointer to the current stack frame.
+THe first parameter can be accessed with (stack_ptr - 1), the second with (stack_ptr - 2) etc. (from left-to-right).
+*/
+typedef void (*XVM_INVOKE_EXTERN_PROC)(unsigned int proc_id, stack_word_t* stack_ptr);
+
+void xvm_invoke_extern_dummy(unsigned int proc_id, stack_word_t* stack_ptr)
+{
+    /* Dummy */
+}
+
+XVM_INVOKE_EXTERN_PROC xvm_invoke_extern = (&xvm_invoke_extern_dummy);
 
 /**
 Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Virtual Machine).
@@ -1702,6 +1720,13 @@ static xvm_exit_codes xvm_execute_program(
             }
             break;
 
+            case OPCODE_INVK:
+            {
+                unsgn_value = instr_get_value26(instr);
+                xvm_invoke_extern(unsgn_value, REG_TO_STACK_PTR(reg_sp));
+            }
+            break;
+
             default:
                 // Unknown opcode -> return with error
                 return EXITCODE_INVALID_OPCODE;
@@ -1838,6 +1863,24 @@ static int shell_parse_args(int argc, char* argv[])
 
 /* ----- Main ----- */
 
+typedef enum
+{
+    TESTPROCID_PRINT,
+    TESTPROCID_PRINTLN,
+    TESTPROCID_PRINTINT,
+}
+TestInvokeProcIDs;
+
+void TestInvokeExtern(unsigned int proc_id, stack_word_t* stack_ptr)
+{
+    switch (proc_id)
+    {
+        case TESTPROCID_PRINTINT:
+            printf("%i", GET_PARAM_FROM_STACK(stack_ptr, 1));
+            break;
+    }
+}
+
 int main(int argc, char* argv[])
 {
     // Ignore program path argument, then parse all other arguments
@@ -1919,6 +1962,11 @@ int main(int argc, char* argv[])
     15          ret (1) 1       ; return result ((x*x) = 1 word) and pop arguments (x = 1 word)
     */
 
+    /*ADD_INSTR(instr_make_special1   (OPCODE_PUSHC,25                                ))
+    ADD_INSTR(instr_make_special1   (OPCODE_INVK, TESTPROCID_PRINTINT               ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_SUB1, REG_SP, 4                         ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JMP,  REG_PC, -3                        ))*/
+
     ADD_INSTR(instr_make_reg1       (OPCODE_ADD1, REG_SP, 8                         ))
     ADD_INSTR(instr_make_reg2       (OPCODE_XOR2, REG_I0, REG_I0, 0                 ))
     ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_I1, 10                        ))
@@ -1941,6 +1989,8 @@ int main(int argc, char* argv[])
     #undef ADD_INSTR
 
     // Execute the virtual program
+    xvm_invoke_extern = (&TestInvokeExtern);
+
     const xvm_exit_codes exitCode = xvm_execute_program(&byte_code, &stack, NULL);
 
     if (exitCode != EXITCODE_SUCCESS)
