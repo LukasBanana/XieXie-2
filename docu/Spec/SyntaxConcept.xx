@@ -1,48 +1,46 @@
 
 extern class String {
 	
-	extern init()
-	extern init(String other)
+	init()
+	init(String other)
 	
-	extern String Left(int len)
-	extern String Right(int len)
-	extern String SubString(int pos, int len)
+	String Left(int len)
+	String Right(int len)
+	String SubString(int pos, int len)
 	
-	extern int Get(int pos)
-	extern void Set(int pos, int character)
+	int Get(int pos)
+	void Set(int pos, int character)
 	
-	extern int Size()
+	int Size()
 	
-	extern String Append(String other)
+	String Append(String other)
 	
-	extern String LCase()
-	extern String UCase()
+	String LCase()
+	String UCase()
 	
 }
 
 extern class Timer {
 	
 	[[deprecated("Use \"foo bar\" instead")]]
-	extern static float ElapsedTime()
+	static float ElapsedTime()
 	
-	extern static float CurrentTime()
+	static float CurrentTime()
 	
-	extern static String Date()
+	static String Date()
 	
 }
 
 extern class Log {
 	
-	extern static void Write(String text)
-	extern static void WriteLine(String text)
+	static void Write(String text)
+	static void WriteLine(String text)
 	
 }
 
 class Mouse {
 	
 	public:
-		
-		release { /* dummy */ }
 		
 		/*
 		static Mouse@ instance {
@@ -69,6 +67,94 @@ class Mouse {
 		
 		init() { /* dummy */ }
 		
+}
+
+extern class Math {
+	
+	static float Sqrt(float x)
+	
+	static float Sin(float x)
+	static float Cos(float x)
+	static float Tan(float x)
+	
+	static float ASin(float x)
+	static float ACos(float x)
+	static float ATan(float x)
+	
+}
+
+class Vector3 {
+	
+	init() {
+	}
+	init(float x, float y, float z) {
+		this.x := x
+		this.y := y
+		this.z := z
+	}
+	
+	float Length() {
+		return Math.Sqrt(x*x + y*y + z*z);
+	}
+	
+	Vector3 Normalize() {
+		float invLength := 1.0 / Length()
+		
+		x *= invLength
+		y *= invLength
+		z *= invLength
+		
+		return this
+	}
+	
+	Vector3 Add(Vector3 other) {
+		x += other.x
+		y += other.y
+		z += other.z
+		return this
+	}
+	
+	Vector3 Sub(Vector3 other) {
+		x -= other.x
+		y -= other.y
+		z -= other.z
+		return this
+	}
+	
+	float x, y, z
+	
+}
+
+class Vehicle {
+	
+	enum Types {
+		__Unspecified__
+		Car,
+		MotorCycle
+	}
+	
+	String name
+	
+	Types Type() {
+		return Types.__Unspecified__
+	}
+	
+	int NumWheels() {
+		return 0
+	}
+	
+}
+
+class Car : Vehicle {
+	
+	Types Type() {
+		return Types.Car
+	}
+	
+	int NumWheels() {
+		return 4
+	}
+	
 }
 
 class AppTest {
@@ -121,7 +207,7 @@ class AppTest {
 		const int const_x := 42
 		
 		// Arrays
-		int[][] arrayList := new int[2][]
+		int[][] arrayList := new int[][2]
 		
 		arrayList[0] := new int[2]
 		arrayList[0][0] := 1
@@ -133,6 +219,15 @@ class AppTest {
 		
 		// Strings
 		String s = new String()
+		
+		// Objects
+		Mouse mouse := Mouse.GetInstance()
+		
+		Vector3[] vertices := new Vector3[100]
+		
+		foreach Vector3 vert : vertices {
+			vert.x := 
+		}
 		
 		// Switch/case
 		switch a {
