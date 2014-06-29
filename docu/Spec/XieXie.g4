@@ -16,7 +16,7 @@ decl_stmnt_list: 		decl_stmnt+;
 extern_decl_stmnt_list:	extern_decl_stmnt+;
 class_decl_stmnt_list:	class_decl_stmnt+;
 
-stmnt	: decl_stmnt
+stmnt	: variable_decl_stmnt
 		| branch_stmnt
 		| loop_stmnt
 		| assign_stmnt
@@ -52,9 +52,9 @@ assign_stmnt	: copy_assign_stmnt
 				| post_operator_stmnt;
 
 // ASSIGN STATEMENTS
-copy_assign_stmnt:		variable_ident ':=' expr;
-modify_assign_stmnt:	variable_ident ('+=' | '-=' | '*=' | '/=' | '%=' | '<<=' | '>>=' | '|=' | '&=' | '^=') expr;
-post_operator_stmnt:	variable_ident ('++' | '--');
+copy_assign_stmnt:		variable_name ':=' expr;
+modify_assign_stmnt:	variable_name ('+=' | '-=' | '*=' | '/=' | '%=' | '<<=' | '>>=' | '|=' | '&=' | '^=') expr;
+post_operator_stmnt:	variable_name ('++' | '--');
 
 // BRANCH STATEMENTS
 if_stmnt:		'if' if_condition code_block else_stmnt?;
@@ -75,19 +75,19 @@ continue_stmnt:	'continue';
 return_stmnt:	'return' expr?;
 
 // PATTERNS
-pattern	: expr_pattern
-		| enum_case_pattern;
+pattern				: expr_pattern
+					| enum_case_pattern;
 
-expr_pattern: 		expr;
+expr_pattern: 		arithmetic_expr;
 
-enum_case_pattern:	(variable_ident '.')? enum_case_name;
+enum_case_pattern:	(variable_name '.')? enum_case_name;
 enum_case_name:		IDENT;
 
 // LOOP STATEMENTS
-for_stmnt:			'for' for_init? ';' expr? ';' assign_stmnt? code_block;
+for_stmnt:			'for' for_init? ';' arithmetic_expr? ';' assign_stmnt? code_block;
 for_each_stmnt:		'foreach' for_each_init ':' expr code_block;
 for_ever_stmnt:		'forever' code_block;
-for_range_stmnt:	'for' variable_name ':' for_range '..' for_range ('->' for_range)? code_block;
+for_range_stmnt:	'for' variable_ident ':' for_range '..' for_range ('->' for_range)? code_block;
 while_stmnt:		'while' expr code_block;
 do_while_stmnt:		'do' code_block 'while' expr;
 
@@ -99,15 +99,20 @@ for_range:		INT_LITERAL;
 attribute_prefix:			'[[' attribute_list ']]';
 attribute_list:				attribute (',' attribute)+;
 attribute:					IDENT ('(' attribute_argument_list ')')?;
-attribute_argument_list:	attribute_argument (',' attribute_argument)+;
+attribute_argument_list:	attribute_argument (',' attribute_argument)*;
 attribute_argument:			expr;
 
 // VARIABLES
-variable_ident:		variable_name ('.' variable_name)*;
-variable_name:		IDENT;
+variable_name:		variable_ident array_access_list? ('.' variable_name)?;
+variable_ident:		IDENT;
 
 variable_decl_stmnt:	type_denoter IDENT variable_init?;
 variable_init:			':=' expr;
+
+// ARRAYS
+array_access_list:	array_access_list+;
+array_access:		'[' array_index ']';
+array_index:		arithmetic_expr;
 
 // CLASSES
 class_decl_stmnt:			intern_class_decl_stmnt | extern_class_decl_stmnt;
@@ -117,18 +122,18 @@ class_body:					'{' decl_stmnt_list? '}';
 extern_class_body:			'{' extern_decl_stmnt_list? '}';
 class_name:					IDENT;
 
-type_inheritance:		':' variable_ident;
-type_multi_inheritance:	':' variable_ident (',' variable_ident)*;
+type_inheritance:		':' variable_name;
+type_multi_inheritance:	':' variable_name (',' variable_name)*;
 
 // ENUMERATIONS
-enum_decl_stmnt:	'enum' variable_name enum_body;
+enum_decl_stmnt:	'enum' variable_ident enum_body;
 enum_body:			'{' enum_entry_list? '}';
 enum_entry_list:	enum_entry (',' enum_entry)*;
 enum_entry:			enum_entry_name (':=' expr)?;
 enum_entry_name:	IDENT;
 
 // FLAGS
-flags_decl_stmnt:	'flags' variable_name type_multi_inheritance? flags_body;
+flags_decl_stmnt:	'flags' variable_ident type_multi_inheritance? flags_body;
 flags_body:			'{' flags_entry_list? '}';
 flags_entry_list:	flags_entry (',' flags_entry)*;
 flags_entry:		IDENT;
@@ -136,10 +141,10 @@ flags_entry:		IDENT;
 // FUNCTIONS
 function_decl_stmnt:		attribute_prefix? function_head code_block;
 extern_function_decl_stmnt:	attribute_prefix? 'extern' function_head;
-function_head:				function_modifier? type_denoter variable_name '(' parameter_list? ')';
+function_head:				function_modifier? type_denoter variable_ident '(' parameter_list? ')';
 function_modifier:			'static';
 parameter_list:				parameter (',' parameter)*;
-parameter:					type_denoter variable_name (':=' expr)?;
+parameter:					type_denoter variable_ident (':=' expr)?;
 
 // EXPRESSIONS
 expr_list:	expr (',' expr)*;
@@ -162,26 +167,30 @@ add_expr:			sub_expr ('+' sub_expr)*;
 sub_expr:			mul_expr ('-' mul_expr)*;
 mul_expr:			div_expr ('*' div_expr)*;
 div_expr:			value_expr (('/' | '%') value_expr)*;
-value_expr:			literal_expr | bracket_expr | cast_expr | call_expr | unary_expr;
+value_expr:			literal_expr | object_expr | bracket_expr | cast_expr | call_expr | unary_expr;
 literal_expr:		LITERAL;
+object_expr:		variable_name;
 bracket_expr:		'(' arithmetic_expr ')';
 cast_expr: 			'(' type_denoter ')' value_expr;
 call_expr:			function_call;
 unary_expr:			('~' | '-' | 'not') value_expr;
 
-function_call:	variable_ident '(' argument_list? ')';
+function_call:	variable_name '(' argument_list? ')';
 argument_list:	argument (',' argument)*;
-argument:		(expr | variable_name ':' expr);
+argument:		(expr | variable_ident ':' expr);
 
 // TYPE DENOTERS
 type_denoter	: buildin_type_denoter
-				| custom_type_denoter;
+				| array_type_denoter
+				| class_type_denoter;
 
 buildin_type_denoter	: BOOL_TYPE_DENOTER
 						| INT_TYPE_DENOTER
 						| FLOAT_TYPE_DENOTER;
 
-custom_type_denoter:	variable_ident;
+array_type_denoter:		type_denoter '[]'
+
+class_type_denoter:		variable_name;
 
 BOOL_TYPE_DENOTER:		'bool';
 INT_TYPE_DENOTER:		'int';

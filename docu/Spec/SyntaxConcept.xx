@@ -31,6 +31,13 @@ extern class Timer {
 	
 }
 
+extern class Log {
+	
+	extern static void Write(String text)
+	extern static void WriteLine(String text)
+	
+}
+
 class Mouse {
 	
 	public:
@@ -71,35 +78,37 @@ class AppTest {
 	int Main(String[] args) {
 		int result := 3
 	
+		// For loops
 		foreach String arg : args {
 			if x > y > z or ( y = 3 and z = 4 ) {
-				IO.Log.Write("A")
+				Log.Write("A")
 			} else if arg.Size() > 10 {
-				IO.Log.Write("B")
+				Log.Write("B")
 			} else {
-				IO.Log.Write("C")
+				Log.Write("C")
 			}
 		}
 		
 		foreach int i : { 1, 2, 3, 4, 5 } {
-			IO.Log.Write(i + ", ")
+			Log.Write(i + ", ")
 		}
 		
 		foreach int[] list : { { 1, 2, 3 }, { -4, 2 }, { 9, 8, 0, 0, 1 } } {
-			IO.Log.WriteLine("New List: ")
+			Log.WriteLine("New List: ")
 			foreach int i : list {
-				IO.Log.Write(i + ", ")
+				Log.Write(i + ", ")
 			}
 		}
 
-		for int i := 0; i < 10; i++ {
-			IO.Log.WriteLine("Hello, World")
+		for int i := 0; i < num; i++ {
+			Log.WriteLine("Hello, World")
 		}
 		
-		for int i : num .. 1 -> 2 {
-			IO.Log.WriteLine("Hello, World")
+		for int i : 10 .. 1 -> 2 {
+			Log.WriteLine("Hello, World")
 		}
 		
+		// Boolean expressions
 		int a, b, c
 		
 		bool b0 := a > b > c
@@ -108,9 +117,34 @@ class AppTest {
 		bool b2 := (a = b = c) = b1
 		bool b3 := (a = b and b = c) = b1
 		
+		// Constants
 		const int const_x := 42
 		
+		// Arrays
+		int[][] arrayList := new int[2][]
+		
+		arrayList[0] := new int[2]
+		arrayList[0][0] := 1
+		arrayList[0][1] := 2
+		
+		arrayList[1] := new int[2]
+		arrayList[1][0] := 3
+		arrayList[1][1] := 4
+		
+		// Strings
 		String s = new String()
+		
+		// Switch/case
+		switch a {
+			case 25, 42, 9:
+				Log.WriteLine("1st case")
+				
+			case -6:
+				Log.WriteLine("2nd case")
+			
+			default:
+				Log.WriteLine("default case")
+		}
 
 		return result
 	}
