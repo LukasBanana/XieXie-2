@@ -1707,7 +1707,7 @@ static xvm_exit_codes xvm_execute_program(
                 *reg_pc = (regi_t)(stack_frame_ptr[1]);
 
                 // Move result memory
-                if (extra_value > 0)
+                if (extra_value > 0 && unsgn_value > 0)
                     memcpy(stack_args_ptr, stack_result_ptr, sizeof(stack_word_t) * extra_value);
             }
             // Don't 'continue' -> pc has old value and must be increased for the next instruction!
@@ -1947,19 +1947,20 @@ int main(int argc, char* argv[])
     00  main:   add sp, 8       ; int i, n
     01          xor i0, i0      ; i = 0
     02          mov i1, 10      ; n = 10
-    03  .for0:  cmp i0, i1
+    03  .for0:  cmp i0, i1      ; compare i >= n
     04          jge .end0       ; if i >= n then goto l_end ; jge (pc) 7
     05          stw i0 (lb) 0   ; store i
-    06          push i0
-    07          call func       ; Stack.Push(func(i)) (actually 'pop i0' after call, but we keep it on stack) ; call (pc) 5
-    08          ldw i0, (lb) 0  ; load i
-    09          inc i0          ; i++
-    10          jmp .for0       ; jmp (pc) -7
-    11  .end0:  stop            ; exit
-    12  func:   ldw i0, (lb) -4 ; load x
-    13          mul i0, i0      ; x *= x
-    14          push i0
-    15          ret (1) 1       ; return result ((x*x) = 1 word) and pop arguments (x = 1 word)
+    06          add i0, 2       ; i += 2
+    07          push i0         ; push i
+    08          call func       ; Stack.Push(func(i)) (actually 'pop i0' after call, but we keep it on stack) ; call (pc) 5
+    09          ldw i0, (lb) 0  ; load i
+    10          inc i0          ; i++
+    11          jmp .for0       ; jmp (pc) -7
+    12  .end0:  stop            ; exit
+    13  func:   ldw i0, (lb) -4 ; load x
+    14          mul i0, i0      ; x *= x
+    15          push i0         ; push x
+    16          ret (1) 1       ; return result ((x*x) = 1 word) and pop arguments (x = 1 word)
     */
 
     /*ADD_INSTR(instr_make_special1   (OPCODE_PUSHC,25                                ))
@@ -1969,15 +1970,16 @@ int main(int argc, char* argv[])
 
     ADD_INSTR(instr_make_reg1       (OPCODE_ADD1, REG_SP, 8                         ))
     ADD_INSTR(instr_make_reg2       (OPCODE_XOR2, REG_I0, REG_I0, 0                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_I1, 10                        ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_I1, 20                        ))
     ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_I0, REG_I1, 0                 ))
-    ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 7                         ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 8                         ))
     ADD_INSTR(instr_make_memoff     (OPCODE_STWO, REG_I0, REG_LB, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_ADD1, REG_I0, 2                         ))
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_I0, 0                         ))
     ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, 5                         ))
     ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_I0, REG_LB, 0                 ))
     ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_I0, 0                         ))
-    ADD_INSTR(instr_make_jump       (OPCODE_JMP,  REG_PC, -7                        ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JMP,  REG_PC, -8                        ))
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                                 ))
     ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_I0, REG_LB, (unsigned int)(-4)))
     ADD_INSTR(instr_make_reg2       (OPCODE_MUL2, REG_I0, REG_I0, 0                 ))
@@ -1998,7 +2000,7 @@ int main(int argc, char* argv[])
 
     // Show stack output for the 20th first values
     log_println("-- Stack content: --");
-    xvm_stack_debug(&stack, 2, 10);
+    xvm_stack_debug(&stack, 2, 20);
 
     xvm_stack_free(&stack);
     xvm_bytecode_free(&byte_code);
