@@ -360,8 +360,9 @@ FLOATS are 32 bits wide.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | JLE      | 1 0 0 1 1 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if less or equal.                                       |
 -------------------------------------------------------------------------------------------------------------------------------------------------
-| CALL     | 1 0 0 1 1 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Calls the routine at the address, stored in the register 'S' |
-|          |             |         |                                             | + the offset 'O', and pushes 'lb' and 'pc' onto the stack.   |
+|          |             |         |                                             | Push the dynamic link ('lb' and 'pc' register) onto stack.   |
+| CALL     | 1 0 0 1 1 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Set 'lb' register to new stack frame.                        |
+|          |             |         |                                             | Jump to address, stored in register 'S' + offset 'O'.        |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -414,11 +415,11 @@ FLOATS are 32 bits wide.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 |          | 31.......26 | 25...........18 | 17................................0 |                                                              |
 -------------------------------------------------------------------------------------------------------------------------------------------------
-| RET      | 1 1 0 0 0 0 | R R R R R R R R | A A A A A A A A A A A A A A A A A A | Pops R words from the stack and buffers them.                |
-|          |             |                 |                                     | Pops the current stack frame.                                |
-|          |             |                 |                                     | Pops A words from the stack.                                 |
-|          |             |                 |                                     | Pushes the R words back onto the stack.                      |
-|          |             |                 |                                     | Restores the 'lb' and 'pc' registers.                        |
+|          |             |                 |                                     | Pop R words from the stack and buffers them.                 |
+|          |             |                 |                                     | Pop the current stack frame.                                 |
+| RET      | 1 1 0 0 0 0 | R R R R R R R R | A A A A A A A A A A A A A A A A A A | Pop A words from the stack.                                  |
+|          |             |                 |                                     | Push the R words back onto the stack.                        |
+|          |             |                 |                                     | Restore the 'lb' and 'pc' registers.                         |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 */
@@ -472,6 +473,7 @@ typedef enum
     OPCODE_POP      = GEN_OPCODE(0x1c), // POP  reg     ->  *reg = stack.pop()
     OPCODE_INC      = GEN_OPCODE(0x1d), // INC  reg     ->  ++*reg
     OPCODE_DEC      = GEN_OPCODE(0x1e), // DEV  reg     ->  --*reg
+    //Unused        = GEN_OPCODE(0x1f),
 }
 opcode_reg1;
 
@@ -500,6 +502,22 @@ opcode_jump;
 
 typedef enum
 {
+    OPCODE_STOP     = GEN_OPCODE(0x00), // STOP          ->  exit(0)
+    OPCODE_RET      = GEN_OPCODE(0x30), // RET  (c0) c1  ->  return
+    OPCODE_PUSHC    = GEN_OPCODE(0x31), // PUSH c        ->  stack.push(c)
+    /*
+    Unused          = GEN_OPCODE(0x32),
+    Unused          = GEN_OPCODE(0x33),
+    Unused          = GEN_OPCODE(0x34),
+    Unused          = GEN_OPCODE(0x35),
+    Unused          = GEN_OPCODE(0x36),
+    Unused          = GEN_OPCODE(0x37),
+    */
+}
+opcode_special;
+
+typedef enum
+{
     OPCODE_LDB      = GEN_OPCODE(0x38), // LDB reg0, addr  ->  *reg0 = programDataSectionByteAligned[addr]
     //Unused        = GEN_OPCODE(0x39),
     OPCODE_LDW      = GEN_OPCODE(0x3a), // STB reg0, addr  ->  *reg0 = programDataSectionWorldAligned[addr]
@@ -515,22 +533,6 @@ typedef enum
     OPCODE_STWO     = GEN_OPCODE(0x3f), // STW reg0, (reg1) c  ->  dynamicMemoryWordAligned[*reg1 + c] = *reg0
 }
 opcode_memoff;
-
-typedef enum
-{
-    OPCODE_STOP     = GEN_OPCODE(0x00), // STOP          ->  exit(0)
-    OPCODE_RET      = GEN_OPCODE(0x30), // RET  (c0) c1  ->  return
-    OPCODE_PUSHC    = GEN_OPCODE(0x31), // PUSH c        ->  stack.push(c)
-    /*
-    Unused          = GEN_OPCODE(0x32),
-    Unused          = GEN_OPCODE(0x33),
-    Unused          = GEN_OPCODE(0x34),
-    Unused          = GEN_OPCODE(0x35),
-    Unused          = GEN_OPCODE(0x36),
-    Unused          = GEN_OPCODE(0x37),
-    */
-}
-opcode_special;
 
 
 /* ----- Virtual machine exit codes ----- */
