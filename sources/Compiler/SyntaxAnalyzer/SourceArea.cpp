@@ -15,6 +15,11 @@ namespace SyntacticAnalyzer
 
 const SourceArea SourceArea::ignore;
 
+SourceArea::SourceArea(const SourcePosition& pos) :
+    start( pos ),
+    end  ( pos )
+{
+}
 SourceArea::SourceArea(const SourcePosition& startPos, const SourcePosition& endPos) :
     start( startPos ),
     end  ( endPops  )
@@ -29,6 +34,11 @@ std::string SourceArea::ToString() const
 bool SourceArea::IsValid() const
 {
     return start <= end;
+}
+
+bool SourceArea::IsMultiLine() const
+{
+    return start.GetRow() != end.GetRow();
 }
 
 

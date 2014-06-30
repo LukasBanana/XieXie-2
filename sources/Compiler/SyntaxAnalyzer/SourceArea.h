@@ -26,6 +26,7 @@ class SourceArea
     public:
         
         SourceArea() = default;
+        SourceArea(const SourcePosition& pos);
         SourceArea(const SourcePosition& startPos, const SourcePosition& endPos);
 
         /**
@@ -36,6 +37,9 @@ class SourceArea
 
         //! Returns ture if this is a valid source position. False if start-position > end-position.
         bool IsValid() const;
+
+        //! Returns true if this area spreads over multiple lines.
+        bool IsMultiLine() const;
 
         //! Start- and end source positions.
         SourcePosition start, end;

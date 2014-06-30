@@ -52,46 +52,29 @@ class AST : public std::enable_shared_from_this<AST>
         Virutal visitor function.
         \param[in] visitor Pass a code-generation- or contex-analysis visitor.
         */
-        virtual void Visit(Visitor* visitor, void* args = nullptr)
+        virtual void Visit(Visitor* visitor, void* args = nullptr) = 0;
+
+        //! Refreshes for some AST nodes the source area (e.g. for all lists).
+        virtual void RefreshSourceArea()
         {
-            // Dummy
+            /* Dummy */
         }
 
-        //! Views debugging information with recursive node calls.
-        virtual void PrintAST()
-        {
-            // Dummy
-        }
-
-        inline const SourceArea& GetSourceArea() const
-        {
-            return sourceArea_;
-        }
+        //! Area in the source code of this AST node.
+        SourceArea sourceArea;
 
     protected:
 
-        AST(const SourcePosition& sourcePos) :
-            sourceArea_(sourcePos)
+        AST() = default;
+        AST(const SourceArea& area) :
+            sourceArea( area )
         {
-        }
-        AST(const SourceArea& sourceArea) :
-            sourceArea_(sourceArea)
-        {
-        }
-
-        void Deb(const std::string &Str)
-        {
-            Console::Message(Str);
         }
 
         template <typename T> inline std::shared_ptr<T> ThisPtr()
         {
             return std::dynamic_pointer_cast<T>(shared_from_this());
         }
-
-    private:
-        
-        SourceArea sourceArea_; //!< Start and end position in the source code.
 
 };
 
