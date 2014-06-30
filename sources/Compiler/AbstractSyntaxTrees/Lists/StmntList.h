@@ -1,12 +1,12 @@
 /*
- * Statement AST header
+ * Statement list AST header
  * 
  * This file is part of the "XieXie-Compiler" (Copyright (c) 2013 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_STATEMENT_H__
-#define __XX_AST_STATEMENT_H__
+#ifndef __XX_AST_STATEMENT_LIST_H__
+#define __XX_AST_STATEMENT_LIST_H__
 
 
 #include "AST.h"
@@ -21,6 +21,8 @@ class StmntList : public AST
     
     public:
         
+        DefineASTVisitProc(StmntList);
+
         void RefreshSourceArea()
         {
             if (!statements.empty())
