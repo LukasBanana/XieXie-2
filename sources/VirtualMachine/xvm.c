@@ -3,7 +3,7 @@
  * 
  * Copyright (c) 2014 by Lukas Hermanns
  * 
- * This file has a separated license than the "XieXie2-Compiler" project.
+ * This file has a separated license than the "XieXie-Compiler" project.
  * It is licensed unter the terms of the GNU LESSER GENERAL PUBLIC LICENSE (LGPL) Version 3.
  */
 
