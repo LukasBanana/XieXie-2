@@ -1,5 +1,5 @@
 /*
- * String modification file
+ * Source position file
  * 
  * This file is part of the "XieXie-Compiler" (Copyright (c) 2013 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -23,7 +23,7 @@ SourcePosition::SourcePosition(unsigned int row, unsigned int column) :
 
 std::string SourcePosition::ToString() const
 {
-    return "(" + ToStr(row_) + ":" + ToStr(column_) + ")";
+    return ToStr(row_) + ":" + ToStr(column_);
 }
 
 void SourcePosition::IncRow()

@@ -25,7 +25,7 @@ class SourcePosition
         SourcePosition() = default;
         SourcePosition(unsigned int row, unsigned int column);
 
-        //! Returns the source position as string, e.g. "(75:10)".
+        //! Returns the source position as string in the format "Row:Column", e.g. "75:10".
         std::string ToString() const;
 
         void IncRow();
@@ -45,6 +45,7 @@ class SourcePosition
             return column_;
         }
 
+        //! Invalid source position.
         static const SourcePosition ignore;
 
     private:
@@ -54,38 +55,34 @@ class SourcePosition
 };
 
 
-/*
- * Operators
- */
-
-inline bool operator == (const SourcePosition& Left, const SourcePosition& Right)
+inline bool operator == (const SourcePosition& left, const SourcePosition& right)
 {
-    return Left.Row() == Right.Row() && Left.Column() == Right.Column();
+    return left.GetRow() == right.GetRow() && left.GetColumn() == right.GetColumn();
 }
 
-inline bool operator != (const SourcePosition& Left, const SourcePosition& Right)
+inline bool operator != (const SourcePosition& left, const SourcePosition& right)
 {
-    return !(Left == Right);
+    return !(left == right);
 }
 
-inline bool operator < (const SourcePosition& Left, const SourcePosition& Right)
+inline bool operator < (const SourcePosition& left, const SourcePosition& right)
 {
-    return Left.Row() < Right.Row() || ( Left.Row() == Right.Row() && Left.Column() < Right.Column() );
+    return left.GetRow() < right.GetRow() || ( left.GetRow() == right.GetRow() && left.GetColumn() < right.GetColumn() );
 }
 
-inline bool operator > (const SourcePosition& Left, const SourcePosition& Right)
+inline bool operator > (const SourcePosition& left, const SourcePosition& right)
 {
-    return Left.Row() > Right.Row() || ( Left.Row() == Right.Row() && Left.Column() > Right.Column() );
+    return left.GetRow() > right.GetRow() || ( left.GetRow() == right.GetRow() && left.GetColumn() > right.GetColumn() );
 }
 
-inline bool operator <= (const SourcePosition& Left, const SourcePosition& Right)
+inline bool operator <= (const SourcePosition& left, const SourcePosition& right)
 {
-    return Left < Right || Left == Right;
+    return left < right || left == right;
 }
 
-inline bool operator >= (const SourcePosition& Left, const SourcePosition& Right)
+inline bool operator >= (const SourcePosition& left, const SourcePosition& right)
 {
-    return Left > Right || Left == Right;
+    return left > right || left == right;
 }
 
 
