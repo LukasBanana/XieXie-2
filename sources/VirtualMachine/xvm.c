@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <setjmp.h>
 #include <string.h>
+#include <math.h>
 
 
 /* ----- Compilation configuration ----- */
@@ -56,6 +57,9 @@ typedef int             word_t;
 #define NUM_REGISTERS               16
 #define REG_TO_STACK_PTR(r)         ((stack_word_t*)(*(r)))
 #define GET_PARAM_FROM_STACK(p, i)  (*((p) - (i)))
+
+#define FLT_TO_INT_REINTERPRET(x)   (*((int*)(&x)))
+#define INT_TO_FLT_REINTERPRET(x)   (*((float*)(&x)))
 
 /*
 All registers can be used for integral and floating-point data.
@@ -942,6 +946,15 @@ static void xvm_stack_debug_float(xvm_stack* stack, size_t first_entry, size_t n
 
 /* ----- Intrinsics ----- */
 
+/*
+
+Calling convention:
+- CALLER pushes all arguments from RIGHT-to-LEFT onto stack.
+- CALLEE pops all arguments from the stack.
+- CALLEE pushes result onto stack.
+
+*/
+
 typedef enum
 {
     INTR_RESERVED       = 0x001fff00, // Start address of reserved primitive procedures.
@@ -962,8 +975,8 @@ typedef enum
     INTR_INPUT_FLOAT    = 0x001fff27, // float InputFloat();
 
     /* --- Conditional intrinsics --- */
-    // Only for XieXie 1.0 compatibility, don't use them for performance seasons.
-    // Make use of CMP instruction and conditional jump instructions (see 'opcode_jump' enumeration).
+    // For easier expression evaluation.
+    // For better performance, make use of conditional jump instructions instead.
     INTR_CMP_E          = 0x001fff30,
     INTR_CMP_NE         = 0x001fff31,
     INTR_CMP_L          = 0x001fff32,
@@ -991,16 +1004,14 @@ typedef enum
     INTR_READ_FLOAT     = 0x001fff4d, // void ReadFloat(const void* fileHandle, void* memoryAddress).
 
     /* --- Math intrinsics --- */
-    // Use every 2nd address to allow extension when
-    // double precision floating points are supported in future.
     INTR_SIN            = 0x001fff80, // float Sin(float x).
-    INTR_COS            = 0x001fff82, // float Cos(float x).
-    INTR_TAN            = 0x001fff84, // float Tan(float x).
-    INTR_ASIN           = 0x001fff86, // float ASin(float x).
-    INTR_ACOS           = 0x001fff88, // float ACos(float x).
-    INTR_ATAN           = 0x001fff8a, // float ATan(float x).
-    INTR_POW            = 0x001fff8c, // float Pow(float base, float exp).
-    INTR_SQRT           = 0x001fff8e, // float Sqrt(float x).
+    INTR_COS            = 0x001fff81, // float Cos(float x).
+    INTR_TAN            = 0x001fff82, // float Tan(float x).
+    INTR_ASIN           = 0x001fff83, // float ASin(float x).
+    INTR_ACOS           = 0x001fff84, // float ACos(float x).
+    INTR_ATAN           = 0x001fff85, // float ATan(float x).
+    INTR_POW            = 0x001fff86, // float Pow(float base, float exp).
+    INTR_SQRT           = 0x001fff87, // float Sqrt(float x).
 }
 intrinsic_addr;
 
@@ -1016,8 +1027,6 @@ xvm_execution_state;
 
 static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_t* reg_sp)
 {
-    //xvm_stack_read(*reg_sp, -1);
-
     switch (intrinsic_addr)
     {
         /* --- Dynamic memory intrinsics --- */
@@ -1033,10 +1042,36 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         case INTR_CLEAR:
         case INTR_PRINT:
         case INTR_PRINT_LN:
+        break;
+
         case INTR_PRINT_INT:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            printf("%i", arg0);
+        }
+        break;
+
         case INTR_PRINT_FLOAT:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            printf("%f", INT_TO_FLT_REINTERPRET(arg0));
+        }
+        break;
+
         case INTR_INPUT_INT:
+        {
+            int result;
+            scanf("%i", &result);
+            xvm_stack_push(stack, reg_sp, result);
+        }
+        break;
+
         case INTR_INPUT_FLOAT:
+        {
+            float result;
+            scanf("%f", &result);
+            xvm_stack_push(stack, reg_sp, FLT_TO_INT_REINTERPRET(result));
+        }
         break;
 
         /* --- Conditional intrinsics --- */
@@ -1073,13 +1108,69 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         /* --- Math intrinsics --- */
 
         case INTR_SIN:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            float result = sinf(INT_TO_FLT_REINTERPRET(arg0));
+            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+        }
+        break;
+
         case INTR_COS:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            float result = cosf(INT_TO_FLT_REINTERPRET(arg0));
+            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+        }
+        break;
+
         case INTR_TAN:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            float result = tanf(INT_TO_FLT_REINTERPRET(arg0));
+            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+        }
+        break;
+
         case INTR_ASIN:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            float result = asinf(INT_TO_FLT_REINTERPRET(arg0));
+            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+        }
+        break;
+
         case INTR_ACOS:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            float result = acosf(INT_TO_FLT_REINTERPRET(arg0));
+            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+        }
+        break;
+
         case INTR_ATAN:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            float result = atanf(INT_TO_FLT_REINTERPRET(arg0));
+            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+        }
+        break;
+
         case INTR_POW:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg1 = xvm_stack_read(*reg_sp, -2);
+            float result = powf(INT_TO_FLT_REINTERPRET(arg0), INT_TO_FLT_REINTERPRET(arg1));
+            xvm_stack_pop(stack, reg_sp);
+            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+        }
+        break;
+
         case INTR_SQRT:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            float result = sqrtf(INT_TO_FLT_REINTERPRET(arg0));
+            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+        }
         break;
 
         default:
@@ -2005,29 +2096,33 @@ int main(int argc, char* argv[])
     #elif 1 //TEST3
 
     /*
-    mov r0, 0
-    ldw r1, flt_lit_0
-    ldw r2, flt_lit_1
-    addf r1, r2
+    Print(Pow(3, 5))
+    */
+
+    /*
+    ldw r0, flt_lit_0
+    ldw r1, flt_lit_1
     push r1
-    push r2
+    push r0
+    call Intr.Pow
+    call Intr.PrintFloat
     stop
     flt_lit_0: DATA.float 3.0
     flt_lit_1: DATA.float 5.0
     */
 
     float flt_lit0 = 3.0f;
-    float flt_lit1 = 5.0f;
+    float flt_lit1 = 4.2f;
     
-    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R0, 0     ))
-    ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R1, 7*4    ))
-    ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R2, 8*4    ))
-    ADD_INSTR(instr_make_float      (OPCODE_ADDF, REG_R1, REG_R2))
-    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R1, 0     ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R2, 0     ))
-    ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0             ))
-    ADD_INSTR(*((instr_t*)(&flt_lit0)))
-    ADD_INSTR(*((instr_t*)(&flt_lit1)))
+    ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R0, 7*4                ))
+    ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R1, 8*4                ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R1, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                 ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_POW          ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_FLOAT  ))
+    ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                         ))
+    ADD_INSTR(FLT_TO_INT_REINTERPRET(flt_lit0))
+    ADD_INSTR(FLT_TO_INT_REINTERPRET(flt_lit1))
 
     #endif
     
@@ -2045,9 +2140,13 @@ int main(int argc, char* argv[])
         printf("\nProgram terminated with error code: %i\n\n", exitCode);
 
     // Show stack output for the 20th first values
+    printf("\n\n");
+
+    #if 1
     log_println("-- Stack content: --");
     //xvm_stack_debug(&stack, 2, 20);
     xvm_stack_debug_float(&stack, 0, 10);
+    #endif
 
     xvm_bytecode_write_to_file(&byte_code, "float_test1.xbc");
 
