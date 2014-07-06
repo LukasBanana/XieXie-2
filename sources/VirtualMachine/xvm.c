@@ -60,6 +60,7 @@ typedef int             word_t;
 
 #define FLT_TO_INT_REINTERPRET(x)   (*((int*)(&x)))
 #define INT_TO_FLT_REINTERPRET(x)   (*((float*)(&x)))
+#define INT_TO_STR_REINTERPRET(x)   ((const char*)(x))
 
 /*
 All registers can be used for integral and floating-point data.
@@ -1039,9 +1040,27 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         /* --- Console intrinsics --- */
 
         case INTR_SYS_CALL:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            system(INT_TO_STR_REINTERPRET(arg0));
+        }
+        break;
+
         case INTR_CLEAR:
+        break;
+
         case INTR_PRINT:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            printf("%s", INT_TO_STR_REINTERPRET(arg0));
+        }
+        break;
+
         case INTR_PRINT_LN:
+        {
+            int arg0 = xvm_stack_read(*reg_sp, -1);
+            printf("%s\n", INT_TO_STR_REINTERPRET(arg0));
+        }
         break;
 
         case INTR_PRINT_INT:
@@ -2109,10 +2128,11 @@ int main(int argc, char* argv[])
     stop
     flt_lit_0: DATA.float 3.0
     flt_lit_1: DATA.float 5.0
+
     */
 
     float flt_lit0 = 3.0f;
-    float flt_lit1 = 4.2f;
+    float flt_lit1 = 5.0f;
     
     ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R0, 7*4                ))
     ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R1, 8*4                ))
