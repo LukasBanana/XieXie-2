@@ -68,6 +68,7 @@ All registers can be used for integral and floating-point data.
 
 typedef enum
 {
+    /* --- General purpose registers --- */
     REG_R0 = 0x00, // r0  ->  General purpose register 0.
     REG_R1 = 0x01, // r1  ->  General purpose register 1.
     REG_R2 = 0x02, // r2  ->  General purpose register 2.
@@ -79,12 +80,15 @@ typedef enum
     REG_R8 = 0x08, // r8  ->  General purpose register 8.
     REG_R9 = 0x09, // r9  ->  General purpose register 9.
 
+    /* --- Special purpose registers --- */
     REG_OP = 0x0a, // op  ->  Object pointer: "this" POINTER to the current object in a member function.
     REG_GP = 0x0b, // gp  ->  Global pointer: POINTER to the global variables in the stack.
+
+    /* --- Register for internal use --- */
     REG_CF = 0x0c, // cf  ->  Conditional flags: used for jump conditions.
     REG_LB = 0x0d, // lb  ->  Base pointer: POINTER to the base of the current stack frame.
     REG_SP = 0x0e, // sp  ->  Stack pointer: POINTER to the top of the stack storage.
-    REG_PC = 0x0f, // pc  ->  Program counter: INDEX (beginning with 0) to the byte-code instruction list.    // <-- TODO: Make PC to a pointer, not an index!
+    REG_PC = 0x0f, // pc  ->  Program counter: POINTER to the current instruction in the byte-code.
 }
 register_id;
 
@@ -1228,6 +1232,8 @@ static xvm_exit_codes xvm_execute_program(
     xvm_stack* const stack,
     xvm_execution_state* const exe_state)
 {
+    #define JUMP_ADDRESS(r, v) (reg.i[r] + ((v) << 2))
+
     if (byte_code == NULL)
         return EXITCODE_INVALID_BYTECODE;
     if (stack == NULL)
@@ -1241,8 +1247,10 @@ static xvm_exit_codes xvm_execute_program(
     }
     reg;
 
-    const instr_t* const instr_ptr = byte_code->instructions;
     const int num_instr = byte_code->num_instructions;
+
+    const regi_t instr_ptr_begin    = (regi_t)byte_code->instructions;
+    const regi_t instr_ptr_end      = instr_ptr_begin + num_instr*4;
 
     regi_t* const reg_cf = (reg.i + REG_CF);
     regi_t* const reg_lb = (reg.i + REG_LB);
@@ -1250,7 +1258,7 @@ static xvm_exit_codes xvm_execute_program(
     regi_t* const reg_pc = (reg.i + REG_PC);
 
     // Program start pointer is used to load memory from program "DATA" section
-    const byte_t* const program_start_ptr = (const byte_t*)instr_ptr;
+    const byte_t* const program_start_ptr = (const byte_t*)(byte_code->instructions);
 
     /* --- Temporary memory --- */
     instr_t         instr;
@@ -1275,7 +1283,7 @@ static xvm_exit_codes xvm_execute_program(
     if (exe_state != NULL)
         *reg_pc = exe_state->pc_reset;
     else
-        *reg_pc = 0;
+        *reg_pc = instr_ptr_begin;
 
     /* --- Catch exceptions --- */
     int exception_val = setjmp(xvm_exception_envbuf);
@@ -1286,10 +1294,10 @@ static xvm_exit_codes xvm_execute_program(
     }
 
     /* --- Start with program execution --- */
-    while (*reg_pc < num_instr)
+    while (*reg_pc < instr_ptr_end)
     {
         /* Load next instruction */
-        instr = instr_ptr[*reg_pc];
+        instr = *((instr_t*)(*reg_pc));
 
         opcode = instr_get_opcode(instr);
 
@@ -1556,7 +1564,7 @@ static xvm_exit_codes xvm_execute_program(
                 // Set program counter to (address + offset)
                 reg0 = instr_get_reg0(instr);
                 sgn_value = instr_get_sgn_value22(instr);
-                *reg_pc = reg.i[reg0] + sgn_value;
+                *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                 continue;
             }
             break;
@@ -1569,7 +1577,7 @@ static xvm_exit_codes xvm_execute_program(
                     // Set program counter to (address + offset)
                     reg0 = instr_get_reg0(instr);
                     sgn_value = instr_get_sgn_value22(instr);
-                    *reg_pc = reg.i[reg0] + sgn_value;
+                    *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
             }
@@ -1583,7 +1591,7 @@ static xvm_exit_codes xvm_execute_program(
                     // Set program counter to (address + offset)
                     reg0 = instr_get_reg0(instr);
                     sgn_value = instr_get_sgn_value22(instr);
-                    *reg_pc = reg.i[reg0] + sgn_value;
+                    *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
             }
@@ -1597,7 +1605,7 @@ static xvm_exit_codes xvm_execute_program(
                     // Set program counter to (address + offset)
                     reg0 = instr_get_reg0(instr);
                     sgn_value = instr_get_sgn_value22(instr);
-                    *reg_pc = reg.i[reg0] + sgn_value;
+                    *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
             }
@@ -1611,7 +1619,7 @@ static xvm_exit_codes xvm_execute_program(
                     // Set program counter to (address + offset)
                     reg0 = instr_get_reg0(instr);
                     sgn_value = instr_get_sgn_value22(instr);
-                    *reg_pc = reg.i[reg0] + sgn_value;
+                    *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
             }
@@ -1625,7 +1633,7 @@ static xvm_exit_codes xvm_execute_program(
                     // Set program counter to (address + offset)
                     reg0 = instr_get_reg0(instr);
                     sgn_value = instr_get_sgn_value22(instr);
-                    *reg_pc = reg.i[reg0] + sgn_value;
+                    *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
             }
@@ -1639,7 +1647,7 @@ static xvm_exit_codes xvm_execute_program(
                     // Set program counter to (address + offset)
                     reg0 = instr_get_reg0(instr);
                     sgn_value = instr_get_sgn_value22(instr);
-                    *reg_pc = reg.i[reg0] + sgn_value;
+                    *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
             }
@@ -1660,7 +1668,7 @@ static xvm_exit_codes xvm_execute_program(
 
                     // Jump to procedure address
                     reg0 = instr_get_reg0(instr);
-                    *reg_pc = reg.i[reg0] + sgn_value;
+                    *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
                 else
@@ -1846,7 +1854,7 @@ static xvm_exit_codes xvm_execute_program(
         }
 
         // Increase program-counter register
-        ++(*reg_pc);
+        *reg_pc += 4;
     }
 
     // Return program counter if set
@@ -1854,6 +1862,8 @@ static xvm_exit_codes xvm_execute_program(
         exe_state->pc_reset = *reg_pc;
 
     return EXITCODE_SUCCESS;
+
+    #undef JUMP_ADDRESS
 }
 
 
@@ -1990,9 +2000,7 @@ static int shell_parse_args(int argc, char* argv[])
 
 typedef enum
 {
-    TESTPROCID_PRINT,
-    TESTPROCID_PRINTLN,
-    TESTPROCID_PRINTINT,
+    TESTPROCID_HELLO_WORLD,
 }
 TestInvokeProcIDs;
 
@@ -2000,8 +2008,8 @@ void TestInvokeExtern(unsigned int proc_id, stack_word_t* stack_ptr)
 {
     switch (proc_id)
     {
-        case TESTPROCID_PRINTINT:
-            printf("%i", GET_PARAM_FROM_STACK(stack_ptr, 1));
+        case TESTPROCID_HELLO_WORLD:
+            printf("\nHello, World\n");
             break;
     }
 }
@@ -2134,12 +2142,13 @@ int main(int argc, char* argv[])
     float flt_lit0 = 3.0f;
     float flt_lit1 = 5.0f;
     
-    ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R0, 7*4                ))
-    ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R1, 8*4                ))
+    ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R0, 8*4                ))
+    ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R1, 9*4                ))
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R1, 0                 ))
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                 ))
     ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_POW          ))
     ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_FLOAT  ))
+    ADD_INSTR(instr_make_special1   (OPCODE_INVK, TESTPROCID_HELLO_WORLD    ))
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                         ))
     ADD_INSTR(FLT_TO_INT_REINTERPRET(flt_lit0))
     ADD_INSTR(FLT_TO_INT_REINTERPRET(flt_lit1))
