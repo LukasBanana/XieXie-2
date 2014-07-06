@@ -18,6 +18,7 @@
 /* ----- Compilation configuration ----- */
 
 #define _ENABLE_INLINEING_
+#define _ENABLE_RUNTIME_DEBUGGER_
 #define _OPTIMIZE_OPCODE_EXTRACTION_
 
 
@@ -559,6 +560,102 @@ INLINE static reg_t instr_get_reg1(const instr_t instr)
     return (instr & 0x003c0000) >> 18;
 }
 
+/**
+Returns the mnemonic of the specified instruction opcode or an empty string if the opcode is invalid.
+*/
+static const char* intr_get_mnemonic(const opcode_t opcode)
+{
+    switch (opcode)
+    {
+        /* --- opcode_reg2 --- */
+
+        case OPCODE_MOV1:
+        case OPCODE_MOV2:   return "mov";
+        case OPCODE_NOT2:   return "not";
+        case OPCODE_AND1:
+        case OPCODE_AND2:   return "and";
+        case OPCODE_OR1:
+        case OPCODE_OR2:    return "or";
+        case OPCODE_XOR1:
+        case OPCODE_XOR2:   return "xor";
+        case OPCODE_ADD1:
+        case OPCODE_ADD2:   return "add";
+        case OPCODE_SUB1:
+        case OPCODE_SUB2:   return "sub";
+        case OPCODE_MUL1:
+        case OPCODE_MUL2:   return "mul";
+        case OPCODE_DIV1:
+        case OPCODE_DIV2:   return "div";
+        case OPCODE_MOD1:
+        case OPCODE_MOD2:   return "mod";
+        case OPCODE_SLL1:
+        case OPCODE_SLL2:   return "sll";
+        case OPCODE_SLR1:
+        case OPCODE_SLR2:   return "slr";
+        case OPCODE_CMP:    return "cmp";
+        case OPCODE_FTI:    return "fti";
+        case OPCODE_ITF:    return "itf";
+            
+        /* --- opcode_reg1 --- */
+
+        case OPCODE_PUSH:   return "push";
+        case OPCODE_POP:    return "pop";
+        case OPCODE_INC:    return "inc";
+        case OPCODE_DEC:    return "dec";
+
+        /* --- opcode_jump --- */
+
+        case OPCODE_JMP:    return "jmp";
+        case OPCODE_JE:     return "je";
+        case OPCODE_JNE:    return "jne";
+        case OPCODE_JG:     return "jg";
+        case OPCODE_JL:     return "jl";
+        case OPCODE_JGE:    return "jge";
+        case OPCODE_JLE:    return "jle";
+        case OPCODE_CALL:   return "call";
+
+        /* --- opcode_float --- */
+
+        case OPCODE_ADDF:   return "addf";
+        case OPCODE_SUBF:   return "subf";
+        case OPCODE_MULF:   return "mulf";
+        case OPCODE_DIVF:   return "divf";
+        case OPCODE_CMPF:   return "cmpf";
+
+        /* --- opcode_mem --- */
+
+        case OPCODE_LDBO:
+        case OPCODE_LDB:    return "ldb";
+        case OPCODE_LDWO:
+        case OPCODE_LDW:    return "ldw";
+
+        /* --- opcode_memoff --- */
+
+        case OPCODE_STBO:   return "stb";
+        case OPCODE_STWO:   return "stw";
+
+        /* --- opcode_special --- */
+
+        case OPCODE_STOP:   return "stop";
+        case OPCODE_RET:    return "ret";
+        case OPCODE_PUSHC:  return "push";
+        case OPCODE_INVK:   return "invk";
+
+        default:            break;
+    }
+    return "";
+}
+
+static void instr_print_debug_info(const instr_t instr, regi_t instr_index)
+{
+    printf(
+        "0x%p  %s\n",
+        (void*)(instr_index >> 2),
+        intr_get_mnemonic(instr_get_opcode(instr))
+    );
+
+}
+
 
 /* ----- Instruction constructors ----- */
 
@@ -1062,8 +1159,9 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
 
         case INTR_PRINT_LN:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
-            printf("%s\n", INT_TO_STR_REINTERPRET(arg0));
+            //int arg0 = xvm_stack_read(*reg_sp, -1);
+            //printf("%s\n", INT_TO_STR_REINTERPRET(arg0));
+            printf("\n");
         }
         break;
 
@@ -1300,6 +1398,10 @@ static xvm_exit_codes xvm_execute_program(
         instr = *((instr_t*)(*reg_pc));
 
         opcode = instr_get_opcode(instr);
+
+        #ifdef _ENABLE_RUNTIME_DEBUGGER_
+        instr_print_debug_info(instr, *reg_pc - instr_ptr_begin);
+        #endif
 
         /* Execute current instruction */
         switch (opcode)
@@ -1979,8 +2081,7 @@ static int shell_parse_args(int argc, char* argv[])
         xvm_stack_create(&stack, stack_size);
 
         // Execute program
-        xvm_execution_state exe_state;
-        const xvm_exit_codes exit_code = xvm_execute_program(&byte_code, &stack, &exe_state);
+        const xvm_exit_codes exit_code = xvm_execute_program(&byte_code, &stack, NULL);
 
         if (exit_code != EXITCODE_SUCCESS)
             log_exitcode_error(exit_code);
@@ -2036,7 +2137,7 @@ int main(int argc, char* argv[])
     #define ADD_INSTR(INSTR) byte_code.instructions[i++] = INSTR;
     #define FINISH_INSTR byte_code.num_instructions = i;
 
-    #if 0 //TEST1
+    #if 0 //TEST1 (loop)
 
     /*
     // Counts from 0 to n
@@ -2065,7 +2166,7 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-4)))
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                         ))
 
-    #elif 0 //TEST2
+    #elif 0 //TEST2 (function)
 
     /*
     // Computes the first n-th squares: 0, 1, 4, 9, 16 ...
@@ -2120,23 +2221,22 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(instr_make_special2   (OPCODE_RET,  1, 1                              ))
 
-    #elif 1 //TEST3
+    #elif 0 //TEST3 (floats)
 
     /*
     Print(Pow(3, 5))
     */
 
     /*
-    ldw r0, flt_lit_0
-    ldw r1, flt_lit_1
-    push r1
-    push r0
-    call Intr.Pow
-    call Intr.PrintFloat
-    stop
-    flt_lit_0: DATA.float 3.0
-    flt_lit_1: DATA.float 5.0
-
+    00  ldw r0, flt_lit_0
+    01  ldw r1, flt_lit_1
+    02  push r1
+    03  push r0
+    04  call Intr.Pow
+    05  call Intr.PrintFloat
+    06  stop
+    07  flt_lit_0: DATA.float 3.0
+    08  flt_lit_1: DATA.float 5.0
     */
 
     float flt_lit0 = 3.0f;
@@ -2152,6 +2252,97 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                         ))
     ADD_INSTR(FLT_TO_INT_REINTERPRET(flt_lit0))
     ADD_INSTR(FLT_TO_INT_REINTERPRET(flt_lit1))
+
+    #elif 1 //TEST4 (fibonacci)
+
+    /*
+    int fib(int n) {
+        if n <= 2 {
+            return 1
+        }
+        return fib(n - 1) + fib(n - 2)
+    }
+    int n := Intr.InputInt()
+    while n > 0 {
+        Intr.PrintInt(fib(n))
+        Intr.PrintLn("")
+        n--
+    }
+    */
+
+    /*
+    00          call Intr.InputInt
+    01          pop r0
+    02  .loop:  xor r1, r1
+    03          cmp r0, r1
+    04          jle .end0           ; while begin
+    05          push r0
+    06          push r0             ; fib argument
+    07          call fib
+    08          call Intr.PrintInt  ; print result
+    09          call Intr.PrintLn
+    10          pop r0
+    11          dec r0
+    12          jmp .loop           ; while end
+    13  .end:   stop
+    14  fib:    ldw r0, (lb) -4     ; get argument
+    15          mov r1, 2
+    16          cmp r0, r1
+    17          jg .else
+    18          push 1
+    19          ret (1) 1
+    20  .else:  dec r0
+    21          push r0             ; push t0 = (n-1)
+    22          push r0             ; fib argument (n-1)
+    23          call fib
+    24          pop r0              ; fib result
+    25          pop r1              ; pop t0
+    26          dec r1
+    27          push r0             ; push t1 = result
+    28          push r1             ; fib argument (n-2)
+    29          call fib
+    30          pop r0              ; fib result
+    31          pop r1              ; pop t1
+    32          add r0, r1
+    33          push r0             ; push result
+    34          ret (1) 1
+    */
+
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_INPUT_INT            ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_POP,  REG_R0, 0                         ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_XOR2, REG_R1, REG_R1                    ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                    ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JLE,  REG_PC, 9                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, 7                         )) // call fib
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_INT            )) // call Intr.PrintInt
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_LN             )) // call Intr.PrintLn
+    ADD_INSTR(instr_make_reg1       (OPCODE_POP,  REG_R0, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_DEC,  REG_R0, 0                         ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JMP,  REG_PC, (unsigned int)(-10)       ))
+    ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                                 ))
+    ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_R0, REG_LB, (unsigned int)(-4)))
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R1, 2                         ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                    ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JG,   REG_PC, 3                         ))
+    ADD_INSTR(instr_make_special1   (OPCODE_PUSHC,1                                 ))
+    ADD_INSTR(instr_make_special2   (OPCODE_RET,  1, 1                              )) // ret (1) 1
+    ADD_INSTR(instr_make_reg1       (OPCODE_DEC,  REG_R0, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, (unsigned int)(-9)        )) // call fib
+    ADD_INSTR(instr_make_reg1       (OPCODE_POP,  REG_R0, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_POP,  REG_R1, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_DEC,  REG_R1, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R1, 0                         ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, (unsigned int)(-15)       )) // call fib
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R1, 0                         ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_ADD2, REG_R0, REG_R1                    ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
+    ADD_INSTR(instr_make_special2   (OPCODE_RET,  1, 1                              )) // ret (1) 1
 
     #endif
     
