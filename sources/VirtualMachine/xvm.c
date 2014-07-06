@@ -54,30 +54,32 @@ typedef char            byte_t;
 typedef int             word_t;
 
 #define NUM_REGISTERS               16
-#define IS_REG_FLOAT(r)             ((r) >= REG_F0)
 #define REG_TO_STACK_PTR(r)         ((stack_word_t*)(*(r)))
 #define GET_PARAM_FROM_STACK(p, i)  (*((p) - (i)))
 
+/*
+All registers can be used for integral and floating-point data.
+*/
+
 typedef enum
 {
-    REG_I0 = 0x00, // i0  ->  Integer register 0.
-    REG_I1 = 0x01, // i1  ->  Integer register 1.
-    REG_I2 = 0x02, // i2  ->  Integer register 2.
-    REG_I3 = 0x03, // i3  ->  Integer register 3.
-    REG_I4 = 0x04, // i4  ->  Integer register 4.
-    REG_I5 = 0x05, // i5  ->  Integer register 5.
+    REG_R0 = 0x00, // r0  ->  General purpose register 0.
+    REG_R1 = 0x01, // r1  ->  General purpose register 1.
+    REG_R2 = 0x02, // r2  ->  General purpose register 2.
+    REG_R3 = 0x03, // r3  ->  General purpose register 3.
+    REG_R4 = 0x04, // r4  ->  General purpose register 4.
+    REG_R5 = 0x05, // r5  ->  General purpose register 5.
+    REG_R6 = 0x06, // r6  ->  General purpose register 6.
+    REG_R7 = 0x07, // r7  ->  General purpose register 7.
+    REG_R8 = 0x08, // r8  ->  General purpose register 8.
+    REG_R9 = 0x09, // r9  ->  General purpose register 9.
 
-    REG_CF = 0x06, // cf  ->  Conditional flags: used for jump conditions.
-    REG_LB = 0x07, // lb  ->  Local base pointer: POINTER to the current stack frame base.
-    REG_SP = 0x08, // sp  ->  Stack-pointer: POINTER to the top of the stack storage.
-    REG_PC = 0x09, // pc  ->  Program-counter: INDEX (beginning with 0) to the byte-code instruction list.
-
-    REG_F0 = 0x0a, // f0  ->  Floating-point register 0.
-    REG_F1 = 0x0b, // f1  ->  Floating-point register 1.
-    REG_F2 = 0x0c, // f2  ->  Floating-point register 2.
-    REG_F3 = 0x0d, // f3  ->  Floating-point register 3.
-    REG_F4 = 0x0e, // f4  ->  Floating-point register 4.
-    REG_F5 = 0x0f, // f5  ->  Floating-point register 5.
+    REG_OP = 0x0a, // op  ->  Object pointer: "this" POINTER to the current object in a member function.
+    REG_GP = 0x0b, // gp  ->  Global pointer: POINTER to the global variables in the stack.
+    REG_CF = 0x0c, // cf  ->  Conditional flags: used for jump conditions.
+    REG_LB = 0x0d, // lb  ->  Base pointer: POINTER to the base of the current stack frame.
+    REG_SP = 0x0e, // sp  ->  Stack pointer: POINTER to the top of the stack storage.
+    REG_PC = 0x0f, // pc  ->  Program counter: INDEX (beginning with 0) to the byte-code instruction list.    // <-- TODO: Make PC to a pointer, not an index!
 }
 register_id;
 
@@ -94,7 +96,7 @@ WORDS are 32 bits wide.
 FLOATS are 32 bits wide.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                        2 Register Instruction Opcodes:                                                        |
+|                                                   2 Register Instruction Opcodes (00....):                                                    |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Mnemonic | Opcode      | Dest.   | Source  | Unused                              | Description                                                |
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -133,7 +135,7 @@ FLOATS are 32 bits wide.
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                        1 Register Instruction Opcodes:                                                        |
+|                                                   1 Register Instruction Opcodes (01....):                                                    |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Mnemonic | Opcode      | Reg.    | Value                                       | Description                                                  |
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -172,7 +174,7 @@ FLOATS are 32 bits wide.
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                           Jump Instruction Opcodes:                                                           |
+|                                                      Jump Instruction Opcodes (100...):                                                       |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Mnemonic | Opcode      | Reg.    | Offset                                      | Description                                                  |
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,7 +201,26 @@ FLOATS are 32 bits wide.
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                        Load/Store Instruction Opcodes:                                                        |
+|                                                     Float Instruction Opcodes (101...):                                                       |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Mnemonic | Opcode      | Dest.   | Source  | Unused                              | Description                                                |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|          | 31.......26 | 25...22 | 21...18 | 17................................0 |                                                            |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| ADDF     | 1 0 1 0 1 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic addition.                                       |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| SUBF     | 1 0 1 1 0 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic subtraction.                                    |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| MULF     | 1 0 1 1 0 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic multiplication.                                 |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| DIVF     | 1 0 1 1 1 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic division.                                       |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| CMPF     | 1 0 1 1 1 1 | X X X X | Y Y Y Y | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Compares the two registers and stores the result in "cf".  |
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                   Load/Store Instruction Opcodes (1110..):                                                    |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Mnemonic | Opcode      | Reg.    | Address                                     | Description                                                  |
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -216,7 +237,7 @@ FLOATS are 32 bits wide.
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                   Load/Store (Offset) Instruction Opcodes:                                                    |
+|                                              Load/Store (Offset) Instruction Opcodes (1111..):                                                |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Mnemonic | Opcode      | Dest.   | AddrReg | Offset                              | Description                                                |
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -233,7 +254,7 @@ FLOATS are 32 bits wide.
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                         Special Instruction Opcodes:                                                          |
+|                                                    Special Instruction Opcodes (110...):                                                      |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Mnemonic | Opcode      | Unused or Value                                     | Description                                                    |
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -321,18 +342,21 @@ typedef enum
     OPCODE_JGE      = GEN_OPCODE(0x25), // JGE  addr    -> if (REG_CF >= 0) then goto addr
     OPCODE_JLE      = GEN_OPCODE(0x26), // JLE  addr    -> if (REG_CF <= 0) then goto addr
     OPCODE_CALL     = GEN_OPCODE(0x27), // CALL addr    -> PUSH pc ; PUSH lb ; MOV lb, sp ; JMP addr
-    /*
-    Reserved        = GEN_OPCODE(0x28),
-    Reserved        = GEN_OPCODE(0x29),
-    Reserved        = GEN_OPCODE(0x2a),
-    Reserved        = GEN_OPCODE(0x2b),
-    Reserved        = GEN_OPCODE(0x2c),
-    Reserved        = GEN_OPCODE(0x2d),
-    Reserved        = GEN_OPCODE(0x2e),
-    Reserved        = GEN_OPCODE(0x2f),
-    */
+    //Reserved      = GEN_OPCODE(0x28),
+    //Reserved      = GEN_OPCODE(0x29),
+    //Reserved      = GEN_OPCODE(0x2a),
 }
 opcode_jump;
+
+typedef enum
+{
+    OPCODE_ADDF     = GEN_OPCODE(0x2b), // ADDF reg0, reg1  ->  *reg0 += *reg1
+    OPCODE_SUBF     = GEN_OPCODE(0x2c), // SUBF reg0, reg1  ->  *reg0 -= *reg1
+    OPCODE_MULF     = GEN_OPCODE(0x2d), // MULF reg0, reg1  ->  *reg0 *= *reg1
+    OPCODE_DIVF     = GEN_OPCODE(0x2e), // DIVF reg0, reg1  ->  *reg0 /= *reg1
+    OPCODE_CMPF     = GEN_OPCODE(0x2f), // CMPF reg0, reg1  ->  REG_CF = signum(*reg0 - *reg1)
+}
+opcode_float;
 
 typedef enum
 {
@@ -340,13 +364,11 @@ typedef enum
     OPCODE_RET      = GEN_OPCODE(0x30), // RET  (c0) c1  ->  return
     OPCODE_PUSHC    = GEN_OPCODE(0x31), // PUSH value    ->  stack.push(value)
     OPCODE_INVK     = GEN_OPCODE(0x32), // INVK addr     ->  invoke external procedure (no jump, no stack change)
-    /*
-    Reserved        = GEN_OPCODE(0x33),
-    Reserved        = GEN_OPCODE(0x34),
-    Reserved        = GEN_OPCODE(0x35),
-    Reserved        = GEN_OPCODE(0x36),
-    Reserved        = GEN_OPCODE(0x37),
-    */
+    //Reserved      = GEN_OPCODE(0x33),
+    //Reserved      = GEN_OPCODE(0x34),
+    //Reserved      = GEN_OPCODE(0x35),
+    //Reserved      = GEN_OPCODE(0x36),
+    //Reserved      = GEN_OPCODE(0x37),
 }
 opcode_special;
 
@@ -1038,10 +1060,7 @@ static xvm_exit_codes xvm_execute_program(
             {
                 reg0 = instr_get_reg0(instr);
                 reg1 = instr_get_reg1(instr);
-                if (IS_REG_FLOAT(reg0))
-                    reg.f[reg0] = reg.f[reg1];
-                else
-                    reg.i[reg0] = reg.i[reg1];
+                reg.i[reg0] = reg.i[reg1];
             }
             break;
 
@@ -1085,10 +1104,7 @@ static xvm_exit_codes xvm_execute_program(
             {
                 reg0 = instr_get_reg0(instr);
                 reg1 = instr_get_reg1(instr);
-                if (IS_REG_FLOAT(reg0))
-                    reg.f[reg0] += reg.f[reg1];
-                else
-                    reg.i[reg0] += reg.i[reg1];
+                reg.i[reg0] += reg.i[reg1];
             }
             break;
 
@@ -1096,10 +1112,7 @@ static xvm_exit_codes xvm_execute_program(
             {
                 reg0 = instr_get_reg0(instr);
                 reg1 = instr_get_reg1(instr);
-                if (IS_REG_FLOAT(reg0))
-                    reg.f[reg0] -= reg.f[reg1];
-                else
-                    reg.i[reg0] -= reg.i[reg1];
+                reg.i[reg0] -= reg.i[reg1];
             }
             break;
 
@@ -1107,10 +1120,7 @@ static xvm_exit_codes xvm_execute_program(
             {
                 reg0 = instr_get_reg0(instr);
                 reg1 = instr_get_reg1(instr);
-                if (IS_REG_FLOAT(reg0))
-                    reg.f[reg0] *= reg.f[reg1];
-                else
-                    reg.i[reg0] *= reg.i[reg1];
+                reg.i[reg0] *= reg.i[reg1];
             }
             break;
 
@@ -1118,10 +1128,7 @@ static xvm_exit_codes xvm_execute_program(
             {
                 reg0 = instr_get_reg0(instr);
                 reg1 = instr_get_reg1(instr);
-                if (IS_REG_FLOAT(reg0))
-                    reg.f[reg0] /= reg.f[reg1];
-                else
-                    reg.i[reg0] /= reg.i[reg1];
+                reg.i[reg0] /= reg.i[reg1];
             }
             break;
 
@@ -1156,10 +1163,7 @@ static xvm_exit_codes xvm_execute_program(
             {
                 reg0 = instr_get_reg0(instr);
                 reg1 = instr_get_reg1(instr);
-                if (IS_REG_FLOAT(reg0))
-                    *reg_cf = flt2int_signum(reg.f[reg0] - reg.f[reg1]);
-                else
-                    *reg_cf = (reg.i[reg0] - reg.i[reg1]);
+                *reg_cf = (reg.i[reg0] - reg.i[reg1]);
             }
             break;
 
@@ -1291,20 +1295,14 @@ static xvm_exit_codes xvm_execute_program(
             case OPCODE_INC:
             {
                 reg0 = instr_get_reg0(instr);
-                if (IS_REG_FLOAT(reg0))
-                    ++reg.f[reg0];
-                else
-                    ++reg.i[reg0];
+                ++reg.i[reg0];
             }
             break;
 
             case OPCODE_DEC:
             {
                 reg0 = instr_get_reg0(instr);
-                if (IS_REG_FLOAT(reg0))
-                    --reg.f[reg0];
-                else
-                    --reg.i[reg0];
+                --reg.i[reg0];
             }
             break;
 
@@ -1428,6 +1426,48 @@ static xvm_exit_codes xvm_execute_program(
                     // Call intrinsic procedure
                     xvm_call_intrinsic(sgn_value, stack, reg_sp);
                 }
+            }
+            break;
+
+            /* --- opcode_float --- */
+
+            case OPCODE_ADDF:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg1 = instr_get_reg1(instr);
+                reg.f[reg0] += reg.f[reg1];
+            }
+            break;
+
+            case OPCODE_SUBF:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg1 = instr_get_reg1(instr);
+                reg.f[reg0] -= reg.f[reg1];
+            }
+            break;
+
+            case OPCODE_MULF:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg1 = instr_get_reg1(instr);
+                reg.f[reg0] *= reg.f[reg1];
+            }
+            break;
+
+            case OPCODE_DIVF:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg1 = instr_get_reg1(instr);
+                reg.f[reg0] /= reg.f[reg1];
+            }
+            break;
+
+            case OPCODE_CMPF:
+            {
+                reg0 = instr_get_reg0(instr);
+                reg1 = instr_get_reg1(instr);
+                *reg_cf = flt2int_signum(reg.f[reg0] - reg.f[reg1]);
             }
             break;
 
@@ -1743,22 +1783,22 @@ int main(int argc, char* argv[])
     */
 
     /*
-    00          mov i0, 0
-    01          mov i1, 10
-    02  l_for:  cmp i0, i1
+    00          mov r0, 0
+    01          mov r1, 10
+    02  l_for:  cmp r0, r1
     03          jge l_end   ; jge (pc) 4
-    04          push i0
-    05          inc i0
+    04          push r0
+    05          inc r0
     06          jmp l_for   ; jmp (pc) -4
     07  l_end:  stop
     */
 
-    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_I0, 0                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_I1, 10                ))
-    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_I0, REG_I1, 0         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R0, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R1, 10                ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1, 0         ))
     ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 4                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_I0, 0                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_I0, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_R0, 0                 ))
     ADD_INSTR(instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-4)))
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                         ))
 
@@ -1776,21 +1816,21 @@ int main(int argc, char* argv[])
 
     /*
     00  main:   add sp, 8       ; int i, n
-    01          xor i0, i0      ; i = 0
-    02          mov i1, 10      ; n = 10
-    03  .for0:  cmp i0, i1      ; compare i >= n
+    01          xor r0, r0      ; i = 0
+    02          mov r1, r0      ; n = 10
+    03  .for0:  cmp r0, r1      ; compare i >= n
     04          jge .end0       ; if i >= n then goto l_end ; jge (pc) 7
-    05          stw i0 (lb) 0   ; store i
-    06          add i0, 2       ; i += 2
-    07          push i0         ; push i
+    05          stw r0 (lb) 0   ; store i
+    06          add r0, 2       ; i += 2
+    07          push r0         ; push i
     08          call func       ; Stack.Push(func(i)) (actually 'pop i0' after call, but we keep it on stack) ; call (pc) 5
-    09          ldw i0, (lb) 0  ; load i
-    10          inc i0          ; i++
+    09          ldw r0, (lb) 0  ; load i
+    10          inc r0          ; i++
     11          jmp .for0       ; jmp (pc) -7
     12  .end0:  stop            ; exit
-    13  func:   ldw i0, (lb) -4 ; load x
-    14          mul i0, i0      ; x *= x
-    15          push i0         ; push x
+    13  func:   ldw r0, (lb) -4 ; load x
+    14          mul r0, r0      ; x *= x
+    15          push r0         ; push x
     16          ret (1) 1       ; return result ((x*x) = 1 word) and pop arguments (x = 1 word)
     */
 
@@ -1800,21 +1840,21 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_jump       (OPCODE_JMP,  REG_PC, -3                        ))*/
 
     ADD_INSTR(instr_make_reg1       (OPCODE_ADD1, REG_SP, 8                         ))
-    ADD_INSTR(instr_make_reg2       (OPCODE_XOR2, REG_I0, REG_I0, 0                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_I1, 20                        ))
-    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_I0, REG_I1, 0                 ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_XOR2, REG_R0, REG_R0, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R1, 20                        ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1, 0                 ))
     ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 8                         ))
-    ADD_INSTR(instr_make_memoff     (OPCODE_STWO, REG_I0, REG_LB, 0                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_ADD1, REG_I0, 2                         ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_I0, 0                         ))
+    ADD_INSTR(instr_make_memoff     (OPCODE_STWO, REG_R0, REG_LB, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_ADD1, REG_R0, 2                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, 5                         ))
-    ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_I0, REG_LB, 0                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_I0, 0                         ))
+    ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_R0, REG_LB, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_R0, 0                         ))
     ADD_INSTR(instr_make_jump       (OPCODE_JMP,  REG_PC, -8                        ))
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                                 ))
-    ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_I0, REG_LB, (unsigned int)(-4)))
-    ADD_INSTR(instr_make_reg2       (OPCODE_MUL2, REG_I0, REG_I0, 0                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_I0, 0                         ))
+    ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_R0, REG_LB, (unsigned int)(-4)))
+    ADD_INSTR(instr_make_reg2       (OPCODE_MUL2, REG_R0, REG_R0, 0                 ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(instr_make_special2   (OPCODE_RET,  1, 1                              ))
 
     #endif
