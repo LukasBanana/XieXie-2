@@ -13,7 +13,7 @@
 #include <setjmp.h>
 #include <string.h>
 #include <math.h>
-
+#include <time.h>
 
 /* ----- Compilation configuration ----- */
 
@@ -26,8 +26,61 @@
 //! Enables opcode extraction optimization (safes one SLL instruction in x86 code)
 #define _OPTIMIZE_OPCODE_EXTRACTION_
 
+//! Enables OS specific features
+#define _ENABLE_OS_FEATURES_
+
 #ifndef _DEBUG
 #undef _ENABLE_RUNTIME_DEBUGGER_
+#endif
+
+
+/* ----- OS specific includes ----- */
+
+#ifdef _ENABLE_OS_FEATURES_
+
+#ifdef WIN32
+#   define NOGDICAPMASKS
+#   define NOVIRTUALKEYCODES
+#   define NOWINMESSAGES
+#   define NOWINSTYLES
+#   define NOSYSMETRICS
+#   define NOMENUS
+#   define NOICONS
+#   define NOKEYSTATES
+#   define NOSYSCOMMANDS
+#   define NORASTEROPS
+#   define NOSHOWWINDOW
+#   define OEMRESOURCE
+#   define NOATOM
+#   define NOCLIPBOARD
+#   define NOCOLOR
+#   define NOCTLMGR
+#   define NODRAWTEXT
+#   define NOGDI
+#   define NOKERNEL
+#   define NOUSER
+#   define NONLS
+#   define NOMB
+#   define NOMEMMGR
+#   define NOMETAFILE
+#   define NOMINMAX
+#   define NOMSG
+#   define NOOPENFILE
+#   define NOSCROLL
+#   define NOSERVICE
+#   define NOSOUND
+#   define NOTEXTMETRIC
+#   define NOWH
+#   define NOWINOFFSETS
+#   define NOCOMM
+#   define NOKANJI
+#   define NOHELP
+#   define NOPROFILER
+#   define NODEFERWINDOWPOS
+#   define NOMCX
+#   include <Windows.h>
+#endif
+
 #endif
 
 
@@ -1176,6 +1229,12 @@ typedef enum
     INTR_ATAN           = 0x001fff85, // float ATan(float x).
     INTR_POW            = 0x001fff86, // float Pow(float base, float exp).
     INTR_SQRT           = 0x001fff87, // float Sqrt(float x).
+
+    /* --- Other intrinsics --- */
+    INTR_RAND_INT       = 0x001fff88, // int RandInt() -> In range [0 .. MAX_INT].
+    INTR_RAND_FLOAT     = 0x001fff89, // float RandFloat() -> In range [0.0 .. 1.0].
+    INTR_TIME           = 0x001fff8a, // int Time() -> Ellapsed time since program start (in ms.).
+    INTR_SLEEP          = 0x001fff8b, // void Sleep(int duration).
 }
 intrinsic_addr;
 
@@ -1355,6 +1414,42 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
             xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
         }
         break;
+
+        /* --- Other intrinsics --- */
+        
+        case INTR_RAND_INT:
+        {
+            int result = rand();
+            xvm_stack_push(stack, reg_sp, result);
+        }
+        break;
+
+        case INTR_RAND_FLOAT:
+        {
+            float result = ((float)rand()) / RAND_MAX;
+            xvm_stack_push(stack, reg_sp, FLT_TO_INT_REINTERPRET(result));
+        }
+        break;
+
+        case INTR_TIME:
+        {
+            clock_t ticks = clock() / (CLOCKS_PER_SEC / 1000);
+            xvm_stack_push(stack, reg_sp, (int)ticks);
+        }
+        break;
+
+        #ifdef _ENABLE_OS_FEATURES_
+
+        case INTR_SLEEP:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            #ifdef WIN32
+            Sleep((DWORD)arg0);
+            #endif
+        }
+        break;
+
+        #endif
 
         default:
             xvm_exception_throw("Invalid intrinsic", EXITCODE_INVALID_INTRINSIC);
@@ -2209,7 +2304,7 @@ int main(int argc, char* argv[])
     #define ADD_INSTR(INSTR) byte_code.instructions[i++] = INSTR;
     #define FINISH_INSTR byte_code.num_instructions = i;
 
-    #if 0 //TEST1 (loop)
+    #if 1 //TEST1 (loop)
 
     /*
     // Counts from 0 to n
@@ -2222,20 +2317,28 @@ int main(int argc, char* argv[])
     00          mov r0, 0
     01          mov r1, 10
     02  l_for:  cmp r0, r1
-    03          jge l_end   ; jge (pc) 4
-    04          push r0
-    05          inc r0
-    06          jmp l_for   ; jmp (pc) -4
-    07  l_end:  stop
+    03          jge l_end   ; jge (pc) 8
+    04          call Intr.Time
+    05          call Intr.PrintInt
+    06          call Intr.PrintLn
+    07          push 1000
+    08          call Intr.Sleep
+    09          inc r0
+    10          jmp l_for   ; jmp (pc) -8
+    11  l_end:  stop
     */
 
     ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R0, 0                 ))
     ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R1, 10                ))
     ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1            ))
-    ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 4                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                 ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 8                 ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_TIME         ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_INT    ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_LN     ))
+    ADD_INSTR(instr_make_special1   (OPCODE_PUSHC,100                       ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_SLEEP        ))
     ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_R0, 0                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-4)))
+    ADD_INSTR(instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-8)))
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                         ))
 
     #elif 0 //TEST2 (function)
