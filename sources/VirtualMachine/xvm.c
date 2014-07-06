@@ -26,6 +26,10 @@
 //! Enables opcode extraction optimization (safes one SLL instruction in x86 code)
 #define _OPTIMIZE_OPCODE_EXTRACTION_
 
+#ifndef _DEBUG
+#undef _ENABLE_RUNTIME_DEBUGGER_
+#endif
+
 
 /* ----- Helper macros ----- */
 
@@ -1200,7 +1204,7 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
 
         case INTR_SYS_CALL:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             system(INT_TO_STR_REINTERPRET(arg0));
         }
         break;
@@ -1210,14 +1214,14 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
 
         case INTR_PRINT:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             printf("%s", INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
         case INTR_PRINT_LN:
         {
-            //int arg0 = xvm_stack_read(*reg_sp, -1);
+            //int arg0 = xvm_stack_pop(stack, reg_sp);
             //printf("%s\n", INT_TO_STR_REINTERPRET(arg0));
             printf("\n");
         }
@@ -1388,7 +1392,7 @@ static xvm_exit_codes xvm_execute_program(
     xvm_stack* const stack,
     xvm_execution_state* const exe_state)
 {
-    #define JUMP_ADDRESS(r, v) (reg.i[r] + ((v) << 2))
+    #define JUMP_ADDRESS(r, a) (reg.i[r] + ((a) << 2))
 
     if (byte_code == NULL)
         return EXITCODE_INVALID_BYTECODE;
