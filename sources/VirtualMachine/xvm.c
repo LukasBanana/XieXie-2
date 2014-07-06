@@ -226,13 +226,9 @@ FLOATS are 32 bits wide.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 |          | 31.......26 | 25...22 | 21........................................0 |                                                              |
 -------------------------------------------------------------------------------------------------------------------------------------------------
-| LDB      | 1 1 1 0 0 0 | D D D D | A A A A A A A A A A A A A A A A A A A A A A | Load byte from memory to register.                           |
+| LDB      | 1 1 1 0 0 0 | D D D D | A A A A A A A A A A A A A A A A A A A A A A | Load byte from program data section to register.             |
 -------------------------------------------------------------------------------------------------------------------------------------------------
-| STB      | 1 1 1 0 0 1 | S S S S | A A A A A A A A A A A A A A A A A A A A A A | Store byte from register to memory.                          |
--------------------------------------------------------------------------------------------------------------------------------------------------
-| LDW      | 1 1 1 0 1 0 | D D D D | A A A A A A A A A A A A A A A A A A A A A A | Load word from memory to register.                           |
--------------------------------------------------------------------------------------------------------------------------------------------------
-| STW      | 1 1 1 0 1 1 | S S S S | A A A A A A A A A A A A A A A A A A A A A A | Store word from register to memory.                          |
+| LDW      | 1 1 1 0 0 1 | D D D D | A A A A A A A A A A A A A A A A A A A A A A | Load word from program data section to register.             |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -375,8 +371,8 @@ opcode_special;
 typedef enum
 {
     OPCODE_LDB      = GEN_OPCODE(0x38), // LDB reg0, addr  ->  *reg0 = programDataSectionByteAligned[addr]
-    //Reserved      = GEN_OPCODE(0x39),
-    OPCODE_LDW      = GEN_OPCODE(0x3a), // STB reg0, addr  ->  *reg0 = programDataSectionWorldAligned[addr]
+    OPCODE_LDW      = GEN_OPCODE(0x39), // STB reg0, addr  ->  *reg0 = programDataSectionWorldAligned[addr]
+    //Reserved      = GEN_OPCODE(0x3a),
     //Reserved      = GEN_OPCODE(0x3b),
 }
 opcode_mem;
@@ -542,7 +538,7 @@ INLINE static reg_t instr_get_reg1(const instr_t instr)
 
 /* ----- Instruction constructors ----- */
 
-static instr_t instr_make_reg2(opcode_reg2 opcode, reg_t reg0, reg_t reg1, unsigned int flags)
+static instr_t instr_make_reg2(opcode_reg2 opcode, reg_t reg0, reg_t reg1)
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -551,8 +547,7 @@ static instr_t instr_make_reg2(opcode_reg2 opcode, reg_t reg0, reg_t reg1, unsig
         ((opcode & 0x3f      ) << 26) |
         #endif
         ((reg0   & 0x0f      ) << 22) |
-        ((reg1   & 0x0f      ) << 18) |
-         (flags  & 0x0003ffff)
+        ((reg1   & 0x0f      ) << 18)
     );
 }
 
@@ -574,6 +569,11 @@ static instr_t instr_make_jump(opcode_jump opcode, reg_t reg, unsigned int offse
     return instr_make_reg1(opcode, reg, offset);
 }
 
+static instr_t instr_make_float(opcode_float opcode, reg_t reg0, reg_t reg1)
+{
+    return instr_make_reg2(opcode, reg0, reg1);
+}
+
 static instr_t instr_make_mem(opcode_mem opcode, reg_t reg, unsigned int address)
 {
     return instr_make_reg1(opcode, reg, address);
@@ -581,7 +581,16 @@ static instr_t instr_make_mem(opcode_mem opcode, reg_t reg, unsigned int address
 
 static instr_t instr_make_memoff(opcode_memoff opcode, reg_t reg0, reg_t reg1, unsigned int offset)
 {
-    return instr_make_reg2(opcode, reg0, reg1, offset);
+    return (instr_t)(
+        #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
+        opcode                        |
+        #else
+        ((opcode & 0x3f      ) << 26) |
+        #endif
+        ((reg0   & 0x0f      ) << 22) |
+        ((reg1   & 0x0f      ) << 18) |
+         (offset & 0x0003ffff)
+    );
 }
 
 static instr_t instr_make_special1(opcode_special opcode, unsigned int value)
@@ -804,6 +813,20 @@ static void xvm_stack_debug(xvm_stack* stack, size_t first_entry, size_t num_ent
         const size_t n = XVM_MIN(first_entry + num_entries, stack->stack_size);
         for (size_t i = first_entry; i < n; ++i)
             printf("stack[%i] = %i\n", i, stack->storage[i]);
+    }
+}
+
+static void xvm_stack_debug_float(xvm_stack* stack, size_t first_entry, size_t num_entries)
+{
+    if (stack != NULL)
+    {
+        // Print all n-th stack entries
+        const size_t n = XVM_MIN(first_entry + num_entries, stack->stack_size);
+        for (size_t i = first_entry; i < n; ++i)
+        {
+            stack_word_t* entry = (stack->storage + i);
+            printf("stack[%i] = %f\n", i, *((float*)entry));
+        }
     }
 }
 
@@ -1795,14 +1818,14 @@ int main(int argc, char* argv[])
 
     ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R0, 0                 ))
     ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R1, 10                ))
-    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1, 0         ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1            ))
     ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 4                 ))
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                 ))
     ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_R0, 0                 ))
     ADD_INSTR(instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-4)))
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                         ))
 
-    #else //TEST2
+    #elif 0 //TEST2
 
     /*
     // Computes the first n-th squares: 0, 1, 4, 9, 16 ...
@@ -1840,9 +1863,9 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_jump       (OPCODE_JMP,  REG_PC, -3                        ))*/
 
     ADD_INSTR(instr_make_reg1       (OPCODE_ADD1, REG_SP, 8                         ))
-    ADD_INSTR(instr_make_reg2       (OPCODE_XOR2, REG_R0, REG_R0, 0                 ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_XOR2, REG_R0, REG_R0                    ))
     ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R1, 20                        ))
-    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1, 0                 ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                    ))
     ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 8                         ))
     ADD_INSTR(instr_make_memoff     (OPCODE_STWO, REG_R0, REG_LB, 0                 ))
     ADD_INSTR(instr_make_reg1       (OPCODE_ADD1, REG_R0, 2                         ))
@@ -1853,9 +1876,36 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_jump       (OPCODE_JMP,  REG_PC, -8                        ))
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                                 ))
     ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_R0, REG_LB, (unsigned int)(-4)))
-    ADD_INSTR(instr_make_reg2       (OPCODE_MUL2, REG_R0, REG_R0, 0                 ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_MUL2, REG_R0, REG_R0                    ))
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(instr_make_special2   (OPCODE_RET,  1, 1                              ))
+
+    #elif 1 //TEST3
+
+    /*
+    mov r0, 0
+    ldw r1, flt_lit_0
+    ldw r2, flt_lit_1
+    addf r1, r2
+    push r1
+    push r2
+    stop
+    flt_lit_0: DATA.float 3.0
+    flt_lit_1: DATA.float 5.0
+    */
+
+    float flt_lit0 = 3.0f;
+    float flt_lit1 = 5.0f;
+
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R0, 0     ))
+    ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R1, 7*4    ))
+    ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R2, 8*4    ))
+    ADD_INSTR(instr_make_float      (OPCODE_ADDF, REG_R1, REG_R2))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R1, 0     ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R2, 0     ))
+    ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0             ))
+    ADD_INSTR(*((instr_t*)(&flt_lit0)))
+    ADD_INSTR(*((instr_t*)(&flt_lit1)))
 
     #endif
     
@@ -1871,7 +1921,8 @@ int main(int argc, char* argv[])
 
     // Show stack output for the 20th first values
     log_println("-- Stack content: --");
-    xvm_stack_debug(&stack, 2, 20);
+    //xvm_stack_debug(&stack, 2, 20);
+    xvm_stack_debug_float(&stack, 0, 10);
 
     xvm_stack_free(&stack);
     xvm_bytecode_free(&byte_code);
