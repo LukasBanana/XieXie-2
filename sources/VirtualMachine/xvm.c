@@ -458,6 +458,21 @@ INLINE static void log_exitcode_error(const xvm_exit_codes exit_code)
 }
 
 
+/* ----- File helper ----- */
+
+static unsigned int file_read_uint(FILE* file)
+{
+    unsigned int value;
+    fread(&value, sizeof(value), 1, file);
+    return value;
+}
+
+static void file_write_uint(FILE* file, unsigned int value)
+{
+    fwrite(&value, sizeof(value), 1, file);
+}
+
+
 /* ----- Instruction ----- */
 
 typedef unsigned int instr_t;
@@ -667,12 +682,106 @@ static int xvm_bytecode_free(xvm_bytecode* byte_code)
     return 0;
 }
 
+/*
+
+XBC file format spec:
+
+WORD: magic number (Must be *(int*)"XBCF")
+WORD: version number (Must be 101 for "1.01")
+WORD: number of instructions
+WORD[n]: instructions
+
+*/
+
+#define XBC_FORMAT_MAGIC    (*((int*)("XBCF")))
+#define XBC_FORMAT_VERSION  101
+
 static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
 {
-    
-    //...
+    // Check arguments
+    if (byte_code == NULL || filename == NULL)
+    {
+        log_error("Invalid arguments");
+        return 0;
+    }
 
-    return 0;
+    // Open file for reading
+    FILE* file = fopen(filename, "rb");
+    if (file == NULL)
+    {
+        log_error("Unable to open file for reading");
+        return 0;
+    }
+
+    // Read magic number
+    unsigned int magic = file_read_uint(file);
+    if (magic != XBC_FORMAT_MAGIC)
+    {
+        log_error("Invalid magic number (Must be \"XBCF\")");
+        fclose(file);
+        return 0;
+    }
+
+    // Read version number
+    unsigned int version = file_read_uint(file);
+    if (version != XBC_FORMAT_VERSION)
+    {
+        log_error("Invalid version number (Must be 101)");
+        fclose(file);
+        return 0;
+    }
+
+    // Read instructions
+    unsigned int num_instr = file_read_uint(file);
+
+    if (xvm_bytecode_create(byte_code, (int)num_instr) == 0)
+    {
+        log_error("Creating byte code failed");
+        fclose(file);
+        return 0;
+    }
+
+    fread(byte_code->instructions, sizeof(instr_t), num_instr, file);
+
+    // Close file and return with success
+    fclose(file);
+
+    return 1;
+}
+
+static int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filename)
+{
+    // Check arguments
+    if (byte_code == NULL || byte_code->num_instructions <= 0 || byte_code->instructions == NULL || filename == NULL)
+    {
+        log_error("Invalid arguments");
+        return 0;
+    }
+
+    // Open file for writing
+    FILE* file = fopen(filename, "wb");
+    if (file == NULL)
+    {
+        log_error("Unable to open file for writing");
+        return 0;
+    }
+
+    // Write magic number
+    file_write_uint(file, XBC_FORMAT_MAGIC);
+
+    // Write version number
+    file_write_uint(file, XBC_FORMAT_VERSION);
+
+    // Write instructions
+    unsigned int num_instr = (unsigned int)byte_code->num_instructions;
+    file_write_uint(file, num_instr);
+
+    fwrite(byte_code->instructions, sizeof(instr_t), num_instr, file);
+
+    // Close file and return with success
+    fclose(file);
+
+    return 1;
 }
 
 
@@ -1644,16 +1753,21 @@ static void shell_print_help()
 {
     log_println("Usage: xvm [options] file");
     log_println("Options:");
-    log_println("  -h --help                Prints the help information");
-    log_println("  -v --version             Prints the version and license note");
+    log_println("  -h --help help           Prints the help information");
+    log_println("  --version                Prints the version and license note");
+    log_println("  --verbose                Prints additional output before and after program execution");
     log_println("  -st --stack-size <arg>   Sets the stack size (by default 256)");
 }
 
 static void shell_print_version()
 {
     log_println("XieXie 2.0 VirtualMachine (XVM)");
-    log_println("GNU LESSER GENERAL PUBLIC LICENSE Version 3 (LGPLv3)");
-    log_println("Copyright (c) 2014  Lukas Hermanns");
+    log_println("");
+    log_println("Copyright (C) 2014 Lukas Hermanns");
+    log_println("All rights reserved.");
+    log_println("");
+    log_println("This software may be modified and distributed under the terms");
+    log_println("of the BSD license.  See the LICENSE file for details.");
 }
 
 static int shell_parse_args(int argc, char* argv[])
@@ -1662,11 +1776,12 @@ static int shell_parse_args(int argc, char* argv[])
 
     if (argc <= 0)
     {
-        shell_print_help();
+        log_println("No input: enter \"help\" for information");
         return 0;
     }
 
     // Configuration memory
+    int verbose = 0;
     const char* filename = NULL;
     size_t stack_size = 256;
 
@@ -1681,10 +1796,12 @@ static int shell_parse_args(int argc, char* argv[])
         --argc;
 
         // Parse current argument
-        if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0)
+        if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0 || strcmp(arg, "help") == 0)
             shell_print_help();
-        else if (strcmp(arg, "-v") == 0 || strcmp(arg, "--version") == 0)
+        else if (strcmp(arg, "--version") == 0)
             shell_print_version();
+        else if (strcmp(arg, "--verbose") == 0)
+            verbose = 1;
         else if (strcmp(arg, "-st") == 0 || strcmp(arg, "--stack-size") == 0)
         {
             if (argc > 0)
@@ -1728,6 +1845,8 @@ static int shell_parse_args(int argc, char* argv[])
     {
         // Read byte code from file
         xvm_bytecode byte_code;
+        xvm_bytecode_init(&byte_code);
+
         if (xvm_bytecode_read_from_file(&byte_code, filename) == 0)
         {
             log_readfile_error(filename);
@@ -1745,6 +1864,8 @@ static int shell_parse_args(int argc, char* argv[])
 
         if (exit_code != EXITCODE_SUCCESS)
             log_exitcode_error(exit_code);
+        else if (verbose != 0)
+            log_println("Program terminated successful");
 
         // Clean up
         xvm_bytecode_free(&byte_code);
@@ -1795,6 +1916,7 @@ int main(int argc, char* argv[])
 
     size_t i = 0;
     #define ADD_INSTR(INSTR) byte_code.instructions[i++] = INSTR;
+    #define FINISH_INSTR byte_code.num_instructions = i;
 
     #if 0 //TEST1
 
@@ -1896,7 +2018,7 @@ int main(int argc, char* argv[])
 
     float flt_lit0 = 3.0f;
     float flt_lit1 = 5.0f;
-
+    
     ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R0, 0     ))
     ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R1, 7*4    ))
     ADD_INSTR(instr_make_mem        (OPCODE_LDW, REG_R2, 8*4    ))
@@ -1909,7 +2031,10 @@ int main(int argc, char* argv[])
 
     #endif
     
+    FINISH_INSTR
+
     #undef ADD_INSTR
+    #undef FINISH_INSTR
 
     // Execute the virtual program
     xvm_invoke_extern = (&TestInvokeExtern);
@@ -1923,6 +2048,8 @@ int main(int argc, char* argv[])
     log_println("-- Stack content: --");
     //xvm_stack_debug(&stack, 2, 20);
     xvm_stack_debug_float(&stack, 0, 10);
+
+    xvm_bytecode_write_to_file(&byte_code, "float_test1.xbc");
 
     xvm_stack_free(&stack);
     xvm_bytecode_free(&byte_code);
