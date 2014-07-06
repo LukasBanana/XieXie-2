@@ -17,8 +17,13 @@
 
 /* ----- Compilation configuration ----- */
 
+//! Enables force inlining
 #define _ENABLE_INLINEING_
-#define _ENABLE_RUNTIME_DEBUGGER_
+
+//! Enables runtimer debugger in virtual machine
+//#define _ENABLE_RUNTIME_DEBUGGER_
+
+//! Enables opcode extraction optimization (safes one SLL instruction in x86 code)
 #define _OPTIMIZE_OPCODE_EXTRACTION_
 
 
@@ -92,6 +97,36 @@ typedef enum
     REG_PC = 0x0f, // pc  ->  Program counter: POINTER to the current instruction in the byte-code.
 }
 register_id;
+
+/**
+Returns the name of the specified register or an empty string if the ID is invalid.
+\see register_id
+*/
+static const char* register_get_name(register_id reg)
+{
+    switch (reg)
+    {
+        case REG_R0: return "r0";
+        case REG_R1: return "r1";
+        case REG_R2: return "r2";
+        case REG_R3: return "r3";
+        case REG_R4: return "r4";
+        case REG_R5: return "r5";
+        case REG_R6: return "r6";
+        case REG_R7: return "r7";
+        case REG_R8: return "r8";
+        case REG_R9: return "r9";
+
+        case REG_OP: return "op";
+        case REG_GP: return "gp";
+
+        case REG_CF: return "cf";
+        case REG_LB: return "lb";
+        case REG_SP: return "sp";
+        case REG_PC: return "pc";
+    }
+    return "";
+}
 
 
 /* ----- OP-codes ----- */
@@ -640,20 +675,43 @@ static const char* intr_get_mnemonic(const opcode_t opcode)
         case OPCODE_RET:    return "ret";
         case OPCODE_PUSHC:  return "push";
         case OPCODE_INVK:   return "invk";
-
-        default:            break;
     }
     return "";
 }
 
-static void instr_print_debug_info(const instr_t instr, regi_t instr_index)
+/**
+Prints debug information for the specified instruction
+with the current state of the specified register set.
+*/
+static void instr_print_debug_info(const instr_t instr, regi_t instr_index, const regi_t* reg_ptr)
 {
-    printf(
-        "0x%p  %s\n",
-        (void*)(instr_index >> 2),
-        intr_get_mnemonic(instr_get_opcode(instr))
-    );
+    const opcode_t opcode = instr_get_opcode(instr);
 
+    printf("0x%*.8x  %s", 8, (instr_index >> 2), intr_get_mnemonic(opcode));
+
+    if (opcode == OPCODE_CMP)
+    {
+        reg_t reg0 = instr_get_reg0(instr);
+        reg_t reg1 = instr_get_reg1(instr);
+        printf(" %s, %s", register_get_name(reg0), register_get_name(reg1));
+    }
+    else if ( ( opcode >= OPCODE_MOV2 && opcode <= OPCODE_DEC  ) ||
+              ( opcode >= OPCODE_LDBO && opcode <= OPCODE_STWO ) )
+    {
+        reg_t reg0 = instr_get_reg0(instr);
+        regi_t value = reg_ptr[reg0];
+        printf(" %s (val: %i)", register_get_name(reg0), value);
+    }
+    else if (opcode >= OPCODE_ADDF && opcode <= OPCODE_DIVF)
+    {
+        reg_t reg0 = instr_get_reg0(instr);
+        regi_t value = reg_ptr[reg0];
+        printf(" %s (val: %f)", register_get_name(reg0), INT_TO_FLT_REINTERPRET(value));
+    }
+    else if (opcode == OPCODE_PUSHC)
+        printf(" %i", instr_get_sgn_value26(instr));
+
+    printf("\n");
 }
 
 
@@ -1167,14 +1225,14 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
 
         case INTR_PRINT_INT:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             printf("%i", arg0);
         }
         break;
 
         case INTR_PRINT_FLOAT:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             printf("%f", INT_TO_FLT_REINTERPRET(arg0));
         }
         break;
@@ -1391,16 +1449,26 @@ static xvm_exit_codes xvm_execute_program(
         return exception_val;
     }
 
+    #ifdef _ENABLE_RUNTIME_DEBUGGER_
+    instr = 0;
+    regi_t prev_pc_index = 0;
+    #endif
+
     /* --- Start with program execution --- */
     while (*reg_pc < instr_ptr_end)
     {
+        #ifdef _ENABLE_RUNTIME_DEBUGGER_
+        if (instr != 0)
+            instr_print_debug_info(instr, prev_pc_index, reg.i);
+        #endif
+
         /* Load next instruction */
         instr = *((instr_t*)(*reg_pc));
 
         opcode = instr_get_opcode(instr);
 
         #ifdef _ENABLE_RUNTIME_DEBUGGER_
-        instr_print_debug_info(instr, *reg_pc - instr_ptr_begin);
+        prev_pc_index = *reg_pc - instr_ptr_begin;
         #endif
 
         /* Execute current instruction */
@@ -2281,31 +2349,31 @@ int main(int argc, char* argv[])
     07          call fib
     08          call Intr.PrintInt  ; print result
     09          call Intr.PrintLn
-    10          pop r0
-    11          dec r0
-    12          jmp .loop           ; while end
-    13  .end:   stop
-    14  fib:    ldw r0, (lb) -4     ; get argument
-    15          mov r1, 2
-    16          cmp r0, r1
-    17          jg .else
-    18          push 1
-    19          ret (1) 1
-    20  .else:  dec r0
-    21          push r0             ; push t0 = (n-1)
-    22          push r0             ; fib argument (n-1)
-    23          call fib
-    24          pop r0              ; fib result
-    25          pop r1              ; pop t0
-    26          dec r1
-    27          push r0             ; push t1 = result
-    28          push r1             ; fib argument (n-2)
-    29          call fib
-    30          pop r0              ; fib result
-    31          pop r1              ; pop t1
-    32          add r0, r1
-    33          push r0             ; push result
-    34          ret (1) 1
+    0a          pop r0
+    0b          dec r0
+    0c          jmp .loop           ; while end
+    0d  .end:   stop
+    0e  fib:    ldw r0, (lb) -4     ; get argument
+    0f          mov r1, 2
+    10          cmp r0, r1
+    11          jg .else
+    12          push 1
+    13          ret (1) 1
+    14  .else:  dec r0
+    15          push r0             ; push t0 = (n-1)
+    16          push r0             ; fib argument (n-1)
+    17          call fib
+    18          pop r0              ; fib result
+    19          pop r1              ; pop t0
+    1a          dec r1
+    1b          push r0             ; push t1 = result
+    1c          push r1             ; fib argument (n-2)
+    1d          call fib
+    1e          pop r0              ; fib result
+    1f          pop r1              ; pop t1
+    20          add r0, r1
+    21          push r0             ; push result
+    22          ret (1) 1
     */
 
     ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_INPUT_INT            ))
@@ -2322,7 +2390,7 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_reg1       (OPCODE_DEC,  REG_R0, 0                         ))
     ADD_INSTR(instr_make_jump       (OPCODE_JMP,  REG_PC, (unsigned int)(-10)       ))
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                                 ))
-    ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_R0, REG_LB, (unsigned int)(-4)))
+    ADD_INSTR(instr_make_memoff     (OPCODE_LDWO, REG_R0, REG_LB, (unsigned int)(-4))) // fib:
     ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R1, 2                         ))
     ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                    ))
     ADD_INSTR(instr_make_jump       (OPCODE_JG,   REG_PC, 3                         ))
@@ -2338,8 +2406,8 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R1, 0                         ))
     ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, (unsigned int)(-15)       )) // call fib
-    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R1, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_POP,  REG_R0, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_POP,  REG_R1, 0                         ))
     ADD_INSTR(instr_make_reg2       (OPCODE_ADD2, REG_R0, REG_R1                    ))
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(instr_make_special2   (OPCODE_RET,  1, 1                              )) // ret (1) 1
@@ -2368,7 +2436,7 @@ int main(int argc, char* argv[])
     xvm_stack_debug_float(&stack, 0, 10);
     #endif
 
-    xvm_bytecode_write_to_file(&byte_code, "float_test1.xbc");
+    xvm_bytecode_write_to_file(&byte_code, "fibonacci.xbc");
 
     xvm_stack_free(&stack);
     xvm_bytecode_free(&byte_code);
