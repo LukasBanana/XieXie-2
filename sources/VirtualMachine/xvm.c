@@ -21,7 +21,7 @@
 #define _ENABLE_INLINEING_
 
 //! Enables runtimer debugger in virtual machine
-//#define _ENABLE_RUNTIME_DEBUGGER_
+#define _ENABLE_RUNTIME_DEBUGGER_
 
 //! Enables opcode extraction optimization (safes one SLL instruction in x86 code)
 #define _OPTIMIZE_OPCODE_EXTRACTION_
@@ -132,26 +132,26 @@ All registers can be used for integral and floating-point data.
 typedef enum
 {
     /* --- General purpose registers --- */
-    REG_R0 = 0x00, // r0  ->  General purpose register 0.
-    REG_R1 = 0x01, // r1  ->  General purpose register 1.
-    REG_R2 = 0x02, // r2  ->  General purpose register 2.
-    REG_R3 = 0x03, // r3  ->  General purpose register 3.
-    REG_R4 = 0x04, // r4  ->  General purpose register 4.
-    REG_R5 = 0x05, // r5  ->  General purpose register 5.
-    REG_R6 = 0x06, // r6  ->  General purpose register 6.
-    REG_R7 = 0x07, // r7  ->  General purpose register 7.
-    REG_R8 = 0x08, // r8  ->  General purpose register 8.
-    REG_R9 = 0x09, // r9  ->  General purpose register 9.
+    REG_R0 = 0x00, // $r0  ->  General purpose register 0.
+    REG_R1 = 0x01, // $r1  ->  General purpose register 1.
+    REG_R2 = 0x02, // $r2  ->  General purpose register 2.
+    REG_R3 = 0x03, // $r3  ->  General purpose register 3.
+    REG_R4 = 0x04, // $r4  ->  General purpose register 4.
+    REG_R5 = 0x05, // $r5  ->  General purpose register 5.
+    REG_R6 = 0x06, // $r6  ->  General purpose register 6.
+    REG_R7 = 0x07, // $r7  ->  General purpose register 7.
+    REG_R8 = 0x08, // $r8  ->  General purpose register 8.
+    REG_R9 = 0x09, // $r9  ->  General purpose register 9.
 
     /* --- Special purpose registers --- */
-    REG_OP = 0x0a, // op  ->  Object pointer: "this" POINTER to the current object in a member function.
-    REG_GP = 0x0b, // gp  ->  Global pointer: POINTER to the global variables in the stack.
+    REG_OP = 0x0a, // $op  ->  Object pointer: "this" POINTER to the current object in a member function.
+    REG_GP = 0x0b, // $gp  ->  Global pointer: POINTER to the global variables in the stack.
 
     /* --- Register for internal use --- */
-    REG_CF = 0x0c, // cf  ->  Conditional flags: used for jump conditions.
-    REG_LB = 0x0d, // lb  ->  Base pointer: POINTER to the base of the current stack frame.
-    REG_SP = 0x0e, // sp  ->  Stack pointer: POINTER to the top of the stack storage.
-    REG_PC = 0x0f, // pc  ->  Program counter: POINTER to the current instruction in the byte-code.
+    REG_CF = 0x0c, // $cf  ->  Conditional flags: used for jump conditions.
+    REG_LB = 0x0d, // $lb  ->  Base pointer: POINTER to the base of the current stack frame.
+    REG_SP = 0x0e, // $sp  ->  Stack pointer: POINTER to the top of the stack storage.
+    REG_PC = 0x0f, // $pc  ->  Program counter: POINTER to the current instruction in the byte-code.
 }
 register_id;
 
