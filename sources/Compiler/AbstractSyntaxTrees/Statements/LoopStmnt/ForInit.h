@@ -29,7 +29,7 @@ class ForInit : public AST
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace AbstractSyntaxTrees
 
 
 #endif

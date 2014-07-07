@@ -35,7 +35,7 @@ class ForStmnt : public LoopStmnt
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace AbstractSyntaxTrees
 
 
 #endif

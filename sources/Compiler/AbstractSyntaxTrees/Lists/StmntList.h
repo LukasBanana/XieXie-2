@@ -37,7 +37,7 @@ class StmntList : public AST
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace AbstractSyntaxTrees
 
 
 #endif

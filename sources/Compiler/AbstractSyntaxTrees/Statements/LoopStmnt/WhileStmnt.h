@@ -33,7 +33,7 @@ class WhileStmnt : public LoopStmnt
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace AbstractSyntaxTrees
 
 
 #endif

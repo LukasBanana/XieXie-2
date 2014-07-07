@@ -34,7 +34,7 @@ class ForEachStmnt : public LoopStmnt
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace AbstractSyntaxTrees
 
 
 #endif

@@ -6,10 +6,10 @@
  */
 
 #include "SourcePosition.h"
-#include "StringMod.h"
+#include "StringModifier.h"
 
 
-namespace SyntacticAnalyzer
+namespace SyntaxAnalyzer
 {
 
 
@@ -36,13 +36,13 @@ void SourcePosition::IncColumn()
     ++column_;
 }
 
-bool SourcePosition::Valid() const
+bool SourcePosition::IsValid() const
 {
     return row_ > 0 && column_ > 0;
 }
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace SyntaxAnalyzer
 
 
 

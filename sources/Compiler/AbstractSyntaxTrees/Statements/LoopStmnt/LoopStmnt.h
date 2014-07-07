@@ -43,7 +43,7 @@ class LoopStmnt : public Stmnt
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace AbstractSyntaxTrees
 
 
 #endif

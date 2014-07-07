@@ -33,7 +33,7 @@ class DoWhileStmnt : public LoopStmnt
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace AbstractSyntaxTrees
 
 
 #endif

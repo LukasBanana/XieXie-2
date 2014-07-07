@@ -37,7 +37,7 @@ class CodeBlock : public AST
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace AbstractSyntaxTrees
 
 
 #endif

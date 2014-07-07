@@ -31,7 +31,7 @@ class ForEverStmnt : public LoopStmnt
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace AbstractSyntaxTrees
 
 
 #endif

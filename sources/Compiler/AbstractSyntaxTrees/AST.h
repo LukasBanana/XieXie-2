@@ -22,7 +22,7 @@ namespace AbstractSyntaxTrees
 {
 
 
-using namespace SyntacticAnalyzer;
+using namespace SyntaxAnalyzer;
 
 
 #define DefineASTVisitProc(n)                                                       \

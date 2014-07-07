@@ -47,7 +47,7 @@ class Stmnt : public AST
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace AbstractSyntaxTrees
 
 
 #endif

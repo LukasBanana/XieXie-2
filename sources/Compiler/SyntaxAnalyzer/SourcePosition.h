@@ -12,7 +12,7 @@
 #include <string>
 
 
-namespace SyntacticAnalyzer
+namespace SyntaxAnalyzer
 {
 
 
@@ -87,7 +87,7 @@ inline bool operator >= (const SourcePosition& left, const SourcePosition& right
 
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace SyntaxAnalyzer
 
 
 #endif

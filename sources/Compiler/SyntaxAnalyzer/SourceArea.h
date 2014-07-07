@@ -12,7 +12,7 @@
 #include "SourcePosition.h"
 
 
-namespace SyntacticAnalyzer
+namespace SyntaxAnalyzer
 {
 
 
@@ -50,7 +50,7 @@ class SourceArea
 };
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace SyntaxAnalyzer
 
 
 #endif

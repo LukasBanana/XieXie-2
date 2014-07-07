@@ -6,10 +6,10 @@
  */
 
 #include "SourceArea.h"
-#include "StringMod.h"
+#include "StringModifier.h"
 
 
-namespace SyntacticAnalyzer
+namespace SyntaxAnalyzer
 {
 
 
@@ -22,7 +22,7 @@ SourceArea::SourceArea(const SourcePosition& pos) :
 }
 SourceArea::SourceArea(const SourcePosition& startPos, const SourcePosition& endPos) :
     start( startPos ),
-    end  ( endPops  )
+    end  ( endPos   )
 {
 }
 
@@ -42,7 +42,7 @@ bool SourceArea::IsMultiLine() const
 }
 
 
-} // /namespace SyntacticAnalyzer
+} // /namespace SyntaxAnalyzer
 
 
 

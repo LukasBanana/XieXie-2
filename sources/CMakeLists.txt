@@ -35,16 +35,33 @@ set(
 
 # === Source group folders ===
 
-#source_group(
-#	"Base" FILES
-#	${FilesBase}
-#)
+source_group(
+	"Base" FILES
+	${FilesBaseAll}
+)
+
+source_group(
+	"Compiler" FILES
+	${FilesCompilerAll}
+)
+
+source_group(
+	"Shell" FILES
+	${FilesShellAll}
+)
+
+source_group(
+	"VirtualMachine" FILES
+	${FilesVirtualMachineAll}
+)
 
 
 # === Include directories ===
 
+include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/Base")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler")
+include_directories("${PROJECT_SOURCE_DIR}/Compiler/Assembler")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Expressions")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Lists")
@@ -54,8 +71,8 @@ include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Operator
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Statements")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/TypeDenoters")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/CodeGenerator")
-include_directories("${PROJECT_SOURCE_DIR}/Compiler/ContextualAnalyzer")
-include_directories("${PROJECT_SOURCE_DIR}/Compiler/SyntacticAnalyzer")
+include_directories("${PROJECT_SOURCE_DIR}/Compiler/ContextAnalyzer")
+include_directories("${PROJECT_SOURCE_DIR}/Compiler/SyntaxAnalyzer")
 include_directories("${PROJECT_SOURCE_DIR}/Shell")
 #include_directories("${PROJECT_SOURCE_DIR}/VirtualMachine")
 
