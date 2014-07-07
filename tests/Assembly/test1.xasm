@@ -1,12 +1,16 @@
 ; Test
 ; 07/07/2014
 
-		call Main
-		stop
-Main:	xor $r0, $r0
-		
-		
-		
-		stop
+		call	Main
+		stop	
+Main:	xor		$r0, $r0
+		mov		$r1, lng0		; Load value of 'lng0'
+		inc		$sp
+		stw		$r1, ($lb) 4	; Store value of $r1 in local scope
+		ldw 	$r2, @str0		; Load address of 'str0'
+		push	$r2
+		call	Intr.PrintLn	; Print str0 with new-line
+		ret		(0) 0
 
 str0:	DATA.string "Hello, World!"
+lng0:	DATA.int 999
