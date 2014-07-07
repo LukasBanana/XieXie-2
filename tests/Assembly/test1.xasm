@@ -1,0 +1,12 @@
+; Test
+; 07/07/2014
+
+		call Main
+		stop
+Main:	xor $r0, $r0
+		
+		
+		
+		stop
+
+str0:	DATA.string "Hello, World!"
