@@ -17,5 +17,5 @@ Main:	mov		$r1, lng0		; load value of 'lng0'
 		jmp		.for0
 .end0:	ret		(0) 0			; return
 
-str0:	DATA.string "Hello, World!"
-lng0:	DATA.int 999
+str0:	.ascii	"Hello, World!"
+lng0:	.word	999

@@ -66,7 +66,7 @@ void Warning(const std::string& message, bool appendPrefix)
     //ScopedColor color(Colors::Yellow);
 
     if (appendPrefix)
-        Message("WARNING >> " + message);
+        Message("warning: " + message);
     else
         Message(message);
 }
@@ -81,7 +81,7 @@ void Error(const std::string& message, bool isFatal, bool appendPrefix)
         SetColor(Colors::Red | Colors::Intens);*/
 
     if (appendPrefix)
-        Message("ERROR >> " + message);
+        Message("error: " + message);
     else
         Message(message);
 

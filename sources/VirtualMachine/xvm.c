@@ -17,6 +17,9 @@
 
 /* ----- Compilation configuration ----- */
 
+//! Removes the XVM test suite (removes the "main" function)
+//#define _REMOVE_XVM_TESTSUITE_
+
 //! Enables force inlining
 #define _ENABLE_INLINEING_
 
@@ -82,6 +85,10 @@
 
 #endif
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* ----- Helper macros ----- */
 
@@ -843,6 +850,7 @@ static const char* instr_get_mnemonic(const opcode_t opcode)
             
         /* --- opcode_reg1 --- */
 
+        case OPCODE_PUSHC:
         case OPCODE_PUSH:   return "push";
         case OPCODE_POP:    return "pop ";
         case OPCODE_INC:    return "inc ";
@@ -883,7 +891,6 @@ static const char* instr_get_mnemonic(const opcode_t opcode)
 
         case OPCODE_STOP:   return "stop";
         case OPCODE_RET:    return "ret ";
-        case OPCODE_PUSHC:  return "push";
         case OPCODE_INVK:   return "invk";
     }
     return "";
@@ -908,8 +915,8 @@ static void instr_print_debug_info(const instr_t instr, regi_t instr_index, cons
         reg_t reg0 = instr_get_reg0(instr);
         reg_t reg1 = instr_get_reg1(instr);
 
-        const char* reg0name = register_get_name(reg0);
-        const char* reg1name = register_get_name(reg1);
+        const char* reg0name = register_get_name((register_id)reg0);
+        const char* reg1name = register_get_name((register_id)reg1);
 
         printf("%s, %s    ($cf = %i)", reg0name, reg1name, reg_ptr[REG_CF]);
     }
@@ -922,7 +929,7 @@ static void instr_print_debug_info(const instr_t instr, regi_t instr_index, cons
     {
         int addr_offset = instr_get_sgn_value22(instr);
         if (addr_offset >= INTR_RESERVED)
-            printf("%s  <intrinsic>", intrinsic_get_ident(addr_offset));
+            printf("%s  <intrinsic>", intrinsic_get_ident((intrinsic_addr)addr_offset));
         else
             printf("%i", addr_offset);
     }
@@ -931,8 +938,8 @@ static void instr_print_debug_info(const instr_t instr, regi_t instr_index, cons
         reg_t reg0 = instr_get_reg0(instr);
         reg_t reg1 = instr_get_reg1(instr);
 
-        const char* reg0name = register_get_name(reg0);
-        const char* reg1name = register_get_name(reg1);
+        const char* reg0name = register_get_name((register_id)reg0);
+        const char* reg1name = register_get_name((register_id)reg1);
 
         regi_t value = reg_ptr[reg0];
 
@@ -944,7 +951,7 @@ static void instr_print_debug_info(const instr_t instr, regi_t instr_index, cons
         reg_t reg0 = instr_get_reg0(instr);
         regi_t value = reg_ptr[reg0];
 
-        const char* reg0name = register_get_name(reg0);
+        const char* reg0name = register_get_name((register_id)reg0);
 
         printf("%s         (%s = %i)", reg0name, reg0name, value);
     }
@@ -953,7 +960,7 @@ static void instr_print_debug_info(const instr_t instr, regi_t instr_index, cons
         reg_t reg0 = instr_get_reg0(instr);
         regi_t value = reg_ptr[reg0];
 
-        const char* reg0name = register_get_name(reg0);
+        const char* reg0name = register_get_name((register_id)reg0);
 
         printf("%s         (%s = %f)", reg0name, reg0name, INT_TO_FLT_REINTERPRET(value));
     }
@@ -994,17 +1001,17 @@ static instr_t instr_make_reg1(opcode_reg1 opcode, reg_t reg, unsigned int value
 
 static instr_t instr_make_jump(opcode_jump opcode, reg_t reg, unsigned int offset)
 {
-    return instr_make_reg1(opcode, reg, offset);
+    return instr_make_reg1((opcode_reg1)opcode, reg, offset);
 }
 
 static instr_t instr_make_float(opcode_float opcode, reg_t reg0, reg_t reg1)
 {
-    return instr_make_reg2(opcode, reg0, reg1);
+    return instr_make_reg2((opcode_reg2)opcode, reg0, reg1);
 }
 
 static instr_t instr_make_mem(opcode_mem opcode, reg_t reg, unsigned int address)
 {
-    return instr_make_reg1(opcode, reg, address);
+    return instr_make_reg1((opcode_reg1)opcode, reg, address);
 }
 
 static instr_t instr_make_memoff(opcode_memoff opcode, reg_t reg0, reg_t reg1, unsigned int offset)
@@ -1114,7 +1121,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     // Check arguments
     if (byte_code == NULL || filename == NULL)
     {
-        log_error("Invalid arguments");
+        log_error("Invalid arguments to read byte code");
         return 0;
     }
 
@@ -1167,7 +1174,7 @@ static int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     // Check arguments
     if (byte_code == NULL || byte_code->num_instructions <= 0 || byte_code->instructions == NULL || filename == NULL)
     {
-        log_error("Invalid arguments");
+        log_error("Invalid arguments to write byte code");
         return 0;
     }
 
@@ -1659,7 +1666,7 @@ static xvm_exit_codes xvm_execute_program(
     if (exception_val != 0)
     {
         log_error(xvm_exception_err);
-        return exception_val;
+        return (xvm_exit_codes)exception_val;
     }
 
     #ifdef _ENABLE_RUNTIME_DEBUGGER_
@@ -2382,6 +2389,8 @@ static int shell_parse_args(int argc, char* argv[])
 }
 
 
+#ifndef _REMOVE_XVM_TESTSUITE_
+
 /* ----- Main ----- */
 
 typedef enum
@@ -2674,3 +2683,10 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+#endif // /_REMOVE_XVM_TESTSUITE_
+
+#ifdef __cplusplus
+}
+#endif
+

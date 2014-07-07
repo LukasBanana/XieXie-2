@@ -25,6 +25,7 @@ class Shell
         
         void CmdVersion();
         void CmdHelp();
+        void CmdAssemble(const Command::ArgumentListType& args);
 
 };
 

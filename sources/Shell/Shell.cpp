@@ -9,6 +9,8 @@
 #include "Console.h"
 #include "Version.h"
 
+#include "Assembler.h"
+
 #include <iostream>
 
 
@@ -31,17 +33,21 @@ bool Shell::ExecuteCommand(const Command& cmd)
 
         if (arg.front() == '-')
         {
-            if (arg == "--version" || arg == "-v")
+            if (arg == "--version")
                 CmdVersion();
             else if (arg == "--help" || arg == "-h")
                 CmdHelp();
+            else if (arg == "--assemble" || arg == "-asm")
+                CmdAssemble(args);
             else
-                Error("Unknown command flag \"" + arg + "\"");
+                Error("unknown command flag \"" + arg + "\"");
         }
         else if (arg == "input")
             WaitForUserInput();
+        else if (arg == "help")
+            CmdHelp();
         else
-            Error("Unknown command \"" + arg + "\"");
+            Error("unknown command \"" + arg + "\"");
     }
 
     return true;
@@ -53,7 +59,7 @@ void Shell::WaitForUserInput()
 
     while (true)
     {
-        std::cin >> input;
+        std::getline(std::cin, input);
 
         if (input == "exit" || input == "q" || input == "quit" || input == "esc" || input == "escape")
             break;
@@ -80,6 +86,20 @@ void Shell::CmdVersion()
 void Shell::CmdHelp()
 {
     //...
+}
+
+void Shell::CmdAssemble(const Command::ArgumentListType& args)
+{
+    auto filename = args.back();
+
+    Console::Message("assemble file \"" + filename + "\"");
+
+    XieXie::Assembler assembler;
+
+    if (assembler.AssembleFile(filename, filename + ".xbc"))
+        Console::Success("assembling XASM file succeeded");
+    else
+        Console::Error("assembling XASM file failed");
 }
 
 

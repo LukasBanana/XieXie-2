@@ -41,6 +41,11 @@ bool SourcePosition::IsValid() const
     return row_ > 0 && column_ > 0;
 }
 
+void SourcePosition::Reset()
+{
+    row_ = column_ = 0;
+}
+
 
 } // /namespace SyntaxAnalyzer
 

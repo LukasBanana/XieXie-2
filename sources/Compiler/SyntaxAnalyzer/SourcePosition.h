@@ -34,6 +34,9 @@ class SourcePosition
         //! Returns ture if this is a valid source position. False if row and column are 0.
         bool IsValid() const;
 
+        //! Reste the source position to (0:0).
+        void Reset();
+
         //! Returns the row of the source position, beginning with 1.
         inline unsigned int GetRow() const
         {
