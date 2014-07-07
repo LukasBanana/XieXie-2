@@ -21,17 +21,16 @@
 #define _ENABLE_INLINEING_
 
 //! Enables runtimer debugger in virtual machine
-#define _ENABLE_RUNTIME_DEBUGGER_
+//#define _ENABLE_RUNTIME_DEBUGGER_
+
+//! Shows the instruction indices as hex numbers.
+//#define _SHOW_RUNTIME_HEXLINES_
 
 //! Enables opcode extraction optimization (safes one SLL instruction in x86 code)
 #define _OPTIMIZE_OPCODE_EXTRACTION_
 
 //! Enables OS specific features
 #define _ENABLE_OS_FEATURES_
-
-#ifndef _DEBUG
-#undef _ENABLE_RUNTIME_DEBUGGER_
-#endif
 
 
 /* ----- OS specific includes ----- */
@@ -163,24 +162,24 @@ static const char* register_get_name(register_id reg)
 {
     switch (reg)
     {
-        case REG_R0: return "r0";
-        case REG_R1: return "r1";
-        case REG_R2: return "r2";
-        case REG_R3: return "r3";
-        case REG_R4: return "r4";
-        case REG_R5: return "r5";
-        case REG_R6: return "r6";
-        case REG_R7: return "r7";
-        case REG_R8: return "r8";
-        case REG_R9: return "r9";
+        case REG_R0: return "$r0";
+        case REG_R1: return "$r1";
+        case REG_R2: return "$r2";
+        case REG_R3: return "$r3";
+        case REG_R4: return "$r4";
+        case REG_R5: return "$r5";
+        case REG_R6: return "$r6";
+        case REG_R7: return "$r7";
+        case REG_R8: return "$r8";
+        case REG_R9: return "$r9";
 
-        case REG_OP: return "op";
-        case REG_GP: return "gp";
+        case REG_OP: return "$op";
+        case REG_GP: return "$gp";
 
-        case REG_CF: return "cf";
-        case REG_LB: return "lb";
-        case REG_SP: return "sp";
-        case REG_PC: return "pc";
+        case REG_CF: return "$cf";
+        case REG_LB: return "$lb";
+        case REG_SP: return "$sp";
+        case REG_PC: return "$pc";
     }
     return "";
 }
@@ -575,6 +574,159 @@ static void file_write_uint(FILE* file, unsigned int value)
 }
 
 
+/* ----- Intrinsics ----- */
+
+/*
+
+Calling convention:
+- CALLER pushes all arguments from RIGHT-to-LEFT onto stack.
+- CALLEE pops all arguments from the stack.
+- CALLEE pushes result onto stack.
+
+*/
+
+typedef enum
+{
+    INTR_RESERVED       = 0x001fff00, // Start address of reserved primitive procedures.
+
+    /* --- Dynamic memory intrinsics --- */
+    INTR_ALLOC_MEM      = 0x001fff00, // void* AllocMem(uint sizeInBytes).
+    INTR_FREE_MEM       = 0x001fff01, // void FreeMem(void* memoryAddress).
+    INTR_COPY_MEM       = 0x001fff02, // void CopyMem(const void* srcMemAddr, void* dstMemAddr, uint sizeInBytes);
+    
+    /* --- Console intrinsics --- */
+    INTR_SYS_CALL       = 0x001fff20, // void SysCall(const byte* stringAddress).
+    INTR_CLEAR          = 0x001fff21, // void ClearTerm().
+    INTR_PRINT          = 0x001fff22, // void Print(const byte* stringAddress).
+    INTR_PRINT_LN       = 0x001fff23, // void PrintLn(const byte* stringAddress).
+    INTR_PRINT_INT      = 0x001fff24, // void PrintInt(int value);
+    INTR_PRINT_FLOAT    = 0x001fff25, // void PrintFloat(float value);
+    INTR_INPUT_INT      = 0x001fff26, // int InputInt();
+    INTR_INPUT_FLOAT    = 0x001fff27, // float InputFloat();
+
+    /* --- Conditional intrinsics --- */
+    // For easier expression evaluation.
+    // For better performance, make use of conditional jump instructions instead.
+    INTR_CMP_E          = 0x001fff30,
+    INTR_CMP_NE         = 0x001fff31,
+    INTR_CMP_L          = 0x001fff32,
+    INTR_CMP_LE         = 0x001fff33,
+    INTR_CMP_G          = 0x001fff34,
+    INTR_CMP_GE         = 0x001fff35,
+    INTR_LOGIC_OR       = 0x001fff36,
+    INTR_LOGIC_AND      = 0x001fff37,
+    INTR_LOGIC_NOT      = 0x001fff38,
+
+    /* --- File intrinsics --- */
+    INTR_CREATE_FILE    = 0x001fff40, // int CreateFile(const byte* stringAddress).
+    INTR_DELETE_FILE    = 0x001fff41, // int DeleteFile(const byte* stringAddress).
+    INTR_OPEN_FILE      = 0x001fff42, // void* OpenFile(const byte* stringAddress).
+    INTR_CLOSE_FILE     = 0x001fff43, // void CloseFile(void* fileHandle).
+    INTR_FILE_SIZE      = 0x001fff44, // int FileSize(const void* fileHandle).
+    INTR_SET_FILE_POS   = 0x001fff45, // void FileSetPos(const void* fileHandle, int pos).
+    INTR_GET_FILE_POS   = 0x001fff46, // int FileGetPos(const void* fileHandle).
+    INTR_FileEOF        = 0x001fff47, // int FileEOF(const void* fileHandle).
+    INTR_WRITE_BYTE     = 0x001fff48, // void WriteByte(const void* fileHandle, const void* memoryAddress).
+    INTR_WRITE_INT      = 0x001fff49, // void WriteWord(const void* fileHandle, const void* memoryAddress).
+    INTR_WRITE_FLOAT    = 0x001fff4a, // void WriteFloat(const void* fileHandle, const void* memoryAddress).
+    INTR_READ_BYTE      = 0x001fff4b, // void ReadByte(const void* fileHandle, void* memoryAddress).
+    INTR_READ_INT       = 0x001fff4c, // void ReadWord(const void* fileHandle, void* memoryAddress).
+    INTR_READ_FLOAT     = 0x001fff4d, // void ReadFloat(const void* fileHandle, void* memoryAddress).
+
+    /* --- Math intrinsics --- */
+    INTR_SIN            = 0x001fff80, // float Sin(float x).
+    INTR_COS            = 0x001fff81, // float Cos(float x).
+    INTR_TAN            = 0x001fff82, // float Tan(float x).
+    INTR_ASIN           = 0x001fff83, // float ASin(float x).
+    INTR_ACOS           = 0x001fff84, // float ACos(float x).
+    INTR_ATAN           = 0x001fff85, // float ATan(float x).
+    INTR_POW            = 0x001fff86, // float Pow(float base, float exp).
+    INTR_SQRT           = 0x001fff87, // float Sqrt(float x).
+
+    /* --- Other intrinsics --- */
+    INTR_RAND_INT       = 0x001fff88, // int RandInt() -> In range [0 .. MAX_INT].
+    INTR_RAND_FLOAT     = 0x001fff89, // float RandFloat() -> In range [0.0 .. 1.0].
+    INTR_TIME           = 0x001fff8a, // int Time() -> Ellapsed time since program start (in ms.).
+    INTR_SLEEP          = 0x001fff8b, // void Sleep(int duration).
+}
+intrinsic_addr;
+
+/**
+Returns the mnemonic of the specified instruction opcode or an empty string if the opcode is invalid.
+If the opcode is valid, the returned string will always consist of 4 characters plus the null terminator '\0'.
+*/
+static const char* intrinsic_get_ident(const intrinsic_addr addr)
+{
+    switch (addr)
+    {
+        /* --- Dynamic memory intrinsics --- */
+        
+        case INTR_ALLOC_MEM:    return "AllocMem";
+        case INTR_FREE_MEM:     return "FreeMem";
+        case INTR_COPY_MEM:     return "CopyMem";
+    
+        /* --- Console intrinsics --- */
+
+        case INTR_SYS_CALL:     return "SysCall";
+        case INTR_CLEAR:        return "Clear";
+        case INTR_PRINT:        return "Print";
+        case INTR_PRINT_LN:     return "PrintLn";
+        case INTR_PRINT_INT:    return "PrintInt";
+        case INTR_PRINT_FLOAT:  return "PrintFloat";
+        case INTR_INPUT_INT:    return "InputInt";
+        case INTR_INPUT_FLOAT:  return "InputFloat";
+
+        /* --- Conditional intrinsics --- */
+
+        case INTR_CMP_E:        return "CmpE";
+        case INTR_CMP_NE:       return "CmpNE";
+        case INTR_CMP_L:        return "CmpL";
+        case INTR_CMP_LE:       return "CmpLE";
+        case INTR_CMP_G:        return "CmpG";
+        case INTR_CMP_GE:       return "CmpGE";
+        case INTR_LOGIC_OR:     return "LogicOr";
+        case INTR_LOGIC_AND:    return "LogicAnd";
+        case INTR_LOGIC_NOT:    return "LogicNot";
+
+        /* --- File intrinsics --- */
+
+        case INTR_CREATE_FILE:  return "CreateFile";
+        case INTR_DELETE_FILE:  return "DeleteFile";
+        case INTR_OPEN_FILE:    return "OpenFile";
+        case INTR_CLOSE_FILE:   return "CloseFile";
+        case INTR_FILE_SIZE:    return "FileSize";
+        case INTR_SET_FILE_POS: return "SetFilePos";
+        case INTR_GET_FILE_POS: return "GetFilePos";
+        case INTR_FileEOF:      return "FileEOF";
+        case INTR_WRITE_BYTE:   return "WriteByte";
+        case INTR_WRITE_INT:    return "WriteInt";
+        case INTR_WRITE_FLOAT:  return "WriteFloat";
+        case INTR_READ_BYTE:    return "ReadByte";
+        case INTR_READ_INT:     return "ReadInt";
+        case INTR_READ_FLOAT:   return "ReadFloat";
+
+        /* --- Math intrinsics --- */
+
+        case INTR_SIN:          return "Sin";
+        case INTR_COS:          return "Cos";
+        case INTR_TAN:          return "Tan";
+        case INTR_ASIN:         return "ASin";
+        case INTR_ACOS:         return "ACos";
+        case INTR_ATAN:         return "ATan";
+        case INTR_POW:          return "Pow";
+        case INTR_SQRT:         return "Sqrt";
+
+        /* --- Other intrinsics --- */
+
+        case INTR_RAND_INT:     return "RandInt";
+        case INTR_RAND_FLOAT:   return "RandFloat";
+        case INTR_TIME:         return "Time";
+        case INTR_SLEEP:        return "Sleep";
+    }
+    return "";
+}
+
+
 /* ----- Instruction ----- */
 
 typedef unsigned int instr_t;
@@ -654,56 +806,57 @@ INLINE static reg_t instr_get_reg1(const instr_t instr)
 
 /**
 Returns the mnemonic of the specified instruction opcode or an empty string if the opcode is invalid.
+If the opcode is valid, the returned string will always consist of 4 characters plus the null terminator '\0'.
 */
-static const char* intr_get_mnemonic(const opcode_t opcode)
+static const char* instr_get_mnemonic(const opcode_t opcode)
 {
     switch (opcode)
     {
         /* --- opcode_reg2 --- */
 
         case OPCODE_MOV1:
-        case OPCODE_MOV2:   return "mov";
-        case OPCODE_NOT2:   return "not";
+        case OPCODE_MOV2:   return "mov ";
+        case OPCODE_NOT2:   return "not ";
         case OPCODE_AND1:
-        case OPCODE_AND2:   return "and";
+        case OPCODE_AND2:   return "and ";
         case OPCODE_OR1:
-        case OPCODE_OR2:    return "or";
+        case OPCODE_OR2:    return "or  ";
         case OPCODE_XOR1:
-        case OPCODE_XOR2:   return "xor";
+        case OPCODE_XOR2:   return "xor ";
         case OPCODE_ADD1:
-        case OPCODE_ADD2:   return "add";
+        case OPCODE_ADD2:   return "add ";
         case OPCODE_SUB1:
-        case OPCODE_SUB2:   return "sub";
+        case OPCODE_SUB2:   return "sub ";
         case OPCODE_MUL1:
-        case OPCODE_MUL2:   return "mul";
+        case OPCODE_MUL2:   return "mul ";
         case OPCODE_DIV1:
-        case OPCODE_DIV2:   return "div";
+        case OPCODE_DIV2:   return "div ";
         case OPCODE_MOD1:
-        case OPCODE_MOD2:   return "mod";
+        case OPCODE_MOD2:   return "mod ";
         case OPCODE_SLL1:
-        case OPCODE_SLL2:   return "sll";
+        case OPCODE_SLL2:   return "sll ";
         case OPCODE_SLR1:
-        case OPCODE_SLR2:   return "slr";
-        case OPCODE_CMP:    return "cmp";
-        case OPCODE_FTI:    return "fti";
-        case OPCODE_ITF:    return "itf";
+        case OPCODE_SLR2:   return "slr ";
+        case OPCODE_CMP:    return "cmp ";
+        case OPCODE_FTI:    return "fti ";
+        case OPCODE_ITF:    return "itf ";
             
         /* --- opcode_reg1 --- */
 
         case OPCODE_PUSH:   return "push";
-        case OPCODE_POP:    return "pop";
-        case OPCODE_INC:    return "inc";
-        case OPCODE_DEC:    return "dec";
+        case OPCODE_POP:    return "pop ";
+        case OPCODE_INC:    return "inc ";
+        case OPCODE_DEC:    return "dec ";
 
         /* --- opcode_jump --- */
 
-        case OPCODE_JMP:    return "jmp";
-        case OPCODE_JE:     return "je";
-        case OPCODE_JNE:    return "jne";
-        case OPCODE_JG:     return "jg";
-        case OPCODE_JL:     return "jl";
-        case OPCODE_JGE:    return "jge";
-        case OPCODE_JLE:    return "jle";
+        case OPCODE_JMP:    return "jmp ";
+        case OPCODE_JE:     return "je  ";
+        case OPCODE_JNE:    return "jne ";
+        case OPCODE_JG:     return "jg  ";
+        case OPCODE_JL:     return "jl  ";
+        case OPCODE_JGE:    return "jge ";
+        case OPCODE_JLE:    return "jle ";
         case OPCODE_CALL:   return "call";
 
         /* --- opcode_float --- */
@@ -717,19 +870,19 @@ static const char* intr_get_mnemonic(const opcode_t opcode)
         /* --- opcode_mem --- */
 
         case OPCODE_LDBO:
-        case OPCODE_LDB:    return "ldb";
+        case OPCODE_LDB:    return "ldb ";
         case OPCODE_LDWO:
-        case OPCODE_LDW:    return "ldw";
+        case OPCODE_LDW:    return "ldw ";
 
         /* --- opcode_memoff --- */
 
-        case OPCODE_STBO:   return "stb";
-        case OPCODE_STWO:   return "stw";
+        case OPCODE_STBO:   return "stb ";
+        case OPCODE_STWO:   return "stw ";
 
         /* --- opcode_special --- */
 
         case OPCODE_STOP:   return "stop";
-        case OPCODE_RET:    return "ret";
+        case OPCODE_RET:    return "ret ";
         case OPCODE_PUSHC:  return "push";
         case OPCODE_INVK:   return "invk";
     }
@@ -744,29 +897,68 @@ static void instr_print_debug_info(const instr_t instr, regi_t instr_index, cons
 {
     const opcode_t opcode = instr_get_opcode(instr);
 
-    printf("0x%*.8x  %s", 8, (instr_index >> 2), intr_get_mnemonic(opcode));
+    #ifdef _SHOW_RUNTIME_HEXLINES_
+    printf("0x%*.8x  %s", 8, (instr_index >> 2), instr_get_mnemonic(opcode));
+    #else
+    printf("%*.8i  %s  ", 8, (instr_index >> 2), instr_get_mnemonic(opcode));
+    #endif
 
-    if (opcode == OPCODE_CMP)
+    if (opcode == OPCODE_CMP || opcode == OPCODE_CMPF)
     {
         reg_t reg0 = instr_get_reg0(instr);
         reg_t reg1 = instr_get_reg1(instr);
-        printf(" %s, %s", register_get_name(reg0), register_get_name(reg1));
+
+        const char* reg0name = register_get_name(reg0);
+        const char* reg1name = register_get_name(reg1);
+
+        printf("%s, %s    ($cf = %i)", reg0name, reg1name, reg_ptr[REG_CF]);
     }
-    else if ( ( opcode >= OPCODE_MOV2 && opcode <= OPCODE_DEC  ) ||
+    else if (opcode >= OPCODE_JMP && opcode <= OPCODE_JLE)
+    {
+        int addr_offset = instr_get_sgn_value22(instr);
+        printf("%i", addr_offset);
+    }
+    else if (opcode == OPCODE_CALL)
+    {
+        int addr_offset = instr_get_sgn_value22(instr);
+        if (addr_offset >= INTR_RESERVED)
+            printf("%s  <intrinsic>", intrinsic_get_ident(addr_offset));
+        else
+            printf("%i", addr_offset);
+    }
+    else if (opcode >= OPCODE_MOV2 && opcode <= OPCODE_ITF)
+    {
+        reg_t reg0 = instr_get_reg0(instr);
+        reg_t reg1 = instr_get_reg1(instr);
+
+        const char* reg0name = register_get_name(reg0);
+        const char* reg1name = register_get_name(reg1);
+
+        regi_t value = reg_ptr[reg0];
+
+        printf("%s, %s    (%s = %i)", reg0name, reg1name, reg0name, value);
+    }
+    else if ( ( opcode >= OPCODE_MOV1 && opcode <= OPCODE_DEC  ) ||
               ( opcode >= OPCODE_LDBO && opcode <= OPCODE_STWO ) )
     {
         reg_t reg0 = instr_get_reg0(instr);
         regi_t value = reg_ptr[reg0];
-        printf(" %s (val: %i)", register_get_name(reg0), value);
+
+        const char* reg0name = register_get_name(reg0);
+
+        printf("%s         (%s = %i)", reg0name, reg0name, value);
     }
     else if (opcode >= OPCODE_ADDF && opcode <= OPCODE_DIVF)
     {
         reg_t reg0 = instr_get_reg0(instr);
         regi_t value = reg_ptr[reg0];
-        printf(" %s (val: %f)", register_get_name(reg0), INT_TO_FLT_REINTERPRET(value));
+
+        const char* reg0name = register_get_name(reg0);
+
+        printf("%s         (%s = %f)", reg0name, reg0name, INT_TO_FLT_REINTERPRET(value));
     }
     else if (opcode == OPCODE_PUSHC)
-        printf(" %i", instr_get_sgn_value26(instr));
+        printf("%i", instr_get_sgn_value26(instr));
 
     printf("\n");
 }
@@ -1159,84 +1351,6 @@ static void xvm_stack_debug_float(xvm_stack* stack, size_t first_entry, size_t n
         }
     }
 }
-
-
-/* ----- Intrinsics ----- */
-
-/*
-
-Calling convention:
-- CALLER pushes all arguments from RIGHT-to-LEFT onto stack.
-- CALLEE pops all arguments from the stack.
-- CALLEE pushes result onto stack.
-
-*/
-
-typedef enum
-{
-    INTR_RESERVED       = 0x001fff00, // Start address of reserved primitive procedures.
-
-    /* --- Dynamic memory intrinsics --- */
-    INTR_ALLOC_MEM      = 0x001fff00, // void* AllocMem(uint sizeInBytes).
-    INTR_FREE_MEM       = 0x001fff01, // void FreeMem(void* memoryAddress).
-    INTR_COPY_MEM       = 0x001fff02, // void CopyMem(const void* srcMemAddr, void* dstMemAddr, uint sizeInBytes);
-    
-    /* --- Console intrinsics --- */
-    INTR_SYS_CALL       = 0x001fff20, // void SysCall(const byte* stringAddress).
-    INTR_CLEAR          = 0x001fff21, // void ClearTerm().
-    INTR_PRINT          = 0x001fff22, // void Print(const byte* stringAddress).
-    INTR_PRINT_LN       = 0x001fff23, // void PrintLn(const byte* stringAddress).
-    INTR_PRINT_INT      = 0x001fff24, // void PrintInt(int value);
-    INTR_PRINT_FLOAT    = 0x001fff25, // void PrintFloat(float value);
-    INTR_INPUT_INT      = 0x001fff26, // int InputInt();
-    INTR_INPUT_FLOAT    = 0x001fff27, // float InputFloat();
-
-    /* --- Conditional intrinsics --- */
-    // For easier expression evaluation.
-    // For better performance, make use of conditional jump instructions instead.
-    INTR_CMP_E          = 0x001fff30,
-    INTR_CMP_NE         = 0x001fff31,
-    INTR_CMP_L          = 0x001fff32,
-    INTR_CMP_LE         = 0x001fff33,
-    INTR_CMP_G          = 0x001fff34,
-    INTR_CMP_GE         = 0x001fff35,
-    INTR_LOGIC_OR       = 0x001fff36,
-    INTR_LOGIC_AND      = 0x001fff37,
-    INTR_LOGIC_NOT      = 0x001fff38,
-
-    /* --- File intrinsics --- */
-    INTR_CREATE_FILE    = 0x001fff40, // int CreateFile(const byte* stringAddress).
-    INTR_DELETE_FILE    = 0x001fff41, // int DeleteFile(const byte* stringAddress).
-    INTR_OPEN_FILE      = 0x001fff42, // void* OpenFile(const byte* stringAddress).
-    INTR_CLOSE_FILE     = 0x001fff43, // void CloseFile(void* fileHandle).
-    INTR_FILE_SIZE      = 0x001fff44, // int FileSize(const void* fileHandle).
-    INTR_SET_FILE_POS   = 0x001fff45, // void FileSetPos(const void* fileHandle, int pos).
-    INTR_GET_FILE_POS   = 0x001fff46, // int FileGetPos(const void* fileHandle).
-    INTR_FileEOF        = 0x001fff47, // int FileEOF(const void* fileHandle).
-    INTR_WRITE_BYTE     = 0x001fff48, // void WriteByte(const void* fileHandle, const void* memoryAddress).
-    INTR_WRITE_INT      = 0x001fff49, // void WriteWord(const void* fileHandle, const void* memoryAddress).
-    INTR_WRITE_FLOAT    = 0x001fff4a, // void WriteFloat(const void* fileHandle, const void* memoryAddress).
-    INTR_READ_BYTE      = 0x001fff4b, // void ReadByte(const void* fileHandle, void* memoryAddress).
-    INTR_READ_INT       = 0x001fff4c, // void ReadWord(const void* fileHandle, void* memoryAddress).
-    INTR_READ_FLOAT     = 0x001fff4d, // void ReadFloat(const void* fileHandle, void* memoryAddress).
-
-    /* --- Math intrinsics --- */
-    INTR_SIN            = 0x001fff80, // float Sin(float x).
-    INTR_COS            = 0x001fff81, // float Cos(float x).
-    INTR_TAN            = 0x001fff82, // float Tan(float x).
-    INTR_ASIN           = 0x001fff83, // float ASin(float x).
-    INTR_ACOS           = 0x001fff84, // float ACos(float x).
-    INTR_ATAN           = 0x001fff85, // float ATan(float x).
-    INTR_POW            = 0x001fff86, // float Pow(float base, float exp).
-    INTR_SQRT           = 0x001fff87, // float Sqrt(float x).
-
-    /* --- Other intrinsics --- */
-    INTR_RAND_INT       = 0x001fff88, // int RandInt() -> In range [0 .. MAX_INT].
-    INTR_RAND_FLOAT     = 0x001fff89, // float RandFloat() -> In range [0.0 .. 1.0].
-    INTR_TIME           = 0x001fff8a, // int Time() -> Ellapsed time since program start (in ms.).
-    INTR_SLEEP          = 0x001fff8b, // void Sleep(int duration).
-}
-intrinsic_addr;
 
 
 /* ----- Virtual machine ----- */
@@ -2150,7 +2264,11 @@ static void shell_print_help()
 
 static void shell_print_version()
 {
+    #ifdef _ENABLE_RUNTIME_DEBUGGER_
+    log_println("XieXie 2.0 VirtualMachine (XVM) with RuntimeDebugger (RTD)");
+    #else
     log_println("XieXie 2.0 VirtualMachine (XVM)");
+    #endif
     log_println("");
     log_println("Copyright (C) 2014 Lukas Hermanns");
     log_println("All rights reserved.");
@@ -2304,7 +2422,9 @@ int main(int argc, char* argv[])
     #define ADD_INSTR(INSTR) byte_code.instructions[i++] = INSTR;
     #define FINISH_INSTR byte_code.num_instructions = i;
 
-    #if 1 //TEST1 (loop)
+    #define TEST 4
+
+    #if TEST == 1 //TEST1 (loop)
 
     /*
     // Counts from 0 to n
@@ -2341,7 +2461,7 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-8)))
     ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                         ))
 
-    #elif 0 //TEST2 (function)
+    #elif TEST == 2 //TEST2 (function)
 
     /*
     // Computes the first n-th squares: 0, 1, 4, 9, 16 ...
@@ -2396,7 +2516,7 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(instr_make_special2   (OPCODE_RET,  1, 1                              ))
 
-    #elif 0 //TEST3 (floats)
+    #elif TEST == 3 //TEST3 (floats)
 
     /*
     Print(Pow(3, 5))
@@ -2428,7 +2548,7 @@ int main(int argc, char* argv[])
     ADD_INSTR(FLT_TO_INT_REINTERPRET(flt_lit0))
     ADD_INSTR(FLT_TO_INT_REINTERPRET(flt_lit1))
 
-    #elif 1 //TEST4 (fibonacci)
+    #elif TEST == 4 //TEST4 (fibonacci)
 
     /*
     int fib(int n) {
