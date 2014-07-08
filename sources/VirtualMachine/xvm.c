@@ -634,7 +634,7 @@ typedef enum
     INTR_FILE_SIZE      = 0x001fff44, // int FileSize(const void* fileHandle).
     INTR_SET_FILE_POS   = 0x001fff45, // void FileSetPos(const void* fileHandle, int pos).
     INTR_GET_FILE_POS   = 0x001fff46, // int FileGetPos(const void* fileHandle).
-    INTR_FileEOF        = 0x001fff47, // int FileEOF(const void* fileHandle).
+    INTR_FILE_EOF       = 0x001fff47, // int FileEOF(const void* fileHandle).
     INTR_WRITE_BYTE     = 0x001fff48, // void WriteByte(const void* fileHandle, const void* memoryAddress).
     INTR_WRITE_WORD     = 0x001fff49, // void WriteWord(const void* fileHandle, const void* memoryAddress).
     INTR_READ_BYTE      = 0x001fff4a, // void ReadByte(const void* fileHandle, void* memoryAddress).
@@ -704,7 +704,7 @@ static const char* intrinsic_get_ident(const intrinsic_addr addr)
         case INTR_FILE_SIZE:    return "FileSize";
         case INTR_SET_FILE_POS: return "SetFilePos";
         case INTR_GET_FILE_POS: return "GetFilePos";
-        case INTR_FileEOF:      return "FileEOF";
+        case INTR_FILE_EOF:     return "FileEOF";
         case INTR_WRITE_BYTE:   return "WriteByte";
         case INTR_WRITE_WORD:   return "WriteWord";
         case INTR_READ_BYTE:    return "ReadByte";
@@ -1718,7 +1718,7 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         case INTR_FILE_SIZE:
         case INTR_SET_FILE_POS:
         case INTR_GET_FILE_POS:
-        case INTR_FileEOF:
+        case INTR_FILE_EOF:
         case INTR_WRITE_BYTE:
         case INTR_WRITE_WORD:
         case INTR_READ_BYTE:
