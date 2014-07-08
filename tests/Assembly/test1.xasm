@@ -25,3 +25,12 @@
 00000017	.end0:	ret		(0) 0			; return
 00000018	str0:	.ascii	"Hello, World!"
 00000019	lng0:	.word	999
+			Math.Sq:
+00000020			ldw		$r0, ($lb) -4
+00000021			mul		$r0, $r0
+00000022			stw		$r0, ($lb) -4
+00000022			ret		(0) 0			; Optimize retunr value by writing it back to the argument
+
+; Export function addresses
+.export "_ZN@Main" @Main
+.export "Main::Sq" @Math.Sq

@@ -497,14 +497,15 @@ opcode_memoff;
 
 typedef enum
 {
-    EXITCODE_SUCCESS            = 0,
-    EXITCODE_INVALID_BYTECODE   = -1,
-    EXITCODE_INVALID_STACK      = -2,
-    EXITCODE_INVALID_OPCODE     = -3,
-    EXITCODE_INVALID_INTRINSIC  = -4,
-    EXITCODE_STACK_OVERFLOW     = -5,
-    EXITCODE_STACK_UNDERFLOW    = -6,
-    EXITCODE_DIVISION_BY_ZERO   = -7,
+    EXITCODE_SUCCESS                =  0,
+    EXITCODE_INVALID_BYTECODE       = -1,
+    EXITCODE_INVALID_STACK          = -2,
+    EXITCODE_INVALID_OPCODE         = -3,
+    EXITCODE_INVALID_INTRINSIC      = -4,
+    EXITCODE_STACK_OVERFLOW         = -5,
+    EXITCODE_STACK_UNDERFLOW        = -6,
+    EXITCODE_DIVISION_BY_ZERO       = -7,
+    EXITCODE_UNKNOWN_ENTRY_POINT    = -8,
 }
 xvm_exit_codes;
 
@@ -568,7 +569,7 @@ INLINE static void log_exitcode_error(const xvm_exit_codes exit_code)
 
 static unsigned int file_read_uint(FILE* file)
 {
-    unsigned int value;
+    unsigned int value = 0;
     fread(&value, sizeof(value), 1, file);
     return value;
 }
@@ -1053,26 +1054,90 @@ static instr_t instr_make_special2(opcode_special opcode, unsigned int result_si
 
 /* ----- Byte code ----- */
 
+//! XVM export procedure address structure.
 typedef struct
 {
-    int         num_instructions;
-    instr_t*    instructions;
+    /**
+    Export procedure address. This is the instruction
+    INDEX where the procedure starts. By default 0.
+    */
+    unsigned int addr;
+    
+    /**
+    Procedure ID name. This depends on the 'name mangling' of
+    the high-level compiler (e.g. "main" or "_ZN@main"). By default NULL.
+    */
+    const char* name;
+}
+xvm_export_address;
+
+//! XVM byte code structure.
+typedef struct
+{
+    int                 num_instructions;       //!< Number of instructions. By default 0.
+    instr_t*            instructions;           //!< Instruction array. By default NULL.
+    unsigned int        num_export_addresses;   //!< Number of export addresses. By default 0.
+    xvm_export_address* export_addresses;       //!< Export addresses array. By default NULL.
 }
 xvm_bytecode;
 
-static int xvm_bytecode_init(xvm_bytecode* byte_code)
+//! Initializes the export address with its default values.
+static int xvm_export_address_init(xvm_export_address* export_address)
 {
-    if (byte_code != NULL)
+    if (export_address != NULL)
     {
-        // Initialize byte code data
-        byte_code->num_instructions = 0;
-        byte_code->instructions     = NULL;
+        export_address->addr = 0;
+        export_address->name = NULL;
         return 1;
     }
     return 0;
 }
 
-static int xvm_bytecode_create(xvm_bytecode* byte_code, int num_instructions)
+//! Initializes the export address with the specified startup values.
+static int xvm_export_address_setup(xvm_export_address* export_address, unsigned int addr, const char* name)
+{
+    if (export_address != NULL)
+    {
+        export_address->addr = addr;
+        export_address->name = name;
+        return 1;
+    }
+    return 0;
+}
+
+/**
+Initializes the specified byte code structure.
+\code
+xvm_bytecode byte_code;
+xvm_bytecode_init(&byte_code);
+xvm_bytecode_create_instructions(&byte_code, num_instructions);
+xvm_bytecode_create_export_addresses(&byte_code, num_export_addresses);
+// ...
+xvm_bytecode_free(&byte_code);
+\endcode
+*/
+static int xvm_bytecode_init(xvm_bytecode* byte_code)
+{
+    if (byte_code != NULL)
+    {
+        // Initialize byte code data
+        byte_code->num_instructions     = 0;
+        byte_code->instructions         = NULL;
+        byte_code->num_export_addresses = 0;
+        byte_code->export_addresses     = NULL;
+        return 1;
+    }
+    return 0;
+}
+
+/**
+Allocates memory for the specified amount of byte code instructions.
+\param[in,out] byte_code Pointer to the byte code object.
+\param[in] num_instructions Specifies the number of instruction to allocate for the byte code.
+\see xvm_bytecode_init
+\note All instructions be uninitialized!
+*/
+static int xvm_bytecode_create_instructions(xvm_bytecode* byte_code, int num_instructions)
 {
     if (byte_code != NULL && byte_code->instructions == NULL && num_instructions > 0)
     {
@@ -1083,35 +1148,143 @@ static int xvm_bytecode_create(xvm_bytecode* byte_code, int num_instructions)
     return 0;
 }
 
-static int xvm_bytecode_free(xvm_bytecode* byte_code)
+/**
+Allocates memory for the specified amount of byte code export addresses.
+\param[in,out] byte_code Pointer to the byte code object.
+\param[in] num_instructions Specifies the number of instruction to allocate for the byte code.
+\see xvm_bytecode_init
+\note All export addresses be uninitialized!
+*/
+static int xvm_bytecode_create_export_addresses(xvm_bytecode* byte_code, unsigned int num_export_addresses)
 {
-    if (byte_code != NULL)
+    if (byte_code != NULL && byte_code->export_addresses == NULL && num_export_addresses > 0)
     {
-        if (byte_code->instructions != NULL)
-            free(byte_code->instructions);
-
-        // Reset byte code data
-        byte_code->num_instructions = 0;
-        byte_code->instructions     = NULL;
-
+        byte_code->num_export_addresses = num_export_addresses;
+        byte_code->export_addresses     = (xvm_export_address*)malloc(sizeof(xvm_export_address)*num_export_addresses);
         return 1;
     }
     return 0;
 }
 
+//! Frees the memory for the specified byte code object.
+static int xvm_bytecode_free(xvm_bytecode* byte_code)
+{
+    if (byte_code != NULL)
+    {
+        if (byte_code->instructions != NULL)
+        {
+            free(byte_code->instructions);
+            byte_code->instructions     = NULL;
+            byte_code->num_instructions = 0;
+        }
+        if (byte_code->export_addresses != NULL)
+        {
+            free(byte_code->export_addresses);
+            byte_code->export_addresses     = NULL;
+            byte_code->num_export_addresses = 0;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+/**
+Inserts an ASCII data field into the byte code instructions.
+In XASM this could look like this:
+\code
+str0: .ascii "Hello, World!\n"
+\endcode
+\param[in,out] byte_code Pointer to the byte code whose instructions will be filled with the data field.
+\param[in] instr_offset Index offset of the first instruction where the data field is to be inserted.
+\param[in] text Constant pointer to the string which is to be filled into the data field.
+\param[out] num_instructions Optional pointer to the number of instruction which are used for this data field.
+This may also be NULL.
+\return Non zero on success otherwise 0 when the byte code is NULL or it has not enough instructions or 'text' is NULL.
+If the byte code has not enough instruction, the output parameter 'num_instructions' will still
+contain the number of instruction which are required to fill the data field.
+\remarks This function can also be used to only determine the number of required instructions for the data field.
+This could look like this:
+\code
+size_t num_instr = 0;
+xvm_bytecode_datafield_ascii(NULL, 0, "Hello, World\n", &num_instr);
+// num_instr == 4 { "Hell", "o, W", "orld", "\n\0\0\0" }
+\endcode
+*/
+static int xvm_bytecode_datafield_ascii(
+    xvm_bytecode* byte_code, size_t instr_offset, const char* text, size_t* num_instructions)
+{
+    instr_t* instr;
+    char* instr_byte;
+    size_t num_instr, remainder;
+
+    if (text == NULL)
+        return 0;
+
+    // Determine number of required instructions
+    num_instr = strlen(text);
+    remainder = num_instr % 4;
+    num_instr = (num_instr + (4 - remainder)) / 4;
+
+    if (num_instructions != NULL)
+        *num_instructions = num_instr;
+
+    if (byte_code == NULL || byte_code->instructions == NULL || instr_offset + num_instr >= (size_t)(byte_code->num_instructions))
+        return 0;
+
+    // Fill data field
+    instr = (byte_code->instructions + instr_offset);
+
+    for (; num_instr > 1; --num_instr)
+    {
+        *instr = *((instr_t*)text);
+        ++instr;
+        text += 4;
+    }
+
+    // Fill last data field
+    *instr = 0;
+    instr_byte = (char*)instr;
+
+    for (; remainder > 0; --remainder)
+    {
+        *instr_byte = *text;
+        ++instr_byte;
+        ++text;
+    }
+
+    return 1;
+}
+
 /*
 
-XBC file format spec:
+WORD: 32-bit unsigned integer
+STR: Null-terminated string.
+
+--- XBC file format spec (Version 1.01): ---
 
 WORD: magic number (Must be *(int*)"XBCF")
 WORD: version number (Must be 101 for "1.01")
-WORD: number of instructions
-WORD[n]: instructions
+WORD: number of instructions (n)
+n times:
+    WORD: instruction
+
+--- XBC file format spec (Version 1.02): ---
+
+WORD: magic number (Must be *(int*)"XBCF")
+WORD: version number (Must be 102 for "1.02")
+WORD: number of instructions (n)
+n times:
+    WORD: instruction
+WORD: number of export addresses (m)
+m times:
+    WORD: address
+    STR: name
 
 */
 
-#define XBC_FORMAT_MAGIC    (*((int*)("XBCF")))
-#define XBC_FORMAT_VERSION  101
+#define XBC_FORMAT_MAGIC        (*((int*)("XBCF")))
+#define XBC_FORMAT_VERSION_1_01 101
+#define XBC_FORMAT_VERSION_1_02 102
 
 static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
 {
@@ -1141,9 +1314,9 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
 
     // Read version number
     unsigned int version = file_read_uint(file);
-    if (version != XBC_FORMAT_VERSION)
+    if (version != XBC_FORMAT_VERSION_1_01 && version != XBC_FORMAT_VERSION_1_02)
     {
-        log_error("Invalid version number (Must be 101)");
+        log_error("Invalid version number (Must be 1.01 or 1.02)");
         fclose(file);
         return 0;
     }
@@ -1151,7 +1324,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     // Read instructions
     unsigned int num_instr = file_read_uint(file);
 
-    if (xvm_bytecode_create(byte_code, (int)num_instr) == 0)
+    if (xvm_bytecode_create_instructions(byte_code, (int)num_instr) == 0)
     {
         log_error("Creating byte code failed");
         fclose(file);
@@ -1159,6 +1332,9 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     }
 
     fread(byte_code->instructions, sizeof(instr_t), num_instr, file);
+
+    // Read export addresses
+    //...
 
     // Close file and return with success
     fclose(file);
@@ -1187,7 +1363,7 @@ static int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     file_write_uint(file, XBC_FORMAT_MAGIC);
 
     // Write version number
-    file_write_uint(file, XBC_FORMAT_VERSION);
+    file_write_uint(file, XBC_FORMAT_VERSION_1_01);
 
     // Write instructions
     unsigned int num_instr = (unsigned int)byte_code->num_instructions;
@@ -1359,13 +1535,6 @@ static void xvm_stack_debug_float(xvm_stack* stack, size_t first_entry, size_t n
 
 /* ----- Virtual machine ----- */
 
-typedef struct
-{
-    int pc_reset;
-    //int max_num_cycles;
-}
-xvm_execution_state;
-
 static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_t* reg_sp)
 {
     switch (intrinsic_addr)
@@ -1398,9 +1567,8 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
 
         case INTR_PRINT_LN:
         {
-            //int arg0 = xvm_stack_pop(stack, reg_sp);
-            //printf("%s\n", INT_TO_STR_REINTERPRET(arg0));
-            printf("\n");
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            printf("%s\n", INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
@@ -1594,16 +1762,17 @@ XVM_INVOKE_EXTERN_PROC xvm_invoke_extern = (&xvm_invoke_extern_dummy);
 Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Virtual Machine).
 \param[in] byte_code Pointer to the byte code to execute.
 \param[in] stack Pointer to the stack which is to be used during execution.
-\param[in,out] exe_state Optional pointer to the execution state. This may also be NULL.
-\remakrs This is the main function for the entire virtual machine.
+\param[in] entry_point Optional pointer to the entry point address.
+This may also be NULL to start the program at the top.
+\remarks This is the main function for the entire virtual machine.
 All instructions are implemented inside this function and its large switch-case statement.
-\see xvm_bytecode_create
+\see xvm_bytecode_create_instructions
 \see xvm_stack_create
 */
-static xvm_exit_codes xvm_execute_program(
+static xvm_exit_codes xvm_execute_program_ext(
     const xvm_bytecode* const byte_code,
     xvm_stack* const stack,
-    xvm_execution_state* const exe_state)
+    const xvm_export_address* entry_point)
 {
     #define JUMP_ADDRESS(r, a) (reg.i[r] + ((a) << 2))
 
@@ -1652,11 +1821,10 @@ static xvm_exit_codes xvm_execute_program(
     /* --- Initialize VM (only reset reserved registers) --- */
     *reg_lb = (regi_t)stack->storage;
     *reg_sp = (regi_t)stack->storage;
+    *reg_pc = instr_ptr_begin;
 
-    if (exe_state != NULL)
-        *reg_pc = exe_state->pc_reset;
-    else
-        *reg_pc = instr_ptr_begin;
+    if (entry_point != NULL)
+        *reg_pc += (entry_point->addr << 2);
 
     /* --- Catch exceptions --- */
     int exception_val = setjmp(xvm_exception_envbuf);
@@ -2232,13 +2400,56 @@ static xvm_exit_codes xvm_execute_program(
         *reg_pc += 4;
     }
 
-    // Return program counter if set
-    if (exe_state != NULL)
-        exe_state->pc_reset = *reg_pc;
-
     return EXITCODE_SUCCESS;
 
     #undef JUMP_ADDRESS
+}
+
+/**
+Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Virtual Machine) from the beginning.
+\see xvm_execute_program_ext
+*/
+static xvm_exit_codes xvm_execute_program(
+    const xvm_bytecode* const byte_code,
+    xvm_stack* const stack)
+{
+    return xvm_execute_program_ext(byte_code, stack, NULL);
+}
+
+/**
+Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Virtual Machine) from the specified entry point.
+\param[in] entry_point Specifies the entry point. If this is an unkown entry point, the return value is EXITCODE_UNKNOWN_ENTRY_POINT.
+\see xvm_execute_program_ext
+*/
+static xvm_exit_codes xvm_execute_program_entry_point(
+    const xvm_bytecode* const byte_code,
+    xvm_stack* const stack,
+    const char* entry_point)
+{
+    const xvm_export_address* export_addr = NULL;
+    const xvm_export_address* entry_point_addr = NULL;
+
+    if (byte_code == NULL)
+        return EXITCODE_INVALID_BYTECODE;
+    if (byte_code->export_addresses == NULL)
+        return EXITCODE_UNKNOWN_ENTRY_POINT;
+
+    // Find entry point in export addresses
+    for (unsigned int i = 0; i < byte_code->num_export_addresses; ++i)
+    {
+        export_addr = &(byte_code->export_addresses[i]);
+        if (strcmp(export_addr->name, entry_point) == 0)
+        {
+            entry_point_addr = export_addr;
+            break;
+        }
+    }
+
+    if (entry_point_addr == NULL)
+        return EXITCODE_UNKNOWN_ENTRY_POINT;
+
+    // Execute program from entry point
+    return xvm_execute_program_ext(byte_code, stack, entry_point_addr);
 }
 
 
@@ -2271,6 +2482,12 @@ static void shell_print_version()
 
 static int shell_parse_args(int argc, char* argv[])
 {
+    // Configuration memory
+    int verbose = 0;
+    const char* filename = NULL;
+    size_t stack_size = 256;
+
+    // Check if there are any arguments
     const char* arg;
 
     if (argc <= 0)
@@ -2278,11 +2495,6 @@ static int shell_parse_args(int argc, char* argv[])
         log_println("No input: enter \"help\" for information");
         return 0;
     }
-
-    // Configuration memory
-    int verbose = 0;
-    const char* filename = NULL;
-    size_t stack_size = 256;
 
     // Parse all arguments
     while (argc > 0)
@@ -2358,7 +2570,7 @@ static int shell_parse_args(int argc, char* argv[])
         xvm_stack_create(&stack, stack_size);
 
         // Execute program
-        const xvm_exit_codes exit_code = xvm_execute_program(&byte_code, &stack, NULL);
+        const xvm_exit_codes exit_code = xvm_execute_program(&byte_code, &stack);
 
         if (exit_code != EXITCODE_SUCCESS)
             log_exitcode_error(exit_code);
@@ -2410,13 +2622,13 @@ int main(int argc, char* argv[])
     // Create the byte code
     xvm_bytecode byte_code;
     xvm_bytecode_init(&byte_code);
-    xvm_bytecode_create(&byte_code, 50);
+    xvm_bytecode_create_instructions(&byte_code, 50);
 
     size_t i = 0;
     #define ADD_INSTR(INSTR) byte_code.instructions[i++] = INSTR;
     #define FINISH_INSTR byte_code.num_instructions = i;
 
-    #define TEST 4
+    #define TEST 1
 
     #if TEST == 1 //TEST1 (loop)
 
@@ -2428,32 +2640,39 @@ int main(int argc, char* argv[])
     */
 
     /*
-    00          mov r0, 0
-    01          mov r1, 10
-    02  l_for:  cmp r0, r1
-    03          jge l_end   ; jge (pc) 8
-    04          call Intr.Time
-    05          call Intr.PrintInt
-    06          call Intr.PrintLn
-    07          push 1000
-    08          call Intr.Sleep
-    09          inc r0
-    10          jmp l_for   ; jmp (pc) -8
-    11  l_end:  stop
+    00          mov     $r0, 0
+    01          mov     $r1, 10
+    02  l_for:  cmp     $r0, $r1
+    03          jge     l_end           ; jge ($pc) 10
+    04          call    Intr.Time
+    05          call    Intr.PrintInt
+    06          lda     $r2, @str0
+    07          push    $r2
+    08          call    Intr.PrintLn
+    09          push    1000
+    10          call    Intr.Sleep
+    11          inc     $r0
+    12          jmp     l_for           ; jmp ($pc) -10
+    13  l_end:  stop
+    14  str0:   .ascii  "\nHi"
     */
 
-    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R0, 0                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R1, 10                ))
-    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1            ))
-    ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 8                 ))
-    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_TIME         ))
-    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_INT    ))
-    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_LN     ))
-    ADD_INSTR(instr_make_special1   (OPCODE_PUSHC,100                       ))
-    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_SLEEP        ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_R0, 0                 ))
-    ADD_INSTR(instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-8)))
-    ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                         ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R0, 0                     ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_MOV1, REG_R1, 10                    ))
+    ADD_INSTR(instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                ))
+    ADD_INSTR(instr_make_jump       (OPCODE_JGE,  REG_PC, 10                    ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_TIME             ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_INT        ))
+    ADD_INSTR(instr_make_mem        (OPCODE_LDA,  REG_R2, 14                    ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R2, 0                     ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_LN         ))
+    ADD_INSTR(instr_make_special1   (OPCODE_PUSHC,100                           ))
+    ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_SLEEP            ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_INC,  REG_R0, 0                     ))
+    ADD_INSTR(instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-10)   ))
+    ADD_INSTR(instr_make_special1   (OPCODE_STOP, 0                             ))
+
+    xvm_bytecode_datafield_ascii(&byte_code, i, "\nHello, World!", NULL);
 
     #elif TEST == 2 //TEST2 (function)
 
@@ -2510,7 +2729,7 @@ int main(int argc, char* argv[])
     ADD_INSTR(instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(instr_make_special2   (OPCODE_RET,  1, 1                              ))
 
-    #elif TEST == 3 //TEST3 (floats)
+    #elif TEST == 3 //TEST3 (addresses)
 
     /*
     Print(Pow(3, 5))
@@ -2563,41 +2782,41 @@ int main(int argc, char* argv[])
     */
 
     /*
-    00          call Intr.InputInt
-    01          pop r0
-    02  .loop:  xor r1, r1
-    03          cmp r0, r1
-    04          jle .end0           ; while begin
-    05          push r0
-    06          push r0             ; fib argument
-    07          call fib
-    08          call Intr.PrintInt  ; print result
-    09          call Intr.PrintLn
-    0a          pop r0
-    0b          dec r0
-    0c          jmp .loop           ; while end
+    00          call    Intr.InputInt
+    01          pop     $r0
+    02  .loop:  xor     $r1, $r1
+    03          cmp     $r0, $r1
+    04          jle     .end0           ; while begin
+    05          push    $r0
+    06          push    $r0             ; fib argument
+    07          call    fib
+    08          call    Intr.PrintInt   ; print result
+    09          call    Intr.PrintLn
+    0a          pop     $r0
+    0b          dec     $r0
+    0c          jmp     .loop           ; while end
     0d  .end:   stop
-    0e  fib:    ldw r0, (lb) -4     ; get argument
-    0f          mov r1, 2
-    10          cmp r0, r1
-    11          jg .else
-    12          push 1
-    13          ret (1) 1
-    14  .else:  dec r0
-    15          push r0             ; push t0 = (n-1)
-    16          push r0             ; fib argument (n-1)
-    17          call fib
-    18          pop r0              ; fib result
-    19          pop r1              ; pop t0
-    1a          dec r1
-    1b          push r0             ; push t1 = result
-    1c          push r1             ; fib argument (n-2)
-    1d          call fib
-    1e          pop r0              ; fib result
-    1f          pop r1              ; pop t1
-    20          add r0, r1
-    21          push r0             ; push result
-    22          ret (1) 1
+    0e  fib:    ldw     $r0, ($lb) -4   ; get argument
+    0f          mov     $r1, 2
+    10          cmp     $r0, $r1
+    11          jg      .else
+    12          push    1
+    13          ret     (1) 1
+    14  .else:  dec     $r0
+    15          push    $r0             ; push t0 = (n-1)
+    16          push    $r0             ; fib argument (n-1)
+    17          call    fib
+    18          pop     $r0             ; fib result
+    19          pop     $r1             ; pop t0
+    1a          dec     $r1
+    1b          push    $r0             ; push t1 = result
+    1c          push    $r1             ; fib argument (n-2)
+    1d          call    fib
+    1e          pop     $r0             ; fib result
+    1f          pop     $r1             ; pop t1
+    20          add     $r0, $r1
+    21          push    $r0             ; push result
+    22          ret     (1) 1
     */
 
     ADD_INSTR(instr_make_jump       (OPCODE_CALL, REG_PC, INTR_INPUT_INT            ))
@@ -2646,7 +2865,7 @@ int main(int argc, char* argv[])
     // Execute the virtual program
     xvm_invoke_extern = (&TestInvokeExtern);
 
-    const xvm_exit_codes exitCode = xvm_execute_program(&byte_code, &stack, NULL);
+    const xvm_exit_codes exitCode = xvm_execute_program(&byte_code, &stack);
 
     if (exitCode != EXITCODE_SUCCESS)
         printf("\nProgram terminated with error code: %i\n\n", exitCode);

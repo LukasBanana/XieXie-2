@@ -466,7 +466,7 @@ bool Assembler::CreateByteCode(const std::string& outFilename)
 
     xvm_bytecode byteCode;
     xvm_bytecode_init(&byteCode);
-    xvm_bytecode_create(&byteCode, numInstr);
+    xvm_bytecode_create_instructions(&byteCode, numInstr);
 
     for (int i = 0; i < numInstr; ++i)
         byteCode.instructions[i] = instructions_[i];
