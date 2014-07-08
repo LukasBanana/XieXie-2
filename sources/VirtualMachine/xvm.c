@@ -506,6 +506,7 @@ typedef enum
     EXITCODE_STACK_UNDERFLOW        = -6,
     EXITCODE_DIVISION_BY_ZERO       = -7,
     EXITCODE_UNKNOWN_ENTRY_POINT    = -8,
+    //EXITCODE_MEMORY_VIOLATION       = -9,
 }
 xvm_exit_codes;
 
@@ -529,6 +530,8 @@ static const char* exitcode_to_string(const xvm_exit_codes exit_code)
             return "stack underflow";
         case EXITCODE_DIVISION_BY_ZERO:
             return "division by zero";
+        case EXITCODE_UNKNOWN_ENTRY_POINT:
+            return "unknown entry point";
     }
     return NULL;
 }
@@ -549,19 +552,19 @@ INLINE static void log_println(const char* str)
 
 INLINE static void log_error(const char* str)
 {
-    printf("ERROR: %s!\n", str);
+    printf("error: %s!\n", str);
 }
 
 INLINE static void log_readfile_error(const char* filename)
 {
-    printf("ERROR: Reading file \"%s\" failed!\n", filename);
+    printf("error: reading file \"%s\" failed!\n", filename);
 }
 
 INLINE static void log_exitcode_error(const xvm_exit_codes exit_code)
 {
     const char* err = exitcode_to_string(exit_code);
     if (err != NULL)
-        printf("ERROR: Program terminated with error: \"%s\"!\n", err);
+        printf("error: program terminated with error: \"%s\"!\n", err);
 }
 
 
@@ -598,7 +601,7 @@ typedef enum
     /* --- Dynamic memory intrinsics --- */
     INTR_ALLOC_MEM      = 0x001fff00, // void* AllocMem(uint sizeInBytes).
     INTR_FREE_MEM       = 0x001fff01, // void FreeMem(void* memoryAddress).
-    INTR_COPY_MEM       = 0x001fff02, // void CopyMem(const void* srcMemAddr, void* dstMemAddr, uint sizeInBytes);
+    INTR_COPY_MEM       = 0x001fff02, // void CopyMem(void* dstMemAddr, const void* srcMemAddr, uint sizeInBytes).
     
     /* --- Console intrinsics --- */
     INTR_SYS_CALL       = 0x001fff20, // void SysCall(const byte* stringAddress).
@@ -613,15 +616,15 @@ typedef enum
     /* --- Conditional intrinsics --- */
     // For easier expression evaluation.
     // For better performance, make use of conditional jump instructions instead.
-    INTR_CMP_E          = 0x001fff30,
-    INTR_CMP_NE         = 0x001fff31,
-    INTR_CMP_L          = 0x001fff32,
-    INTR_CMP_LE         = 0x001fff33,
-    INTR_CMP_G          = 0x001fff34,
-    INTR_CMP_GE         = 0x001fff35,
-    INTR_LOGIC_OR       = 0x001fff36,
-    INTR_LOGIC_AND      = 0x001fff37,
-    INTR_LOGIC_NOT      = 0x001fff38,
+    INTR_CMP_E          = 0x001fff30, //!< int CmpE(int x, int y)       -> x == y
+    INTR_CMP_NE         = 0x001fff31, //!< int CmpNE(int x, int y)      -> x != y
+    INTR_CMP_L          = 0x001fff32, //!< int CmpL(int x, int y)       -> x < y
+    INTR_CMP_LE         = 0x001fff33, //!< int CmpLE(int x, int y)      -> x <= y
+    INTR_CMP_G          = 0x001fff34, //!< int CmpG(int x, int y)       -> x > y
+    INTR_CMP_GE         = 0x001fff35, //!< int CmpGE(int x, int y)      -> x >= y
+    INTR_LOGIC_OR       = 0x001fff36, //!< int LogicOr(int x, int y)    -> x != 0 || y != 0
+    INTR_LOGIC_AND      = 0x001fff37, //!< int LogicAnd(int x, int y)   -> x != 0 && y != 0
+    INTR_LOGIC_NOT      = 0x001fff38, //!< int LogicNot(int x)          -> x == 0
 
     /* --- File intrinsics --- */
     INTR_CREATE_FILE    = 0x001fff40, // int CreateFile(const byte* stringAddress).
@@ -633,11 +636,9 @@ typedef enum
     INTR_GET_FILE_POS   = 0x001fff46, // int FileGetPos(const void* fileHandle).
     INTR_FileEOF        = 0x001fff47, // int FileEOF(const void* fileHandle).
     INTR_WRITE_BYTE     = 0x001fff48, // void WriteByte(const void* fileHandle, const void* memoryAddress).
-    INTR_WRITE_INT      = 0x001fff49, // void WriteWord(const void* fileHandle, const void* memoryAddress).
-    INTR_WRITE_FLOAT    = 0x001fff4a, // void WriteFloat(const void* fileHandle, const void* memoryAddress).
-    INTR_READ_BYTE      = 0x001fff4b, // void ReadByte(const void* fileHandle, void* memoryAddress).
-    INTR_READ_INT       = 0x001fff4c, // void ReadWord(const void* fileHandle, void* memoryAddress).
-    INTR_READ_FLOAT     = 0x001fff4d, // void ReadFloat(const void* fileHandle, void* memoryAddress).
+    INTR_WRITE_WORD     = 0x001fff49, // void WriteWord(const void* fileHandle, const void* memoryAddress).
+    INTR_READ_BYTE      = 0x001fff4a, // void ReadByte(const void* fileHandle, void* memoryAddress).
+    INTR_READ_WORD      = 0x001fff4b, // void ReadWord(const void* fileHandle, void* memoryAddress).
 
     /* --- Math intrinsics --- */
     INTR_SIN            = 0x001fff80, // float Sin(float x).
@@ -705,11 +706,9 @@ static const char* intrinsic_get_ident(const intrinsic_addr addr)
         case INTR_GET_FILE_POS: return "GetFilePos";
         case INTR_FileEOF:      return "FileEOF";
         case INTR_WRITE_BYTE:   return "WriteByte";
-        case INTR_WRITE_INT:    return "WriteInt";
-        case INTR_WRITE_FLOAT:  return "WriteFloat";
+        case INTR_WRITE_WORD:   return "WriteWord";
         case INTR_READ_BYTE:    return "ReadByte";
-        case INTR_READ_INT:     return "ReadInt";
-        case INTR_READ_FLOAT:   return "ReadFloat";
+        case INTR_READ_WORD:    return "ReadWord";
 
         /* --- Math intrinsics --- */
 
@@ -1482,7 +1481,7 @@ INLINE static void xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t
         (*reg_sp) += sizeof(stack_word_t);
     }
     else
-        xvm_exception_throw("Stack overflow", EXITCODE_STACK_OVERFLOW);
+        xvm_exception_throw("stack overflow", EXITCODE_STACK_OVERFLOW);
 }
 
 INLINE static stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
@@ -1491,7 +1490,7 @@ INLINE static stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
     if (stack_ptr > stack->storage)
         (*reg_sp) -= sizeof(stack_word_t);
     else
-        xvm_exception_throw("Stack underflow", EXITCODE_STACK_OVERFLOW);
+        xvm_exception_throw("stack underflow", EXITCODE_STACK_OVERFLOW);
     return *REG_TO_STACK_PTR(reg_sp);
 }
 
@@ -1541,9 +1540,32 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
     {
         /* --- Dynamic memory intrinsics --- */
 
+        // void* AllocMem(uint sizeInBytes)
         case INTR_ALLOC_MEM:
+        {
+            size_t arg0 = (size_t)(xvm_stack_read(*reg_sp, -1));
+            void* result = malloc(arg0);
+            xvm_stack_write(*reg_sp, -1, (stack_word_t)result);
+        }
+        break;
+
+        // void FreeMem(void* memoryAddress)
         case INTR_FREE_MEM:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            if (arg0 != 0)
+                free((void*)arg0);
+        }
+        break;
+
+        // void CopyMem(void* dstMemAddr, const void* srcMemAddr, uint sizeInBytes)
         case INTR_COPY_MEM:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int arg2 = xvm_stack_pop(stack, reg_sp);
+            memcpy((void*)arg0, (const void*)arg1, (size_t)arg2);
+        }
         break;
 
         /* --- Console intrinsics --- */
@@ -1556,6 +1578,9 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         break;
 
         case INTR_CLEAR:
+        {
+            //todo...
+        }
         break;
 
         case INTR_PRINT:
@@ -1605,14 +1630,83 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         /* --- Conditional intrinsics --- */
 
         case INTR_CMP_E:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int result = (arg0 == arg1 ? 1 : 0);
+            xvm_stack_push(stack, reg_sp, result);
+        }
+        break;
+
         case INTR_CMP_NE:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int result = (arg0 != arg1 ? 1 : 0);
+            xvm_stack_push(stack, reg_sp, result);
+        }
+        break;
+
         case INTR_CMP_L:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int result = (arg0 < arg1 ? 1 : 0);
+            xvm_stack_push(stack, reg_sp, result);
+        }
+        break;
+
         case INTR_CMP_LE:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int result = (arg0 <= arg1 ? 1 : 0);
+            xvm_stack_push(stack, reg_sp, result);
+        }
+        break;
+
         case INTR_CMP_G:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int result = (arg0 > arg1 ? 1 : 0);
+            xvm_stack_push(stack, reg_sp, result);
+        }
+        break;
+
         case INTR_CMP_GE:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int result = (arg0 >= arg1 ? 1 : 0);
+            xvm_stack_push(stack, reg_sp, result);
+        }
+        break;
+
         case INTR_LOGIC_OR:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int result = (arg0 != 0 || arg1 != 0 ? 1 : 0);
+            xvm_stack_push(stack, reg_sp, result);
+        }
+        break;
+
         case INTR_LOGIC_AND:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int result = (arg0 != 0 && arg1 != 0 ? 1 : 0);
+            xvm_stack_push(stack, reg_sp, result);
+        }
+        break;
+
         case INTR_LOGIC_NOT:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int result = (arg0 == 0 ? 1 : 0);
+            xvm_stack_push(stack, reg_sp, result);
+        }
         break;
 
         /* --- File intrinsics --- */
@@ -1626,11 +1720,9 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         case INTR_GET_FILE_POS:
         case INTR_FileEOF:
         case INTR_WRITE_BYTE:
-        case INTR_WRITE_INT:
-        case INTR_WRITE_FLOAT:
+        case INTR_WRITE_WORD:
         case INTR_READ_BYTE:
-        case INTR_READ_INT:
-        case INTR_READ_FLOAT:
+        case INTR_READ_WORD:
         break;
 
         /* --- Math intrinsics --- */
@@ -1738,7 +1830,7 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         #endif
 
         default:
-            xvm_exception_throw("Invalid intrinsic", EXITCODE_INVALID_INTRINSIC);
+            xvm_exception_throw("invalid intrinsic", EXITCODE_INVALID_INTRINSIC);
             break;
     }
 }
@@ -2051,7 +2143,7 @@ static xvm_exit_codes xvm_execute_program_ext(
                 reg0 = instr_get_reg0(instr);
                 sgn_value = instr_get_sgn_value22(instr);
                 if (sgn_value == 0)
-                    xvm_exception_throw("Division by zero", EXITCODE_DIVISION_BY_ZERO);
+                    xvm_exception_throw("division by zero (DIV instruction)", EXITCODE_DIVISION_BY_ZERO);
                 reg.i[reg0] /= sgn_value;
             }
             break;
@@ -2062,7 +2154,7 @@ static xvm_exit_codes xvm_execute_program_ext(
                 reg0 = instr_get_reg0(instr);
                 sgn_value = instr_get_sgn_value22(instr);
                 if (sgn_value == 0)
-                    xvm_exception_throw("Division by zero", EXITCODE_DIVISION_BY_ZERO);
+                    xvm_exception_throw("division by zero (MOD instruction)", EXITCODE_DIVISION_BY_ZERO);
                 reg.i[reg0] %= sgn_value;
             }
             break;
@@ -2492,7 +2584,7 @@ static int shell_parse_args(int argc, char* argv[])
 
     if (argc <= 0)
     {
-        log_println("No input: enter \"help\" for information");
+        log_println("no input: enter \"help\" for information");
         return 0;
     }
 
