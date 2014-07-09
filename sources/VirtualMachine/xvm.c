@@ -40,7 +40,7 @@
 
 #ifdef _ENABLE_OS_FEATURES_
 
-#ifdef WIN32
+#if defined(WIN32)
 #   define NOGDICAPMASKS
 #   define NOVIRTUALKEYCODES
 #   define NOWINMESSAGES
@@ -81,6 +81,8 @@
 #   define NODEFERWINDOWPOS
 #   define NOMCX
 #   include <Windows.h>
+#elif defined(__linux__)
+#   include <unistd.h>
 #endif
 
 #endif
@@ -1084,6 +1086,16 @@ static xvm_string xvm_string_create(size_t len)
     return string;
 }
 
+//! Creates a string from the specified string literal.
+static xvm_string xvm_string_create_from(const char* str)
+{
+    // Create string and copy data
+    size_t len = strlen(str);
+    xvm_string string = xvm_string_create(len);
+    strcpy(string.str, str);
+    return string;
+}
+
 //! Frees the memory of the specified string.
 static int xvm_string_free(xvm_string* string)
 {
@@ -1168,12 +1180,12 @@ static int xvm_export_address_init(xvm_export_address* export_address)
 }
 
 //! Initializes the export address with the specified startup values.
-static int xvm_export_address_setup(xvm_export_address* export_address, unsigned int addr, size_t name_len)
+static int xvm_export_address_setup(xvm_export_address* export_address, unsigned int addr, xvm_string name)
 {
     if (export_address != NULL)
     {
         export_address->addr = addr;
-        export_address->name = xvm_string_create(name_len);
+        export_address->name = name;
         return 1;
     }
     return 0;
@@ -1341,7 +1353,9 @@ static int xvm_bytecode_datafield_ascii(
 /*
 
 WORD: 32-bit unsigned integer
-STR: Null-terminated string.
+STR:
+    WORD:           length
+    Byte[length]:   data
 
 --- XBC file format spec (Version 1.01): ---
 
@@ -1374,7 +1388,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     // Check arguments
     if (byte_code == NULL || filename == NULL)
     {
-        xvm_log_error("Invalid arguments to read byte code");
+        xvm_log_error("invalid arguments to read byte code");
         return 0;
     }
 
@@ -1382,7 +1396,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     FILE* file = fopen(filename, "rb");
     if (file == NULL)
     {
-        xvm_log_error("Unable to open file for reading");
+        xvm_log_error("unable to open file for reading");
         return 0;
     }
 
@@ -1390,7 +1404,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     unsigned int magic = xvm_file_read_uint(file);
     if (magic != XBC_FORMAT_MAGIC)
     {
-        xvm_log_error("Invalid magic number (Must be \"XBCF\")");
+        xvm_log_error("invalid magic number (must be \"XBCF\")");
         fclose(file);
         return 0;
     }
@@ -1399,7 +1413,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     unsigned int version = xvm_file_read_uint(file);
     if (version != XBC_FORMAT_VERSION_1_01 && version != XBC_FORMAT_VERSION_1_02)
     {
-        xvm_log_error("Invalid version number (Must be 1.01 or 1.02)");
+        xvm_log_error("invalid version number (must be 1.01 or 1.02)");
         fclose(file);
         return 0;
     }
@@ -1409,7 +1423,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
 
     if (xvm_bytecode_create_instructions(byte_code, (int)num_instr) == 0)
     {
-        xvm_log_error("Creating byte code failed");
+        xvm_log_error("creating byte code instructions failed");
         fclose(file);
         return 0;
     }
@@ -1417,7 +1431,25 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     fread(byte_code->instructions, sizeof(instr_t), num_instr, file);
 
     // Read export addresses
-    //...
+    unsigned int num_export_addr = xvm_file_read_uint(file);
+
+    if (xvm_bytecode_create_export_addresses(byte_code, num_export_addr) == 0)
+    {
+        xvm_log_error("creating byte code export addresses failed");
+        fclose(file);
+        return 0;
+    }
+
+    for (unsigned int i = 0; i < num_export_addr; ++i)
+    {
+        // Read address and name and store it into the export address
+        xvm_export_address* export_addr = &(byte_code->export_addresses[i]);
+
+        unsigned int addr = xvm_file_read_uint(file);
+        xvm_string string = xvm_string_read_from_file(file);
+
+        xvm_export_address_setup(export_addr, addr, string);
+    }
 
     // Close file and return with success
     fclose(file);
@@ -1446,13 +1478,35 @@ static int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     xvm_file_write_uint(file, XBC_FORMAT_MAGIC);
 
     // Write version number
-    xvm_file_write_uint(file, XBC_FORMAT_VERSION_1_01);
+    const int has_export_addr = (byte_code->export_addresses != NULL && byte_code->num_export_addresses > 0 ? 1 : 0);
+
+    xvm_file_write_uint(
+        file,
+        has_export_addr != 0 ?
+            XBC_FORMAT_VERSION_1_02 :
+            XBC_FORMAT_VERSION_1_01
+    );
 
     // Write instructions
     unsigned int num_instr = (unsigned int)byte_code->num_instructions;
     xvm_file_write_uint(file, num_instr);
 
     fwrite(byte_code->instructions, sizeof(instr_t), num_instr, file);
+
+    // Write export addresses
+    if (has_export_addr != 0)
+    {
+        unsigned int num_export_addr = byte_code->num_export_addresses;
+        xvm_file_write_uint(file, num_export_addr);
+
+        for (unsigned int i = 0; i < num_export_addr; ++i)
+        {
+            xvm_export_address* export_addr = &(byte_code->export_addresses[i]);
+
+            xvm_file_write_uint(file, export_addr->addr);
+            xvm_string_write_to_file(export_addr->name, file);
+        }
+    }
 
     // Close file and return with success
     fclose(file);
@@ -1905,8 +1959,10 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         case INTR_SLEEP:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
-            #ifdef WIN32
+            #if defined(WIN32)
             Sleep((DWORD)arg0);
+            #elif defined(__linux__)
+            usleep(((useconds_t)arg0) * 1000);
             #endif
         }
         break;
