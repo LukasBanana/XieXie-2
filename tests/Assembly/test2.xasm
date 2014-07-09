@@ -19,7 +19,7 @@
 	.for0:	cmp		$r0, $r1		; while i < 10
 			jge		.end0
 			push	$r2
-			call	Intr.PrintLn	; print str0 with new-line
+			call	<PrintLn>		; print str0 with new-line
 			inc		$r0				; i++
 			jmp		.for0
 	.end0:	ret		(0) 0			; return

@@ -65,6 +65,7 @@ class Assembler
             {
                 __Unknown__,
                 Ident,          //!< ( a-zA-Z | '_' | '.' ) ( a-zA-Z | '_' | '.' | '0' - '9' )*
+                Intrinsic,      //!< '<' (a-zA-Z | '_' | '.' )+ '>'
                 IntLiteral,     //!< ( '-' | epsilon ) ( '0' - '9' )+
                 FloatLiteral,   //!< ( '-' | epsilon ) ( '0' - '9' )+ '.' ( '0' - '9' )+
                 StringLiteral,  //!< '"' ( ? )* '"'
@@ -124,6 +125,7 @@ class Assembler
 
         Token NextToken();
         Token ScanStringLiteral();
+        Token ScanIntrinsic();
         Token ScanIdentifier();
         Token ScanNumber();
         Token ScanRegister();
@@ -137,6 +139,7 @@ class Assembler
 
         void ParseMnemonic();
         void ParseLabel();
+        void ParseDataField();
         void ParseExportField();
         unsigned int ParseLabelAddress();
         

@@ -226,6 +226,10 @@ Assembler::Token Assembler::NextToken()
     if (chr_ == '$')
         return std::move(ScanRegister());
 
+    /* Scan intrinsic */
+    if (chr_ == '<')
+        return std::move(ScanIntrinsic());
+
     /* Scan punctuation */
     switch (chr_)
     {
@@ -324,6 +328,22 @@ Assembler::Token Assembler::ScanIdentifier()
 
     /* Return identifier token */
     return std::move(Token(Token::Types::Ident, spell));
+}
+
+Assembler::Token Assembler::ScanIntrinsic()
+{
+    /* Scan intrinsic string */
+    std::string spell;
+
+    Take('<');
+
+    while (IsIdentChar(chr_))
+        spell += TakeIt();
+
+    Take('>');
+
+    /* Return intrinsic token */
+    return std::move(Token(Token::Types::Intrinsic, spell));
 }
 
 Assembler::Token Assembler::ScanNumber()
@@ -441,6 +461,9 @@ void Assembler::ParseLine()
         case Token::Types::Ident:
             ParseLabel();
             break;
+        case Token::Types::Data:
+            ParseDataField();
+            break;
         case Token::Types::Export:
             ParseExportField();
             break;
@@ -479,6 +502,13 @@ void Assembler::ParseExportField()
     auto addr = ParseLabelAddress();
 
     AddExportAddress(name.spell, addr);
+}
+
+void Assembler::ParseDataField()
+{
+    auto dataType = Accept(Token::Types::Data);
+
+    //...
 }
 
 unsigned int Assembler::ParseLabelAddress()
