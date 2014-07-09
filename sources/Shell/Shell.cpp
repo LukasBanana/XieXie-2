@@ -39,6 +39,8 @@ bool Shell::ExecuteCommandLine(const ArgList& args)
                     CmdVersion();
                 else if (arg == "--help" || arg == "-h")
                     CmdHelp();
+                else if (arg == "--pause")
+                    CmdPause();
                 else if (arg == "--assemble" || arg == "-asm")
                     CmdAssemble(it, end);
                 else
@@ -101,7 +103,13 @@ void Shell::CmdVersion()
 
 void Shell::CmdHelp()
 {
+    Message("no help available yet");
     //...
+}
+
+void Shell::CmdPause()
+{
+    system("pause");
 }
 
 void Shell::CmdAssemble(ArgList::const_iterator& it, const ArgList::const_iterator& end)

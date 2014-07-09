@@ -102,6 +102,7 @@ void Assembler::EstablishMnemonicTable()
         { "mulf", Token::Types::Mnemonic },
         { "divf", Token::Types::Mnemonic },
         { "cmpf", Token::Types::Mnemonic },
+        { "lda",  Token::Types::Mnemonic },
         { "ldb",  Token::Types::Mnemonic },
         { "ldw",  Token::Types::Mnemonic },
         { "stb",  Token::Types::Mnemonic },
@@ -426,6 +427,9 @@ void Assembler::ParseLine()
 {
     switch (tkn_.type)
     {
+        case Token::Types::__Unknown__:
+            /* Ignore empty line */
+            break;
         case Token::Types::Mnemonic:
             ParseMnemonic();
             break;
