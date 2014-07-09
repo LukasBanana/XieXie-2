@@ -31,9 +31,27 @@ std::string SourceArea::ToString() const
     return start == end ? start.ToString() : start.ToString() + " - " + end.ToString();
 }
 
+void SourceArea::IncRow()
+{
+    start.IncRow();
+    end.IncRow();
+}
+
+void SourceArea::IncColumn()
+{
+    start.IncColumn();
+    end.IncColumn();
+}
+
 bool SourceArea::IsValid() const
 {
     return start <= end;
+}
+
+void SourceArea::Reset()
+{
+    start.Reset();
+    end.Reset();
 }
 
 bool SourceArea::IsMultiLine() const

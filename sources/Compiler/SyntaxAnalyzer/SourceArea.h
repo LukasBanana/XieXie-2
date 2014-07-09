@@ -35,8 +35,16 @@ class SourceArea
         */
         std::string ToString() const;
 
+        //! Increases the rows of the start and end position by 1 and sets their columns to 0.
+        void IncRow();
+        //! Increases the columns of the start and end position by 1.
+        void IncColumn();
+
         //! Returns ture if this is a valid source position. False if start-position > end-position.
         bool IsValid() const;
+
+        //! Reste the start and end positions to (0:0).
+        void Reset();
 
         //! Returns true if this area spreads over multiple lines.
         bool IsMultiLine() const;

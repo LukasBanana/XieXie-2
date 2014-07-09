@@ -10,7 +10,7 @@
 
 
 #include "Base/DeclPtr.h"
-#include "Compiler/SyntaxAnalyzer/SourcePosition.h"
+#include "Compiler/SyntaxAnalyzer/SourceArea.h"
 
 #include <fstream>
 #include <string>
@@ -156,7 +156,7 @@ class Assembler
         char chr_ = 0;
         Token tkn_;
 
-        SyntaxAnalyzer::SourcePosition sourcePos_;
+        SyntaxAnalyzer::SourceArea sourceArea_;
 
         std::vector<int> instructions_;
         std::vector<ExportAddress> exportAddresses_;

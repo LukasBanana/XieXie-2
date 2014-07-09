@@ -39,9 +39,9 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
     line_.clear();
     lineIt_ = line_.end();
 
-    ReadNextLine(inFile);
+    sourceArea_.Reset();
 
-    sourcePos_.Reset();
+    ReadNextLine(inFile);
 
     try
     {
@@ -55,7 +55,7 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
     }
     catch (const std::exception& err)
     {
-        Console::Error("(" + sourcePos_.ToString() + ") -- " + std::string(err.what()));
+        Console::Error("(" + sourceArea_.ToString() + ") -- " + std::string(err.what()));
     }
 
     return false;
@@ -120,7 +120,7 @@ void Assembler::ErrorUnexpectedChar()
 
 void Assembler::ErrorUnexpectedToken()
 {
-    throw std::runtime_error("Unexpected token");
+    throw std::runtime_error("Unexpected token '" + tkn_.spell + "'");
 }
 
 /* ------- Scanner ------- */
@@ -132,7 +132,7 @@ void Assembler::ReadNextLine(std::ifstream& inFile)
     lineIt_ = line_.begin();
 
     /* Keep track of source line */
-    sourcePos_.IncRow();
+    sourceArea_.IncRow();
 
     /* Reset scanner information */
     chr_ = 0;
@@ -145,6 +145,7 @@ char Assembler::NextChar()
     if (lineIt_ != line_.end())
     {
         auto chr = *lineIt_;
+        sourceArea_.end.IncColumn();
         ++lineIt_;
         return chr;
     }
@@ -200,7 +201,10 @@ Assembler::Token Assembler::NextToken()
 {
     /* Ignore white spaces */
     while (IsWhiteSpace(chr_))
+    {
         TakeIt();
+        sourceArea_.start = sourceArea_.end;
+    }
 
     /* Check if end-of-line or commentary has reached */
     if (chr_ == 0 || chr_ == ';')
@@ -225,11 +229,11 @@ Assembler::Token Assembler::NextToken()
     /* Scan punctuation */
     switch (chr_)
     {
-        case ':': return std::move(MakeToken( Token::Types::Colon    ));
-        case ',': return std::move(MakeToken( Token::Types::Comma    ));
-        case '(': return std::move(MakeToken( Token::Types::LBracket ));
-        case ')': return std::move(MakeToken( Token::Types::RBracket ));
-        case '@': return std::move(MakeToken( Token::Types::At       ));
+        case ':': return std::move(MakeToken( Token::Types::Colon,      true ));
+        case ',': return std::move(MakeToken( Token::Types::Comma,      true ));
+        case '(': return std::move(MakeToken( Token::Types::LBracket,   true ));
+        case ')': return std::move(MakeToken( Token::Types::RBracket,   true ));
+        case '@': return std::move(MakeToken( Token::Types::At,         true ));
     }
 
     /* Error -> unknwon character */
@@ -419,6 +423,7 @@ Assembler::Token Assembler::Accept(const Token::Types type)
 Assembler::Token Assembler::AcceptIt()
 {
     auto prevTkn = tkn_;
+    sourceArea_.start = sourceArea_.end;
     tkn_ = NextToken();
     return std::move(prevTkn);
 }
@@ -457,9 +462,13 @@ void Assembler::ParseMnemonic()
 
 void Assembler::ParseLabel()
 {
+    /* Parse label */
     auto ident = Accept(Token::Types::Ident);
     Accept(Token::Types::Colon);
     AddLabel(ident.spell);
+
+    /* Parse optional further mnemonic */
+    ParseLine();
 }
 
 void Assembler::ParseExportField()

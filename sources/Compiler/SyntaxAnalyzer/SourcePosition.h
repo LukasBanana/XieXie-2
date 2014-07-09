@@ -28,7 +28,9 @@ class SourcePosition
         //! Returns the source position as string in the format "Row:Column", e.g. "75:10".
         std::string ToString() const;
 
+        //! Increases the row by 1 and sets the column to 0.
         void IncRow();
+        //! Increases the column by 1.
         void IncColumn();
 
         //! Returns ture if this is a valid source position. False if row and column are 0.
