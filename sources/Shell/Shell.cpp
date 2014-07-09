@@ -12,42 +12,49 @@
 #include "Assembler.h"
 
 #include <iostream>
+#include <exception>
+#include <sstream>
 
 
 using namespace Console;
 
-bool Shell::ExecuteCommand(const Command& cmd)
+bool Shell::ExecuteCommandLine(const ArgList& args)
 {
-    if (cmd.IsEmpty())
+    if (args.empty())
         return false;
     
     /* Collect all options */
-    const auto& args = cmd.GetArguments();
-
-    for (auto it = args.begin(); it != args.end(); ++it)
+    try
     {
-        const auto& arg = *it;
-
-        if (arg.empty())
-            continue;
-
-        if (arg.front() == '-')
+        for (auto it = args.begin(), end = args.end(); it != end; ++it)
         {
-            if (arg == "--version")
-                CmdVersion();
-            else if (arg == "--help" || arg == "-h")
+            const auto& arg = *it;
+
+            if (arg.empty())
+                continue;
+
+            if (arg.front() == '-')
+            {
+                if (arg == "--version")
+                    CmdVersion();
+                else if (arg == "--help" || arg == "-h")
+                    CmdHelp();
+                else if (arg == "--assemble" || arg == "-asm")
+                    CmdAssemble(it, end);
+                else
+                    Error("unknown command flag \"" + arg + "\"");
+            }
+            else if (arg == "input")
+                WaitForUserInput();
+            else if (arg == "help")
                 CmdHelp();
-            else if (arg == "--assemble" || arg == "-asm")
-                CmdAssemble(args);
             else
-                Error("unknown command flag \"" + arg + "\"");
+                Error("unknown command \"" + arg + "\"");
         }
-        else if (arg == "input")
-            WaitForUserInput();
-        else if (arg == "help")
-            CmdHelp();
-        else
-            Error("unknown command \"" + arg + "\"");
+    }
+    catch (const std::exception& err)
+    {
+        Error(err.what());
     }
 
     return true;
@@ -55,16 +62,25 @@ bool Shell::ExecuteCommand(const Command& cmd)
 
 void Shell::WaitForUserInput()
 {
-    std::string input;
+    std::string line, in;
+    ArgList args;
 
     while (true)
     {
-        std::getline(std::cin, input);
+        /* Get command line input */
+        std::getline(std::cin, line);
+        std::istringstream stream(line);
 
-        if (input == "exit" || input == "q" || input == "quit" || input == "esc" || input == "escape")
-            break;
+        while (stream >> in)
+        {
+            if (in == "exit" || in == "q" || in == "quit" || in == "esc" || in == "escape")
+                return;
+            args.push_back(in);
+        }
 
-        ExecuteCommand(input);
+        /* Execute command line */
+        ExecuteCommandLine(args);
+        args.clear();
     }
 }
 
@@ -88,10 +104,16 @@ void Shell::CmdHelp()
     //...
 }
 
-void Shell::CmdAssemble(const Command::ArgumentListType& args)
+void Shell::CmdAssemble(ArgList::const_iterator& it, const ArgList::const_iterator& end)
 {
-    auto filename = args.back();
+    /* Get filename */
+    ++it;
+    if (it == end)
+        throw std::runtime_error("missing filename to assembled source");
 
+    auto filename = *it;
+
+    /* Assemble code */
     Console::Message("assemble file \"" + filename + "\"");
 
     XieXie::Assembler assembler;

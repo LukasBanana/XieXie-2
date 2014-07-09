@@ -53,6 +53,12 @@ class Assembler
             size_t offsetBase = 0;
         };
 
+        struct ExportAddress
+        {
+            int         address;
+            std::string name;
+        };
+
         struct Token
         {
             enum class Types
@@ -69,6 +75,7 @@ class Assembler
                 RBracket,       //!< ')'
                 At,             //!< '@'
                 Data,           //!< ( '.ascii' | '.word' | '.float' )
+                Export,         //!< '.export'
                 Mnemonic,       //!< ( 'mov' | 'call' | ... )
             };
 
@@ -105,6 +112,8 @@ class Assembler
         void ErrorUnexpectedChar();
         void ErrorUnexpectedToken();
 
+        /* ------- Scanner ------- */
+
         void ReadNextLine(std::ifstream& inFile);
 
         char NextChar();
@@ -119,15 +128,23 @@ class Assembler
         Token ScanNumber();
         Token ScanRegister();
 
+        /* ------- Parser ------- */
+
         Token Accept(const Token::Types type);
         Token AcceptIt();
 
         void ParseLine();
+
         void ParseMnemonic();
         void ParseLabel();
+        void ParseExportField();
+        unsigned int ParseLabelAddress();
         
+        /* ------- Assembler ------- */
+
         void AddLabel(const std::string& label);
-        void AddInstr(int byteCode);
+        void AddInstruction(int byteCode);
+        void AddExportAddress(const std::string& name, unsigned int address);
 
         bool CreateByteCode(const std::string& outFilename);
 
@@ -142,6 +159,7 @@ class Assembler
         SyntaxAnalyzer::SourcePosition sourcePos_;
 
         std::vector<int> instructions_;
+        std::vector<ExportAddress> exportAddresses_;
 
         std::map<std::string, size_t> labelAddresses_;                      //!< [ label name | instruction index ].
         std::map<std::string, std::vector<BackPatchAddr>> backPatchLabels_; //!< [ label name | back patch addresses ].

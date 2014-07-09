@@ -9,7 +9,8 @@
 #define __XX_SHELL_H__
 
 
-#include "Command.h"
+#include <string>
+#include <vector>
 
 
 class Shell
@@ -17,7 +18,9 @@ class Shell
     
     public:
         
-        bool ExecuteCommand(const Command& cmd);
+        typedef std::vector<std::string> ArgList;
+
+        bool ExecuteCommandLine(const ArgList& args);
 
         void WaitForUserInput();
 
@@ -25,7 +28,7 @@ class Shell
         
         void CmdVersion();
         void CmdHelp();
-        void CmdAssemble(const Command::ArgumentListType& args);
+        void CmdAssemble(ArgList::const_iterator& it, const ArgList::const_iterator& end);
 
 };
 

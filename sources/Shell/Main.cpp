@@ -14,9 +14,15 @@ int main(int argc, char* argv[])
     /* Execute all program arguments as shell commands */
     if (argc > 1)
     {
+        /* Get argument list */
+        Shell::ArgList args;
+
         Shell shell;
         for (int i = 1; i < argc; ++i)
-            shell.ExecuteCommand(std::string(argv[i]));
+            args.push_back(argv[i]);
+
+        /* Execute command line */
+        shell.ExecuteCommandLine(args);
     }
     else
         Console::Message("Enter \"xxc --help\" for the man page");

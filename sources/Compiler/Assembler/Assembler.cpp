@@ -9,6 +9,8 @@
 #include "Console.h"
 #include "StringModifier.h"
 
+#include <exception>
+
 #define _REMOVE_XVM_TESTSUITE_
 #include "VirtualMachine/xvm.c"
 
@@ -54,10 +56,6 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
     catch (const std::exception& err)
     {
         Console::Error("(" + sourcePos_.ToString() + ") -- " + std::string(err.what()));
-    }
-    catch (const std::string& err)
-    {
-        Console::Error("(" + sourcePos_.ToString() + ") -- " + err);
     }
 
     return false;
@@ -116,13 +114,15 @@ void Assembler::EstablishMnemonicTable()
 
 void Assembler::ErrorUnexpectedChar()
 {
-    throw std::string("Unexpected character '" + ToStr(chr_) + "'");
+    throw std::runtime_error("Unexpected character '" + ToStr(chr_) + "'");
 }
 
 void Assembler::ErrorUnexpectedToken()
 {
-    throw std::string("Unexpected token");
+    throw std::runtime_error("Unexpected token");
 }
+
+/* ------- Scanner ------- */
 
 void Assembler::ReadNextLine(std::ifstream& inFile)
 {
@@ -232,7 +232,7 @@ Assembler::Token Assembler::NextToken()
     }
 
     /* Error -> unknwon character */
-    throw std::string("Unknown character '" + ToStr(chr_) + "'");
+    throw std::runtime_error("Unknown character '" + ToStr(chr_) + "'");
 
     return Token();
 }
@@ -303,10 +303,11 @@ Assembler::Token Assembler::ScanIdentifier()
 
     /* Check for data field */
     if (spell == ".ascii" || spell == ".word" || spell == ".float")
-    {
-        /* Return data field token */
         return std::move(Token(Token::Types::Data, spell));
-    }
+
+    /* Check for export field */
+    if (spell == ".export")
+        return std::move(Token(Token::Types::Export, spell));
 
     /* Check for mnemonics */
     auto it = mnemonicTable_.find(spell);
@@ -344,7 +345,7 @@ Assembler::Token Assembler::ScanNumber()
             switch (type)
             {
                 case Token::Types::FloatLiteral:
-                    throw std::string("Multiple dots in float literal");
+                    throw std::runtime_error("Multiple dots in float literal");
                     break;
                 case Token::Types::IntLiteral:
                     type = Token::Types::FloatLiteral;
@@ -352,7 +353,7 @@ Assembler::Token Assembler::ScanNumber()
             }
         }
         else if (IsIdentChar(chr_))
-            throw std::string("Letter '" + ToStr(chr_) + "' is not allowed within a number");
+            throw std::runtime_error("Letter '" + ToStr(chr_) + "' is not allowed within a number");
 
         /* Append current character */
         spell += TakeIt();
@@ -405,6 +406,8 @@ Assembler::Token Assembler::ScanRegister()
     return std::move(Token(Token::Types::Register, spell));
 }
 
+/* ------- Parser ------- */
+
 Assembler::Token Assembler::Accept(const Token::Types type)
 {
     if (!tkn_.IsValid() || tkn_.type != type)
@@ -423,11 +426,17 @@ void Assembler::ParseLine()
 {
     switch (tkn_.type)
     {
+        case Token::Types::Mnemonic:
+            ParseMnemonic();
+            break;
         case Token::Types::Ident:
             ParseLabel();
             break;
-        case Token::Types::Mnemonic:
-            ParseMnemonic();
+        case Token::Types::Export:
+            ParseExportField();
+            break;
+        default:
+            ErrorUnexpectedToken();
             break;
     }
 }
@@ -437,7 +446,7 @@ void Assembler::ParseMnemonic()
     auto ident = Accept(Token::Types::Mnemonic);
 
     #if 1
-    AddInstr(xvm_instr_make_reg2(OPCODE_XOR2, REG_R0, REG_R0));
+    AddInstruction(xvm_instr_make_reg2(OPCODE_XOR2, REG_R0, REG_R0));
     #endif
     //...
 }
@@ -449,14 +458,37 @@ void Assembler::ParseLabel()
     AddLabel(ident.spell);
 }
 
+void Assembler::ParseExportField()
+{
+    Accept(Token::Types::Export);
+
+    auto name = Accept(Token::Types::StringLiteral);
+    auto addr = ParseLabelAddress();
+
+    AddExportAddress(name.spell, addr);
+}
+
+unsigned int Assembler::ParseLabelAddress()
+{
+    //...
+    return 0;
+}
+
+/* ------- Assembler ------- */
+
 void Assembler::AddLabel(const std::string& label)
 {
     labelAddresses_[label] = instructions_.size();
 }
 
-void Assembler::AddInstr(int byteCode)
+void Assembler::AddInstruction(int byteCode)
 {
     instructions_.push_back(byteCode);
+}
+
+void Assembler::AddExportAddress(const std::string& name, unsigned int address)
+{
+    exportAddresses_.push_back({ address, name });
 }
 
 bool Assembler::CreateByteCode(const std::string& outFilename)

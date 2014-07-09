@@ -1,0 +1,36 @@
+; Test
+; 07/07/2014
+
+;  lng0 -> get relative position (from instruction) of label "lng0" (word aligned)
+; @lng0 -> get absolute position of label "lng0" (word aligned)
+; *lng0 -> get value at label "lng0"
+
+			call	Main			; equivalent to "call ($pc) 5"
+			stop					; quit
+			lda		$r3, @.for		; load global address of '.for0' ($r3 = byte_code_memory + 11)
+			mov		$r4, .for		; load relative address of '.for' ($r4 = 8)
+			mov		$r5, @.for		; load absolute address of '.for' ($r4 = 11)
+	Main:	mov		$r1, *lng0		; load value of 'lng0' ($r1 = 999)
+			add		$sp, 4			; increase stack for local scope (4 bytes)
+			stw		$r1, ($lb) 8	; store value of $r1 in local scope (after dynamic-link)
+			lda 	$r2, @str0		; load address of 'str0' ($r2 = byte_code_memory + 18)
+			xor		$r0, $r0		; i := 0
+			mov		$r1, 10			; n := 10
+	.for0:	cmp		$r0, $r1		; while i < 10
+			jge		.end0
+			push	$r2
+			call	Intr.PrintLn	; print str0 with new-line
+			inc		$r0				; i++
+			jmp		.for0
+	.end0:	ret		(0) 0			; return
+	str0:	.ascii	"Hello, World!"
+	lng0:	.word	999
+			Math.Sq:
+			ldw		$r0, ($lb) -4
+			mul		$r0, $r0
+			stw		$r0, ($lb) -4
+			ret		(0) 0			; Optimize retunr value by writing it back to the argument
+
+; Export function addresses
+.export "_ZN@Main" @Main
+.export "Main::Sq" @Math.Sq
