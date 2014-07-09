@@ -543,13 +543,12 @@ static const char* xvm_exitcode_to_string(const xvm_exit_codes exit_code)
 
 INLINE static void xvm_log_print(const char* str)
 {
-    printf(str);
+    printf("%s", str);
 }
 
 INLINE static void xvm_log_println(const char* str)
 {
-    printf(str);
-    printf("\n");
+    puts(str);
 }
 
 INLINE static void xvm_log_error(const char* str)
@@ -600,22 +599,24 @@ Calling convention:
 
 typedef enum
 {
-    INTR_RESERVED       = 0x001fff00, // Start address of reserved primitive procedures.
+    INTR_RESERVED_MIN   = 0x001fff00, // Start address of reserved primitive procedures.
+    INTR_RESERVED_MAX   = 0x001fffff, // End address of reserved primitive procedures.
 
     /* --- Dynamic memory intrinsics --- */
     INTR_ALLOC_MEM      = 0x001fff00, // void* AllocMem(uint sizeInBytes).
-    INTR_FREE_MEM       = 0x001fff01, // void FreeMem(void* memoryAddress).
+    INTR_FREE_MEM       = 0x001fff01, // void FreeMem(void* memoryAddr).
     INTR_COPY_MEM       = 0x001fff02, // void CopyMem(void* dstMemAddr, const void* srcMemAddr, uint sizeInBytes).
     
     /* --- Console intrinsics --- */
-    INTR_SYS_CALL       = 0x001fff20, // void SysCall(const byte* stringAddress).
+    INTR_SYS_CALL       = 0x001fff20, // void SysCall(const byte* stringAddr).
     INTR_CLEAR          = 0x001fff21, // void ClearTerm().
-    INTR_PRINT          = 0x001fff22, // void Print(const byte* stringAddress).
-    INTR_PRINT_LN       = 0x001fff23, // void PrintLn(const byte* stringAddress).
+    INTR_PRINT          = 0x001fff22, // void Print(const byte* stringAddr).
+    INTR_PRINT_LN       = 0x001fff23, // void PrintLn(const byte* stringAddr).
     INTR_PRINT_INT      = 0x001fff24, // void PrintInt(int value);
     INTR_PRINT_FLOAT    = 0x001fff25, // void PrintFloat(float value);
-    INTR_INPUT_INT      = 0x001fff26, // int InputInt();
-    INTR_INPUT_FLOAT    = 0x001fff27, // float InputFloat();
+    INTR_INPUT          = 0x001fff26, // void Input(byte* stringAddr, int maxLen);
+    INTR_INPUT_INT      = 0x001fff27, // int InputInt();
+    INTR_INPUT_FLOAT    = 0x001fff28, // float InputFloat();
 
     /* --- Conditional intrinsics --- */
     // For easier expression evaluation.
@@ -681,6 +682,7 @@ static const char* xvm_intrinsic_get_ident(const intrinsic_addr addr)
         case INTR_PRINT_LN:     return "PrintLn";
         case INTR_PRINT_INT:    return "PrintInt";
         case INTR_PRINT_FLOAT:  return "PrintFloat";
+        case INTR_INPUT:        return "Input";
         case INTR_INPUT_INT:    return "InputInt";
         case INTR_INPUT_FLOAT:  return "InputFloat";
 
@@ -926,7 +928,7 @@ static void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
     else if (opcode == OPCODE_CALL)
     {
         int addr_offset = xvm_instr_get_sgn_value22(instr);
-        if (addr_offset >= INTR_RESERVED)
+        if (addr_offset >= INTR_RESERVED_MIN)
             printf("%s  <intrinsic>", xvm_intrinsic_get_ident((intrinsic_addr)addr_offset));
         else
             printf("%i", addr_offset);
@@ -1737,7 +1739,7 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         case INTR_PRINT_LN:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
-            printf("%s\n", INT_TO_STR_REINTERPRET(arg0));
+            puts(INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
@@ -1752,6 +1754,12 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
             printf("%f", INT_TO_FLT_REINTERPRET(arg0));
+        }
+        break;
+
+        case INTR_INPUT:
+        {
+            //...
         }
         break;
 
@@ -1968,7 +1976,7 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
             #if defined(_WIN32)
             Sleep((DWORD)arg0);
             #elif defined(__linux__)
-            usleep(((useconds_t)arg0) * 1000);
+            usleep(((unsigned int)arg0) * 1000);
             #endif
         }
         break;
@@ -2451,7 +2459,7 @@ static xvm_exit_codes xvm_execute_program_ext(
             {
                 sgn_value = xvm_instr_get_sgn_value22(instr);
 
-                if (sgn_value < INTR_RESERVED)
+                if (sgn_value < INTR_RESERVED_MIN)
                 {
                     // Push dynamic link (lb and pc registers)
                     extra_value = *reg_lb;
