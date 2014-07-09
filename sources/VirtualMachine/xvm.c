@@ -2870,11 +2870,13 @@ int main(int argc, char* argv[])
     xvm_bytecode_init(&byte_code);
     xvm_bytecode_create_instructions(&byte_code, 50);
 
+    const char* program_filename = "test_byte_code.xbc";
+
     size_t i = 0;
     #define ADD_INSTR(INSTR) byte_code.instructions[i++] = INSTR;
     #define FINISH_INSTR byte_code.num_instructions = i;
 
-    #define TEST 1
+    #define TEST 4
 
     #if TEST == 1 //TEST1 (loop)
 
@@ -2921,6 +2923,8 @@ int main(int argc, char* argv[])
     size_t tmp = 0;
     xvm_bytecode_datafield_ascii(&byte_code, i, "\nHello, World!", &tmp);
     i += tmp;
+
+    program_filename = "hello_world.xbc";
 
     #elif TEST == 2 //TEST2 (function)
 
@@ -3034,52 +3038,57 @@ int main(int argc, char* argv[])
     01          pop     $r0
     02  .loop:  xor     $r1, $r1
     03          cmp     $r0, $r1
-    04          jle     .end0           ; while begin
+    04          jle     ($pc), 11       ; while begin
     05          push    $r0
     06          push    $r0             ; fib argument
-    07          call    fib
+    07          call    ($pc), 9
     08          call    Intr.PrintInt   ; print result
-    09          call    Intr.PrintLn
-    0a          pop     $r0
-    0b          dec     $r0
-    0c          jmp     .loop           ; while end
-    0d  .end:   stop
-    0e  fib:    ldw     $r0, ($lb) -4   ; get argument
-    0f          mov     $r1, 2
-    10          cmp     $r0, $r1
-    11          jg      .else
-    12          push    1
-    13          ret     (1) 1
-    14  .else:  dec     $r0
-    15          push    $r0             ; push t0 = (n-1)
-    16          push    $r0             ; fib argument (n-1)
-    17          call    fib
-    18          pop     $r0             ; fib result
-    19          pop     $r1             ; pop t0
-    1a          dec     $r1
-    1b          push    $r0             ; push t1 = result
-    1c          push    $r1             ; fib argument (n-2)
-    1d          call    fib
-    1e          pop     $r0             ; fib result
-    1f          pop     $r1             ; pop t1
-    20          add     $r0, $r1
-    21          push    $r0             ; push result
-    22          ret     (1) 1
+    09          lda     $r0, 37
+    10          push    $r0
+    11          call    Intr.PrintLn
+    12          pop     $r0
+    13          dec     $r0
+    14          jmp     ($pc), -12      ; while end
+    15  .end:   stop
+    16  fib:    ldw     $r0, ($lb) -4   ; get argument
+    17          mov     $r1, 2
+    18          cmp     $r0, $r1
+    19          jg      .else
+    20          push    1
+    21          ret     (1) 1
+    22  .else:  dec     $r0
+    23          push    $r0             ; push t0 = (n-1)
+    24          push    $r0             ; fib argument (n-1)
+    25          call    fib
+    26          pop     $r0             ; fib result
+    27          pop     $r1             ; pop t0
+    28          dec     $r1
+    29          push    $r0             ; push t1 = result
+    30          push    $r1             ; fib argument (n-2)
+    31          call    fib
+    32          pop     $r0             ; fib result
+    33          pop     $r1             ; pop t1
+    34          add     $r0, $r1
+    35          push    $r0             ; push result
+    36          ret     (1) 1
+    37  str0:   .ascii  ""
     */
 
     ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_INPUT_INT            ))
     ADD_INSTR(xvm_instr_make_reg1       (OPCODE_POP,  REG_R0, 0                         ))
     ADD_INSTR(xvm_instr_make_reg2       (OPCODE_XOR2, REG_R1, REG_R1                    ))
     ADD_INSTR(xvm_instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                    ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JLE,  REG_PC, 9                         ))
+    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JLE,  REG_PC, 11                        ))
     ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, 7                         )) // call fib
+    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, 9                         )) // call fib
     ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_INT            )) // call Intr.PrintInt
+    ADD_INSTR(xvm_instr_make_mem        (OPCODE_LDA,  REG_R0, 37                        )) // addr := &str0
+    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_LN             )) // call Intr.PrintLn
     ADD_INSTR(xvm_instr_make_reg1       (OPCODE_POP,  REG_R0, 0                         ))
     ADD_INSTR(xvm_instr_make_reg1       (OPCODE_DEC,  REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JMP,  REG_PC, (unsigned int)(-10)       ))
+    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JMP,  REG_PC, (unsigned int)(-12)       ))
     ADD_INSTR(xvm_instr_make_special1   (OPCODE_STOP, 0                                 ))
     ADD_INSTR(xvm_instr_make_memoff     (OPCODE_LDW,  REG_R0, REG_LB, (unsigned int)(-4))) // fib:
     ADD_INSTR(xvm_instr_make_reg1       (OPCODE_MOV1, REG_R1, 2                         ))
@@ -3102,6 +3111,9 @@ int main(int argc, char* argv[])
     ADD_INSTR(xvm_instr_make_reg2       (OPCODE_ADD2, REG_R0, REG_R1                    ))
     ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
     ADD_INSTR(xvm_instr_make_special2   (OPCODE_RET,  1, 1                              )) // ret (1) 1
+    ADD_INSTR(0)                                                                           // str0: .ascii ""
+
+    program_filename = "fibonacci.xbc";
 
     #endif
     
@@ -3127,7 +3139,7 @@ int main(int argc, char* argv[])
     xvm_stack_debug_float(&stack, 0, 10);
     #endif
 
-    xvm_bytecode_write_to_file(&byte_code, "test_byte_code.xbc");
+    xvm_bytecode_write_to_file(&byte_code, program_filename);
 
     xvm_stack_free(&stack);
     xvm_bytecode_free(&byte_code);
