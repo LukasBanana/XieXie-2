@@ -539,28 +539,28 @@ static const char* xvm_exitcode_to_string(const xvm_exit_codes exit_code)
 
 /* ----- Debug log ----- */
 
-INLINE static void log_print(const char* str)
+INLINE static void xvm_log_print(const char* str)
 {
     printf(str);
 }
 
-INLINE static void log_println(const char* str)
+INLINE static void xvm_log_println(const char* str)
 {
     printf(str);
     printf("\n");
 }
 
-INLINE static void log_error(const char* str)
+INLINE static void xvm_log_error(const char* str)
 {
     printf("error: %s!\n", str);
 }
 
-INLINE static void log_readfile_error(const char* filename)
+INLINE static void xvm_log_readfile_error(const char* filename)
 {
     printf("error: reading file \"%s\" failed!\n", filename);
 }
 
-INLINE static void log_exitcode_error(const xvm_exit_codes exit_code)
+INLINE static void xvm_log_exitcode_error(const xvm_exit_codes exit_code)
 {
     const char* err = xvm_exitcode_to_string(exit_code);
     if (err != NULL)
@@ -1374,7 +1374,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     // Check arguments
     if (byte_code == NULL || filename == NULL)
     {
-        log_error("Invalid arguments to read byte code");
+        xvm_log_error("Invalid arguments to read byte code");
         return 0;
     }
 
@@ -1382,7 +1382,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     FILE* file = fopen(filename, "rb");
     if (file == NULL)
     {
-        log_error("Unable to open file for reading");
+        xvm_log_error("Unable to open file for reading");
         return 0;
     }
 
@@ -1390,7 +1390,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     unsigned int magic = xvm_file_read_uint(file);
     if (magic != XBC_FORMAT_MAGIC)
     {
-        log_error("Invalid magic number (Must be \"XBCF\")");
+        xvm_log_error("Invalid magic number (Must be \"XBCF\")");
         fclose(file);
         return 0;
     }
@@ -1399,7 +1399,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     unsigned int version = xvm_file_read_uint(file);
     if (version != XBC_FORMAT_VERSION_1_01 && version != XBC_FORMAT_VERSION_1_02)
     {
-        log_error("Invalid version number (Must be 1.01 or 1.02)");
+        xvm_log_error("Invalid version number (Must be 1.01 or 1.02)");
         fclose(file);
         return 0;
     }
@@ -1409,7 +1409,7 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
 
     if (xvm_bytecode_create_instructions(byte_code, (int)num_instr) == 0)
     {
-        log_error("Creating byte code failed");
+        xvm_log_error("Creating byte code failed");
         fclose(file);
         return 0;
     }
@@ -1430,7 +1430,7 @@ static int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     // Check arguments
     if (byte_code == NULL || byte_code->num_instructions <= 0 || byte_code->instructions == NULL || filename == NULL)
     {
-        log_error("Invalid arguments to write byte code");
+        xvm_log_error("Invalid arguments to write byte code");
         return 0;
     }
 
@@ -1438,7 +1438,7 @@ static int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     FILE* file = fopen(filename, "wb");
     if (file == NULL)
     {
-        log_error("Unable to open file for writing");
+        xvm_log_error("Unable to open file for writing");
         return 0;
     }
 
@@ -2006,7 +2006,7 @@ static xvm_exit_codes xvm_execute_program_ext(
     int exception_val = setjmp(xvm_exception_envbuf);
     if (exception_val != 0)
     {
-        log_error(xvm_exception_err);
+        xvm_log_error(xvm_exception_err);
         return (xvm_exit_codes)exception_val;
     }
 
@@ -2633,27 +2633,27 @@ static xvm_exit_codes xvm_execute_program_entry_point(
 
 static void shell_print_help()
 {
-    log_println("Usage: xvm [options] file");
-    log_println("Options:");
-    log_println("  -h --help help           Prints the help information");
-    log_println("  --version                Prints the version and license note");
-    log_println("  --verbose                Prints additional output before and after program execution");
-    log_println("  -st --stack-size <arg>   Sets the stack size (by default 256)");
+    xvm_log_println("Usage: xvm [options] file");
+    xvm_log_println("Options:");
+    xvm_log_println("  -h --help help           Prints the help information");
+    xvm_log_println("  --version                Prints the version and license note");
+    xvm_log_println("  --verbose                Prints additional output before and after program execution");
+    xvm_log_println("  -st --stack-size <arg>   Sets the stack size (by default 256)");
 }
 
 static void shell_print_version()
 {
     #ifdef _ENABLE_RUNTIME_DEBUGGER_
-    log_println("XieXie 2.0 VirtualMachine (XVM) with RuntimeDebugger (RTD)");
+    xvm_log_println("XieXie 2.0 VirtualMachine (XVM) with RuntimeDebugger (RTD)");
     #else
-    log_println("XieXie 2.0 VirtualMachine (XVM)");
+    xvm_log_println("XieXie 2.0 VirtualMachine (XVM)");
     #endif
-    log_println("");
-    log_println("Copyright (C) 2014 Lukas Hermanns");
-    log_println("All rights reserved.");
-    log_println("");
-    log_println("This software may be modified and distributed under the terms");
-    log_println("of the BSD license.  See the LICENSE file for details.");
+    xvm_log_println("");
+    xvm_log_println("Copyright (C) 2014 Lukas Hermanns");
+    xvm_log_println("All rights reserved.");
+    xvm_log_println("");
+    xvm_log_println("This software may be modified and distributed under the terms");
+    xvm_log_println("of the BSD license.  See the LICENSE file for details.");
 }
 
 static int shell_parse_args(int argc, char* argv[])
@@ -2668,7 +2668,7 @@ static int shell_parse_args(int argc, char* argv[])
 
     if (argc <= 0)
     {
-        log_println("no input: enter \"help\" for information");
+        xvm_log_println("no input: enter \"help\" for information");
         return 0;
     }
 
@@ -2699,7 +2699,7 @@ static int shell_parse_args(int argc, char* argv[])
 
                 if (param <= 0)
                 {
-                    log_error("Stack size must be greater than zero");
+                    xvm_log_error("Stack size must be greater than zero");
                     return 0;
                 }
                 else
@@ -2711,7 +2711,7 @@ static int shell_parse_args(int argc, char* argv[])
             }
             else
             {
-                log_error("Expected argument after \"-st\" and \"--stack-size\" flag");
+                xvm_log_error("Expected argument after \"-st\" and \"--stack-size\" flag");
                 return 0;
             }
         }
@@ -2719,7 +2719,7 @@ static int shell_parse_args(int argc, char* argv[])
         {
             if (filename != NULL)
             {
-                log_error("Only a single program can be executed at a time");
+                xvm_log_error("Only a single program can be executed at a time");
                 return 0;
             }
             else
@@ -2736,7 +2736,7 @@ static int shell_parse_args(int argc, char* argv[])
 
         if (xvm_bytecode_read_from_file(&byte_code, filename) == 0)
         {
-            log_readfile_error(filename);
+            xvm_log_readfile_error(filename);
             return 0;
         }
 
@@ -2749,9 +2749,9 @@ static int shell_parse_args(int argc, char* argv[])
         const xvm_exit_codes exit_code = xvm_execute_program(&byte_code, &stack);
 
         if (exit_code != EXITCODE_SUCCESS)
-            log_exitcode_error(exit_code);
+            xvm_log_exitcode_error(exit_code);
         else if (verbose != 0)
-            log_println("Program terminated successful");
+            xvm_log_println("Program terminated successful");
 
         // Clean up
         xvm_bytecode_free(&byte_code);
@@ -3050,7 +3050,7 @@ int main(int argc, char* argv[])
     printf("\n\n");
 
     #if 1
-    log_println("-- Stack content: --");
+    xvm_log_println("-- Stack content: --");
     //xvm_stack_debug(&stack, 2, 20);
     xvm_stack_debug_float(&stack, 0, 10);
     #endif
