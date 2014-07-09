@@ -437,7 +437,7 @@ void Assembler::ParseMnemonic()
     auto ident = Accept(Token::Types::Mnemonic);
 
     #if 1
-    AddInstr(instr_make_reg2(OPCODE_XOR2, REG_R0, REG_R0));
+    AddInstr(xvm_instr_make_reg2(OPCODE_XOR2, REG_R0, REG_R0));
     #endif
     //...
 }
