@@ -40,7 +40,7 @@
 
 #ifdef _ENABLE_OS_FEATURES_
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #   define NOGDICAPMASKS
 #   define NOVIRTUALKEYCODES
 #   define NOWINMESSAGES
@@ -554,19 +554,19 @@ INLINE static void xvm_log_println(const char* str)
 
 INLINE static void xvm_log_error(const char* str)
 {
-    printf("error: %s!\n", str);
+    printf("error: %s\n", str);
 }
 
 INLINE static void xvm_log_readfile_error(const char* filename)
 {
-    printf("error: reading file \"%s\" failed!\n", filename);
+    printf("error: reading file \"%s\" failed\n", filename);
 }
 
 INLINE static void xvm_log_exitcode_error(const xvm_exit_codes exit_code)
 {
     const char* err = xvm_exitcode_to_string(exit_code);
     if (err != NULL)
-        printf("error: program terminated with error: \"%s\"!\n", err);
+        printf("error: program terminated with error: \"%s\"\n", err);
 }
 
 
@@ -1431,24 +1431,30 @@ static int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     fread(byte_code->instructions, sizeof(instr_t), num_instr, file);
 
     // Read export addresses
-    unsigned int num_export_addr = xvm_file_read_uint(file);
-
-    if (xvm_bytecode_create_export_addresses(byte_code, num_export_addr) == 0)
+    if (version >= XBC_FORMAT_VERSION_1_02)
     {
-        xvm_log_error("creating byte code export addresses failed");
-        fclose(file);
-        return 0;
-    }
+        unsigned int num_export_addr = xvm_file_read_uint(file);
 
-    for (unsigned int i = 0; i < num_export_addr; ++i)
-    {
-        // Read address and name and store it into the export address
-        xvm_export_address* export_addr = &(byte_code->export_addresses[i]);
+        if (num_export_addr > 0)
+        {
+            if (xvm_bytecode_create_export_addresses(byte_code, num_export_addr) == 0)
+            {
+                xvm_log_error("creating byte code export addresses failed");
+                fclose(file);
+                return 0;
+            }
 
-        unsigned int addr = xvm_file_read_uint(file);
-        xvm_string string = xvm_string_read_from_file(file);
+            for (unsigned int i = 0; i < num_export_addr; ++i)
+            {
+                // Read address and name and store it into the export address
+                xvm_export_address* export_addr = &(byte_code->export_addresses[i]);
 
-        xvm_export_address_setup(export_addr, addr, string);
+                unsigned int addr = xvm_file_read_uint(file);
+                xvm_string string = xvm_string_read_from_file(file);
+
+                xvm_export_address_setup(export_addr, addr, string);
+            }
+        }
     }
 
     // Close file and return with success
@@ -1959,7 +1965,7 @@ static void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         case INTR_SLEEP:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
-            #if defined(WIN32)
+            #if defined(_WIN32)
             Sleep((DWORD)arg0);
             #elif defined(__linux__)
             usleep(((useconds_t)arg0) * 1000);
@@ -2843,7 +2849,7 @@ int main(int argc, char* argv[])
     // Ignore program path argument, then parse all other arguments
     shell_parse_args(--argc, ++argv);
 
-    #if defined(_DEBUG) || 1
+    #if defined(_DEBUG) || 0
 
     // Create a virtual stack
     xvm_stack stack;
@@ -2904,7 +2910,9 @@ int main(int argc, char* argv[])
     ADD_INSTR(xvm_instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-10)   ))
     ADD_INSTR(xvm_instr_make_special1   (OPCODE_STOP, 0                             ))
 
-    xvm_bytecode_datafield_ascii(&byte_code, i, "\nHello, World!", NULL);
+    size_t tmp = 0;
+    xvm_bytecode_datafield_ascii(&byte_code, i, "\nHello, World!", &tmp);
+    i += tmp;
 
     #elif TEST == 2 //TEST2 (function)
 
