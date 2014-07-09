@@ -1,0 +1,48 @@
+
+; Reflective XASM code
+; Program cycle:
+; call main
+;	overwrite 4 instructions from 'func' to 'main'
+;	push arguments on stack
+;	call main again -> this time the code from 'func' will be executed
+
+		call	main
+		stop
+main:	lda		$r1, @main
+		lda		$r2, @func
+		ldw		$r3, ($r2) 0
+		stw		$r3, ($r1) 0
+		ldw		$r3, ($r2) 4
+		stw		$r3, ($r1) 4
+		ldw		$r3, ($r2) 8
+		stw		$r3, ($r1) 8
+		ldw		$r3, ($r2) 12
+		stw		$r3, ($r1) 12
+		push	10
+		call	main
+func:	ldw		$r0, ($lb) -4	; get argument0
+		add		$r0, $r0		; r0 := r0 + r0 (r0 *= 2)
+		stw		$r0, ($lb) -4	; write argument0
+		ret		(0) 0
+
+; After execution the code looks like this:
+
+		call	main
+		stop
+main:	ldw		$r0, ($lb) -4	; get argument0
+		add		$r0, $r0		; r0 := r0 + r0 (r0 *= 2)
+		stw		$r0, ($lb) -4	; write argument0
+		ret		(0) 0			; return to 'stop' instruction
+		ldw		$r3, ($r2) 4
+		stw		$r3, ($r1) 4
+		ldw		$r3, ($r2) 8
+		stw		$r3, ($r1) 8
+		ldw		$r3, ($r2) 12
+		stw		$r3, ($r1) 12
+		push	10
+		call	main
+func:	ldw		$r0, ($lb) -4	; get argument0
+		add		$r0, $r0		; r0 := r0 + r0 (r0 *= 2)
+		stw		$r0, ($lb) -4	; write argument0
+		ret		(0) 0
+
