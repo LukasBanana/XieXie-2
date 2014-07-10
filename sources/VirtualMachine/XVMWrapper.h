@@ -64,6 +64,84 @@ ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack);
 ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const std::string& entryPoint);
 
 
+//! Virtual register class.
+class Register
+{
+    
+    public:
+        
+        static const Register r0;
+        static const Register r1;
+        static const Register r2;
+        static const Register r3;
+        static const Register r4;
+        static const Register r5;
+        static const Register r6;
+        static const Register r7;
+        static const Register r8;
+        static const Register r9;
+
+        static const Register op;
+        static const Register gp;
+
+        static const Register cf;
+        static const Register lb;
+        static const Register sp;
+        static const Register pc;
+
+        operator reg_t () const
+        {
+            return reg_;
+        }
+
+        //! Returns the register name.
+        std::string Name() const
+        {
+            return std::string(xvm_register_get_name(reg_));
+        }
+
+    private:
+        
+        Register(reg_t reg) :
+            reg_(reg)
+        {
+        }
+        Register(const Register&)
+        {
+            /* Not used */
+        }
+        Register& operator = (const Register&)
+        {
+            /* Not used */
+            return *this;
+        }
+
+        reg_t reg_;
+
+};
+
+const Register Register::r0(REG_R0);
+const Register Register::r1(REG_R1);
+const Register Register::r2(REG_R2);
+const Register Register::r3(REG_R3);
+const Register Register::r4(REG_R4);
+const Register Register::r5(REG_R5);
+const Register Register::r6(REG_R6);
+const Register Register::r7(REG_R7);
+const Register Register::r8(REG_R8);
+const Register Register::r9(REG_R9);
+
+const Register Register::op(REG_OP);
+const Register Register::gp(REG_GP);
+
+const Register Register::cf(REG_CF);
+const Register Register::lb(REG_LB);
+const Register Register::sp(REG_SP);
+const Register Register::pc(REG_PC);
+
+typedef Register Reg;
+
+
 //! The instruction class only stores the 32-bit code of a single XVM instruction.
 class Instruction
 {
@@ -79,16 +157,41 @@ class Instruction
         {
         }
 
-        inline int Code() const
+        //! Returns the entire 32-bit instruction code.
+        instr_t Code() const
         {
             return code_;
         }
 
+        //! Returns the instruction opcode.
+        opcode_t OpCode() const
+        {
+            return xvm_instr_get_opcode(code_);
+        }
+
+        /**
+        Returns the instruction mnemonic. This string will be filled with
+        spaces (' ') so that the string always consists of 4 characters.
+        */
+        std::string Mnemonic() const
+        {
+            return std::string(xvm_instr_get_mnemonic(OpCode()));
+        }
+
+        //! Makesa 2-register instruction.
+        static Instruction MakeReg2(opcode_reg2 opcode, const Register& reg0, const Register& reg1)
+        {
+            return Instruction(xvm_instr_make_reg2(opcode, reg0, reg1));
+        }
+
     private:
         
-        int code_;
+        instr_t code_;
 
 };
+
+typedef Instruction Instr;
+
 
 //! The byte code class represents an entire virtual program.
 class ByteCode
@@ -156,6 +259,7 @@ class ByteCode
 
 };
 
+
 //! A virtual stack is required for to execute a program.
 class Stack
 {
@@ -198,6 +302,7 @@ class Stack
         xvm_stack stack_;
 
 };
+
 
 /**
 Maps the XVM exit codes from 'xvm_exit_codes' to 'XieXie::VirtualMachien::ExitCodes'.
