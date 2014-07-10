@@ -101,7 +101,7 @@ class Register
         }
 
         /**
-        Returns the specified register.
+        Returns the specified register via index.
         \param[in] reg Specifies the register index. Must be in the range [0x0 .. 0xf].
         \throws std::out_of_range If the register index is out of range.
         */
@@ -127,6 +127,44 @@ class Register
                 case 0xf: return pc;
             }
             throw std::out_of_range("invalid register index (must be in rage: 0x0 - 0xf)");
+            return r0;
+        }
+
+        /**
+        Returns the specified register via name.
+        \param[in] name Specifies the register name (e.g. "$r0" or "$sp").
+        Valid register names are: "$r0" - "$r9", "$op", "$gp", "$cf", "$lb", "$sp" and "$pc".
+        \throws std::invalid_argument If the register name is invalid.
+        \see Name
+        */
+        static const Register& Get(const std::string& name)
+        {
+            if (name.size() == 3 && name[0] == '$')
+            {
+                if (name[1] == 'r')
+                {
+                    switch (name[2])
+                    {
+                        case '0': return r0;
+                        case '1': return r1;
+                        case '2': return r2;
+                        case '3': return r3;
+                        case '4': return r4;
+                        case '5': return r5;
+                        case '6': return r6;
+                        case '7': return r7;
+                        case '8': return r8;
+                        case '9': return r9;
+                    }
+                }
+                else if (name == "$op") return op;
+                else if (name == "$gp") return gp;
+                else if (name == "$cf") return cf;
+                else if (name == "$lb") return lb;
+                else if (name == "$sp") return sp;
+                else if (name == "$pc") return pc;
+            }
+            throw std::invalid_argument("invalid register name '" + name + "'");
             return r0;
         }
 
