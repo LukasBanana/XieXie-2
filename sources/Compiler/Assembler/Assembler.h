@@ -22,6 +22,8 @@
 namespace XieXie
 {
 
+namespace VirtualMachine { class ByteCode; }
+
 
 /**
 XieXie Assmbler (XASM).
@@ -161,7 +163,9 @@ class Assembler
 
         SyntaxAnalyzer::SourceArea sourceArea_;
 
-        std::vector<int> instructions_;
+        std::shared_ptr<VirtualMachine::ByteCode> byteCode_;
+
+        //std::vector<int> instructions_;
         std::vector<ExportAddress> exportAddresses_;
 
         std::map<std::string, size_t> labelAddresses_;                      //!< [ label name | instruction index ].

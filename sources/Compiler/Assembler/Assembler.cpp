@@ -11,15 +11,19 @@
 
 #include <exception>
 
-#define _REMOVE_XVM_TESTSUITE_
-#include "VirtualMachine/xvm.c"
+#include "VirtualMachine/XVMWrapper.h"
+//#define _REMOVE_XVM_TESTSUITE_
+//#include "VirtualMachine/xvm.c"
 
 
 namespace XieXie
 {
 
 
-Assembler::Assembler()
+using namespace VirtualMachine;
+
+Assembler::Assembler() :
+    byteCode_(std::make_shared<ByteCode>())
 {
     EstablishMnemonicTable();
 }
@@ -521,12 +525,12 @@ unsigned int Assembler::ParseLabelAddress()
 
 void Assembler::AddLabel(const std::string& label)
 {
-    labelAddresses_[label] = instructions_.size();
+    labelAddresses_[label] = byteCode_->instructions.size();
 }
 
 void Assembler::AddInstruction(int byteCode)
 {
-    instructions_.push_back(byteCode);
+    byteCode_->instructions.push_back(byteCode);
 }
 
 void Assembler::AddExportAddress(const std::string& name, unsigned int address)
@@ -536,23 +540,8 @@ void Assembler::AddExportAddress(const std::string& name, unsigned int address)
 
 bool Assembler::CreateByteCode(const std::string& outFilename)
 {
-    /* Create byte code */
-    const int numInstr = static_cast<int>(instructions_.size());
-
-    xvm_bytecode byteCode;
-    xvm_bytecode_init(&byteCode);
-    xvm_bytecode_create_instructions(&byteCode, numInstr);
-
-    for (int i = 0; i < numInstr; ++i)
-        byteCode.instructions[i] = instructions_[i];
-
-    /* Write byte code to file */
-    int result = xvm_bytecode_write_to_file(&byteCode, outFilename.c_str());
-
-    /* Releas byte code */
-    xvm_bytecode_free(&byteCode);
-
-    return result != 0;
+    byteCode_->Finalize();
+    return byteCode_->WriteToFile(outFilename);
 }
 
 
