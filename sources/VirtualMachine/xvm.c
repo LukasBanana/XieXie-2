@@ -746,6 +746,22 @@ STATIC const char* xvm_intrinsic_get_ident(const intrinsic_addr addr)
 
 /* ----- Instruction ----- */
 
+#define XVM_VALUE26_MAX     (0x03ffffff)
+#define XVM_VALUE22_MAX     (0x003fffff)
+#define XVM_VALUE18_MAX     (0x0003ffff)
+
+#define XVM_VALUE26_MIN     (0)
+#define XVM_VALUE22_MIN     (0)
+#define XVM_VALUE18_MIN     (0)
+
+#define XVM_SGN_VALUE26_MAX (0x01ffffff)
+#define XVM_SGN_VALUE22_MAX (0x001fffff)
+#define XVM_SGN_VALUE18_MAX (0x0001ffff)
+
+#define XVM_SGN_VALUE26_MIN (-0x02000000)
+#define XVM_SGN_VALUE22_MIN (-0x00200000)
+#define XVM_SGN_VALUE18_MIN (-0x00020000)
+
 typedef unsigned int instr_t;
 
 INLINE STATIC opcode_t xvm_instr_get_opcode(const instr_t instr)
@@ -763,23 +779,24 @@ INLINE STATIC opcode_t xvm_instr_get_opcode(const instr_t instr)
 
 INLINE STATIC unsigned int xvm_instr_get_value26(const instr_t instr)
 {
-    return (instr & 0x03ffffff);
+    return (instr & XVM_VALUE26_MAX);
 }
 
 INLINE STATIC unsigned int xvm_instr_get_value22(const instr_t instr)
 {
-    return (instr & 0x003fffff);
+    return (instr & XVM_VALUE22_MAX);
 }
 
 INLINE STATIC unsigned int xvm_instr_get_value18(const instr_t instr)
 {
-    return (instr & 0x0003ffff);
+    return (instr & XVM_VALUE18_MAX);
 }
 
 INLINE STATIC int xvm_instr_get_sgn_value26(const instr_t instr)
 {
     unsigned int val = xvm_instr_get_value26(instr);
 
+    // Sign extend
     if ((val & 0x02000000) != 0)
         val |= 0xfc000000;
 
@@ -790,6 +807,7 @@ INLINE STATIC int xvm_instr_get_sgn_value22(const instr_t instr)
 {
     unsigned int val = xvm_instr_get_value22(instr);
 
+    // Sign extend
     if ((val & 0x00200000) != 0)
         val |= 0xffc00000;
 
@@ -800,6 +818,7 @@ INLINE STATIC int xvm_instr_get_sgn_value18(const instr_t instr)
 {
     unsigned int val = xvm_instr_get_value18(instr);
 
+    // Sign extend
     if ((val & 0x00020000) != 0)
         val |= 0xfffc0000;
 
@@ -999,12 +1018,12 @@ STATIC instr_t xvm_instr_make_reg1(opcode_reg1 opcode, reg_t reg, unsigned int v
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
-        opcode                        |
+        opcode                             |
         #else
-        ((opcode & 0x3f      ) << 26) |
+        ((opcode & 0x3f           ) << 26) |
         #endif
-        ((reg    & 0x0f      ) << 22) |
-         (value  & 0x003fffff)
+        ((reg    & 0x0f           ) << 22) |
+         (value  & XVM_VALUE22_MAX)
     );
 }
 
@@ -1027,13 +1046,13 @@ STATIC instr_t xvm_instr_make_memoff(opcode_memoff opcode, reg_t reg0, reg_t reg
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
-        opcode                        |
+        opcode                             |
         #else
-        ((opcode & 0x3f      ) << 26) |
+        ((opcode & 0x3f           ) << 26) |
         #endif
-        ((reg0   & 0x0f      ) << 22) |
-        ((reg1   & 0x0f      ) << 18) |
-         (offset & 0x0003ffff)
+        ((reg0   & 0x0f           ) << 22) |
+        ((reg1   & 0x0f           ) << 18) |
+         (offset & XVM_VALUE18_MAX)
     );
 }
 
@@ -1041,11 +1060,11 @@ STATIC instr_t xvm_instr_make_special1(opcode_special opcode, unsigned int value
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
-        opcode                        |
+        opcode                             |
         #else
-        ((opcode & 0x3f      ) << 26) |
+        ((opcode & 0x3f           ) << 26) |
         #endif
-         (value  & 0x03ffffff)
+         (value  & XVM_VALUE26_MAX)
     );
 }
 
@@ -1053,12 +1072,12 @@ STATIC instr_t xvm_instr_make_special2(opcode_special opcode, unsigned int resul
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
-        opcode                             |
+        opcode                                  |
         #else
-        ((opcode      & 0x3f      ) << 26) |
+        ((opcode      & 0x3f           ) << 26) |
         #endif
-        ((result_size & 0x000000ff) << 18) |
-         (arg_size    & 0x0003ffff)
+        ((result_size & 0x000000ff     ) << 18) |
+         (arg_size    & XVM_VALUE18_MAX)
     );
 }
 
