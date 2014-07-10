@@ -6,3 +6,7 @@
 * Compiler (in progress)
 * Virtual Assembler (XASM)
 * Virtual Machine (written in plain C with C++ wrapper)
+
+### License ###
+
+BSD License
