@@ -28,6 +28,7 @@ namespace VirtualMachine { class ByteCode; }
 /**
 XieXie Assmbler (XASM).
 This class can compile XASM (XieXie Assembler) files into XBC (XieXie Byte Code) files.
+\remarks The assembler combines scanner and parser because of the simple XASM grammar.
 */
 class Assembler
 {
@@ -61,8 +62,10 @@ class Assembler
             std::string name;
         };
 
+        //! XASM token structure.
         struct Token
         {
+            //! Token types. The documentation describes the token grammar.
             enum class Types
             {
                 __Unknown__,
@@ -94,12 +97,12 @@ class Assembler
             {
             }
 
-            inline bool IsValid() const
+            bool IsValid() const
             {
                 return type != Types::__Unknown__;
             }
 
-            inline operator bool () const
+            operator bool () const
             {
                 return IsValid();
             }
@@ -163,9 +166,9 @@ class Assembler
 
         SyntaxAnalyzer::SourceArea sourceArea_;
 
+        // (Can not be unique_ptr because of unknown type)
         std::shared_ptr<VirtualMachine::ByteCode> byteCode_;
 
-        //std::vector<int> instructions_;
         std::vector<ExportAddress> exportAddresses_;
 
         std::map<std::string, size_t> labelAddresses_;                      //!< [ label name | instruction index ].
