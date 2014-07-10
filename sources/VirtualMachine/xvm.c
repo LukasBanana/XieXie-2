@@ -1479,7 +1479,7 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     // Check arguments
     if (byte_code == NULL || byte_code->num_instructions <= 0 || byte_code->instructions == NULL || filename == NULL)
     {
-        xvm_log_error("Invalid arguments to write byte code");
+        xvm_log_error("invalid arguments to write byte code");
         return 0;
     }
 
@@ -1487,7 +1487,7 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     FILE* file = fopen(filename, "wb");
     if (file == NULL)
     {
-        xvm_log_error("Unable to open file for writing");
+        xvm_log_error("unable to open file for writing");
         return 0;
     }
 
