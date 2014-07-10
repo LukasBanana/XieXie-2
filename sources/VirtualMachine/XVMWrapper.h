@@ -176,8 +176,105 @@ typedef Register Reg;
 class Instruction
 {
     
+    private:
+        
+        template <class ValueClass> static bool InBitRange(int value)
+        {
+            return value >= ValueClass::min && value <= ValueClass::max;
+        }
+        template <class ValueClass> static bool InBitRange(unsigned int value)
+        {
+            return value >= ValueClass::min && value <= ValueClass::max;
+        }
+
     public:
         
+        /* ------- Structures ------- */
+
+        //! Unsigned 26-bit value.
+        struct Value26
+        {
+            static const unsigned int max = XVM_VALUE26_MAX;
+            static const unsigned int min = XVM_VALUE26_MIN;
+        };
+
+        //! Unsigned 22-bit value.
+        struct Value22
+        {
+            static const unsigned int max = XVM_VALUE22_MAX;
+            static const unsigned int min = XVM_VALUE22_MIN;
+        };
+
+        //! Unsigned 18-bit value.
+        struct Value18
+        {
+            static const unsigned int max = XVM_VALUE18_MAX;
+            static const unsigned int min = XVM_VALUE18_MIN;
+        };
+
+        //! Signed 26-bit value.
+        struct SgnValue26
+        {
+            static const int max = XVM_SGN_VALUE26_MAX;
+            static const int min = XVM_SGN_VALUE26_MIN;
+        };
+
+        //! Signed 22-bit value.
+        struct SgnValue22
+        {
+            static const int max = XVM_SGN_VALUE22_MAX;
+            static const int min = XVM_SGN_VALUE22_MIN;
+        };
+
+        //! Signed 18-bit value.
+        struct SgnValue18
+        {
+            static const int max = XVM_SGN_VALUE18_MAX;
+            static const int min = XVM_SGN_VALUE18_MIN;
+        };
+
+        /* ------- Templates ------- */
+
+        //! Returns true if the specified value is inside the inside the bit range.
+        template <int Bits> static bool InRange(int value)
+        {
+            return false;
+        }
+
+        template <> static bool InRange<26>(int value)
+        {
+            return InBitRange<SgnValue26>(value);
+        }
+        template <> static bool InRange<22>(int value)
+        {
+            return InBitRange<SgnValue22>(value);
+        }
+        template <> static bool InRange<18>(int value)
+        {
+            return InBitRange<SgnValue18>(value);
+        }
+
+        //! Returns true if the specified value is inside the inside the bit range.
+        template <int Bits> static bool InRange(unsigned int value)
+        {
+            return false;
+        }
+
+        template <> static bool InRange<26>(unsigned int value)
+        {
+            return InBitRange<Value26>(value);
+        }
+        template <> static bool InRange<22>(unsigned int value)
+        {
+            return InBitRange<Value22>(value);
+        }
+        template <> static bool InRange<18>(unsigned int value)
+        {
+            return InBitRange<Value18>(value);
+        }
+
+        /* ------- Functions ------- */
+
         Instruction() :
             code_(0)
         {
@@ -208,21 +305,34 @@ class Instruction
             return std::string(xvm_instr_get_mnemonic(OpCode()));
         }
 
+        /* ------- Static functions ------- */
+
         //! Makes a 2-register instruction (mov, not, and, or, xor, add, sub, mul, div, mod, sll, slr, cmp, fti, itf).
         static Instruction MakeReg2(opcode_reg2 opcode, const Register& reg0, const Register& reg1)
         {
             return Instruction(xvm_instr_make_reg2(opcode, reg0, reg1));
         }
 
-        //! Makes a 1-register instruction (mov, and, or, xor, add, sub, mul, div, mod, sll, slr, push, pop, inc, dec).
-        static Instruction MakeReg1(opcode_reg1 opcode, const Register& reg, unsigned int value)
+        /**
+        Makes a 1-register instruction (mov, and, or, xor, add, sub, mul, div, mod, sll, slr, push, pop, inc, dec).
+        \param[in] value 22-bit signed value.
+        \throws std::out_of_range If 'value' is out of SgnValue22 range.
+        */
+        static Instruction MakeReg1(opcode_reg1 opcode, const Register& reg, int value)
         {
-            return Instruction(xvm_instr_make_reg1(opcode, reg, value));
+            RangeAssert(InRange<22>(value), "'value' is out of range in 1-register instruction");
+            return Instruction(xvm_instr_make_reg1(opcode, reg, static_cast<unsigned int>(value)));
         }
 
-        //! Makes a jump instruction (jmp, je, jne, jg, jl, jge, jle, call).
+        /**
+        Makes a jump instruction (jmp, je, jne, jg, jl, jge, jle, call).
+        \param[in] offset 22-bit signed jump offset. A jump offset is word aligned,
+        i.e. to jump to the next instruction, use 1 and to jump to the previous instruction use -1.
+        \throws std::out_of_range If 'offset' is out of SgnValue22 range.
+        */
         static Instruction MakeJump(opcode_jump opcode, const Register& reg, int offset)
         {
+            RangeAssert(InRange<22>(offset), "'offset' is out of range in jump instruction");
             return Instruction(xvm_instr_make_jump(opcode, reg, static_cast<unsigned int>(offset)));
         }
 
@@ -256,50 +366,14 @@ class Instruction
             return Instruction(xvm_instr_make_special2(opcode, resultSize, argSize));
         }
 
-        //! Unsigned 26-bit value.
-        struct Value26
-        {
-            static const unsigned max = XVM_VALUE26_MAX;
-            static const unsigned min = XVM_VALUE26_MIN;
-        };
-
-        //! Unsigned 22-bit value.
-        struct Value22
-        {
-            static const unsigned max = XVM_VALUE22_MAX;
-            static const unsigned min = XVM_VALUE22_MIN;
-        };
-
-        //! Unsigned 18-bit value.
-        struct Value18
-        {
-            static const unsigned max = XVM_VALUE18_MAX;
-            static const unsigned min = XVM_VALUE18_MIN;
-        };
-
-        //! Signed 26-bit value.
-        struct SgnValue26
-        {
-            static const unsigned max = XVM_SGN_VALUE26_MAX;
-            static const unsigned min = XVM_SGN_VALUE26_MIN;
-        };
-
-        //! Signed 22-bit value.
-        struct SgnValue22
-        {
-            static const unsigned max = XVM_SGN_VALUE22_MAX;
-            static const unsigned min = XVM_SGN_VALUE22_MIN;
-        };
-
-        //! Signed 18-bit value.
-        struct SgnValue18
-        {
-            static const unsigned max = XVM_SGN_VALUE18_MAX;
-            static const unsigned min = XVM_SGN_VALUE18_MIN;
-        };
-
     private:
         
+        static void RangeAssert(bool inRange, const char* err)
+        {
+            if (!inRange)
+                throw std::out_of_range(err);
+        }
+
         instr_t code_;
 
 };
