@@ -307,62 +307,117 @@ class Instruction
 
         /* ------- Static functions ------- */
 
-        //! Makes a 2-register instruction (mov, not, and, or, xor, add, sub, mul, div, mod, sll, slr, cmp, fti, itf).
+        /**
+        Makes a 2-register instruction (mov, not, and, or, xor, add, sub, mul, div, mod, sll, slr, cmp, fti, itf).
+        \throws std::invalid_argument If 'opcode' is invalid.
+        */
         static Instruction MakeReg2(opcode_reg2 opcode, const Register& reg0, const Register& reg1)
         {
+            OpCodeAssert(opcode, OPCODE_MOV2, OPCODE_ITF, "invalid opcode for 2-register instruction");
             return Instruction(xvm_instr_make_reg2(opcode, reg0, reg1));
         }
 
         /**
         Makes a 1-register instruction (mov, and, or, xor, add, sub, mul, div, mod, sll, slr, push, pop, inc, dec).
         \param[in] value 22-bit signed value.
+        \throws std::invalid_argument If 'opcode' is invalid.
         \throws std::out_of_range If 'value' is out of SgnValue22 range.
         */
         static Instruction MakeReg1(opcode_reg1 opcode, const Register& reg, int value)
         {
+            OpCodeAssert(opcode, OPCODE_MOV1, OPCODE_DEC, "invalid opcode for 1-register instruction");
             RangeAssert(InRange<22>(value), "'value' is out of range in 1-register instruction");
             return Instruction(xvm_instr_make_reg1(opcode, reg, static_cast<unsigned int>(value)));
         }
 
         /**
         Makes a jump instruction (jmp, je, jne, jg, jl, jge, jle, call).
-        \param[in] offset 22-bit signed jump offset. A jump offset is word aligned,
+        \param[in] offset 22-bit signed jump offset. A jump offset is WORD aligned,
         i.e. to jump to the next instruction, use 1 and to jump to the previous instruction use -1.
+        \throws std::invalid_argument If 'opcode' is invalid.
         \throws std::out_of_range If 'offset' is out of SgnValue22 range.
         */
         static Instruction MakeJump(opcode_jump opcode, const Register& reg, int offset)
         {
+            OpCodeAssert(opcode, OPCODE_JMP, OPCODE_CALL, "invalid opcode for jump instruction");
             RangeAssert(InRange<22>(offset), "'offset' is out of range in jump instruction");
             return Instruction(xvm_instr_make_jump(opcode, reg, static_cast<unsigned int>(offset)));
         }
 
-        //! Makes a float instruction (addf, subf, mulf, divf, cmpf).
+        /**
+        Makes a float instruction (addf, subf, mulf, divf, cmpf).
+        \throws std::invalid_argument If 'opcode' is invalid.
+        */
         static Instruction MakeFloat(opcode_float opcode, const Register& reg0, const Register& reg1)
         {
+            OpCodeAssert(opcode, OPCODE_ADDF, OPCODE_CMPF, "invalid opcode for float instruction");
             return Instruction(xvm_instr_make_float(opcode, reg0, reg1));
         }
 
-        //! Makes a memory instruction (lda).
+        /**
+        Makes a memory instruction (lda).
+        \param[in] address 22-bit unsigned address. This address is (like jump offsets) WORD aligned,
+        i.e. to address the 5th instruction use 5.
+        \throws std::invalid_argument If 'opcode' is invalid.
+        \throws std::out_of_range If 'address' is out of Value22 range.
+        */
         static Instruction MakeMem(opcode_mem opcode, const Register& reg, unsigned int address)
         {
+            OpCodeAssert(opcode == OPCODE_LDA, "invalid opcode for memory instruction");
+            RangeAssert(InRange<22>(address), "'address' is out of range in memory instruction");
             return Instruction(xvm_instr_make_mem(opcode, reg, address));
         }
 
-        //! Makes a memory-offset instruction (ldb, stb, ldw, stw).
+        /**
+        Makes a memory-offset instruction (ldb, stb, ldw, stw).
+        \param[in] offset 18-bit signed offset. This offset is BYTE aligned.
+        \throws std::invalid_argument If 'opcode' is invalid.
+        \throws std::out_of_range If 'offset' is out of SgnValue18 range.
+        */
         static Instruction MakeMemOff(opcode_memoff opcode, const Register& reg0, const Register& reg1, int offset)
         {
+            OpCodeAssert(opcode, OPCODE_LDB, OPCODE_STW, "invalid opcode for memory-offset instruction");
+            RangeAssert(InRange<18>(offset), "'offset' is out of range in memory-offset instruction");
             return Instruction(xvm_instr_make_memoff(opcode, reg0, reg1, static_cast<unsigned int>(offset)));
         }
 
-        //! Makes a special instruction (stop, push, invk).
+        /**
+        Makes a special instruction (stop, push).
+        \param[in] value 26-bit signed value.
+        \throws std::invalid_argument If 'opcode' is invalid.
+        \throws std::out_of_range If 'value' is out of SgnValue26 range.
+        */
+        static Instruction MakeSpecial(opcode_special opcode, int value)
+        {
+            OpCodeAssert(opcode == OPCODE_STOP || opcode == OPCODE_PUSHC, "invalid opcode for special instruction");
+            RangeAssert(InRange<26>(value), "'value' is out of range in special instruction");
+            return Instruction(xvm_instr_make_special1(opcode, static_cast<unsigned int>(value)));
+        }
+
+        /**
+        Makes a special instruction (invk).
+        \param[in] value 26-bit unsigned value.
+        \throws std::invalid_argument If 'opcode' is invalid.
+        \throws std::out_of_range If 'value' is out of Value26 range.
+        */
         static Instruction MakeSpecial(opcode_special opcode, unsigned int value)
         {
+            OpCodeAssert(opcode == OPCODE_INVK, "invalid opcode for special instruction");
+            RangeAssert(InRange<26>(value), "'value' is out of range in special instruction");
             return Instruction(xvm_instr_make_special1(opcode, value));
         }
 
-        //! Makes a specular instruction (ret).
+        /**
+        Makes a specular instruction (ret).
+        \param[in] argSize 18-bit unsigned value.
+        Specifies the number of procedure argument WORDs which will be poped from the stack.
+        \throws std::invalid_argument If 'opcode' is invalid.
+        \throws std::out_of_range If 'argSize' is out of Value18 range.
+        */
         static Instruction MakeSpecial(opcode_special opcode, unsigned int resultSize, unsigned int argSize)
         {
+            OpCodeAssert(opcode == OPCODE_RET, "invalid opcode for special instruction");
+            RangeAssert(InRange<18>(argSize), "'argSize' is out of range in special instruction");
             return Instruction(xvm_instr_make_special2(opcode, resultSize, argSize));
         }
 
@@ -372,6 +427,18 @@ class Instruction
         {
             if (!inRange)
                 throw std::out_of_range(err);
+        }
+
+        static void OpCodeAssert(bool inRange, const char* err)
+        {
+            if (!inRange)
+                throw std::invalid_argument(err);
+        }
+
+        template <typename OpCode> static void OpCodeAssert(
+            const OpCode& opcode, const OpCode& minOpcode, const OpCode& maxOpcode, const char* err)
+        {
+            OpCodeAssert(opcode >= minOpcode && opcode <= maxOpcode, err);
         }
 
         instr_t code_;
