@@ -208,17 +208,95 @@ class Instruction
             return std::string(xvm_instr_get_mnemonic(OpCode()));
         }
 
-        //! Makes a 2-register instruction.
+        //! Makes a 2-register instruction (mov, not, and, or, xor, add, sub, mul, div, mod, sll, slr, cmp, fti, itf).
         static Instruction MakeReg2(opcode_reg2 opcode, const Register& reg0, const Register& reg1)
         {
             return Instruction(xvm_instr_make_reg2(opcode, reg0, reg1));
         }
 
-        //! Makes a 1-register instruction.
+        //! Makes a 1-register instruction (mov, and, or, xor, add, sub, mul, div, mod, sll, slr, push, pop, inc, dec).
         static Instruction MakeReg1(opcode_reg1 opcode, const Register& reg, unsigned int value)
         {
             return Instruction(xvm_instr_make_reg1(opcode, reg, value));
         }
+
+        //! Makes a jump instruction (jmp, je, jne, jg, jl, jge, jle, call).
+        static Instruction MakeJump(opcode_jump opcode, const Register& reg, int offset)
+        {
+            return Instruction(xvm_instr_make_jump(opcode, reg, static_cast<unsigned int>(offset)));
+        }
+
+        //! Makes a float instruction (addf, subf, mulf, divf, cmpf).
+        static Instruction MakeFloat(opcode_float opcode, const Register& reg0, const Register& reg1)
+        {
+            return Instruction(xvm_instr_make_float(opcode, reg0, reg1));
+        }
+
+        //! Makes a memory instruction (lda).
+        static Instruction MakeMem(opcode_mem opcode, const Register& reg, unsigned int address)
+        {
+            return Instruction(xvm_instr_make_mem(opcode, reg, address));
+        }
+
+        //! Makes a memory-offset instruction (ldb, stb, ldw, stw).
+        static Instruction MakeMemOff(opcode_memoff opcode, const Register& reg0, const Register& reg1, int offset)
+        {
+            return Instruction(xvm_instr_make_memoff(opcode, reg0, reg1, static_cast<unsigned int>(offset)));
+        }
+
+        //! Makes a special instruction (stop, push, invk).
+        static Instruction MakeSpecial(opcode_special opcode, unsigned int value)
+        {
+            return Instruction(xvm_instr_make_special1(opcode, value));
+        }
+
+        //! Makes a specular instruction (ret).
+        static Instruction MakeSpecial(opcode_special opcode, unsigned int resultSize, unsigned int argSize)
+        {
+            return Instruction(xvm_instr_make_special2(opcode, resultSize, argSize));
+        }
+
+        //! Unsigned 26-bit value.
+        struct Value26
+        {
+            static const unsigned max = XVM_VALUE26_MAX;
+            static const unsigned min = XVM_VALUE26_MIN;
+        };
+
+        //! Unsigned 22-bit value.
+        struct Value22
+        {
+            static const unsigned max = XVM_VALUE22_MAX;
+            static const unsigned min = XVM_VALUE22_MIN;
+        };
+
+        //! Unsigned 18-bit value.
+        struct Value18
+        {
+            static const unsigned max = XVM_VALUE18_MAX;
+            static const unsigned min = XVM_VALUE18_MIN;
+        };
+
+        //! Signed 26-bit value.
+        struct SgnValue26
+        {
+            static const unsigned max = XVM_SGN_VALUE26_MAX;
+            static const unsigned min = XVM_SGN_VALUE26_MIN;
+        };
+
+        //! Signed 22-bit value.
+        struct SgnValue22
+        {
+            static const unsigned max = XVM_SGN_VALUE22_MAX;
+            static const unsigned min = XVM_SGN_VALUE22_MIN;
+        };
+
+        //! Signed 18-bit value.
+        struct SgnValue18
+        {
+            static const unsigned max = XVM_SGN_VALUE18_MAX;
+            static const unsigned min = XVM_SGN_VALUE18_MIN;
+        };
 
     private:
         
