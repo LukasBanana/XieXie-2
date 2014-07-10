@@ -1,4 +1,4 @@
-# XièXiè 2.0 Compiler and VirtualMachine #
+# XieXie 2.0 Compiler and VirtualMachine #
 
 ### Features ###
 
