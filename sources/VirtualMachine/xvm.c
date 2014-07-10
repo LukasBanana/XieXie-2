@@ -176,7 +176,7 @@ register_id;
 Returns the name of the specified register or an empty string if the ID is invalid.
 \see register_id
 */
-STATIC const char* xvm_register_get_name(register_id reg)
+STATIC const char* xvm_register_get_name(reg_t reg)
 {
     switch (reg)
     {
@@ -924,8 +924,8 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
         reg_t reg0 = xvm_instr_get_reg0(instr);
         reg_t reg1 = xvm_instr_get_reg1(instr);
 
-        const char* reg0name = xvm_register_get_name((register_id)reg0);
-        const char* reg1name = xvm_register_get_name((register_id)reg1);
+        const char* reg0name = xvm_register_get_name(reg0);
+        const char* reg1name = xvm_register_get_name(reg1);
 
         printf("%s, %s    ($cf = %i)", reg0name, reg1name, reg_ptr[REG_CF]);
     }
@@ -947,8 +947,8 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
         reg_t reg0 = xvm_instr_get_reg0(instr);
         reg_t reg1 = xvm_instr_get_reg1(instr);
 
-        const char* reg0name = xvm_register_get_name((register_id)reg0);
-        const char* reg1name = xvm_register_get_name((register_id)reg1);
+        const char* reg0name = xvm_register_get_name(reg0);
+        const char* reg1name = xvm_register_get_name(reg1);
 
         regi_t value = reg_ptr[reg0];
 
@@ -960,7 +960,7 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
         reg_t reg0 = xvm_instr_get_reg0(instr);
         regi_t value = reg_ptr[reg0];
 
-        const char* reg0name = xvm_register_get_name((register_id)reg0);
+        const char* reg0name = xvm_register_get_name(reg0);
 
         printf("%s         (%s = %i)", reg0name, reg0name, value);
     }
@@ -969,7 +969,7 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
         reg_t reg0 = xvm_instr_get_reg0(instr);
         regi_t value = reg_ptr[reg0];
 
-        const char* reg0name = xvm_register_get_name((register_id)reg0);
+        const char* reg0name = xvm_register_get_name(reg0);
 
         printf("%s         (%s = %f)", reg0name, reg0name, INT_TO_FLT_REINTERPRET(value));
     }
