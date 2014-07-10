@@ -70,24 +70,24 @@ class Register
     
     public:
         
-        static const Register r0;
-        static const Register r1;
-        static const Register r2;
-        static const Register r3;
-        static const Register r4;
-        static const Register r5;
-        static const Register r6;
-        static const Register r7;
-        static const Register r8;
-        static const Register r9;
+        static const Register r0; //!< $r0  ->  General purpose register 0.
+        static const Register r1; //!< $r1  ->  General purpose register 1.
+        static const Register r2; //!< $r2  ->  General purpose register 2.
+        static const Register r3; //!< $r3  ->  General purpose register 3.
+        static const Register r4; //!< $r4  ->  General purpose register 4.
+        static const Register r5; //!< $r5  ->  General purpose register 5.
+        static const Register r6; //!< $r6  ->  General purpose register 6.
+        static const Register r7; //!< $r7  ->  General purpose register 7.
+        static const Register r8; //!< $r8  ->  General purpose register 8.
+        static const Register r9; //!< $r9  ->  General purpose register 9.
 
-        static const Register op;
-        static const Register gp;
+        static const Register op; //!< $op  ->  Object pointer: should be used as the "this" pointer.
+        static const Register gp; //!< $gp  ->  Global pointer: should be used as the stack pointer where all global variables are stored.
 
-        static const Register cf;
-        static const Register lb;
-        static const Register sp;
-        static const Register pc;
+        static const Register cf; //!< $cf  ->  Conditional flag register: used for jump conditions.
+        static const Register lb; //!< $lb  ->  Local base pointer: pointer to the current stack frame.
+        static const Register sp; //!< $sp  ->  Stack pointer: pointer to the top of the stack.
+        static const Register pc; //!< $pc  ->  Program counter: pointer to the current instruction.
 
         operator reg_t () const
         {
@@ -100,10 +100,40 @@ class Register
             return std::string(xvm_register_get_name(reg_));
         }
 
+        /**
+        Returns the specified register.
+        \param[in] reg Specifies the register index. Must be in the range [0x0 .. 0xf].
+        \throws std::out_of_range If the register index is out of range.
+        */
+        static const Register& Get(size_t reg)
+        {
+            switch (reg)
+            {
+                case 0x0: return r0;
+                case 0x1: return r1;
+                case 0x2: return r2;
+                case 0x3: return r3;
+                case 0x4: return r4;
+                case 0x5: return r5;
+                case 0x6: return r6;
+                case 0x7: return r7;
+                case 0x8: return r8;
+                case 0x9: return r9;
+                case 0xa: return op;
+                case 0xb: return gp;
+                case 0xc: return cf;
+                case 0xd: return lb;
+                case 0xe: return sp;
+                case 0xf: return pc;
+            }
+            throw std::out_of_range("invalid register index (must be in rage: 0x0 - 0xf)");
+            return r0;
+        }
+
     private:
         
-        Register(reg_t reg) :
-            reg_(reg)
+        Register(register_id reg) :
+            reg_(static_cast<reg_t>(reg))
         {
         }
         Register(const Register&)
@@ -178,10 +208,16 @@ class Instruction
             return std::string(xvm_instr_get_mnemonic(OpCode()));
         }
 
-        //! Makesa 2-register instruction.
+        //! Makes a 2-register instruction.
         static Instruction MakeReg2(opcode_reg2 opcode, const Register& reg0, const Register& reg1)
         {
             return Instruction(xvm_instr_make_reg2(opcode, reg0, reg1));
+        }
+
+        //! Makes a 1-register instruction.
+        static Instruction MakeReg1(opcode_reg1 opcode, const Register& reg, unsigned int value)
+        {
+            return Instruction(xvm_instr_make_reg1(opcode, reg, value));
         }
 
     private:
