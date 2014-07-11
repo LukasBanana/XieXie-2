@@ -2935,7 +2935,7 @@ int main(int argc, char* argv[])
     11          inc     $r0
     12          jmp     l_for           ; jmp ($pc) -10
     13  l_end:  stop
-    14  str0:   .ascii  "\nHi"
+    14  str0:   .ascii  "\nHello, World!"
     */
 
     ADD_INSTR(xvm_instr_make_reg1       (OPCODE_MOV1, REG_R0, 0                     ))
