@@ -343,6 +343,17 @@ class Instruction
             return std::string(xvm_instr_get_mnemonic(OpCode()));
         }
 
+        /**
+        Back-patches the constant value of this instruction.
+        This can be used to back-patch labels which must be resolved later.
+        This function can be used for 1-register-, jump-, memory-, memory-offset- and special instructions.
+        \return True if this instruction could be back-pachted. Otherwise the opcode is valid to be back-pachted.
+        */
+        void BackPatch(int value)
+        {
+            code_ = xvm_instr_patch_value(Code(), static_cast<unsigned int>(value));
+        }
+
         /* ------- Static functions ------- */
 
         /**

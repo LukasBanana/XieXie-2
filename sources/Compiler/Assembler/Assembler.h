@@ -231,7 +231,9 @@ class Assembler
         int AddressValue(std::string label, const BackPatchAddr::InstrUse::Types type);
         void AddBackPatchAddress(const std::string& label, const BackPatchAddr::InstrUse::Types type);
         int BackPatchAddressValue(const BackPatchAddr& patchAddr, const BackPatchAddr::InstrUse& instrUse);
-        void ResolveBackPatchAddress(const std::string& label, const BackPatchAddr& patchAddr);
+
+        void ResolveBackPatchAddress(const std::string& label, BackPatchAddr& patchAddr);
+        void ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr, const BackPatchAddr::InstrUse& instrUse);
 
         bool CreateByteCode(const std::string& outFilename);
 

@@ -80,7 +80,7 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
     }
 
     /* Resolve back-patch addresses */
-    for (const auto& patchAddr : backPatchAddresses_)
+    for (auto& patchAddr : backPatchAddresses_)
     {
         try
         {
@@ -1025,7 +1025,7 @@ int Assembler::BackPatchAddressValue(const BackPatchAddr& patchAddr, const BackP
     return 0;
 }
 
-void Assembler::ResolveBackPatchAddress(const std::string& label, const BackPatchAddr& patchAddr)
+void Assembler::ResolveBackPatchAddress(const std::string& label, BackPatchAddr& patchAddr)
 {
     /* Find label */
     auto it = labelAddresses_.find(label);
@@ -1036,7 +1036,25 @@ void Assembler::ResolveBackPatchAddress(const std::string& label, const BackPatc
         Error("unresolved label '" + label + "' (" + ToStr(numRefs) + " " + refInfo + ")", false);
     }
 
+    /* Store label address */
+    patchAddr.addrIndex = static_cast<int>(it->second);
 
+    /* Back patch the address for all references */
+    for (const auto& instrUse : patchAddr.instrUses)
+        ResolveBackPatchAddressReference(patchAddr, instrUse);
+}
+
+void Assembler::ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr, const BackPatchAddr::InstrUse& instrUse)
+{
+    /* Get resolved value */
+    auto value = BackPatchAddressValue(patchAddr, instrUse);
+
+    /* Back patch instruction */
+    auto instrIndex = static_cast<size_t>(instrUse.index);
+    if (instrIndex < byteCode_->instructions.size())
+        byteCode_->instructions[instrIndex].BackPatch(value);
+    else
+        Error("back-patch address index out of bounds");
 }
 
 bool Assembler::CreateByteCode(const std::string& outFilename)

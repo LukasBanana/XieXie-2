@@ -1081,6 +1081,35 @@ STATIC instr_t xvm_instr_make_special2(opcode_special opcode, unsigned int resul
     );
 }
 
+STATIC instr_t xvm_instr_patch_value18(instr_t instr, unsigned int value)
+{
+    return (instr & 0xfffc0000) | (value & XVM_VALUE18_MAX);
+}
+
+STATIC instr_t xvm_instr_patch_value22(instr_t instr, unsigned int value)
+{
+    return (instr & 0xffc00000) | (value & XVM_VALUE22_MAX);
+}
+
+STATIC instr_t xvm_instr_patch_value26(instr_t instr, unsigned int value)
+{
+    return (instr & 0xfc000000) | (value & XVM_VALUE26_MAX);
+}
+
+STATIC instr_t xvm_instr_patch_value(instr_t instr, unsigned int value)
+{
+    opcode_t opcode = xvm_instr_get_opcode(instr);
+
+    if (opcode >= OPCODE_LDB && opcode <= OPCODE_STW)
+        return xvm_instr_patch_value18(instr, value);
+    if ( ( opcode >= OPCODE_MOV1 && opcode <= OPCODE_CALL ) || opcode == OPCODE_LDA )
+        return xvm_instr_patch_value22(instr, value);
+    if (opcode == OPCODE_PUSHC || opcode == OPCODE_INVK)
+        return xvm_instr_patch_value26(instr, value);
+
+    return instr;
+}
+
 
 /* ----- Strings ----- */
 
