@@ -985,7 +985,12 @@ int Assembler::AddressValue(std::string label, const BackPatchAddr::InstrUse::Ty
     /* Find label */
     auto it = labelAddresses_.find(label);
     if (it != labelAddresses_.end())
-        return it->second;
+    {
+        return BackPatchAddressValue(
+            static_cast<int>(it->second),
+            { type, byteCode_->NextInstrIndex() }
+        );
+    }
 
     /* Add label to back-patch addresses */
     AddBackPatchAddress(label, type);
@@ -1005,17 +1010,17 @@ void Assembler::AddBackPatchAddress(const std::string& label, const BackPatchAdd
 }
 
 //! Returns the value of this back-patch address for the specified instruction use.
-int Assembler::BackPatchAddressValue(const BackPatchAddr& patchAddr, const BackPatchAddr::InstrUse& instrUse)
+int Assembler::BackPatchAddressValue(int labelIndex, const BackPatchAddr::InstrUse& instrUse)
 {
     switch (instrUse.type)
     {
         case BackPatchAddr::InstrUse::Types::Local:
-            return patchAddr.addrIndex - instrUse.index;
+            return labelIndex - instrUse.index;
         case BackPatchAddr::InstrUse::Types::Global:
-            return patchAddr.addrIndex;
+            return labelIndex;
         case BackPatchAddr::InstrUse::Types::Pointer:
         {
-            auto instrIndex = static_cast<size_t>(patchAddr.addrIndex);
+            auto instrIndex = static_cast<size_t>(labelIndex);
             if (instrIndex < byteCode_->instructions.size())
                 return static_cast<int>(byteCode_->instructions[instrIndex].Code());
             else
@@ -1047,7 +1052,7 @@ void Assembler::ResolveBackPatchAddress(const std::string& label, BackPatchAddr&
 void Assembler::ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr, const BackPatchAddr::InstrUse& instrUse)
 {
     /* Get resolved value */
-    auto value = BackPatchAddressValue(patchAddr, instrUse);
+    auto value = BackPatchAddressValue(patchAddr.addrIndex, instrUse);
 
     /* Back patch instruction */
     auto instrIndex = static_cast<size_t>(instrUse.index);

@@ -11,7 +11,7 @@
 			mov		$r4, Math.Sq	; load relative address of 'Math.Sq' ($r4 = 8)
 			mov		$r5, @Math.Sq	; load absolute address of 'Math.Sq' ($r4 = 11)
 	Main:	mov		$r1, *lng0		; load value of 'lng0' ($r1 = 999)
-			add		$sp, -4			; increase stack for local scope (4 bytes)
+			add		$sp, 4			; increase stack for local scope (4 bytes)
 			stw		$r1, ($lb) 8	; store value of $r1 in local scope (after dynamic-link)
 			lda 	$r2, @str0		; load address of 'str0' ($r2 = byte_code_memory + 18)
 			xor		$r0, $r0		; i := 0
