@@ -66,8 +66,8 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
             ParseLine();
 
             /* Check if line is finished */
-            //if (tkn_.type != Token::Types::__Unknown__)
-            //    Error("trailing line not allowed after instruction");
+            if (tkn_.type != Token::Types::__Unknown__)
+                Error("trailing line not allowed after instruction");
         }
         catch (const CompilerMessage& err)
         {
@@ -76,6 +76,19 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
         catch (const std::exception& err)
         {
             errorReporter_.Add(AssemblerError(sourceArea_, err.what()));
+        }
+    }
+
+    /* Resolve back-patch addresses */
+    for (const auto& patchAddr : backPatchAddresses_)
+    {
+        try
+        {
+            ResolveBackPatchAddress(patchAddr.first, patchAddr.second);
+        }
+        catch (const CompilerMessage& err)
+        {
+            errorReporter_.Add(err);
         }
     }
 
@@ -115,7 +128,6 @@ void Assembler::EstablishMnemonicTable()
         { "cmp",  { InstrCategory::Categories::Reg2,    OPCODE_CMP,  0u           } },
         { "fti",  { InstrCategory::Categories::Reg2,    OPCODE_FTI,  0u           } },
         { "itf",  { InstrCategory::Categories::Reg2,    OPCODE_ITF,  0u           } },
-        { "push", { InstrCategory::Categories::Special, OPCODE_PUSH, OPCODE_PUSHC } },
         { "pop",  { InstrCategory::Categories::Reg1,    OPCODE_POP,  0u           } },
         { "inc",  { InstrCategory::Categories::Reg1,    OPCODE_INC,  0u           } },
         { "dec",  { InstrCategory::Categories::Reg1,    OPCODE_DEC,  0u           } },
@@ -137,6 +149,7 @@ void Assembler::EstablishMnemonicTable()
         { "ldw",  { InstrCategory::Categories::MemOff,  OPCODE_LDW,  0u           } },
         { "stb",  { InstrCategory::Categories::MemOff,  OPCODE_STB,  0u           } },
         { "stw",  { InstrCategory::Categories::MemOff,  OPCODE_STW,  0u           } },
+        { "push", { InstrCategory::Categories::Special, OPCODE_PUSH, OPCODE_PUSHC } },
         { "stop", { InstrCategory::Categories::Special, OPCODE_STOP, 0u           } },
         { "ret",  { InstrCategory::Categories::Special, OPCODE_RET,  0u           } },
         { "invk", { InstrCategory::Categories::Special, OPCODE_INVK, 0u           } },
@@ -552,6 +565,8 @@ void Assembler::ParseLabel()
     /* Parse label */
     auto ident = Accept(Token::Types::Ident);
     Accept(Token::Types::Colon);
+
+    /* Add label */
     AddLabel(ident.spell);
 
     /* Parse optional further mnemonic */
@@ -570,9 +585,34 @@ void Assembler::ParseExportField()
 
 void Assembler::ParseDataField()
 {
-    auto dataType = Accept(Token::Types::Data);
+    auto dataField = Accept(Token::Types::Data).spell;
 
-    //...
+    if (dataField == ".word")
+        ParseDataFieldWord();
+    else if (dataField == ".float")
+        ParseDataFieldFloat();
+    else if (dataField == ".ascii")
+        ParseDataFieldAscii();
+    else
+        Error("invalid data field '" + dataField + "'");
+}
+
+void Assembler::ParseDataFieldWord()
+{
+    /* Parse integer literal and add data-field as instruction */
+    byteCode_->AddDataField(ParseIntLiteral());
+}
+
+void Assembler::ParseDataFieldFloat()
+{
+    /* Parse floating-point literal and add data-field as instruction */
+    byteCode_->AddDataField(ParseFloatLiteral());
+}
+
+void Assembler::ParseDataFieldAscii()
+{
+    /* Parse string literal and add data-field as instruction */
+    byteCode_->AddDataField(ParseStringLiteral());
 }
 
 void Assembler::ParseInstr(const InstrCategory& instr)
@@ -619,27 +659,27 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
 
             /* Add instruction */
             byteCode_->instructions.push_back(
-                Instr::MakeReg2(static_cast<opcode_reg2>(instr.opcodeA), reg0, reg1)
+                Instr::MakeReg2(static_cast<opcode_reg2>(instr.opcodePrimary), reg0, reg1)
             );
         }
-        else if (instr.opcodeB != 0)
+        else if (instr.opcodeSecondary != 0)
         {
             /* Parse second operand */
             int value = ParseOperand();
             
             /* Add instruction */
             byteCode_->instructions.push_back(
-                Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeB), reg0, value)
+                Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeSecondary), reg0, value)
             );
         }
         else
             Error("invalid second operand for 2-register instruction (expected register)");
     }
-    else if (instr.opcodeB != 0)
+    else if (instr.opcodeSecondary != 0)
     {
         /* Add instruction */
         byteCode_->instructions.push_back(
-            Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeB), reg0, 0)
+            Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeSecondary), reg0, 0)
         );
     }
     else
@@ -653,7 +693,7 @@ void Assembler::ParseInstrReg1(const InstrCategory& instr)
 
     /* Add instruction */
     byteCode_->instructions.push_back(
-        Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeA), reg, 0)
+        Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodePrimary), reg, 0)
     );
 }
 
@@ -675,24 +715,136 @@ void Assembler::ParseInstrJump(const InstrCategory& instr)
 
     /* Add instruction */
     byteCode_->instructions.push_back(
-        Instr::MakeJump(static_cast<opcode_jump>(instr.opcodeA), *reg, offset)
+        Instr::MakeJump(static_cast<opcode_jump>(instr.opcodePrimary), *reg, offset)
     );
 }
 
 void Assembler::ParseInstrFloat(const InstrCategory& instr)
 {
+    /* Parse first operand */
+    const auto& reg0 = ParseRegister();
+
+    /* Parse second operand */
+    Accept(Token::Types::Comma);
+    const auto& reg1 = ParseRegister();
+
+    /* Add instruction */
+    byteCode_->instructions.push_back(
+        Instr::MakeFloat(static_cast<opcode_float>(instr.opcodePrimary), reg0, reg1)
+    );
 }
 
 void Assembler::ParseInstrMem(const InstrCategory& instr)
 {
+    /* Parse first operand */
+    const auto& reg = ParseRegister();
+
+    /* Parse second operand */
+    Accept(Token::Types::Comma);
+    auto address = static_cast<unsigned int>(ParseOperand());
+
+    /* Add instruction */
+    byteCode_->instructions.push_back(
+        Instr::MakeMem(static_cast<opcode_mem>(instr.opcodePrimary), reg, address)
+    );
 }
 
 void Assembler::ParseInstrMemOff(const InstrCategory& instr)
 {
+    /* Parse first operand */
+    const auto& reg0 = ParseRegister();
+
+    /* Parse second operand */
+    Accept(Token::Types::Comma);
+    Accept(Token::Types::LBracket);
+    const auto& reg1 = ParseRegister();
+    Accept(Token::Types::RBracket);
+
+    /* Parse third operand */
+    auto offset = ParseOperand();
+
+    /* Add instruction */
+    byteCode_->instructions.push_back(
+        Instr::MakeMemOff(static_cast<opcode_memoff>(instr.opcodePrimary), reg0, reg1, offset)
+    );
 }
 
 void Assembler::ParseInstrSpecial(const InstrCategory& instr)
 {
+    switch (instr.opcodePrimary)
+    {
+        case OPCODE_PUSH:
+            ParseInstrSpecialPUSH();
+            break;
+        case OPCODE_STOP:
+            ParseInstrSpecialSTOP();
+            break;
+        case OPCODE_RET:
+            ParseInstrSpecialRET();
+            break;
+        case OPCODE_INVK:
+            ParseInstrSpecialINVK();
+            break;
+    }
+}
+
+void Assembler::ParseInstrSpecialPUSH()
+{
+    if (tkn_.type == Token::Types::Register)
+    {
+        /* Parse operand */
+        const auto& reg = ParseRegister();
+        
+        /* Add instruction */
+        byteCode_->instructions.push_back(
+            Instr::MakeReg1(OPCODE_PUSH, reg, 0)
+        );
+    }
+    else
+    {
+        /* Parse operand */
+        auto value = ParseOperand();
+
+        /* Add instruction */
+        byteCode_->instructions.push_back(
+            Instr::MakeSpecial(OPCODE_PUSHC, int(value))
+        );
+    }
+}
+
+void Assembler::ParseInstrSpecialSTOP()
+{
+    /* Add instruction */
+    byteCode_->instructions.push_back(
+        Instr::MakeSpecial(OPCODE_STOP, int(0))
+    );
+}
+
+void Assembler::ParseInstrSpecialINVK()
+{
+    /* Parse operand */
+    auto value = ParseUIntLiteral();
+
+    /* Add instruction */
+    byteCode_->instructions.push_back(
+        Instr::MakeSpecial(OPCODE_INVK, value)
+    );
+}
+
+void Assembler::ParseInstrSpecialRET()
+{
+    /* Parse first operand */
+    Accept(Token::Types::LBracket);
+    auto resultSize = ParseUIntLiteral();
+    Accept(Token::Types::RBracket);
+
+    /* Parse second operand */
+    auto argSize = ParseUIntLiteral();
+
+    /* Add instruction */
+    byteCode_->instructions.push_back(
+        Instr::MakeSpecial(OPCODE_RET, resultSize, argSize)
+    );
 }
 
 const Register& Assembler::ParseRegister()
@@ -730,11 +882,30 @@ int Assembler::ParseIntLiteral()
     return StrToNum<int>(value.spell);
 }
 
+unsigned int Assembler::ParseUIntLiteral()
+{
+    /* Parse unsigned integer literal */
+    auto value = Accept(Token::Types::IntLiteral);
+    auto intValue = StrToNum<int>(value.spell);
+
+    /* Check if value is negative */
+    if (intValue < 0)
+        Error("expected unsigned integer literal");
+
+    return static_cast<unsigned int>(intValue);
+}
+
 float Assembler::ParseFloatLiteral()
 {
     /* Parse floating-point literal */
     auto value = Accept(Token::Types::FloatLiteral);
     return StrToNum<float>(value.spell);
+}
+
+std::string Assembler::ParseStringLiteral()
+{
+    /* Parse string literal */
+    return Accept(Token::Types::StringLiteral).spell;
 }
 
 int Assembler::ParseLocalAddress()
@@ -769,14 +940,30 @@ int Assembler::ParseIntrinsicAddress()
 
 /* ------- Assembler ------- */
 
-size_t Assembler::NextInstrIndex() const
+bool Assembler::IsGlobalLabel(const std::string& label) const
 {
-    return byteCode_->instructions.size();
+    return !label.empty() && label.front() != '.';
 }
 
-void Assembler::AddLabel(const std::string& label)
+std::string Assembler::LocalLabel(const std::string& label) const
 {
-    labelAddresses_[label] = NextInstrIndex();
+    return "." + globalLabel_ + label;
+}
+
+void Assembler::AddLabel(std::string label)
+{
+    /* Store parent label */
+    if (IsGlobalLabel(label))
+        globalLabel_ = label;
+    else
+        label = LocalLabel(label);
+
+    /* Check if label is already defined */
+    if (labelAddresses_.find(label) != labelAddresses_.end())
+        Error("multiple definitions of label '" + label + "'");
+
+    /* Add new label */
+    labelAddresses_[label] = byteCode_->NextInstrIndex();
 }
 
 void Assembler::AddInstruction(int byteCode)
@@ -789,8 +976,12 @@ void Assembler::AddExportAddress(const std::string& name, unsigned int address)
     exportAddresses_.push_back({ address, name });
 }
 
-int Assembler::AddressValue(const std::string& label, const BackPatchAddr::InstrUse::Types type)
+int Assembler::AddressValue(std::string label, const BackPatchAddr::InstrUse::Types type)
 {
+    /* Adjust label */
+    if (!IsGlobalLabel(label))
+        label = LocalLabel(label);
+
     /* Find label */
     auto it = labelAddresses_.find(label);
     if (it != labelAddresses_.end())
@@ -804,13 +995,13 @@ int Assembler::AddressValue(const std::string& label, const BackPatchAddr::Instr
 
 void Assembler::AddBackPatchAddress(const std::string& label, const BackPatchAddr::InstrUse::Types type)
 {
-    BackPatchAddr::InstrUse instrUse { type, static_cast<int>(NextInstrIndex()) };
+    BackPatchAddr::InstrUse instrUse { type, static_cast<int>(byteCode_->NextInstrIndex()) };
 
-    auto it = backPatchLabels_.find(label);
-    if (it != backPatchLabels_.end())
+    auto it = backPatchAddresses_.find(label);
+    if (it != backPatchAddresses_.end())
         it->second.instrUses.push_back(instrUse);
     else
-        backPatchLabels_[label].instrUses.push_back(instrUse);
+        backPatchAddresses_[label].instrUses.push_back(instrUse);
 }
 
 //! Returns the value of this back-patch address for the specified instruction use.
@@ -832,6 +1023,20 @@ int Assembler::BackPatchAddressValue(const BackPatchAddr& patchAddr, const BackP
         }
     }
     return 0;
+}
+
+void Assembler::ResolveBackPatchAddress(const std::string& label, const BackPatchAddr& patchAddr)
+{
+    /* Find label */
+    auto it = labelAddresses_.find(label);
+    if (it == labelAddresses_.end())
+    {
+        const auto numRefs = patchAddr.instrUses.size();
+        const std::string refInfo = (numRefs == 1 ? "reference" : "references");
+        Error("unresolved label '" + label + "' (" + ToStr(numRefs) + " " + refInfo + ")", false);
+    }
+
+
 }
 
 bool Assembler::CreateByteCode(const std::string& outFilename)

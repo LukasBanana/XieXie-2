@@ -7,9 +7,9 @@
 
 			call	Main			; equivalent to "call ($pc) 5"
 			stop					; quit
-			lda		$r3, @.for		; load global address of '.for0' ($r3 = byte_code_memory + 11)
-			mov		$r4, .for		; load relative address of '.for' ($r4 = 8)
-			mov		$r5, @.for		; load absolute address of '.for' ($r4 = 11)
+			lda		$r3, @Math.Sq	; load global address of 'Math.Sq' ($r3 = byte_code_memory + 11)
+			mov		$r4, Math.Sq	; load relative address of 'Math.Sq' ($r4 = 8)
+			mov		$r5, @Math.Sq	; load absolute address of 'Math.Sq' ($r4 = 11)
 	Main:	mov		$r1, *lng0		; load value of 'lng0' ($r1 = 999)
 			add		$sp, -4			; increase stack for local scope (4 bytes)
 			stw		$r1, ($lb) 8	; store value of $r1 in local scope (after dynamic-link)
@@ -29,7 +29,7 @@
 			ldw		$r0, ($lb) -4
 			mul		$r0, $r0
 			stw		$r0, ($lb) -4
-			ret		(0) 0			; Optimize retunr value by writing it back to the argument
+			ret		(0) 0			; Optimize return value by writing it back to the argument
 
 ; Export function addresses
 .export "_ZN@Main" @Main

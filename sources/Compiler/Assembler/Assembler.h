@@ -50,6 +50,7 @@ class Assembler
         
         /* === Structures === */
 
+        //! Back-patch address structure.
         struct BackPatchAddr
         {
             struct InstrUse
@@ -69,6 +70,7 @@ class Assembler
             std::vector<InstrUse> instrUses;
         };
 
+        //! Export address structure.
         struct ExportAddress
         {
             int         address;
@@ -125,6 +127,7 @@ class Assembler
             std::string spell;
         };
 
+        //! Instruction category structure.
         struct InstrCategory
         {
             enum class Categories
@@ -139,7 +142,7 @@ class Assembler
             };
 
             Categories category;
-            unsigned int opcodeA, opcodeB;
+            unsigned int opcodePrimary, opcodeSecondary;
         };
 
         /* === Functions === */
@@ -182,8 +185,12 @@ class Assembler
 
         void ParseMnemonic();
         void ParseLabel();
-        void ParseDataField();
         void ParseExportField();
+
+        void ParseDataField();
+        void ParseDataFieldWord();
+        void ParseDataFieldFloat();
+        void ParseDataFieldAscii();
 
         void ParseInstr         (const InstrCategory& instr);
         void ParseInstrReg2     (const InstrCategory& instr);
@@ -194,11 +201,19 @@ class Assembler
         void ParseInstrMemOff   (const InstrCategory& instr);
         void ParseInstrSpecial  (const InstrCategory& instr);
 
+        void ParseInstrSpecialPUSH();
+        void ParseInstrSpecialSTOP();
+        void ParseInstrSpecialINVK();
+        void ParseInstrSpecialRET();
+
         const VirtualMachine::Register& ParseRegister();
         int ParseOperand();
 
         int ParseIntLiteral();
+        unsigned int ParseUIntLiteral();
         float ParseFloatLiteral();
+        std::string ParseStringLiteral();
+
         int ParseLocalAddress();
         int ParseGlobalAddress();
         int ParseAddressPointer();
@@ -206,16 +221,17 @@ class Assembler
 
         /* ------- Assembler ------- */
 
-        //! Returns the index for the next instruction.
-        size_t NextInstrIndex() const;
-        
-        void AddLabel(const std::string& label);
+        bool IsGlobalLabel(const std::string& label) const;
+        std::string LocalLabel(const std::string& label) const;
+
+        void AddLabel(std::string label);
         void AddInstruction(int byteCode);
         void AddExportAddress(const std::string& name, unsigned int address);
 
-        int AddressValue(const std::string& label, const BackPatchAddr::InstrUse::Types type);
+        int AddressValue(std::string label, const BackPatchAddr::InstrUse::Types type);
         void AddBackPatchAddress(const std::string& label, const BackPatchAddr::InstrUse::Types type);
         int BackPatchAddressValue(const BackPatchAddr& patchAddr, const BackPatchAddr::InstrUse& instrUse);
+        void ResolveBackPatchAddress(const std::string& label, const BackPatchAddr& patchAddr);
 
         bool CreateByteCode(const std::string& outFilename);
 
@@ -235,8 +251,11 @@ class Assembler
 
         std::vector<ExportAddress> exportAddresses_;
 
-        std::map<std::string, size_t> labelAddresses_;          //!< [ label name | instruction index ].
-        std::map<std::string, BackPatchAddr> backPatchLabels_;  //!< [ label name | back patch address ].
+        //! Parent label will be pre-appended to all sub labels (e.g. parent is "Main", sub label is ".end" -> ".Main.end").
+        std::string globalLabel_;
+
+        std::map<std::string, size_t> labelAddresses_;              //!< [ label name | instruction index ].
+        std::map<std::string, BackPatchAddr> backPatchAddresses_;   //!< [ label name | back patch address ].
 
         std::map<std::string, InstrCategory> mnemonicTable_;
 
