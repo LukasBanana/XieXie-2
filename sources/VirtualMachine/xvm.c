@@ -1331,14 +1331,14 @@ contain the number of instruction which are required to fill the data field.
 This could look like this:
 \code
 size_t num_instr = 0;
-xvm_bytecode_datafield_ascii(NULL, 0, "Hello, World\n", &num_instr);
-// num_instr == 4 { "Hell", "o, W", "orld", "\n\0\0\0" }
+xvm_bytecode_datafield_ascii(NULL, "Hello, World\n", &num_instr);
+// num_instr == 4  ->  { "Hell", "o, W", "orld", "\n\0\0\0" }
+xvm_bytecode_datafield_ascii(byte_code.instructions + current_instr_offset, "Hello, World\n", NULL);
 \endcode
 */
 STATIC int xvm_bytecode_datafield_ascii(
-    xvm_bytecode* byte_code, size_t instr_offset, const char* text, size_t* num_instructions)
+    instr_t* instr_ptr, const char* text, size_t* num_instructions)
 {
-    instr_t* instr;
     char* instr_byte;
     size_t num_instr, remainder;
 
@@ -1353,22 +1353,20 @@ STATIC int xvm_bytecode_datafield_ascii(
     if (num_instructions != NULL)
         *num_instructions = num_instr;
 
-    if (byte_code == NULL || byte_code->instructions == NULL || instr_offset + num_instr >= (size_t)(byte_code->num_instructions))
-        return 0;
+    if (instr_ptr == NULL)
+        return 1;
 
     // Fill data field
-    instr = (byte_code->instructions + instr_offset);
-
     for (; num_instr > 1; --num_instr)
     {
-        *instr = *((instr_t*)text);
-        ++instr;
+        *instr_ptr = *((instr_t*)text);
+        ++instr_ptr;
         text += 4;
     }
 
     // Fill last data field
-    *instr = 0;
-    instr_byte = (char*)instr;
+    *instr_ptr = 0;
+    instr_byte = (char*)instr_ptr;
 
     for (; remainder > 0; --remainder)
     {
@@ -2909,7 +2907,7 @@ int main(int argc, char* argv[])
     #define ADD_INSTR(INSTR) byte_code.instructions[i++] = INSTR;
     #define FINISH_INSTR byte_code.num_instructions = i;
 
-    #define TEST 4
+    #define TEST 1
 
     #if TEST == 1 //TEST1 (loop)
 
@@ -2954,7 +2952,7 @@ int main(int argc, char* argv[])
     ADD_INSTR(xvm_instr_make_special1   (OPCODE_STOP, 0                             ))
 
     size_t tmp = 0;
-    xvm_bytecode_datafield_ascii(&byte_code, i, "\nHello, World!", &tmp);
+    xvm_bytecode_datafield_ascii(byte_code.instructions + i, "\nHello, World!", &tmp);
     i += tmp;
 
     program_filename = "hello_world.xbc";

@@ -587,6 +587,46 @@ class ByteCode
             return xvm_bytecode_write_to_file(&byteCode_, filename.c_str()) != 0;
         }
 
+        //! Adds the specifies instruction
+        void AddInstr(const Instruction& instr)
+        {
+            instructions.push_back(instr);
+        }
+
+        //! Adds the specified integer literal word as instruction data field.
+        void AddDataField(int wordDataField)
+        {
+            AddInstr(wordDataField);
+        }
+
+        //! Adds the specified floating-point literal word as instruction data field.
+        void AddDataField(float floatDataField)
+        {
+            AddInstr(*reinterpret_cast<int*>(&floatDataField));
+        }
+
+        //! Adds the specified ascii literal as instruction data fields.
+        void AddDataField(const std::string& asciiDataField)
+        {
+            size_t numInstr = 0;
+            xvm_bytecode_datafield_ascii(NULL, asciiDataField.c_str(), &numInstr);
+
+            auto instrIndex = NextInstrIndex();
+            instructions.resize(instructions.size() + numInstr);
+
+            xvm_bytecode_datafield_ascii(
+                reinterpret_cast<instr_t*>(&(instructions[instrIndex])),
+                asciiDataField.c_str(),
+                NULL
+            );
+        }
+
+        //! Returns the index for the next instruction.
+        size_t NextInstrIndex() const
+        {
+            return instructions.size();
+        }
+
         /**
         Finalizes the instruction building. After this call no further
         instructions can be added to this byte code object.
