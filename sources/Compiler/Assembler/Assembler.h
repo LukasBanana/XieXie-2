@@ -28,6 +28,7 @@ namespace VirtualMachine
 {
     class ByteCode;
     class Register;
+    class Intrinsics;
 }
 
 
@@ -51,15 +52,21 @@ class Assembler
 
         struct BackPatchAddr
         {
-            BackPatchAddr() = default;
-            BackPatchAddr(size_t index, size_t base) :
-                instrIndex( index ),
-                offsetBase( base  )
+            struct InstrUse
             {
-            }
+                enum class Types
+                {
+                    Local,
+                    Global,
+                    Pointer,
+                };
 
-            size_t instrIndex = 0;
-            size_t offsetBase = 0;
+                Types type;
+                int index;
+            };
+
+            int addrIndex = 0;
+            std::vector<InstrUse> instrUses;
         };
 
         struct ExportAddress
@@ -139,7 +146,7 @@ class Assembler
 
         void EstablishMnemonicTable();
 
-        void Error(const std::string& message);
+        void Error(const std::string& message, bool appendSourceArea = true);
 
         void ErrorUnexpectedChar();
         void ErrorUnexpectedChar(const std::string& hint);
@@ -177,7 +184,6 @@ class Assembler
         void ParseLabel();
         void ParseDataField();
         void ParseExportField();
-        unsigned int ParseLabelAddress();
 
         void ParseInstr         (const InstrCategory& instr);
         void ParseInstrReg2     (const InstrCategory& instr);
@@ -189,16 +195,27 @@ class Assembler
         void ParseInstrSpecial  (const InstrCategory& instr);
 
         const VirtualMachine::Register& ParseRegister();
-        int ParseSgnOperand();
-        unsigned int ParseUnsgnOperand();
+        int ParseOperand();
 
         int ParseIntLiteral();
-        
+        float ParseFloatLiteral();
+        int ParseLocalAddress();
+        int ParseGlobalAddress();
+        int ParseAddressPointer();
+        int ParseIntrinsicAddress();
+
         /* ------- Assembler ------- */
 
+        //! Returns the index for the next instruction.
+        size_t NextInstrIndex() const;
+        
         void AddLabel(const std::string& label);
         void AddInstruction(int byteCode);
         void AddExportAddress(const std::string& name, unsigned int address);
+
+        int AddressValue(const std::string& label, const BackPatchAddr::InstrUse::Types type);
+        void AddBackPatchAddress(const std::string& label, const BackPatchAddr::InstrUse::Types type);
+        int BackPatchAddressValue(const BackPatchAddr& patchAddr, const BackPatchAddr::InstrUse& instrUse);
 
         bool CreateByteCode(const std::string& outFilename);
 
@@ -214,11 +231,12 @@ class Assembler
 
         // (Can not be unique_ptr because of unknown type)
         std::shared_ptr<VirtualMachine::ByteCode> byteCode_;
+        std::shared_ptr<VirtualMachine::Intrinsics> intrinsics_;
 
         std::vector<ExportAddress> exportAddresses_;
 
-        std::map<std::string, size_t> labelAddresses_;                      //!< [ label name | instruction index ].
-        std::map<std::string, std::vector<BackPatchAddr>> backPatchLabels_; //!< [ label name | back patch addresses ].
+        std::map<std::string, size_t> labelAddresses_;          //!< [ label name | instruction index ].
+        std::map<std::string, BackPatchAddr> backPatchLabels_;  //!< [ label name | back patch address ].
 
         std::map<std::string, InstrCategory> mnemonicTable_;
 

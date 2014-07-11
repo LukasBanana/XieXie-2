@@ -486,6 +486,80 @@ class Instruction
 typedef Instruction Instr;
 
 
+//! Intrinsics helper class.
+class Intrinsics
+{
+    
+    public:
+        
+        Intrinsics()
+        {
+            addresses_ = std::move(std::map<std::string, unsigned int>
+            {
+                { "AllocMem",   INTR_ALLOC_MEM    },
+                { "FreeMem",    INTR_FREE_MEM     },
+                { "CopyMem",    INTR_COPY_MEM     },
+                { "SysCall",    INTR_SYS_CALL     },
+                { "Clear",      INTR_CLEAR        },
+                { "Print",      INTR_PRINT        },
+                { "PrintLn",    INTR_PRINT_LN     },
+                { "PrintInt",   INTR_PRINT_INT    },
+                { "PrintFloat", INTR_PRINT_FLOAT  },
+                { "Input",      INTR_INPUT        },
+                { "InputInt",   INTR_INPUT_INT    },
+                { "InputFloat", INTR_INPUT_FLOAT  },
+                { "CmpE",       INTR_CMP_E        },
+                { "CmpNE",      INTR_CMP_NE       },
+                { "CmpL",       INTR_CMP_L        },
+                { "CmpLE",      INTR_CMP_LE       },
+                { "CmpG",       INTR_CMP_G        },
+                { "CmpGE",      INTR_CMP_GE       },
+                { "LogicOr",    INTR_LOGIC_OR     },
+                { "LogicAnd",   INTR_LOGIC_AND    },
+                { "LogicNot",   INTR_LOGIC_NOT    },
+                { "CreateFile", INTR_CREATE_FILE  },
+                { "DeleteFile", INTR_DELETE_FILE  },
+                { "OpenFile",   INTR_OPEN_FILE    },
+                { "CloseFile",  INTR_CLOSE_FILE   },
+                { "FileSize",   INTR_FILE_SIZE    },
+                { "SetFilePos", INTR_SET_FILE_POS },
+                { "GetFilePos", INTR_GET_FILE_POS },
+                { "FileEOF",    INTR_FILE_EOF     },
+                { "WriteByte",  INTR_WRITE_BYTE   },
+                { "WriteWord",  INTR_WRITE_WORD   },
+                { "ReadByte",   INTR_READ_BYTE    },
+                { "ReadWord",   INTR_READ_WORD    },
+                { "Sin",        INTR_SIN          },
+                { "Cos",        INTR_COS          },
+                { "Tan",        INTR_TAN          },
+                { "ASin",       INTR_ASIN         },
+                { "ACos",       INTR_ACOS         },
+                { "ATan",       INTR_ATAN         },
+                { "Pow",        INTR_POW          },
+                { "Sqrt",       INTR_SQRT         },
+                { "RandInt",    INTR_RAND_INT     },
+                { "RandFloat",  INTR_RAND_FLOAT   },
+                { "Time",       INTR_TIME         },
+                { "Slepp",      INTR_SLEEP        }
+            });
+        }
+
+        //! Returns the intrinsic address by the specified intrinsic name or 0 if the name is invalid.
+        unsigned int AddressByName(const std::string& name)
+        {
+            auto it = addresses_.find(name);
+            if (it != addresses_.end())
+                return it->second;
+            return 0u;
+        }
+
+    private:
+        
+        std::map<std::string, unsigned int> addresses_;
+
+};
+
+
 //! The byte code class represents an entire virtual program.
 class ByteCode
 {

@@ -23,7 +23,8 @@ namespace XieXie
 using namespace VirtualMachine;
 
 Assembler::Assembler() :
-    byteCode_(std::make_shared<ByteCode>())
+    byteCode_   ( std::make_shared< ByteCode   >() ),
+    intrinsics_ ( std::make_shared< Intrinsics >() )
 {
     EstablishMnemonicTable();
 }
@@ -74,7 +75,7 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
         }
         catch (const std::exception& err)
         {
-            errorReporter_.Add(AssemblerError(err.what()));
+            errorReporter_.Add(AssemblerError(sourceArea_, err.what()));
         }
     }
 
@@ -142,9 +143,12 @@ void Assembler::EstablishMnemonicTable()
     });
 }
 
-void Assembler::Error(const std::string& message)
+void Assembler::Error(const std::string& message, bool appendSourceArea)
 {
-    throw AssemblerError(sourceArea_, message);
+    if (appendSourceArea)
+        throw AssemblerError(sourceArea_, message);
+    else
+        throw AssemblerError(message);
 }
 
 void Assembler::ErrorUnexpectedChar()
@@ -559,7 +563,7 @@ void Assembler::ParseExportField()
     Accept(Token::Types::Export);
 
     auto name = Accept(Token::Types::StringLiteral);
-    auto addr = ParseLabelAddress();
+    auto addr = static_cast<unsigned int>(ParseGlobalAddress());
 
     AddExportAddress(name.spell, addr);
 }
@@ -569,12 +573,6 @@ void Assembler::ParseDataField()
     auto dataType = Accept(Token::Types::Data);
 
     //...
-}
-
-unsigned int Assembler::ParseLabelAddress()
-{
-    //...
-    return 0;
 }
 
 void Assembler::ParseInstr(const InstrCategory& instr)
@@ -627,7 +625,7 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
         else if (instr.opcodeB != 0)
         {
             /* Parse second operand */
-            int value = ParseSgnOperand();
+            int value = ParseOperand();
             
             /* Add instruction */
             byteCode_->instructions.push_back(
@@ -650,10 +648,35 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
 
 void Assembler::ParseInstrReg1(const InstrCategory& instr)
 {
+    /* Parse first operand */
+    const auto& reg = ParseRegister();
+
+    /* Add instruction */
+    byteCode_->instructions.push_back(
+        Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeA), reg, 0)
+    );
 }
 
 void Assembler::ParseInstrJump(const InstrCategory& instr)
 {
+    const auto* reg = &(Register::pc);
+    int offset = 0;
+
+    if (tkn_.type == Token::Types::LBracket)
+    {
+        /* Parse first operand */
+        AcceptIt();
+        reg = &(ParseRegister());
+        Accept(Token::Types::RBracket);
+    }
+
+    /* Parse second operand */
+    offset = ParseOperand();
+
+    /* Add instruction */
+    byteCode_->instructions.push_back(
+        Instr::MakeJump(static_cast<opcode_jump>(instr.opcodeA), *reg, offset)
+    );
 }
 
 void Assembler::ParseInstrFloat(const InstrCategory& instr)
@@ -679,14 +702,20 @@ const Register& Assembler::ParseRegister()
     return Register::Get(reg.spell);
 }
 
-int Assembler::ParseSgnOperand()
+int Assembler::ParseOperand()
 {
     switch (tkn_.type)
     {
         case Token::Types::IntLiteral:
             return ParseIntLiteral();
-        /*case Token::Types::
-            */
+        case Token::Types::Ident:
+            return ParseLocalAddress();
+        case Token::Types::At:
+            return ParseGlobalAddress();
+        case Token::Types::Pointer:
+            return ParseAddressPointer();
+        case Token::Types::Intrinsic:
+            return ParseIntrinsicAddress();
         default:
             ErrorUnexpectedToken("expected operand");
             break;
@@ -694,23 +723,60 @@ int Assembler::ParseSgnOperand()
     return 0;
 }
 
-unsigned int Assembler::ParseUnsgnOperand()
-{
-    //...
-    return 0;
-}
-
 int Assembler::ParseIntLiteral()
 {
+    /* Parse integer literal */
     auto value = Accept(Token::Types::IntLiteral);
     return StrToNum<int>(value.spell);
 }
 
+float Assembler::ParseFloatLiteral()
+{
+    /* Parse floating-point literal */
+    auto value = Accept(Token::Types::FloatLiteral);
+    return StrToNum<float>(value.spell);
+}
+
+int Assembler::ParseLocalAddress()
+{
+    /* Parse address label */
+    auto label = Accept(Token::Types::Ident).spell;
+    return AddressValue(label, BackPatchAddr::InstrUse::Types::Local);
+}
+
+int Assembler::ParseGlobalAddress()
+{
+    /* Parse address label */
+    Accept(Token::Types::At);
+    auto label = Accept(Token::Types::Ident).spell;
+    return AddressValue(label, BackPatchAddr::InstrUse::Types::Global);
+}
+
+int Assembler::ParseAddressPointer()
+{
+    /* Parse address label */
+    Accept(Token::Types::Pointer);
+    auto label = Accept(Token::Types::Ident).spell;
+    return AddressValue(label, BackPatchAddr::InstrUse::Types::Pointer);
+}
+
+int Assembler::ParseIntrinsicAddress()
+{
+    /* Parse intrinsic address label */
+    auto label = Accept(Token::Types::Intrinsic).spell;
+    return static_cast<int>(intrinsics_->AddressByName(label));
+}
+
 /* ------- Assembler ------- */
+
+size_t Assembler::NextInstrIndex() const
+{
+    return byteCode_->instructions.size();
+}
 
 void Assembler::AddLabel(const std::string& label)
 {
-    labelAddresses_[label] = byteCode_->instructions.size();
+    labelAddresses_[label] = NextInstrIndex();
 }
 
 void Assembler::AddInstruction(int byteCode)
@@ -721,6 +787,51 @@ void Assembler::AddInstruction(int byteCode)
 void Assembler::AddExportAddress(const std::string& name, unsigned int address)
 {
     exportAddresses_.push_back({ address, name });
+}
+
+int Assembler::AddressValue(const std::string& label, const BackPatchAddr::InstrUse::Types type)
+{
+    /* Find label */
+    auto it = labelAddresses_.find(label);
+    if (it != labelAddresses_.end())
+        return it->second;
+
+    /* Add label to back-patch addresses */
+    AddBackPatchAddress(label, type);
+
+    return 0;
+}
+
+void Assembler::AddBackPatchAddress(const std::string& label, const BackPatchAddr::InstrUse::Types type)
+{
+    BackPatchAddr::InstrUse instrUse { type, static_cast<int>(NextInstrIndex()) };
+
+    auto it = backPatchLabels_.find(label);
+    if (it != backPatchLabels_.end())
+        it->second.instrUses.push_back(instrUse);
+    else
+        backPatchLabels_[label].instrUses.push_back(instrUse);
+}
+
+//! Returns the value of this back-patch address for the specified instruction use.
+int Assembler::BackPatchAddressValue(const BackPatchAddr& patchAddr, const BackPatchAddr::InstrUse& instrUse)
+{
+    switch (instrUse.type)
+    {
+        case BackPatchAddr::InstrUse::Types::Local:
+            return patchAddr.addrIndex - instrUse.index;
+        case BackPatchAddr::InstrUse::Types::Global:
+            return patchAddr.addrIndex;
+        case BackPatchAddr::InstrUse::Types::Pointer:
+        {
+            auto instrIndex = static_cast<size_t>(patchAddr.addrIndex);
+            if (instrIndex < byteCode_->instructions.size())
+                return static_cast<int>(byteCode_->instructions[instrIndex].Code());
+            else
+                Error("address index out of range", false);
+        }
+    }
+    return 0;
 }
 
 bool Assembler::CreateByteCode(const std::string& outFilename)
