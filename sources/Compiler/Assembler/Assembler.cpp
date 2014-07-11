@@ -45,24 +45,49 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
 
     sourceArea_.Reset();
 
-    ReadNextLine(inFile);
-
+    /* Read first line */
     try
     {
-        while (!inFile.eof())
+        ReadNextLine(inFile);
+    }
+    catch (const CompilerMessage& err)
+    {
+        errorReporter_.Add(err);
+    }
+
+    /* Read entire input file */
+    while (!inFile.eof())
+    {
+        try
         {
             /* Read and parse next line */
             ReadNextLine(inFile);
             ParseLine();
+
+            /* Check if line is finished */
+            //if (tkn_.type != Token::Types::__Unknown__)
+            //    Error("trailing line not allowed after instruction");
         }
-        return CreateByteCode(outFilename);
-    }
-    catch (const std::exception& err)
-    {
-        Console::Error("(" + sourceArea_.ToString() + ") -- " + std::string(err.what()));
+        catch (const CompilerMessage& err)
+        {
+            errorReporter_.Add(err);
+        }
+        catch (const std::exception& err)
+        {
+            errorReporter_.Add(AssemblerError(err.what()));
+        }
     }
 
-    return false;
+    /* Prints errors */
+    bool hasErrors = errorReporter_.HasErrors();
+
+    errorReporter_.Flush();
+
+    if (hasErrors)
+        return false;
+
+    /* Write byte code to file */
+    return CreateByteCode(outFilename);
 }
 
 
@@ -72,59 +97,74 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
 
 void Assembler::EstablishMnemonicTable()
 {
-    mnemonicTable_ = std::map<std::string, Token::Types>
+    mnemonicTable_ = std::move(std::map<std::string, InstrCategory>
     {
-        { "mov",  Token::Types::Mnemonic },
-        { "not",  Token::Types::Mnemonic },
-        { "and",  Token::Types::Mnemonic },
-        { "or",   Token::Types::Mnemonic },
-        { "xor",  Token::Types::Mnemonic },
-        { "add",  Token::Types::Mnemonic },
-        { "sub",  Token::Types::Mnemonic },
-        { "mul",  Token::Types::Mnemonic },
-        { "div",  Token::Types::Mnemonic },
-        { "mod",  Token::Types::Mnemonic },
-        { "sll",  Token::Types::Mnemonic },
-        { "slr",  Token::Types::Mnemonic },
-        { "cmp",  Token::Types::Mnemonic },
-        { "fti",  Token::Types::Mnemonic },
-        { "itf",  Token::Types::Mnemonic },
-        { "push", Token::Types::Mnemonic },
-        { "pop",  Token::Types::Mnemonic },
-        { "inc",  Token::Types::Mnemonic },
-        { "dec",  Token::Types::Mnemonic },
-        { "jmp",  Token::Types::Mnemonic },
-        { "je",   Token::Types::Mnemonic },
-        { "jne",  Token::Types::Mnemonic },
-        { "jg",   Token::Types::Mnemonic },
-        { "jl",   Token::Types::Mnemonic },
-        { "jge",  Token::Types::Mnemonic },
-        { "jle",  Token::Types::Mnemonic },
-        { "call", Token::Types::Mnemonic },
-        { "addf", Token::Types::Mnemonic },
-        { "subf", Token::Types::Mnemonic },
-        { "mulf", Token::Types::Mnemonic },
-        { "divf", Token::Types::Mnemonic },
-        { "cmpf", Token::Types::Mnemonic },
-        { "lda",  Token::Types::Mnemonic },
-        { "ldb",  Token::Types::Mnemonic },
-        { "ldw",  Token::Types::Mnemonic },
-        { "stb",  Token::Types::Mnemonic },
-        { "stw",  Token::Types::Mnemonic },
-        { "stop", Token::Types::Mnemonic },
-        { "ret",  Token::Types::Mnemonic },
-        { "invk", Token::Types::Mnemonic },
-    };
+        { "mov",  { InstrCategory::Categories::Reg2,    OPCODE_MOV2, OPCODE_MOV1  } },
+        { "not",  { InstrCategory::Categories::Reg2,    OPCODE_NOT2, 0u           } },
+        { "and",  { InstrCategory::Categories::Reg2,    OPCODE_AND2, OPCODE_AND1  } },
+        { "or",   { InstrCategory::Categories::Reg2,    OPCODE_OR2,  OPCODE_OR1   } },
+        { "xor",  { InstrCategory::Categories::Reg2,    OPCODE_XOR2, OPCODE_XOR1  } },
+        { "add",  { InstrCategory::Categories::Reg2,    OPCODE_ADD2, OPCODE_ADD1  } },
+        { "sub",  { InstrCategory::Categories::Reg2,    OPCODE_SUB2, OPCODE_SUB1  } },
+        { "mul",  { InstrCategory::Categories::Reg2,    OPCODE_MUL2, OPCODE_MUL1  } },
+        { "div",  { InstrCategory::Categories::Reg2,    OPCODE_DIV2, OPCODE_DIV1  } },
+        { "mod",  { InstrCategory::Categories::Reg2,    OPCODE_MOD2, OPCODE_MOD1  } },
+        { "sll",  { InstrCategory::Categories::Reg2,    OPCODE_SLL2, OPCODE_SLL1  } },
+        { "slr",  { InstrCategory::Categories::Reg2,    OPCODE_SLR2, OPCODE_SLR1  } },
+        { "cmp",  { InstrCategory::Categories::Reg2,    OPCODE_CMP,  0u           } },
+        { "fti",  { InstrCategory::Categories::Reg2,    OPCODE_FTI,  0u           } },
+        { "itf",  { InstrCategory::Categories::Reg2,    OPCODE_ITF,  0u           } },
+        { "push", { InstrCategory::Categories::Special, OPCODE_PUSH, OPCODE_PUSHC } },
+        { "pop",  { InstrCategory::Categories::Reg1,    OPCODE_POP,  0u           } },
+        { "inc",  { InstrCategory::Categories::Reg1,    OPCODE_INC,  0u           } },
+        { "dec",  { InstrCategory::Categories::Reg1,    OPCODE_DEC,  0u           } },
+        { "jmp",  { InstrCategory::Categories::Jump,    OPCODE_JMP,  0u           } },
+        { "je",   { InstrCategory::Categories::Jump,    OPCODE_JE,   0u           } },
+        { "jne",  { InstrCategory::Categories::Jump,    OPCODE_JNE,  0u           } },
+        { "jg",   { InstrCategory::Categories::Jump,    OPCODE_JG,   0u           } },
+        { "jl",   { InstrCategory::Categories::Jump,    OPCODE_JL,   0u           } },
+        { "jge",  { InstrCategory::Categories::Jump,    OPCODE_JGE,  0u           } },
+        { "jle",  { InstrCategory::Categories::Jump,    OPCODE_JLE,  0u           } },
+        { "call", { InstrCategory::Categories::Jump,    OPCODE_CALL, 0u           } },
+        { "addf", { InstrCategory::Categories::Float,   OPCODE_ADDF, 0u           } },
+        { "subf", { InstrCategory::Categories::Reg2,    OPCODE_SUBF, 0u           } },
+        { "mulf", { InstrCategory::Categories::Float,   OPCODE_MULF, 0u           } },
+        { "divf", { InstrCategory::Categories::Float,   OPCODE_DIVF, 0u           } },
+        { "cmpf", { InstrCategory::Categories::Float,   OPCODE_CMPF, 0u           } },
+        { "lda",  { InstrCategory::Categories::Mem,     OPCODE_LDA,  0u           } },
+        { "ldb",  { InstrCategory::Categories::MemOff,  OPCODE_LDB,  0u           } },
+        { "ldw",  { InstrCategory::Categories::MemOff,  OPCODE_LDW,  0u           } },
+        { "stb",  { InstrCategory::Categories::MemOff,  OPCODE_STB,  0u           } },
+        { "stw",  { InstrCategory::Categories::MemOff,  OPCODE_STW,  0u           } },
+        { "stop", { InstrCategory::Categories::Special, OPCODE_STOP, 0u           } },
+        { "ret",  { InstrCategory::Categories::Special, OPCODE_RET,  0u           } },
+        { "invk", { InstrCategory::Categories::Special, OPCODE_INVK, 0u           } },
+    });
+}
+
+void Assembler::Error(const std::string& message)
+{
+    throw AssemblerError(sourceArea_, message);
 }
 
 void Assembler::ErrorUnexpectedChar()
 {
-    throw std::runtime_error("Unexpected character '" + ToStr(chr_) + "'");
+    Error("unexpected character '" + ToStr(chr_) + "'");
+}
+
+void Assembler::ErrorUnexpectedChar(const std::string& hint)
+{
+    Error("unexpected character '" + ToStr(chr_) + "' (" + hint + ")");
 }
 
 void Assembler::ErrorUnexpectedToken()
 {
-    throw std::runtime_error("Unexpected token '" + tkn_.spell + "'");
+    Error("unexpected token '" + tkn_.spell + "'");
+}
+
+void Assembler::ErrorUnexpectedToken(const std::string& hint)
+{
+    Error("unexpected token '" + tkn_.spell + "' (" + hint + ")");
 }
 
 /* ------- Scanner ------- */
@@ -159,7 +199,14 @@ char Assembler::NextChar()
 char Assembler::Take(char chr)
 {
     if (chr_ != chr)
-        ErrorUnexpectedChar();
+        ErrorUnexpectedChar("expected '" + ToStr(chr) + "')");
+    return TakeIt();
+}
+
+char Assembler::Take(char chr, const std::string& hint)
+{
+    if (chr_ != chr)
+        ErrorUnexpectedChar(hint);
     return TakeIt();
 }
 
@@ -242,10 +289,11 @@ Assembler::Token Assembler::NextToken()
         case '(': return std::move(MakeToken( Token::Types::LBracket,   true ));
         case ')': return std::move(MakeToken( Token::Types::RBracket,   true ));
         case '@': return std::move(MakeToken( Token::Types::At,         true ));
+        case '*': return std::move(MakeToken( Token::Types::Pointer,    true ));
     }
 
     /* Error -> unknwon character */
-    throw std::runtime_error("Unknown character '" + ToStr(chr_) + "'");
+    Error("unknown character '" + ToStr(chr_) + "'");
 
     return Token();
 }
@@ -278,7 +326,7 @@ Assembler::Token Assembler::ScanStringLiteral()
                     spell += '\n';
                     break;
                 default:
-                    ErrorUnexpectedChar();
+                    Error("invalid escape character in string literal '" + ToStr(chr_) + "' (only '\\\\', '\\\"', '\\t' and '\\n' are allowed)");
                     break;
             }
 
@@ -286,7 +334,7 @@ Assembler::Token Assembler::ScanStringLiteral()
         }
 
         if (chr_ == 0)
-            ErrorUnexpectedChar();
+            Error("unexpected end of string literal");
         
         /* Check for closing '\"' character */
         if (chr_ == '\"')
@@ -358,7 +406,7 @@ Assembler::Token Assembler::ScanNumber()
         spell += TakeIt();
 
     if (!IsDigit(chr_))
-        ErrorUnexpectedChar();
+        ErrorUnexpectedChar("expected digit");
     
     /* Take first number (literals like ".0" are not allowed) */
     const auto startChr = TakeIt();
@@ -374,7 +422,7 @@ Assembler::Token Assembler::ScanNumber()
             switch (type)
             {
                 case Token::Types::FloatLiteral:
-                    throw std::runtime_error("Multiple dots in float literal");
+                    Error("multiple dots in float literal");
                     break;
                 case Token::Types::IntLiteral:
                     type = Token::Types::FloatLiteral;
@@ -382,7 +430,7 @@ Assembler::Token Assembler::ScanNumber()
             }
         }
         else if (IsIdentChar(chr_))
-            throw std::runtime_error("Letter '" + ToStr(chr_) + "' is not allowed within a number");
+            Error("letter '" + ToStr(chr_) + "' is not allowed within a number");
 
         /* Append current character */
         spell += TakeIt();
@@ -444,6 +492,13 @@ Assembler::Token Assembler::Accept(const Token::Types type)
     return std::move(AcceptIt());
 }
 
+Assembler::Token Assembler::Accept(const Token::Types type, const std::string& hint)
+{
+    if (!tkn_.IsValid() || tkn_.type != type)
+        ErrorUnexpectedToken(hint);
+    return std::move(AcceptIt());
+}
+
 Assembler::Token Assembler::AcceptIt()
 {
     auto prevTkn = tkn_;
@@ -481,11 +536,11 @@ void Assembler::ParseMnemonic()
 {
     auto ident = Accept(Token::Types::Mnemonic);
 
-    #if 1
-    //AddInstruction(xvm_instr_make_reg2(OPCODE_XOR2, REG_R0, REG_R0));
-    byteCode_->instructions.push_back(Instruction::MakeReg1(OPCODE_MOV1, Reg::r0, 0));
-    #endif
-    //...
+    auto it = mnemonicTable_.find(ident.spell);
+    if (it != mnemonicTable_.end())
+        ParseInstr(it->second);
+    else
+        Error("unknown mnemonic '" + ident.spell + "'");
 }
 
 void Assembler::ParseLabel()
@@ -520,6 +575,135 @@ unsigned int Assembler::ParseLabelAddress()
 {
     //...
     return 0;
+}
+
+void Assembler::ParseInstr(const InstrCategory& instr)
+{
+    switch (instr.category)
+    {
+        case InstrCategory::Categories::Reg2:
+            ParseInstrReg2(instr);
+            break;
+        case InstrCategory::Categories::Reg1:
+            ParseInstrReg1(instr);
+            break;
+        case InstrCategory::Categories::Jump:
+            ParseInstrJump(instr);
+            break;
+        case InstrCategory::Categories::Float:
+            ParseInstrFloat(instr);
+            break;
+        case InstrCategory::Categories::Mem:
+            ParseInstrMem(instr);
+            break;
+        case InstrCategory::Categories::MemOff:
+            ParseInstrMemOff(instr);
+            break;
+        case InstrCategory::Categories::Special:
+            ParseInstrSpecial(instr);
+            break;
+    }
+}
+
+void Assembler::ParseInstrReg2(const InstrCategory& instr)
+{
+    /* Parse first operand */
+    const auto& reg0 = ParseRegister();
+
+    if (tkn_.type == Token::Types::Comma)
+    {
+        AcceptIt();
+
+        if (tkn_.type == Token::Types::Register)
+        {
+            /* Parse second operand */
+            const auto& reg1 = ParseRegister();
+
+            /* Add instruction */
+            byteCode_->instructions.push_back(
+                Instr::MakeReg2(static_cast<opcode_reg2>(instr.opcodeA), reg0, reg1)
+            );
+        }
+        else if (instr.opcodeB != 0)
+        {
+            /* Parse second operand */
+            int value = ParseSgnOperand();
+            
+            /* Add instruction */
+            byteCode_->instructions.push_back(
+                Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeB), reg0, value)
+            );
+        }
+        else
+            Error("invalid second operand for 2-register instruction (expected register)");
+    }
+    else if (instr.opcodeB != 0)
+    {
+        /* Add instruction */
+        byteCode_->instructions.push_back(
+            Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeB), reg0, 0)
+        );
+    }
+    else
+        Error("missing second operand for 2-register or 1-register instruction");
+}
+
+void Assembler::ParseInstrReg1(const InstrCategory& instr)
+{
+}
+
+void Assembler::ParseInstrJump(const InstrCategory& instr)
+{
+}
+
+void Assembler::ParseInstrFloat(const InstrCategory& instr)
+{
+}
+
+void Assembler::ParseInstrMem(const InstrCategory& instr)
+{
+}
+
+void Assembler::ParseInstrMemOff(const InstrCategory& instr)
+{
+}
+
+void Assembler::ParseInstrSpecial(const InstrCategory& instr)
+{
+}
+
+const Register& Assembler::ParseRegister()
+{
+    /* Parse register name */
+    auto reg = Accept(Token::Types::Register);
+    return Register::Get(reg.spell);
+}
+
+int Assembler::ParseSgnOperand()
+{
+    switch (tkn_.type)
+    {
+        case Token::Types::IntLiteral:
+            return ParseIntLiteral();
+        /*case Token::Types::
+            */
+        default:
+            ErrorUnexpectedToken("expected operand");
+            break;
+    }
+    return 0;
+}
+
+unsigned int Assembler::ParseUnsgnOperand()
+{
+    //...
+    return 0;
+}
+
+int Assembler::ParseIntLiteral()
+{
+    auto value = Accept(Token::Types::IntLiteral);
+    return StrToNum<int>(value.spell);
 }
 
 /* ------- Assembler ------- */

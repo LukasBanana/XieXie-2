@@ -13,15 +13,11 @@
 #include <initializer_list>
 
 
-//class ErrorReporter;
-
 namespace Console
 {
 
 
 /* === Functions === */
-
-//void PrintErrorReport(ErrorReporter &Reporter);
 
 void StartLn();
 void EndLn();

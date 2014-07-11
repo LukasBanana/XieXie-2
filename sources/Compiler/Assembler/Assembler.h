@@ -11,18 +11,24 @@
 
 #include "Base/DeclPtr.h"
 #include "Compiler/SyntaxAnalyzer/SourceArea.h"
+#include "ErrorReporter.h"
 
 #include <fstream>
 #include <string>
 #include <memory>
 #include <vector>
 #include <map>
+#include <array>
 
 
 namespace XieXie
 {
 
-namespace VirtualMachine { class ByteCode; }
+namespace VirtualMachine
+{
+    class ByteCode;
+    class Register;
+}
 
 
 /**
@@ -80,6 +86,7 @@ class Assembler
                 LBracket,       //!< '('
                 RBracket,       //!< ')'
                 At,             //!< '@'
+                Pointer,        //!< '*'
                 Data,           //!< ( '.ascii' | '.word' | '.float' )
                 Export,         //!< '.export'
                 Mnemonic,       //!< ( 'mov' | 'call' | ... )
@@ -111,12 +118,34 @@ class Assembler
             std::string spell;
         };
 
+        struct InstrCategory
+        {
+            enum class Categories
+            {
+                Reg2,
+                Reg1,
+                Jump,
+                Float,
+                Mem,
+                MemOff,
+                Special,
+            };
+
+            Categories category;
+            unsigned int opcodeA, opcodeB;
+        };
+
         /* === Functions === */
 
         void EstablishMnemonicTable();
 
+        void Error(const std::string& message);
+
         void ErrorUnexpectedChar();
+        void ErrorUnexpectedChar(const std::string& hint);
+
         void ErrorUnexpectedToken();
+        void ErrorUnexpectedToken(const std::string& hint);
 
         /* ------- Scanner ------- */
 
@@ -124,6 +153,7 @@ class Assembler
 
         char NextChar();
         char Take(char chr);
+        char Take(char chr, const std::string& hint);
         char TakeIt();
 
         Token MakeToken(const Token::Types type, bool takeIt = false);
@@ -138,6 +168,7 @@ class Assembler
         /* ------- Parser ------- */
 
         Token Accept(const Token::Types type);
+        Token Accept(const Token::Types type, const std::string& hint);
         Token AcceptIt();
 
         void ParseLine();
@@ -147,6 +178,21 @@ class Assembler
         void ParseDataField();
         void ParseExportField();
         unsigned int ParseLabelAddress();
+
+        void ParseInstr         (const InstrCategory& instr);
+        void ParseInstrReg2     (const InstrCategory& instr);
+        void ParseInstrReg1     (const InstrCategory& instr);
+        void ParseInstrJump     (const InstrCategory& instr);
+        void ParseInstrFloat    (const InstrCategory& instr);
+        void ParseInstrMem      (const InstrCategory& instr);
+        void ParseInstrMemOff   (const InstrCategory& instr);
+        void ParseInstrSpecial  (const InstrCategory& instr);
+
+        const VirtualMachine::Register& ParseRegister();
+        int ParseSgnOperand();
+        unsigned int ParseUnsgnOperand();
+
+        int ParseIntLiteral();
         
         /* ------- Assembler ------- */
 
@@ -174,7 +220,9 @@ class Assembler
         std::map<std::string, size_t> labelAddresses_;                      //!< [ label name | instruction index ].
         std::map<std::string, std::vector<BackPatchAddr>> backPatchLabels_; //!< [ label name | back patch addresses ].
 
-        std::map<std::string, Token::Types> mnemonicTable_;
+        std::map<std::string, InstrCategory> mnemonicTable_;
+
+        ErrorReporter errorReporter_;
 
 };
 
