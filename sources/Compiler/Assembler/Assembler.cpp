@@ -140,7 +140,7 @@ void Assembler::EstablishMnemonicTable()
         { "jle",  { InstrCategory::Categories::Jump,    OPCODE_JLE,  0u           } },
         { "call", { InstrCategory::Categories::Jump,    OPCODE_CALL, 0u           } },
         { "addf", { InstrCategory::Categories::Float,   OPCODE_ADDF, 0u           } },
-        { "subf", { InstrCategory::Categories::Reg2,    OPCODE_SUBF, 0u           } },
+        { "subf", { InstrCategory::Categories::Float,   OPCODE_SUBF, 0u           } },
         { "mulf", { InstrCategory::Categories::Float,   OPCODE_MULF, 0u           } },
         { "divf", { InstrCategory::Categories::Float,   OPCODE_DIVF, 0u           } },
         { "cmpf", { InstrCategory::Categories::Float,   OPCODE_CMPF, 0u           } },
