@@ -23,7 +23,11 @@ bool Shell::ExecuteCommandLine(const ArgList& args)
     if (args.empty())
         return false;
     
-    /* Collect all options */
+    /* Temporaries */
+    std::vector<std::string> filenames;
+    bool pause = false;
+    
+    /* Parse all arguments */
     try
     {
         for (auto it = args.begin(), end = args.end(); it != end; ++it)
@@ -40,9 +44,7 @@ bool Shell::ExecuteCommandLine(const ArgList& args)
                 else if (arg == "--help" || arg == "-h")
                     CmdHelp();
                 else if (arg == "--pause")
-                    CmdPause();
-                else if (arg == "--assemble" || arg == "-asm")
-                    CmdAssemble(it, end);
+                    pause = true;
                 else
                     Error("unknown command flag \"" + arg + "\"");
             }
@@ -51,13 +53,26 @@ bool Shell::ExecuteCommandLine(const ArgList& args)
             else if (arg == "help")
                 CmdHelp();
             else
-                Error("unknown command \"" + arg + "\"");
+            {
+                std::ifstream file(arg);
+                if (file.good())
+                    filenames.push_back(arg);
+                else
+                    Error("file not found: \"" + arg + "\"");
+            }
         }
     }
     catch (const std::exception& err)
     {
         Error(err.what());
     }
+
+    /* Process input files */
+    for (const auto& file : filenames)
+        AssembleFile(file);
+
+    if (pause)
+        Pause();
 
     return true;
 }
@@ -107,20 +122,13 @@ void Shell::CmdHelp()
     //...
 }
 
-void Shell::CmdPause()
+void Shell::Pause()
 {
     system("pause");
 }
 
-void Shell::CmdAssemble(ArgList::const_iterator& it, const ArgList::const_iterator& end)
+void Shell::AssembleFile(const std::string& filename)
 {
-    /* Get filename */
-    ++it;
-    if (it == end)
-        throw std::runtime_error("missing filename to assembled source");
-
-    auto filename = *it;
-
     /* Assemble code */
     Console::Message("assemble file \"" + filename + "\"");
 

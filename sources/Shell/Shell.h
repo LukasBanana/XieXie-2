@@ -28,8 +28,9 @@ class Shell
         
         void CmdVersion();
         void CmdHelp();
-        void CmdPause();
-        void CmdAssemble(ArgList::const_iterator& it, const ArgList::const_iterator& end);
+
+        void Pause();
+        void AssembleFile(const std::string& filename);
 
 };
 
