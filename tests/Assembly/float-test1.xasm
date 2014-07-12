@@ -1,0 +1,55 @@
+
+; Float XASM test1
+; 12/07/2014
+
+lda $r0, @Math.pi	; Load address of 'Math.pi'
+ldw $r1, ($r0) 0	; Load value of 'Math.pi'
+ldw $r7, ($r0) 4	; Load value of 'deg_start'
+ldw $r8, ($r0) 8	; Load value of 'deg_step'
+
+mulf $r1, $r8		; deg *= deg_step
+
+lda $r4, @str0
+lda $r5, @str1
+lda $r6, @str2
+
+xor $r2, $r2		; i := 0
+mov $r3, 10			; n := 10
+while:
+cmp $r2, $r3
+jg end				; while i <= n
+
+push $r4
+call <Print>
+
+push $r7
+call <PrintFloat>
+
+push $r5
+call <Print>
+
+push $r7
+call <Sin>
+call <PrintFloat>
+
+addf $r7, $r1		; deg += step
+
+push $r6
+call <Print>
+
+inc $r2				; i++
+jmp while
+
+Math.pi:
+.float 3.141592654
+
+deg_start:
+.float 0.0
+deg_step:
+.float 0.2
+
+str0: .ascii "Sin("
+str1: .ascii ") = "
+str2: .ascii "\n"
+
+end:
