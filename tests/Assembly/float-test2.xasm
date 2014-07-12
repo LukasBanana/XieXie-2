@@ -1,0 +1,66 @@
+
+; float XASM test2
+; 12/07/2014
+
+call main
+stop
+
+str_null: .ascii ""
+str_info: .ascii "enter float number: "
+str_flt: .ascii "float value is now: "
+flt_zero: .float 0.0
+flt_step: .float 0.5
+
+main:
+
+; print 'str_info'
+lda $r0, @str_info
+push $r0
+call <Print>
+
+; get float as input
+call <InputFloat>
+pop $r1
+
+; print new line
+lda $r5, @str_null
+push $r5
+call <PrintLn>
+
+; load 'flt_zero'
+lda $r0, @flt_zero
+ldw $r2, ($r0) 0
+
+; load 'flt_step'
+lda $r0, @flt_step
+ldw $r3, ($r0) 0
+
+; load 'str_flt'
+lda $r4, @str_flt
+
+; while r1 > r2
+.while:
+cmpf $r1, $r2
+jle .end
+
+; print 'str_flt'
+push $r4
+call <Print>
+
+; print current float value
+push $r1
+call <PrintFloat>
+
+; print new line
+push $r5
+call <PrintLn>
+
+; r0 -= r3
+subf $r1, $r3
+
+jmp .while
+.end:
+
+; return from main
+ret (0) 0
+
