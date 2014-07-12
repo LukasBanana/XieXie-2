@@ -70,13 +70,6 @@ class Assembler
             std::vector<InstrUse> instrUses;
         };
 
-        //! Export address structure.
-        struct ExportAddress
-        {
-            int         address;
-            std::string name;
-        };
-
         //! XASM token structure.
         struct Token
         {
@@ -225,8 +218,6 @@ class Assembler
         std::string LocalLabel(const std::string& label) const;
 
         void AddLabel(std::string label);
-        void AddInstruction(int byteCode);
-        void AddExportAddress(const std::string& name, unsigned int address);
 
         int AddressValue(std::string label, const BackPatchAddr::InstrUse::Types type);
         void AddBackPatchAddress(const std::string& label, const BackPatchAddr::InstrUse::Types type);
@@ -250,8 +241,6 @@ class Assembler
         // (Can not be unique_ptr because of unknown type)
         std::shared_ptr<VirtualMachine::ByteCode> byteCode_;
         std::shared_ptr<VirtualMachine::Intrinsics> intrinsics_;
-
-        std::vector<ExportAddress> exportAddresses_;
 
         //! Parent label will be pre-appended to all sub labels (e.g. parent is "Main", sub label is ".end" -> ".Main.end").
         std::string globalLabel_;

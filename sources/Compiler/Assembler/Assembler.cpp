@@ -12,8 +12,6 @@
 #include <exception>
 
 #include "VirtualMachine/XVMWrapper.h"
-//#define _REMOVE_XVM_TESTSUITE_
-//#include "VirtualMachine/xvm.c"
 
 
 namespace XieXie
@@ -580,7 +578,7 @@ void Assembler::ParseExportField()
     auto name = Accept(Token::Types::StringLiteral);
     auto addr = static_cast<unsigned int>(ParseGlobalAddress());
 
-    AddExportAddress(name.spell, addr);
+    byteCode_->AddExportAddress(name.spell, addr);
 }
 
 void Assembler::ParseDataField()
@@ -966,16 +964,6 @@ void Assembler::AddLabel(std::string label)
     labelAddresses_[label] = byteCode_->NextInstrIndex();
 }
 
-void Assembler::AddInstruction(int byteCode)
-{
-    byteCode_->instructions.push_back(byteCode);
-}
-
-void Assembler::AddExportAddress(const std::string& name, unsigned int address)
-{
-    exportAddresses_.push_back({ address, name });
-}
-
 int Assembler::AddressValue(std::string label, const BackPatchAddr::InstrUse::Types type)
 {
     /* Adjust label */
@@ -1064,7 +1052,11 @@ void Assembler::ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr,
 
 bool Assembler::CreateByteCode(const std::string& outFilename)
 {
-    byteCode_->Finalize();
+    if (!byteCode_->Finalize())
+    {
+        Console::Error("failed to finalize byte code");
+        return false;
+    }
     return byteCode_->WriteToFile(outFilename);
 }
 

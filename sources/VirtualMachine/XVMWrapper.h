@@ -503,6 +503,8 @@ class Intrinsics
     
     public:
         
+        typedef std::map<std::string, unsigned int> AddressMapType;
+
         Intrinsics()
         {
             addresses_ = std::move(std::map<std::string, unsigned int>
@@ -558,7 +560,7 @@ class Intrinsics
         //! Returns the intrinsic address by the specified intrinsic name or 0 if the name is invalid.
         unsigned int AddressByName(const std::string& name)
         {
-            auto it = addresses_.find(name);
+            AddressMapType::iterator it = addresses_.find(name);
             if (it != addresses_.end())
                 return it->second;
             return 0u;
@@ -566,7 +568,7 @@ class Intrinsics
 
     private:
         
-        std::map<std::string, unsigned int> addresses_;
+        AddressMapType addresses_;
 
 };
 
@@ -576,6 +578,13 @@ class ByteCode
 {
     
     public:
+
+        //! Export address structure.
+        struct ExportAddress
+        {
+            std::string name;
+            unsigned int address;
+        };
 
         ByteCode()
         {
@@ -622,7 +631,7 @@ class ByteCode
             size_t numInstr = 0;
             xvm_bytecode_datafield_ascii(NULL, asciiDataField.c_str(), &numInstr);
 
-            auto instrIndex = NextInstrIndex();
+            size_t instrIndex = NextInstrIndex();
             instructions.resize(instructions.size() + numInstr);
 
             xvm_bytecode_datafield_ascii(
@@ -630,6 +639,12 @@ class ByteCode
                 asciiDataField.c_str(),
                 NULL
             );
+        }
+
+        //! Adds a new export address.
+        void AddExportAddress(const std::string& name, unsigned int address)
+        {
+            exportAddresses.push_back({ name, address });
         }
 
         //! Returns the index for the next instruction.
@@ -645,18 +660,43 @@ class ByteCode
         */
         bool Finalize()
         {
+            /* Copy instructions into XVM byte code */
             size_t numInstr = instructions.size();
-            if (xvm_bytecode_create_instructions(&byteCode_, static_cast<int>(numInstr)) != 0)
+            if (xvm_bytecode_create_instructions(&byteCode_, static_cast<int>(numInstr)) == 0)
+                return false;
+            
+            for (size_t i = 0; i < numInstr; ++i)
+                byteCode_.instructions[i] = instructions[i].Code();
+
+            /* Copy export-addresses into XVM byte code */
+            size_t numExportAddr = exportAddresses.size();
+            if (numExportAddr > 0)
             {
-                for (size_t i = 0; i < numInstr; ++i)
-                    byteCode_.instructions[i] = instructions[i].Code();
-                return true;
+                if (xvm_bytecode_create_export_addresses(&byteCode_, static_cast<unsigned int>(numExportAddr)) == 0)
+                    return false;
+
+                for (size_t i = 0; i < numExportAddr; ++i)
+                {
+                    const ExportAddress& addr = exportAddresses[i];
+                    xvm_export_address* exportAddr = &(byteCode_.export_addresses[i]);
+
+                    /* Setup final export address */
+                    xvm_export_address_setup(
+                        exportAddr,
+                        addr.address,
+                        xvm_string_create_from(addr.name.c_str())
+                    );
+                }
             }
-            return false;
+
+            return true;
         }
 
         //! Array list of all instructions.
         std::vector<Instruction> instructions;
+
+        //! Array list of all export addresses.
+        std::vector<ExportAddress> exportAddresses;
 
     private:
         
