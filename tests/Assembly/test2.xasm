@@ -25,6 +25,8 @@
 	.end0:	ret		(0) 0			; return
 	str0:	.ascii	"Hello, World!"
 	lng0:	.word	999
+	lng1:	.word	0x00ffabcd
+	lng2:	.word	0b110001010110011
 	Math.Sq:
 			ldw		$r0, ($lb) -4
 			mul		$r0, $r0
