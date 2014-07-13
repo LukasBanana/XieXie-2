@@ -1,0 +1,153 @@
+
+; Hamming Distance XASM test
+; 13/07/2014
+
+call main
+stop
+
+str_null: .ascii ""
+str_a: .ascii "enter first value: "
+str_b: .ascii "enter second value: "
+str_1: .ascii "1"
+str_0: .ascii "0"
+str_result: .ascii "hamming distance = "
+str_pause: .ascii "pause"
+
+; void new_line()
+new_line:
+	lda $r1, @str_null
+	push $r1
+	call <PrintLn>
+	ret (0) 0
+
+; int get_value(char*)
+get_value:
+	ldw $r0, ($lb) -4
+	push $r0
+	call <Print>
+	call <InputInt>
+	ret (1) 1
+
+; void print_bits(int)
+print_bits:
+	ldw $r0, ($lb) -4
+
+	xor $r5, $r5
+	
+	; for i := 0 ; i < 32; i++
+	xor $r1, $r1
+	mov $r2, 32
+	.for:
+	cmp $r1, $r2
+	jge .end
+		; r3 := r0 >> 31
+		mov $r3, $r0
+		slr $r3, 31
+		
+		; if r3 = 0
+		cmp $r3, $r5
+		jne .else
+			lda $r4, @str_0 ; print "0"
+		jmp .endif
+		.else:
+			lda $r4, @str_1 ; print "1"
+		.endif:
+		
+		; print "\n"
+		push $r4
+		call <Print>
+		
+		; r0 <<= 1
+		sll $r0, 1
+	inc $r1
+	jmp .for
+	.end:
+
+	call new_line
+
+	ret (0) 1
+
+; int hamming_distance(int, int)
+hamming_distance:
+	ldw $r0, ($lb) -4
+	ldw $r1, ($lb) -8
+	
+	; result := 0
+	xor $r2, $r2
+	
+	; for i := 0 ; i < 32 ; i++
+	xor $r3, $r3
+	mov $r4, 32
+	.for:
+	cmp $r3, $r4
+	jge .end
+		; r5 = (r0 & 1) ^ (r1 & 1)
+		mov $r5, $r0
+		and $r5, 1;0x00000001
+		mov $r6, $r1
+		and $r6, 1
+		xor $r5, $r6
+		
+		; if r5 != 0
+		xor $r6, $r6
+		cmp $r5, $r6
+		je .endif
+			; result++
+			inc $r2
+		.endif:
+		
+		; r0 >>= 1  r1 >>= 1
+		slr $r0, 1
+		slr $r1, 1
+	inc $r3
+	jmp .for
+	.end:
+	
+	push $r2
+	
+	ret (1) 2
+
+; main
+main:
+	; r8 = get_value(str_a)
+	lda $r0, @str_a
+	push $r0
+	call get_value
+	pop $r8
+	
+	; r9 = get_value(str_b)
+	lda $r0, @str_b
+	push $r0
+	call get_value
+	pop $r9
+	
+	; print_bits(r8)  print_bits(r9)
+	push $r8
+	call print_bits
+	push $r9
+	call print_bits
+	
+	; r0 := hamming_distance(r8, r9)
+	push $r9
+	push $r8
+	call hamming_distance
+	pop $r0
+	
+	; print str_result + r0
+	lda $r1, @str_result
+	push $r1
+	call <Print>
+	push $r0
+	call <PrintInt>
+	call new_line
+	
+	; wait for user input
+	lda $r0, @str_pause
+	push $r0
+	call <SysCall>
+	
+	ret (0) 0
+
+
+
+
