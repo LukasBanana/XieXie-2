@@ -673,13 +673,6 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
         else
             Error("invalid second operand for 2-register instruction (expected register)");
     }
-    else if (instr.opcodeSecondary != 0)
-    {
-        /* Add instruction */
-        byteCode_->instructions.push_back(
-            Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeSecondary), reg0, 0)
-        );
-    }
     else
         Error("missing second operand for 2-register or 1-register instruction");
 }
