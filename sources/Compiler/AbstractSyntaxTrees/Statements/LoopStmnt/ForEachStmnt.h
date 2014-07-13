@@ -16,6 +16,13 @@ namespace AbstractSyntaxTrees
 {
 
 
+/**
+For-each statement.
+\code
+// Grammar
+forEachStmnt ::= 'foreach' varDeclStmnt ':' listExpr codeBlock
+\endcode
+*/
 class ForEachStmnt : public LoopStmnt
 {
     

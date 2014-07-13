@@ -16,6 +16,13 @@ namespace AbstractSyntaxTrees
 {
 
 
+/**
+For-ever statement.
+\code
+// Grammar
+forEverStmnt ::= 'forever' codeBlock
+\endcode
+*/
 class ForEverStmnt : public LoopStmnt
 {
     
