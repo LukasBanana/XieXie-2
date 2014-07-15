@@ -413,6 +413,7 @@ Assembler::Token Assembler::ScanIntrinsic()
     return std::move(Token(Token::Types::Intrinsic, spell));
 }
 
+//! TODO -> scan hex-, oct- and binary literals!!!
 Assembler::Token Assembler::ScanNumber()
 {
     std::string spell;
