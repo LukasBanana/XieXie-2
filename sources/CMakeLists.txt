@@ -19,10 +19,36 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 # === Global files ===
 
-file(GLOB_RECURSE FilesBaseAll				${PROJECT_SOURCE_DIR}/Base/*.*)
-file(GLOB_RECURSE FilesCompilerAll			${PROJECT_SOURCE_DIR}/Compiler/*.*)
-file(GLOB_RECURSE FilesShellAll				${PROJECT_SOURCE_DIR}/Shell/*.*)
-file(GLOB_RECURSE FilesVirtualMachineAll	${PROJECT_SOURCE_DIR}/VirtualMachine/*.*)
+file(GLOB_RECURSE FilesBaseAll					${PROJECT_SOURCE_DIR}/Base/*.*)
+file(GLOB_RECURSE FilesCompilerAll				${PROJECT_SOURCE_DIR}/Compiler/*.*)
+file(GLOB_RECURSE FilesShellAll					${PROJECT_SOURCE_DIR}/Shell/*.*)
+file(GLOB_RECURSE FilesVirtualMachineAll		${PROJECT_SOURCE_DIR}/VirtualMachine/*.*)
+
+file(GLOB FilesCompiler							${PROJECT_SOURCE_DIR}/Compiler/*.*)
+file(GLOB FilesCompilerAssembler				${PROJECT_SOURCE_DIR}/Compiler/Assembler/*.*)
+file(GLOB FilesCompilerAST						${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/*.*)
+file(GLOB FilesCompilerASTExprs					${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Expressions/*.*)
+file(GLOB FilesCompilerASTLists					${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Lists/*.*)
+file(GLOB FilesCompilerASTLiterals				${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Literals/*.*)
+file(GLOB FilesCompilerASTObjects				${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Objects/*.*)
+file(GLOB FilesCompilerASTOperators				${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Operators/*.*)
+file(GLOB FilesCompilerASTStmnts				${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Statements/*.*)
+file(GLOB FilesCompilerASTAssignStmnts			${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Statements/AssignStmnts/*.*)
+file(GLOB FilesCompilerASTBranchStmnts			${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Statements/BranchStmnts/*.*)
+file(GLOB FilesCompilerASTCtrlTransferStmnts	${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Statements/CtrlTransferStmnts/*.*)
+file(GLOB FilesCompilerASTDeclStmnts			${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Statements/DeclStmnts/*.*)
+file(GLOB FilesCompilerASTLoopStmnts			${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Statements/LoopStmnts/*.*)
+file(GLOB FilesCompilerASTTypeDenoters			${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/TypeDenoters/*.*)
+file(GLOB FilesCompilerClassTrees				${PROJECT_SOURCE_DIR}/Compiler/ClassTrees/*.*)
+file(GLOB FilesCompilerCodeGenerators			${PROJECT_SOURCE_DIR}/Compiler/CodeGenerators/*.*)
+file(GLOB FilesCompilerCodeGeneratorsXASM		${PROJECT_SOURCE_DIR}/Compiler/CodeGenerators/XASM/*.*)
+file(GLOB FilesCompilerContextAnalyzer			${PROJECT_SOURCE_DIR}/Compiler/ContextAnalyzer/*.*)
+file(GLOB FilesCompilerOptimizer				${PROJECT_SOURCE_DIR}/Compiler/Optimizer/*.*)
+file(GLOB FilesCompilerOptimizerSCCP			${PROJECT_SOURCE_DIR}/Compiler/Optimizer/ConstantPropagation/*.*)
+file(GLOB FilesCompilerOptimizerCP				${PROJECT_SOURCE_DIR}/Compiler/Optimizer/CopyPropagation/*.*)
+file(GLOB FilesCompilerOptimizerDCE				${PROJECT_SOURCE_DIR}/Compiler/Optimizer/DeadCodeElimination/*.*)
+file(GLOB FilesCompilerSyntaxAnalyzer			${PROJECT_SOURCE_DIR}/Compiler/SyntaxAnalyzer/*.*)
+file(GLOB FilesCompilerTAC						${PROJECT_SOURCE_DIR}/Compiler/ThreeAddressCodes/*.*)
 
 set(
 	FilesAll
@@ -35,25 +61,46 @@ set(
 
 # === Source group folders ===
 
-source_group(
-	"Base" FILES
-	${FilesBaseAll}
-)
+# --- Base ---
 
-source_group(
-	"Compiler" FILES
-	${FilesCompilerAll}
-)
+source_group("Base" FILES ${FilesBaseAll})
 
-source_group(
-	"Shell" FILES
-	${FilesShellAll}
-)
+# --- Compiler ---
 
-source_group(
-	"VirtualMachine" FILES
-	${FilesVirtualMachineAll}
-)
+source_group("Compiler" FILES ${FilesCompiler})
+source_group("Compiler\\Assembler" FILES ${FilesCompilerAssembler})
+
+source_group("Compiler\\AbstractSyntaxTrees" FILES ${FilesCompilerAST})
+source_group("Compiler\\AbstractSyntaxTrees\\Expressions" FILES ${FilesCompilerASTExprs})
+source_group("Compiler\\AbstractSyntaxTrees\\Lists" FILES ${FilesCompilerASTLists})
+source_group("Compiler\\AbstractSyntaxTrees\\Literals" FILES ${FilesCompilerASTLiterals})
+source_group("Compiler\\AbstractSyntaxTrees\\Objects" FILES ${FilesCompilerASTObjects})
+source_group("Compiler\\AbstractSyntaxTrees\\Operators" FILES ${FilesCompilerASTOperators})
+source_group("Compiler\\AbstractSyntaxTrees\\Statements" FILES ${FilesCompilerASTStmnts})
+source_group("Compiler\\AbstractSyntaxTrees\\Statements\\AssignStmnts" FILES ${FilesCompilerASTAssignStmnts})
+source_group("Compiler\\AbstractSyntaxTrees\\Statements\\BranchStmnts" FILES ${FilesCompilerASTBranchStmnts})
+source_group("Compiler\\AbstractSyntaxTrees\\Statements\\CtrlTransferStmnts" FILES ${FilesCompilerASTCtrlTransferStmnts})
+source_group("Compiler\\AbstractSyntaxTrees\\Statements\\DeclStmnts" FILES ${FilesCompilerASTDeclStmnts})
+source_group("Compiler\\AbstractSyntaxTrees\\Statements\\LoopStmnts" FILES ${FilesCompilerASTLoopStmnts})
+source_group("Compiler\\AbstractSyntaxTrees\\TypeDenoters" FILES ${FilesCompilerASTTypeDenoters})
+source_group("Compiler\\ClassTrees" FILES ${FilesCompilerClassTrees})
+source_group("Compiler\\CodeGenerators" FILES ${FilesCompilerCodeGenerators})
+source_group("Compiler\\CodeGenerators\\XASM" FILES ${FilesCompilerCodeGeneratorsXASM})
+source_group("Compiler\\ContextAnalyzer" FILES ${FilesCompilerContextAnalyzer})
+source_group("Compiler\\Optimizer" FILES ${FilesCompilerOptimizer})
+source_group("Compiler\\Optimizer\\ConstantPropagation" FILES ${FilesCompilerOptimizerSCCP})
+source_group("Compiler\\Optimizer\\CopyPropagation" FILES ${FilesCompilerOptimizerCP})
+source_group("Compiler\\Optimizer\\DeadCodeElemination" FILES ${FilesCompilerOptimizerDCE})
+source_group("Compiler\\SyntaxAnalyzer" FILES ${FilesCompilerSyntaxAnalyzer})
+source_group("Compiler\\ThreeAddressCodes" FILES ${FilesCompilerTAC})
+
+# --- Shell ---
+
+source_group("Shell" FILES ${FilesShellAll})
+
+# --- Virtual Machine ---
+
+source_group("VirtualMachine" FILES ${FilesVirtualMachineAll})
 
 
 # === Include directories ===
@@ -73,8 +120,8 @@ include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/TypeDeno
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/CodeGenerator")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/ContextAnalyzer")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/SyntaxAnalyzer")
+include_directories("${PROJECT_SOURCE_DIR}/Compiler/ThreeAddressCodes")
 include_directories("${PROJECT_SOURCE_DIR}/Shell")
-#include_directories("${PROJECT_SOURCE_DIR}/VirtualMachine")
 
 
 # === Executable ===
