@@ -82,7 +82,7 @@ class Assembler
                 IntLiteral,     //!< ( '-' | epsilon ) ( '0' - '9' )+
                 FloatLiteral,   //!< ( '-' | epsilon ) ( '0' - '9' )+ '.' ( '0' - '9' )+
                 StringLiteral,  //!< '"' ( ? )* '"'
-                Register,       //!< '$' ( 'r0' - 'r9' | 'op' | 'gp' | 'cf' | 'sp' | 'lb' | 'pc' )
+                Register,       //!< '$' ( 'r0' - 'r9' | 'tr' | 'gp' | 'cf' | 'sp' | 'lb' | 'pc' )
                 Colon,          //!< ':'
                 Comma,          //!< ','
                 LBracket,       //!< '('

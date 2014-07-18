@@ -161,7 +161,7 @@ typedef enum
     REG_R9 = 0x09, // $r9  ->  General purpose register 9.
 
     /* --- Special purpose registers --- */
-    REG_OP = 0x0a, // $op  ->  Object pointer: "this" POINTER to the current object in a member function.
+    REG_TR = 0x0a, // $tr  ->  Assembler temporary register: Used for assembler specific pseudo instructions.
     REG_GP = 0x0b, // $gp  ->  Global pointer: POINTER to the global variables in the stack.
 
     /* --- Register for internal use --- */
@@ -191,7 +191,7 @@ STATIC const char* xvm_register_get_name(reg_t reg)
         case REG_R8: return "$r8";
         case REG_R9: return "$r9";
 
-        case REG_OP: return "$op";
+        case REG_TR: return "$tr";
         case REG_GP: return "$gp";
 
         case REG_CF: return "$cf";

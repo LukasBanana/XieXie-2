@@ -478,9 +478,9 @@ Assembler::Token Assembler::ScanRegister()
             spell += TakeIt();
             spell += Take('b');
             break;
-        case 'o':
+        case 't':
             spell += TakeIt();
-            spell += Take('p');
+            spell += Take('r');
             break;
         case 'g':
             spell += TakeIt();

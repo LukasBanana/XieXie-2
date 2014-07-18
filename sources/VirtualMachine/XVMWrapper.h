@@ -81,7 +81,7 @@ class Register
         static const Register r8; //!< $r8  ->  General purpose register 8.
         static const Register r9; //!< $r9  ->  General purpose register 9.
 
-        static const Register op; //!< $op  ->  Object pointer: should be used as the "this" pointer.
+        static const Register tr; //!< $tr  ->  Assembler temporary register: should be used for assembler specific pseudo instructions.
         static const Register gp; //!< $gp  ->  Global pointer: should be used as the stack pointer where all global variables are stored.
 
         static const Register cf; //!< $cf  ->  Conditional flag register: used for jump conditions.
@@ -119,7 +119,7 @@ class Register
                 case 0x7: return r7;
                 case 0x8: return r8;
                 case 0x9: return r9;
-                case 0xa: return op;
+                case 0xa: return tr;
                 case 0xb: return gp;
                 case 0xc: return cf;
                 case 0xd: return lb;
@@ -157,7 +157,7 @@ class Register
                         case '9': return r9;
                     }
                 }
-                else if (name == "$op") return op;
+                else if (name == "$tr") return tr;
                 else if (name == "$gp") return gp;
                 else if (name == "$cf") return cf;
                 else if (name == "$lb") return lb;
@@ -199,7 +199,7 @@ const Register Register::r7(REG_R7);
 const Register Register::r8(REG_R8);
 const Register Register::r9(REG_R9);
 
-const Register Register::op(REG_OP);
+const Register Register::tr(REG_TR);
 const Register Register::gp(REG_GP);
 
 const Register Register::cf(REG_CF);
