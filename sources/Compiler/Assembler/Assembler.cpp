@@ -577,7 +577,7 @@ void Assembler::ParseExportField()
     Accept(Token::Types::Export);
 
     auto name = Accept(Token::Types::StringLiteral);
-    auto addr = static_cast<unsigned int>(ParseGlobalAddress());
+    auto addr = static_cast<unsigned int>(ParseGlobalAddress(false));
 
     byteCode_->AddExportAddress(name.spell, addr);
 }
@@ -599,7 +599,7 @@ void Assembler::ParseDataField()
 void Assembler::ParseDataFieldWord()
 {
     /* Parse integer literal and add data-field as instruction */
-    byteCode_->AddDataField(ParseOperand());
+    byteCode_->AddDataField(ParseOperand(true));
 }
 
 void Assembler::ParseDataFieldFloat()
@@ -846,18 +846,18 @@ const Register& Assembler::ParseRegister()
     return Register::Get(reg.spell);
 }
 
-int Assembler::ParseOperand()
+int Assembler::ParseOperand(bool isDataField)
 {
     switch (tkn_.type)
     {
         case Token::Types::IntLiteral:
             return ParseIntLiteral();
         case Token::Types::Ident:
-            return ParseLocalAddress();
+            return ParseLocalAddress(isDataField);
         case Token::Types::At:
-            return ParseGlobalAddress();
+            return ParseGlobalAddress(isDataField);
         case Token::Types::Pointer:
-            return ParseAddressPointer();
+            return ParseAddressPointer(isDataField);
         case Token::Types::Intrinsic:
             return ParseIntrinsicAddress();
         default:
@@ -900,27 +900,27 @@ std::string Assembler::ParseStringLiteral()
     return Accept(Token::Types::StringLiteral).spell;
 }
 
-int Assembler::ParseLocalAddress()
+int Assembler::ParseLocalAddress(bool isDataField)
 {
     /* Parse address label */
     auto label = Accept(Token::Types::Ident).spell;
-    return AddressValue(label, BackPatchAddr::InstrUse::Types::Local);
+    return AddressValue(label, BackPatchAddr::InstrUse::Types::Local, isDataField);
 }
 
-int Assembler::ParseGlobalAddress()
+int Assembler::ParseGlobalAddress(bool isDataField)
 {
     /* Parse address label */
     Accept(Token::Types::At);
     auto label = Accept(Token::Types::Ident).spell;
-    return AddressValue(label, BackPatchAddr::InstrUse::Types::Global);
+    return AddressValue(label, BackPatchAddr::InstrUse::Types::Global, isDataField);
 }
 
-int Assembler::ParseAddressPointer()
+int Assembler::ParseAddressPointer(bool isDataField)
 {
     /* Parse address label */
     Accept(Token::Types::Pointer);
     auto label = Accept(Token::Types::Ident).spell;
-    return AddressValue(label, BackPatchAddr::InstrUse::Types::Pointer);
+    return AddressValue(label, BackPatchAddr::InstrUse::Types::Pointer, isDataField);
 }
 
 int Assembler::ParseIntrinsicAddress()
@@ -958,7 +958,7 @@ void Assembler::AddLabel(std::string label)
     labelAddresses_[label] = byteCode_->NextInstrIndex();
 }
 
-int Assembler::AddressValue(std::string label, const BackPatchAddr::InstrUse::Types type)
+int Assembler::AddressValue(std::string label, const BackPatchAddr::InstrUse::Types type, bool isDataField)
 {
     /* Adjust label */
     if (!IsGlobalLabel(label))
@@ -970,19 +970,19 @@ int Assembler::AddressValue(std::string label, const BackPatchAddr::InstrUse::Ty
     {
         return BackPatchAddressValue(
             static_cast<int>(it->second),
-            { type, byteCode_->NextInstrIndex() }
+            { type, byteCode_->NextInstrIndex(), false }
         );
     }
 
     /* Add label to back-patch addresses */
-    AddBackPatchAddress(label, type);
+    AddBackPatchAddress(label, type, isDataField);
 
     return 0;
 }
 
-void Assembler::AddBackPatchAddress(const std::string& label, const BackPatchAddr::InstrUse::Types type)
+void Assembler::AddBackPatchAddress(const std::string& label, const BackPatchAddr::InstrUse::Types type, bool isDataField)
 {
-    BackPatchAddr::InstrUse instrUse { type, static_cast<int>(byteCode_->NextInstrIndex()) };
+    BackPatchAddr::InstrUse instrUse { type, static_cast<int>(byteCode_->NextInstrIndex()), isDataField };
 
     auto it = backPatchAddresses_.find(label);
     if (it != backPatchAddresses_.end())
@@ -1039,7 +1039,12 @@ void Assembler::ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr,
     /* Back patch instruction */
     auto instrIndex = static_cast<size_t>(instrUse.index);
     if (instrIndex < byteCode_->instructions.size())
-        byteCode_->instructions[instrIndex].BackPatch(value);
+    {
+        if (instrUse.isDataField)
+            byteCode_->instructions[instrIndex] = value;
+        else
+            byteCode_->instructions[instrIndex].BackPatch(value);
+    }
     else
         Error("back-patch address index out of bounds");
 }

@@ -64,6 +64,7 @@ class Assembler
 
                 Types type;
                 int index;
+                bool isDataField;
             };
 
             int addrIndex = 0;
@@ -200,16 +201,16 @@ class Assembler
         void ParseInstrSpecialRET();
 
         const VirtualMachine::Register& ParseRegister();
-        int ParseOperand();
+        int ParseOperand(bool isDataField = false);
 
         int ParseIntLiteral();
         unsigned int ParseUIntLiteral();
         float ParseFloatLiteral();
         std::string ParseStringLiteral();
 
-        int ParseLocalAddress();
-        int ParseGlobalAddress();
-        int ParseAddressPointer();
+        int ParseLocalAddress(bool isDataField);
+        int ParseGlobalAddress(bool isDataField);
+        int ParseAddressPointer(bool isDataField);
         int ParseIntrinsicAddress();
 
         /* ------- Assembler ------- */
@@ -219,8 +220,8 @@ class Assembler
 
         void AddLabel(std::string label);
 
-        int AddressValue(std::string label, const BackPatchAddr::InstrUse::Types type);
-        void AddBackPatchAddress(const std::string& label, const BackPatchAddr::InstrUse::Types type);
+        int AddressValue(std::string label, const BackPatchAddr::InstrUse::Types type, bool isDataField);
+        void AddBackPatchAddress(const std::string& label, const BackPatchAddr::InstrUse::Types type, bool isDataField);
         int BackPatchAddressValue(int labelIndex, const BackPatchAddr::InstrUse& instrUse);
 
         void ResolveBackPatchAddress(const std::string& label, BackPatchAddr& patchAddr);
