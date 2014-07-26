@@ -33,14 +33,23 @@ Math.Sq:
 		stw		$r0, ($lb) -4
 		ret		(0) 0			; Optimize return value by writing it back to the argument
 
+; Dynamic dispatch test
 Object.toString:
-		; ...
+		lda		$r8, @Object._vtable
+		ldw		$r9, ($r8) 4	; Load address of Procedure "Object.equals"
+		call	($r9) 0			; Indirect call
+		ret		(0) 0
+
 Object.equals:
-		; ...
+		ret		(0) 0
+
 Object._vtable:
 		.word @Object.toString	; Procedure-ID 0
 		.word @Object.equals	; Procedure-ID 1
+		.word <CmpE>			; Procedure-ID 2
 
 ; Export function addresses
 .export "_ZN@Main" @Main
 .export "Main::Sq" @Math.Sq
+.export "Object.toString" @Object.toString
+.export "Object.equals" @Object.equals
