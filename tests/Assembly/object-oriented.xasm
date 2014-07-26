@@ -1,0 +1,63 @@
+
+; Object oriented code generation test
+; 26/07/2014
+
+call Main.Main
+stop
+
+str_lit0: .ascii "Hello, World!"
+
+Object._vtable:
+.word @Object.Equals
+.word @Object.ToString
+
+String._vtable:
+.word @Object.Equals
+.word @Object.ToString
+.word @String.Size
+
+; int String.Size()
+String.Size:
+ldw $r0, ($lb) -4 ; r0 := this
+xor $r2, $r2
+xor $r3, $r3
+.while:
+ldb $r4, ($r0) 0
+cmp $r4, $r2
+je .end
+inc $r3
+inc $r0
+jmp .while
+.end:
+push $r3
+ret (1) 0
+
+; bool Object.Equals(ptr)
+Object.Equals:
+push 0
+ret (1) 1
+
+; ptr Object.ToString()
+Object.ToString:
+push 0
+ret (1) 0
+
+Main.Main:
+
+lda $r0, @str_lit0
+push $r0 ; push str.this
+
+; r0 := str.Size()
+lda $r0, @String._vtable
+ldw $r0, ($r0) 8
+sll $r0, 2
+lda $r1, 0
+add $r1, $r0
+call ($r1) 0
+
+call <PrintInt>
+
+ret (0) 0
+
+
+
