@@ -81,6 +81,8 @@ extern class Math {
 	static float ACos(float x)
 	static float ATan(float x)
 	
+	static float Random()
+	
 }
 
 class Vector3 {
@@ -226,7 +228,7 @@ class AppTest {
 		Vector3[] vertices := new Vector3[100]
 		
 		foreach Vector3 vert : vertices {
-			vert.x := 
+			vert.x := Math.Random()
 		}
 		
 		// Switch/case
