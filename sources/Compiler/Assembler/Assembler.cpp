@@ -599,7 +599,7 @@ void Assembler::ParseDataField()
 void Assembler::ParseDataFieldWord()
 {
     /* Parse integer literal and add data-field as instruction */
-    byteCode_->AddDataField(ParseIntLiteral());
+    byteCode_->AddDataField(ParseOperand());
 }
 
 void Assembler::ParseDataFieldFloat()
