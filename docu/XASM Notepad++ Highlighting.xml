@@ -13,7 +13,7 @@
             <Keywords name="Numbers, suffix1"></Keywords>
             <Keywords name="Numbers, suffix2"></Keywords>
             <Keywords name="Numbers, range">a b c d e f</Keywords>
-            <Keywords name="Operators1">, . : ( ) [ ] $</Keywords>
+            <Keywords name="Operators1">, . : ( ) [ ] $ @ *</Keywords>
             <Keywords name="Operators2"></Keywords>
             <Keywords name="Folders in code1, open"></Keywords>
             <Keywords name="Folders in code1, middle"></Keywords>
@@ -24,8 +24,8 @@
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">MOV NOT AND OR XOR ADD SUB MUL DIV MOD SLL SLR CMP FTI ITF INC DEC PUSH POP JMP JE JNE JL JLE JG JGE CALL RET STOP LDB STB LDW STW INVK ADDF SUBF MULF DIVF CMPF</Keywords>
-            <Keywords name="Keywords2">DATA string float double int long</Keywords>
+            <Keywords name="Keywords1">MOV NOT AND OR XOR ADD SUB MUL DIV MOD SLL SLR CMP FTI ITF INC DEC PUSH POP JMP JE JNE JL JLE JG JGE CALL RET STOP LDB STB LDW STW INVK ADDF SUBF MULF DIVF CMPF LDA</Keywords>
+            <Keywords name="Keywords2">DATA string float double int long&#x000D;&#x000A;ascii word float export</Keywords>
             <Keywords name="Keywords3">r0 r1 r2 r3 r4 r5 r6 r7 r8 r9&#x000D;&#x000A;op gp&#x000D;&#x000A;cf lb sp pc&#x000D;&#x000A;&#x000D;&#x000A;i0 i1 i2 i3&#x000D;&#x000A;f0 f1 f2 f3 f4 f5 f6 f7</Keywords>
             <Keywords name="Keywords4"></Keywords>
             <Keywords name="Keywords5"></Keywords>
