@@ -50,10 +50,7 @@ push $r0 ; push str.this
 ; r0 := str.Size()
 lda $r0, @String._vtable
 ldw $r0, ($r0) 8
-sll $r0, 2
-lda $r1, 0
-add $r1, $r0
-call ($r1) 0
+call $r0
 
 call <PrintInt>
 
