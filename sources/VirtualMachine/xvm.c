@@ -956,7 +956,13 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
     else if (opcode == OPCODE_CALL)
     {
         int addr_offset = xvm_instr_get_sgn_value22(instr);
-        if (addr_offset >= INTR_RESERVED_MIN)
+        if (addr_offset == INTR_RESERVED_MAX)
+        {
+            reg_t reg0 = xvm_instr_get_reg0(instr);
+            const char* reg0name = xvm_register_get_name(reg0);
+            printf("%s", reg0name);
+        }
+        else if (addr_offset >= INTR_RESERVED_MIN)
             printf("%s  <intrinsic>", xvm_intrinsic_get_ident((intrinsic_addr)addr_offset));
         else
             printf("%i", addr_offset);
@@ -2514,7 +2520,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             {
                 sgn_value = xvm_instr_get_sgn_value22(instr);
 
-                if (sgn_value < INTR_RESERVED_MIN)
+                if (sgn_value == INTR_RESERVED_MAX)
                 {
                     // Push dynamic link (lb and pc registers)
                     extra_value = *reg_lb;
@@ -2522,7 +2528,20 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                     xvm_stack_push(stack, reg_sp, extra_value);
                     xvm_stack_push(stack, reg_sp, *reg_pc);
 
-                    // Jump to procedure address
+                    // Jump to procedure address (absolute address)
+                    reg0 = xvm_instr_get_reg0(instr);
+                    *reg_pc = (regi_t)(program_start_ptr + (reg.i[reg0] << 2));
+                    continue;
+                }
+                else if (sgn_value < INTR_RESERVED_MIN)
+                {
+                    // Push dynamic link (lb and pc registers)
+                    extra_value = *reg_lb;
+                    *reg_lb = *reg_sp;
+                    xvm_stack_push(stack, reg_sp, extra_value);
+                    xvm_stack_push(stack, reg_sp, *reg_pc);
+
+                    // Jump to procedure address (relative address)
                     reg0 = xvm_instr_get_reg0(instr);
                     *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
@@ -2769,9 +2788,9 @@ STATIC void shell_print_help()
 STATIC void shell_print_version()
 {
     #ifdef _ENABLE_RUNTIME_DEBUGGER_
-    xvm_log_println("XieXie 2.0 VirtualMachine (XVM) with RuntimeDebugger (RTD)");
+    xvm_log_println("XieXie 2.0 (Rev.1) VirtualMachine (XVM) with RuntimeDebugger (RTD)");
     #else
-    xvm_log_println("XieXie 2.0 VirtualMachine (XVM)");
+    xvm_log_println("XieXie 2.0 (Rev.1) VirtualMachine (XVM)");
     #endif
     xvm_log_println("");
     xvm_log_println("Copyright (C) 2014 Lukas Hermanns");
