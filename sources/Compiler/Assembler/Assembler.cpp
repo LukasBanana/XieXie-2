@@ -694,16 +694,26 @@ void Assembler::ParseInstrJump(const InstrCategory& instr)
     const auto* reg = &(Register::pc);
     int offset = 0;
 
-    if (tkn_.type == Token::Types::LBracket)
+    /* Check for special case of "CALL" instruction */
+    if (instr.opcodePrimary == OPCODE_CALL && tkn_.type == Token::Types::Register)
     {
-        /* Parse first operand */
-        AcceptIt();
+        /* Parse single register and set offset to magic number */
         reg = &(ParseRegister());
-        Accept(Token::Types::RBracket);
+        offset = INTR_RESERVED_MAX;
     }
+    else
+    {
+        if (tkn_.type == Token::Types::LBracket)
+        {
+            /* Parse first operand */
+            AcceptIt();
+            reg = &(ParseRegister());
+            Accept(Token::Types::RBracket);
+        }
 
-    /* Parse second operand */
-    offset = ParseOperand();
+        /* Parse second operand */
+        offset = ParseOperand();
+    }
 
     /* Add instruction */
     byteCode_->instructions.push_back(
