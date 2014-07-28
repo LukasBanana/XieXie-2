@@ -54,7 +54,7 @@ call $r0
 
 call <PrintInt>
 
-ret (0) 0
+ret
 
 
 

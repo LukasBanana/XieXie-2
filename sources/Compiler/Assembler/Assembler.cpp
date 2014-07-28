@@ -835,13 +835,18 @@ void Assembler::ParseInstrSpecialINVK()
 
 void Assembler::ParseInstrSpecialRET()
 {
-    /* Parse first operand */
-    Accept(Token::Types::LBracket);
-    auto resultSize = ParseUIntLiteral();
-    Accept(Token::Types::RBracket);
+    unsigned int resultSize = 0, argSize = 0;
 
-    /* Parse second operand */
-    auto argSize = ParseUIntLiteral();
+    if (tkn_.type == Token::Types::LBracket)
+    {
+        /* Parse first operand */
+        Accept(Token::Types::LBracket);
+        resultSize = ParseUIntLiteral();
+        Accept(Token::Types::RBracket);
+
+        /* Parse second operand */
+        argSize = ParseUIntLiteral();
+    }
 
     /* Add instruction */
     byteCode_->instructions.push_back(
