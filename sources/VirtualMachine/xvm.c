@@ -166,7 +166,7 @@ typedef enum
 
     /* --- Register for internal use --- */
     REG_CF = 0x0c, // $cf  ->  Conditional flags: used for jump conditions.
-    REG_LB = 0x0d, // $lb  ->  Base pointer: POINTER to the base of the current stack frame.
+    REG_LB = 0x0d, // $lb  ->  Local base pointer: POINTER to the base of the current stack frame.
     REG_SP = 0x0e, // $sp  ->  Stack pointer: POINTER to the top of the stack storage.
     REG_PC = 0x0f, // $pc  ->  Program counter: POINTER to the current instruction in the byte-code.
 }
@@ -1820,7 +1820,7 @@ STATIC void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
 
         case INTR_INPUT:
         {
-            //...
+            //todo...
         }
         break;
 
@@ -2101,29 +2101,29 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
     const regi_t instr_ptr_begin    = (regi_t)byte_code->instructions;
     const regi_t instr_ptr_end      = instr_ptr_begin + num_instr*4;
 
-    regi_t* const reg_cf = (reg.i + REG_CF);
-    regi_t* const reg_lb = (reg.i + REG_LB);
-    regi_t* const reg_sp = (reg.i + REG_SP);
-    regi_t* const reg_pc = (reg.i + REG_PC);
+    regi_t* const reg_cf = (reg.i + REG_CF); // Reference to '$cf' register
+    regi_t* const reg_lb = (reg.i + REG_LB); // Reference to '$lb' register
+    regi_t* const reg_sp = (reg.i + REG_SP); // Reference to '$sp' register
+    regi_t* const reg_pc = (reg.i + REG_PC); // Reference to '$pc' register
 
     // Program start pointer is used to load memory from program "DATA" section
     const byte_t* const program_start_ptr = (const byte_t*)(byte_code->instructions);
 
     /* --- Temporary memory --- */
-    instr_t         instr;
-    opcode_t        opcode;
-    reg_t           reg0;
-    reg_t           reg1;
+    instr_t         instr;          // Current instruction
+    opcode_t        opcode;         // Current opcode
+    reg_t           reg0;           // First register
+    reg_t           reg1;           // Second register
 
-    byte_t*         byte_mem_addr;
-    word_t*         word_mem_addr;
+    byte_t*         byte_mem_addr;  // Memory address pointer (byte aligned)
+    word_t*         word_mem_addr;  // Memory address pointer (word aligned)
 
-    const byte_t*   cbyte_mem_addr;
-    const word_t*   cword_mem_addr;
+    const byte_t*   cbyte_mem_addr; // Memory address constant pointer (byte aligned)
+    const word_t*   cword_mem_addr; // Memory address constant pointer (word aligned)
 
-    int             sgn_value;
-    unsigned int    unsgn_value;
-    int             extra_value;
+    int             sgn_value;      // Signed value
+    unsigned int    unsgn_value;    // Unsigned value
+    int             extra_value;    // Extra value (for 'call' and 'ret' instructions)
 
     /* --- Initialize VM (only reset reserved registers) --- */
     *reg_lb = (regi_t)stack->storage;
@@ -2520,6 +2520,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             {
                 sgn_value = xvm_instr_get_sgn_value22(instr);
 
+                // -- Indirect call --
                 if (sgn_value == INTR_RESERVED_MAX)
                 {
                     // Push dynamic link (lb and pc registers)
@@ -2533,6 +2534,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                     *reg_pc = (regi_t)(program_start_ptr + (reg.i[reg0] << 2));
                     continue;
                 }
+                // -- Direct call ---
                 else if (sgn_value < INTR_RESERVED_MIN)
                 {
                     // Push dynamic link (lb and pc registers)
@@ -2546,6 +2548,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                     *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
+                // -- Intrinsic call --
                 else
                 {
                     // Call intrinsic procedure
