@@ -39,7 +39,7 @@ TACConst::TACConst(float real) :
 }
 TACConst::TACConst(const std::string& str) :
     type_       ( ValueTypes::String   ),
-    boolean_    ( !str.empty()         ),
+    boolean_    ( str == "true"        ),
     integral_   ( StrToNum<int>(str)   ),
     real_       ( StrToNum<float>(str) ),
     string_     ( str                  )

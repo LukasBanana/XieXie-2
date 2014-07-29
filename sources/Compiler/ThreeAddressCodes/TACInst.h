@@ -26,22 +26,23 @@ class TACInst
     public:
         
         //! TAC instruction opcodes.
-        enum class OpCodes
+        enum class Types
         {
-            AssignInst,     //!< x := y; x := const; x := "string";
-            ArithmeticInst, //!< x := y + z; x := y - z; x := y * z; x := y / z; x := y % z;
-            RelationInst,   //!< x := y == z; x := y != z; x := y < z; x := y <= z; x := y > z; x := y >= z;
-            LabelInst,      //!< L1:
-            JumpInst,       //!< goto L1; ifz x then goto L1;
-            //...
+            Assign,         //!< x := y; x := const; x := "string";
+            Arithmetic,     //!< x := y + z; x := y - z; x := y * z; ...
+            Relation,       //!< x := y == z; x := y != z; x := y < z; ...
+            Label,          //!< L1:
+            Jump,           //!< jump to basic block
+            DirectCall,     //!< jump and link
+            IndirectCall,   //!< jump register and link
         };
 
         virtual ~TACInst()
         {
         }
 
-        //! Returns the TAC instruction opcode (or rather type).
-        virtual OpCodes OpCode() const = 0;
+        //! Returns the TAC instruction type.
+        virtual Types Type() const = 0;
 
         //! Returns this TAC instruction as string representation (for debugging).
         virtual std::string ToString() const = 0;
