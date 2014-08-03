@@ -1,0 +1,142 @@
+; Vector Test
+; 03/08/2014
+
+call main
+stop
+
+str_null: .ascii ""
+str_enter: .ascii "Enter a floating pointer value: "
+str_output: .ascii "Normalized vector component: "
+
+normalize.floats:
+	.float 0.0
+	.float 1.0
+
+; void normalize(float*)
+normalize:
+	; load pointer to vector
+	ldw $r0, ($lb) -4
+	
+	; load x, y, z
+	ldw $r1, ($r0) 0
+	ldw $r2, ($r0) 4
+	ldw $r3, ($r0) 8
+	
+	mov $r4, $r1
+	mov $r5, $r2
+	mov $r6, $r3
+	
+	; compute sq_len := x*x + y*y + z*z
+	mulf $r1, $r1
+	mulf $r2, $r2
+	mulf $r3, $r3
+	addf $r1, $r2
+	addf $r1, $r3
+	
+	; check if vector is normalizable
+	lda $r2, @normalize.floats
+	
+	ldw $r3, ($r2) 0
+	cmpf $r1, $r3
+	je .return
+	
+	ldw $r3, ($r2) 4
+	cmpf $r1, $r3
+	je .return
+	
+	; compute len := sqrt(sq_len)
+	push $r1
+	call <Sqrt>
+	pop $r1
+	
+	; compute inv_len := 1.0 / len
+	divf $r3, $r1
+	
+	; normalize vector (x*inv_len, y*inv_len, z*inv_len)
+	mulf $r4, $r3
+	mulf $r5, $r3
+	mulf $r6, $r3
+	
+	; store x, y, z
+	stw $r4, ($r0) 0
+	stw $r5, ($r0) 4
+	stw $r6, ($r0) 8
+	
+	.return:
+	ret (0) 1
+
+; float get_num()
+get_num:
+	; print 'enter number' prompt
+	lda $r0, @str_enter
+	push $r0
+	call <Print>
+	
+	; get float number
+	call <InputFloat>
+	
+	ret (1) 0
+
+; void print_num(float)
+print_num:
+	; print output info
+	lda $r0, @str_output
+	push $r0
+	call <Print>
+	
+	; print number
+	ldw $r0, ($lb) -4
+	push $r0
+	call <PrintFloat>
+	
+	; print new line
+	lda $r0, @str_null
+	push $r0
+	call <PrintLn>
+	
+	ret (0) 1
+
+; void main()
+main:
+	; allocate vector
+	add $sp, 12
+	
+	; get numbers x, y, z
+	call get_num
+	pop $r0
+	stw $r0, ($lb) 8
+	
+	call get_num
+	pop $r0
+	stw $r0, ($lb) 12
+	
+	call get_num
+	pop $r0
+	stw $r0, ($lb) 16
+	
+	; get pointer of vector
+	mov $r0, $lb
+	add $r0, 8
+	
+	; normalize vector
+	push $r0
+	call normalize
+	
+	; print normalized vector
+	ldw $r0, ($lb) 8
+	push $r0
+	call print_num
+	
+	ldw $r0, ($lb) 12
+	push $r0
+	call print_num
+	
+	ldw $r0, ($lb) 16
+	push $r0
+	call print_num
+	
+	ret
+
+
+; Export function addresses
+.export "normalize" @normalize
