@@ -13,15 +13,20 @@ namespace SyntaxAnalyzer
 
 
 Token::Token(Token&& other) :
-    pos_    { other.pos_              },
     type_   { other.type_             },
+    pos_    { other.pos_              },
     spell_  { std::move(other.spell_) }
 {
 }
-Token::Token(const SourcePosition& pos, const Types type)
+Token::Token(const SourcePosition& pos, const Types type) :
+    type_   { type },
+    pos_    { pos  }
 {
 }
-Token::Token(const SourcePosition& pos, const Types type, const std::string& spell)
+Token::Token(const SourcePosition& pos, const Types type, const std::string& spell) :
+    type_   { type  },
+    pos_    { pos   },
+    spell_  { spell }
 {
 }
 

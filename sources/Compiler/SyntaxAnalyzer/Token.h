@@ -128,15 +128,15 @@ class Token
         Token(const SourcePosition& pos, const Types type);
         Token(const SourcePosition& pos, const Types type, const std::string& spell);
 
-        //! Returns the token source position.
-        inline const SourcePosition& Pos() const
-        {
-            return pos_;
-        }
         //! Returns the token type.
         inline Types Type() const
         {
             return type_;
+        }
+        //! Returns the token source position.
+        inline const SourcePosition& Pos() const
+        {
+            return pos_;
         }
         //! Returns the token spelling.
         inline const std::string& Spell() const
@@ -146,9 +146,9 @@ class Token
 
     private:
 
-        SourcePosition  pos_;                           //!< Source position of this token.
-        Types           type_   = Types::__Unknown__;   //!< Type of this token.
-        std::string     spell_;                         //!< Token spelling.
+        Types           type_;  //!< Type of this token.
+        SourcePosition  pos_;   //!< Source position of this token.
+        std::string     spell_; //!< Token spelling.
 
 };
 
