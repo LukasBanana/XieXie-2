@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
         shell.ExecuteCommandLine(args);
     }
     else
-        Console::Message("Enter \"xxc --help\" for the man page");
+        Console::Message("Enter \"xxc help\" for the man page");
 
     return 0;
 }
