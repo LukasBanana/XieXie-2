@@ -188,7 +188,7 @@ class AppTest {
 			}
 		}
 
-		for int i := 0; i < num; i++ {
+		for int i := 0 ; i < num ; i++ {
 			Log.WriteLine("Hello, World")
 		}
 		

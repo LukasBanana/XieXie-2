@@ -630,15 +630,15 @@ typedef enum
     /* --- Conditional intrinsics --- */
     // For easier expression evaluation.
     // For better performance, make use of conditional jump instructions instead.
-    INTR_CMP_E          = 0x001fff30, //!< int CmpE(int x, int y)       -> x == y
-    INTR_CMP_NE         = 0x001fff31, //!< int CmpNE(int x, int y)      -> x != y
-    INTR_CMP_L          = 0x001fff32, //!< int CmpL(int x, int y)       -> x < y
-    INTR_CMP_LE         = 0x001fff33, //!< int CmpLE(int x, int y)      -> x <= y
-    INTR_CMP_G          = 0x001fff34, //!< int CmpG(int x, int y)       -> x > y
-    INTR_CMP_GE         = 0x001fff35, //!< int CmpGE(int x, int y)      -> x >= y
-    INTR_LOGIC_OR       = 0x001fff36, //!< int LogicOr(int x, int y)    -> x != 0 || y != 0
-    INTR_LOGIC_AND      = 0x001fff37, //!< int LogicAnd(int x, int y)   -> x != 0 && y != 0
-    INTR_LOGIC_NOT      = 0x001fff38, //!< int LogicNot(int x)          -> x == 0
+    INTR_CMP_E          = 0x001fff30, // int CmpE(int x, int y)       -> x == y
+    INTR_CMP_NE         = 0x001fff31, // int CmpNE(int x, int y)      -> x != y
+    INTR_CMP_L          = 0x001fff32, // int CmpL(int x, int y)       -> x < y
+    INTR_CMP_LE         = 0x001fff33, // int CmpLE(int x, int y)      -> x <= y
+    INTR_CMP_G          = 0x001fff34, // int CmpG(int x, int y)       -> x > y
+    INTR_CMP_GE         = 0x001fff35, // int CmpGE(int x, int y)      -> x >= y
+    INTR_LOGIC_OR       = 0x001fff36, // int LogicOr(int x, int y)    -> x != 0 || y != 0
+    INTR_LOGIC_AND      = 0x001fff37, // int LogicAnd(int x, int y)   -> x != 0 && y != 0
+    INTR_LOGIC_NOT      = 0x001fff38, // int LogicNot(int x)          -> x == 0
 
     /* --- File intrinsics --- */
     INTR_CREATE_FILE    = 0x001fff40, // int CreateFile(const byte* stringAddress).
