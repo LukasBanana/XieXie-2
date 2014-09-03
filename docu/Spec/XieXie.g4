@@ -108,7 +108,7 @@ attribute_argument:			expr;
 variable_name:		variable_ident array_access_list? ('.' variable_name)?;
 variable_ident:		IDENT;
 
-variable_decl_stmnt:		type_denoter IDENT variable_init? (',' IDENT variable_init?)*;
+variable_decl_stmnt:		data_type_denoter IDENT variable_init? (',' IDENT variable_init?)*;
 variable_init:				':=' expr;
 
 // ARRAYS
@@ -120,7 +120,9 @@ array_index:		arithmetic_expr;
 class_decl_stmnt:			intern_class_decl_stmnt | extern_class_decl_stmnt;
 intern_class_decl_stmnt:	'class' class_name type_inheritance? class_body;
 extern_class_decl_stmnt:	'extern' 'class' class_name extern_class_body;
-class_body:					'{' decl_stmnt_list? '}';
+class_body:					'{' (class_visibility? decl_stmnt_list?)* '}';
+class_visibility:			class_visibility_type ':';
+class_visibility_type:		'public' | 'private';
 extern_class_body:			'{' extern_decl_stmnt_list? '}';
 class_name:					IDENT;
 
@@ -143,10 +145,10 @@ flags_entry:		IDENT;
 // FUNCTIONS
 function_decl_stmnt:		attribute_prefix? function_head code_block;
 extern_function_decl_stmnt:	attribute_prefix? function_head;
-function_head:				function_modifier? type_denoter variable_ident '(' parameter_list? ')';
+function_head:				function_modifier? return_type_denoter variable_ident '(' parameter_list? ')';
 function_modifier:			'static';
 parameter_list:				parameter (',' parameter)*;
-parameter:					type_denoter variable_ident (':=' expr)?;
+parameter:					data_type_denoter variable_ident (':=' expr)?;
 
 init_decl_stmnt:			attribute_prefix? init_head code_block;
 extern_init_decl_stmnt:		attribute_prefix? init_head;
@@ -184,13 +186,13 @@ value_expr			: literal_expr
 object_expr			: variable_name
 					| new_expr;
 
-new_expr:			'new' type_denoter (array_dimension | constructor_init)?;
+new_expr:			'new' data_type_denoter (array_dimension | constructor_init)?;
 array_dimension:	'[' arithmetic_expr ']';
 constructor_init:	'(' argument_list? ')';
 
 literal_expr:		LITERAL;
 bracket_expr:		'(' arithmetic_expr ')';
-cast_expr: 			'(' type_denoter ')' value_expr;
+cast_expr: 			'(' data_type_denoter ')' value_expr;
 call_expr:			function_call;
 unary_expr:			('~' | '-' | 'not') value_expr;
 
@@ -199,18 +201,22 @@ argument_list:		argument (',' argument)*;
 argument:			(expr | variable_ident ':' expr);
 
 // TYPE DENOTERS
-type_denoter	: buildin_type_denoter
-				| array_type_denoter
-				| class_type_denoter;
+data_type_denoter	: builtin_type_denoter
+					| array_type_denoter
+					| class_type_denoter;
 
-buildin_type_denoter	: BOOL_TYPE_DENOTER
+builtin_type_denoter	: BOOL_TYPE_DENOTER
 						| INT_TYPE_DENOTER
 						| FLOAT_TYPE_DENOTER;
 
-array_type_denoter:		type_denoter '[]'
+return_type_denoter	: VOID_TYPE_DENOTER
+					| data_type_denoter;
+
+array_type_denoter:		data_type_denoter '[]';
 
 class_type_denoter:		variable_name;
 
+VOID_TYPE_DENOTER:		'void';
 BOOL_TYPE_DENOTER:		'bool';
 INT_TYPE_DENOTER:		'int';
 FLOAT_TYPE_DENOTER:		'float';
