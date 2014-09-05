@@ -98,6 +98,11 @@ class Scanner
             return chr_ == chr;
         }
 
+        inline unsigned char UChr() const
+        {
+            return static_cast<unsigned char>(chr_);
+        }
+
         /* === Members === */
 
         SourceCodePtr   source_;

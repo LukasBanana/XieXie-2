@@ -8,15 +8,25 @@
 #include "Shell.h"
 #include "Console.h"
 #include "Version.h"
+#include "StringModifier.h"
 
 #include "Assembler.h"
+#include "Scanner.h"
+#include "SourceFile.h"
 
 #include <iostream>
 #include <exception>
 #include <sstream>
 
 
+/*
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!! TODO -> Refactor the shell completely !!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*/
+
 using namespace Console;
+using namespace SyntaxAnalyzer;
 
 bool Shell::ExecuteCommandLine(const ArgList& args)
 {
@@ -26,6 +36,8 @@ bool Shell::ExecuteCommandLine(const ArgList& args)
     /* Temporaries */
     std::vector<std::string> filenames;
     bool pause = false;
+    bool scan = false;
+    bool showPos = false;
     
     /* Parse all arguments */
     try
@@ -45,6 +57,10 @@ bool Shell::ExecuteCommandLine(const ArgList& args)
                     CmdHelp();
                 else if (arg == "--pause")
                     pause = true;
+                else if (arg == "--scan")
+                    scan = true;
+                else if (arg == "--show-pos")
+                    showPos = true;
                 else
                     Error("unknown command flag \"" + arg + "\"");
             }
@@ -68,8 +84,16 @@ bool Shell::ExecuteCommandLine(const ArgList& args)
     }
 
     /* Process input files */
-    for (const auto& file : filenames)
-        AssembleFile(file);
+    if (scan)
+    {
+        for (const auto& file : filenames)
+            ScanAndPrintTokens(file, showPos);
+    }
+    else
+    {
+        for (const auto& file : filenames)
+            ProcessFile(file);
+    }
 
     if (pause)
         Pause();
@@ -127,6 +151,22 @@ void Shell::Pause()
     system("pause");
 }
 
+void Shell::ProcessFile(const std::string& filename)
+{
+    auto fileExt = ToLower(ExtractFileExtension(filename));
+    if (fileExt == "xx")
+        CompileFile(filename);
+    else if (fileExt == "xasm")
+        AssembleFile(filename);
+    else
+        Error("unknown file extension \"" + fileExt + "\"");
+}
+
+void Shell::CompileFile(const std::string& filename)
+{
+    //...
+}
+
 void Shell::AssembleFile(const std::string& filename)
 {
     /* Assemble code */
@@ -138,6 +178,36 @@ void Shell::AssembleFile(const std::string& filename)
         Console::Success("assembling XASM file succeeded");
     else
         Console::Error("assembling XASM file failed");
+}
+
+void Shell::ScanAndPrintTokens(const std::string& filename, bool showPos)
+{
+    Scanner scanner;
+    ErrorReporter errorReporter;
+
+    auto source = std::make_shared<SourceFile>();
+    if (source->ReadFile(filename))
+    {
+        scanner.ScanSource(source, errorReporter);
+
+        TokenPtr tkn;
+
+        while (true)
+        {
+            tkn = scanner.Next();
+            if (tkn != nullptr && tkn->Type() != Token::Types::EndOfFile)
+            {
+                if (showPos)
+                    PrintLn("(" + tkn->Pos().ToString() + ") '" + tkn->Spell() + "'");
+                else
+                    PrintLn(tkn->Spell());
+            }
+            else
+                break;
+        }
+
+        errorReporter.Flush();
+    }
 }
 
 

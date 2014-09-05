@@ -116,17 +116,19 @@ char Scanner::TakeIt()
 
 void Scanner::Error(const std::string& msg)
 {
-    throw SyntaxError(msg);
+    throw SyntaxError(Pos(), msg);
 }
 
 void Scanner::ErrorUnexpected()
 {
-    Error("unexpected character '" + ToStr(chr_) + "'");
+    auto chr = TakeIt();
+    Error("unexpected character '" + ToStr(chr) + "'");
 }
 
 void Scanner::ErrorUnexpected(char expectedChar)
 {
-    Error("unexpected character '" + ToStr(chr_) + "' (expected '" + ToStr(expectedChar) + "')");
+    auto chr = TakeIt();
+    Error("unexpected character '" + ToStr(chr) + "' (expected '" + ToStr(expectedChar) + "')");
 }
 
 void Scanner::ErrorEOF()
@@ -142,12 +144,12 @@ void Scanner::ErrorLetterInNumber()
 void Scanner::Ignore(const std::function<bool (char)>& pred)
 {
     while (pred(chr_))
-        source_->Ignore();
+        TakeIt();
 }
 
 void Scanner::IgnoreWhiteSpaces()
 {
-    Ignore([](char chr) { return std::isspace(chr) != 0; });
+    Ignore([](char chr) { return std::isspace(static_cast<unsigned char>(chr)) != 0; });
 }
 
 void Scanner::IgnoreCommentLine()
@@ -180,14 +182,18 @@ void Scanner::IgnoreCommentBlock()
 TokenPtr Scanner::Make(const Token::Types& type, bool takeChr)
 {
     if (takeChr)
-        TakeIt();
+    {
+        std::string spell;
+        spell += TakeIt();
+        return std::make_shared<Token>(Pos(), type, std::move(spell));
+    }
     return std::make_shared<Token>(Pos(), type);
 }
 
 TokenPtr Scanner::Make(const Token::Types& type, std::string& spell, bool takeChr)
 {
     if (takeChr)
-        TakeIt();
+        spell += TakeIt();
     return std::make_shared<Token>(Pos(), type, std::move(spell));
 }
 
@@ -200,23 +206,23 @@ TokenPtr Scanner::ScanToken()
         return ScanStringLiteral();
 
     /* Scan identifier */
-    if (std::isalpha(chr_) || Is('_'))
+    if (std::isalpha(UChr()) || Is('_'))
         return ScanIdentifier();
 
     /* Scan number */
-    if (std::isdigit(chr_))
+    if (std::isdigit(UChr()))
         return ScanNumber();
 
     /* Scan special character and verbatim string literals */
     if (Is('@'))
     {
-        TakeIt();
+        spell += TakeIt();
 
         /* Scan verbatim string literal */
         if (Is('\"'))
             return ScanVerbatimStringLiteral();
 
-        return Make(Token::Types::At);
+        return Make(Token::Types::At, spell);
     }
 
     /* Scan operators */
@@ -234,10 +240,10 @@ TokenPtr Scanner::ScanToken()
     }
 
     if (Is('='))
-        return Make(Token::Types::EqualityOp, spell += '=', true);
+        return Make(Token::Types::EqualityOp, spell, true);
 
     if (Is('~'))
-        return Make(Token::Types::BitwiseNotOp, spell += '~', true);
+        return Make(Token::Types::BitwiseNotOp, spell, true);
 
     if (Is('!'))
     {
@@ -328,27 +334,27 @@ TokenPtr Scanner::ScanToken()
     /* Scan special cases */
     if (Is('['))
     {
-        TakeIt();
+        spell += TakeIt();
         if (Is('['))
-            return Make(Token::Types::LDParen, true);
-        return Make(Token::Types::LParen);
+            return Make(Token::Types::LDParen, spell, true);
+        return Make(Token::Types::LParen, spell);
     }
 
     if (Is(']'))
     {
-        TakeIt();
+        spell += TakeIt();
         if (state.allowRDParen && Is(']'))
-            return Make(Token::Types::RDParen, true);
-        return Make(Token::Types::RParen);
+            return Make(Token::Types::RDParen, spell, true);
+        return Make(Token::Types::RParen, spell);
     }
 
     /* Scan punctuation, special characters and brackets */
     if (Is('.'))
     {
-        TakeIt();
+        spell += TakeIt();
         if (Is('.'))
-            return Make(Token::Types::RangeSep, true);
-        return Make(Token::Types::Dot);
+            return Make(Token::Types::RangeSep, spell, true);
+        return Make(Token::Types::Dot, spell);
     }
 
     switch (chr_)
@@ -388,7 +394,10 @@ TokenPtr Scanner::ScanStringLiteral()
                     spell += chr_;
                 }
                 else
-                    ErrorUnexpected();
+                {
+                    auto chr = TakeIt();
+                    Error("unexpected escape character '" + ToStr(chr) + "' in string literal");
+                }
 
                 TakeIt();
             }
@@ -484,7 +493,7 @@ TokenPtr Scanner::ScanIdentifier()
     std::string spell;
     spell += TakeIt();
 
-    while (std::isalnum(chr_) || Is('_'))
+    while (std::isalnum(UChr()) || Is('_'))
         spell += TakeIt();
 
     /* Check for reserved internal names */
@@ -569,7 +578,7 @@ TokenPtr Scanner::ScanMinusOp()
 
 TokenPtr Scanner::ScanNumber()
 {
-    if (!std::isdigit(chr_))
+    if (!std::isdigit(UChr()))
         Error("expected digit");
     
     /* Take first number (literals like ".0" are not allowed) */
@@ -604,7 +613,7 @@ TokenPtr Scanner::ScanNumber()
     {
         spell += TakeIt();
         
-        if (std::isdigit(chr_))
+        if (std::isdigit(UChr()))
             ScanDecimalLiteral(spell);
         else
             Error("floating-point literals must have a decimal on both sides of the dot (e.g. '0.0' but not '0.' or '.0')");
@@ -612,7 +621,7 @@ TokenPtr Scanner::ScanNumber()
         type = Token::Types::FloatLiteral;
     }
 
-    if (std::isalpha(chr_) || Is('.'))
+    if (std::isalpha(UChr()) || Is('.'))
         ErrorLetterInNumber();
 
     /* Create number token */
@@ -623,11 +632,11 @@ TokenPtr Scanner::ScanHexNumber()
 {
     /* Scan hex literal */
     std::string spell;
-    while (std::isxdigit(chr_))
+    while (std::isxdigit(UChr()))
         spell += TakeIt();
 
     /* Check for wrong appendix */
-    if ( ( std::isalpha(chr_) && !std::isxdigit(chr_) ) || Is('.') )
+    if ( ( std::isalpha(UChr()) && !std::isxdigit(UChr()) ) || Is('.') )
         ErrorLetterInNumber();
 
     /* Convert literal to decimal */
@@ -643,7 +652,7 @@ TokenPtr Scanner::ScanOctNumber()
         spell += TakeIt();
 
     /* Check for wrong appendix */
-    if (std::isalpha(chr_) || Is('.') )
+    if (std::isalpha(UChr()) || Is('.') )
         ErrorLetterInNumber();
 
     /* Convert literal to decimal */
@@ -659,7 +668,7 @@ TokenPtr Scanner::ScanBinNumber()
         spell += TakeIt();
 
     /* Check for wrong appendix */
-    if (std::isalpha(chr_) || Is('.') )
+    if (std::isalpha(UChr()) || Is('.') )
         ErrorLetterInNumber();
 
     /* Convert literal to decimal */
@@ -669,7 +678,7 @@ TokenPtr Scanner::ScanBinNumber()
 
 void Scanner::ScanDecimalLiteral(std::string& spell)
 {
-    while (std::isdigit(chr_))
+    while (std::isdigit(UChr()))
         spell += TakeIt();
 }
 

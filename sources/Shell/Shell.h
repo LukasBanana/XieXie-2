@@ -30,7 +30,12 @@ class Shell
         void CmdHelp();
 
         void Pause();
+
+        void ProcessFile(const std::string& filename);
+        void CompileFile(const std::string& filename);
         void AssembleFile(const std::string& filename);
+
+        void ScanAndPrintTokens(const std::string& filename, bool showPos = false);
 
 };
 

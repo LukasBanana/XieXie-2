@@ -14,110 +14,111 @@
 
 /* === Templates === */
 
-template <typename T> inline std::string ToStrTmpl(const T &Val)
+template <typename T> inline std::string ToStrTmpl(const T& val)
 {
     std::stringstream SStr;
-    SStr << Val;
+    SStr << val;
     return SStr.str();
 }
 
-template <typename T> inline std::string ToStrTmplPrec(const T &Val)
+template <typename T> inline std::string ToStrTmplPrec(const T& val)
 {
     std::stringstream SStr;
     SStr.precision(std::numeric_limits<T>::digits10);
-    SStr << Val;
+    SStr << val;
     return SStr.str();
 }
 
 
 /* === Functions === */
 
-std::string ToStr(char Val)
+std::string ToStr(char val)
 {
-    return std::string(1, Val);
+    return std::string(1, val);
 }
 
-std::string ToStr(short Val)
+std::string ToStr(short val)
 {
-    return ToStrTmpl(Val);
+    return ToStrTmpl(val);
 }
-std::string ToStr(unsigned short Val)
+std::string ToStr(unsigned short val)
 {
-    return ToStrTmpl(Val);
-}
-
-std::string ToStr(int Val)
-{
-    return ToStrTmpl(Val);
-}
-std::string ToStr(unsigned int Val)
-{
-    return ToStrTmpl(Val);
+    return ToStrTmpl(val);
 }
 
-std::string ToStr(long long int Val)
+std::string ToStr(int val)
 {
-    return ToStrTmpl(Val);
+    return ToStrTmpl(val);
 }
-std::string ToStr(unsigned long long int Val)
+std::string ToStr(unsigned int val)
 {
-    return ToStrTmpl(Val);
-}
-
-std::string ToStr(float Val)
-{
-    return ToStrTmplPrec(Val);
-}
-std::string ToStr(double Val)
-{
-    return ToStrTmplPrec(Val);
-}
-std::string ToStr(long double Val)
-{
-    return ToStrTmplPrec(Val);
+    return ToStrTmpl(val);
 }
 
-std::string ExtractFilename(const std::string& Filename)
+std::string ToStr(long long int val)
+{
+    return ToStrTmpl(val);
+}
+std::string ToStr(unsigned long long int val)
+{
+    return ToStrTmpl(val);
+}
+
+std::string ToStr(float val)
+{
+    return ToStrTmplPrec(val);
+}
+std::string ToStr(double val)
+{
+    return ToStrTmplPrec(val);
+}
+std::string ToStr(long double val)
+{
+    return ToStrTmplPrec(val);
+}
+
+std::string ExtractFilename(const std::string& filename)
 {
     /* Find position with filename only */
-    size_t Pos = Filename.find_last_of("/\\");
+    auto pos = filename.find_last_of("/\\");
 
-    if (Pos == std::string::npos)
-        return Filename;
+    if (pos == std::string::npos)
+        return filename;
 
     /* Return filename only */
-    return Filename.substr(Pos + 1);
+    return filename.substr(pos + 1);
 }
 
-std::string ExtractFilePath(const std::string& Filename)
+std::string ExtractFilePath(const std::string& filename)
 {
     /* Return file path only */
-    return Filename.substr(0, Filename.find_last_of("\\/"));
+    auto pos = filename.find_last_of("\\/");
+    return pos != std::string::npos ? filename.substr(0, pos) : ".";
 }
 
-std::string ExtractFileExtension(const std::string& Filename)
+std::string ExtractFileExtension(const std::string& filename)
 {
     /* Return file extension only */
-    auto Pos = Filename.find_last_of('.');
+    auto Pos = filename.find_last_of('.');
 
     if (Pos == std::string::npos)
-        return Filename;
+        return filename;
 
-    return Filename.substr(Pos + 1, Filename.size() - Pos - 1);
+    return filename.substr(Pos + 1, filename.size() - Pos - 1);
 }
 
 std::string ReplaceString(
-    std::string Subject, const std::string& Search, const std::string& Replace)
+    std::string subject, const std::string& search, const std::string& replace)
 {
     size_t Pos = 0;
 
-    while ( ( Pos = Subject.find(Search, Pos) ) != std::string::npos )
+    while ( ( Pos = subject.find(search, Pos) ) != std::string::npos )
     {
-        Subject.replace(Pos, Search.size(), Replace);
-        Pos += Replace.size();
+        subject.replace(Pos, search.size(), replace);
+        Pos += replace.size();
     }
 
-    return Subject;
+    return subject;
 }
 
 bool IsWhiteSpace(char chr)
@@ -135,68 +136,68 @@ bool HasWhiteSpaces(const std::string& str)
     return false;
 }
 
-std::string RemoveWhiteSpaces(std::string Str)
+std::string RemoveWhiteSpaces(std::string str)
 {
     auto it = std::remove_if(
-        Str.begin(), Str.end(),
-        [](char Chr)
+        str.begin(), str.end(),
+        [](char chr)
         {
-            return Chr == ' ' || Chr == '\t';
+            return chr == ' ' || chr == '\t';
         }
     );
         
-    Str.erase(it, Str.end());
+    str.erase(it, str.end());
 
-    return Str;
+    return str;
 }
 
 std::string NumberOffset(
-    size_t Num, size_t MaxNum, const char FillChar, const size_t Base)
+    size_t num, size_t maxNum, const char fillChar, const size_t base)
 {
-    if (Num > MaxNum)
-        return ToStr(Num);
+    if (num > maxNum)
+        return ToStr(num);
 
-    const size_t NumOrig = Num;
+    const size_t numOrig = num;
 
     /* Find number of numerics */
-    size_t MaxNumerics = 0, Numerics = 0;
+    size_t maxNumerics = 0, numerics = 0;
 
-    while (MaxNum >= Base)
+    while (maxNum >= base)
     {
-        MaxNum /= Base;
-        ++MaxNumerics;
+        maxNum /= base;
+        ++maxNumerics;
     }
 
-    while (Num >= Base)
+    while (num >= base)
     {
-        Num /= Base;
-        ++Numerics;
+        num /= base;
+        ++numerics;
     }
 
     /* Return string with offset and number */
     return
-        std::string(MaxNumerics - Numerics, FillChar) +
-        (Base > 10 ? NumToHex(NumOrig, false) : ToStr(NumOrig));
+        std::string(maxNumerics - numerics, fillChar) +
+        (base > 10 ? NumToHex(numOrig, false) : ToStr(numOrig));
 }
 
-std::string ToLower(std::string Str)
+std::string ToLower(std::string str)
 {
-    for (char& Chr : Str)
+    for (char& chr : str)
     {
-        if (Chr >= 'A' && Chr <= 'Z')
-            Chr += 'a' - 'A';
+        if (chr >= 'A' && chr <= 'Z')
+            chr += 'a' - 'A';
     }
-    return Str;
+    return str;
 }
 
-std::string ToUpper(std::string Str)
+std::string ToUpper(std::string str)
 {
-    for (char& Chr : Str)
+    for (char& chr : str)
     {
-        if (Chr >= 'a' && Chr <= 'z')
-            Chr -= 'a' - 'A';
+        if (chr >= 'a' && chr <= 'z')
+            chr -= 'a' - 'A';
     }
-    return Str;
+    return str;
 }
 
 

@@ -1,0 +1,253 @@
+
+// XieXie 2.0 Code Test 1
+// 05/09/2014
+
+extern class String {
+	
+	init()
+	init(String other)
+	
+	String Left(int len)
+	String Right(int len)
+	String SubString(int pos, int len)
+	
+	int Get(int pos)
+	void Set(int pos, int character)
+	
+	int Size()
+	
+	String Append(String other)
+	
+	String LCase()
+	String UCase()
+	
+}
+
+extern class Timer {
+	
+	[[deprecated("Use \"foo bar\" instead")]]
+	static float ElapsedTime()
+	
+	static float CurrentTime()
+	
+	static String Date()
+	
+}
+
+extern class Log {
+	
+	static void Write(String text)
+	static void WriteLine(String text)
+	
+}
+
+class Mouse {
+	
+	public:
+		
+		/*
+		static Mouse@ instance {
+			public get {
+				if instance = null {
+					instance := new Mouse()
+				}
+				return instance
+			}
+			private set
+		} := null
+		*/
+		
+		static Mouse GetInstance() {
+			if instance = null {
+				instance := new Mouse()
+			}
+			return instance
+		}
+		
+	private:
+		
+		static Mouse instance
+		
+		init() { /* dummy */ }
+		
+}
+
+extern class Math {
+	
+	static float Sqrt(float x)
+	
+	static float Sin(float x)
+	static float Cos(float x)
+	static float Tan(float x)
+	
+	static float ASin(float x)
+	static float ACos(float x)
+	static float ATan(float x)
+	
+	static float Random()
+	
+}
+
+class Vector3 {
+	
+	init() {
+	}
+	init(float x, float y, float z) {
+		this.x := x
+		this.y := y
+		this.z := z
+	}
+	
+	float Length() {
+		return Math.Sqrt(x*x + y*y + z*z);
+	}
+	
+	Vector3 Normalize() {
+		float invLength := 1.0 / Length()
+		
+		x *= invLength
+		y *= invLength
+		z *= invLength
+		
+		return this
+	}
+	
+	Vector3 Add(Vector3 other) {
+		x += other.x
+		y += other.y
+		z += other.z
+		return this
+	}
+	
+	Vector3 Sub(Vector3 other) {
+		x -= other.x
+		y -= other.y
+		z -= other.z
+		return this
+	}
+	
+	float x, y, z
+	
+}
+
+class Vehicle {
+	
+	enum Types {
+		__Unspecified__
+		Car,
+		MotorCycle
+	}
+	
+	String name
+	
+	Types Type() {
+		return Types.__Unspecified__
+	}
+	
+	int NumWheels() {
+		return 0
+	}
+	
+}
+
+class Car : Vehicle {
+	
+	Types Type() {
+		return Types.Car
+	}
+	
+	int NumWheels() {
+		return 4
+	}
+	
+}
+
+class AppTest {
+	
+	int num := 10
+	
+	int Main(String[] args) {
+		int result := 3
+	
+		// For loops
+		foreach String arg : args {
+			if x > y > z or ( y = 3 and z = 4 ) {
+				Log.Write("A")
+			} else if arg.Size() > 10 {
+				Log.Write("B")
+			} else {
+				Log.Write("C")
+			}
+		}
+		
+		foreach int i : { 1, 2, 3, 4, 5 } {
+			Log.Write(i + ", ")
+		}
+		
+		foreach int[] list : { { 1, 2, 3 }, { -4, 2 }, { 9, 8, 0, 0, 1 } } {
+			Log.WriteLine("New List: ")
+			foreach int i : list {
+				Log.Write(i + ", ")
+			}
+		}
+
+		for int i := 0 ; i < num ; i++ {
+			Log.WriteLine("Hello, World")
+		}
+		
+		for int i : 10 .. 1 -> 2 {
+			Log.WriteLine("Hello, World")
+		}
+		
+		// Boolean expressions
+		int a, b, c
+		
+		bool b0 := a > b > c
+		bool b1 := a > b and b > c
+		
+		bool b2 := (a = b = c) = b1
+		bool b3 := (a = b and b = c) = b1
+		
+		// Constants
+		const int const_x := 42
+		
+		// Arrays
+		int[][] arrayList := new int[][2]
+		
+		arrayList[0] := new int[2]
+		arrayList[0][0] := 1
+		arrayList[0][1] := 2
+		
+		arrayList[1] := new int[2]
+		arrayList[1][0] := 3
+		arrayList[1][1] := 4
+		
+		// Strings
+		String s = new String()
+		
+		// Objects
+		Mouse mouse := Mouse.GetInstance()
+		
+		Vector3[] vertices := new Vector3[100]
+		
+		foreach Vector3 vert : vertices {
+			vert.x := Math.Random()
+		}
+		
+		// Switch/case
+		switch a {
+			case 25, 42, 9:
+				Log.WriteLine("1st case")
+				
+			case -6:
+				Log.WriteLine("2nd case")
+			
+			default:
+				Log.WriteLine("default case")
+		}
+
+		return result
+	}
+	
+}
+

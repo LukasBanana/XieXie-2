@@ -15,72 +15,72 @@
 
 /* === Inline functions === */
 
-inline std::string ToStr(const std::string &Str)
+inline std::string ToStr(const std::string& str)
 {
-    return Str;
+    return str;
 }
 
 /* === Functions === */
 
-std::string ToStr(char Val);
+std::string ToStr(char val);
 
-std::string ToStr(short Val);
-std::string ToStr(unsigned short Val);
+std::string ToStr(short val);
+std::string ToStr(unsigned short val);
 
-std::string ToStr(int Val);
-std::string ToStr(unsigned int Val);
+std::string ToStr(int val);
+std::string ToStr(unsigned int val);
 
-std::string ToStr(long long int Val);
-std::string ToStr(unsigned long long int Val);
+std::string ToStr(long long int val);
+std::string ToStr(unsigned long long int val);
 
-std::string ToStr(float Val);
-std::string ToStr(double Val);
-std::string ToStr(long double Val);
+std::string ToStr(float val);
+std::string ToStr(double val);
+std::string ToStr(long double val);
 
 //! Returns the filename of the specified full path (e.g. from "C:/Program Files/Programming/App.xx" to "App.xx").
-std::string ExtractFilename(const std::string& Filename);
+std::string ExtractFilename(const std::string& filename);
 //! Returns the full path of the specified filename (e.g. from "C:/Program Files/Programming/App.xx" to "C:/Program Files/Programming").
-std::string ExtractFilePath(const std::string& Filename);
+std::string ExtractFilePath(const std::string& filename);
 //! Returns the file extension part (e.g. from "C:/Program Files/Programming/App.xx" to "xx").
-std::string ExtractFileExtension(const std::string& Filename);
+std::string ExtractFileExtension(const std::string& filename);
 
 std::string ReplaceString(
-    std::string Subject, const std::string& Search, const std::string& Replace
+    std::string subject, const std::string& search, const std::string& replace
 );
 
 bool IsWhiteSpace(char chr);
 bool HasWhiteSpaces(const std::string& str);
-std::string RemoveWhiteSpaces(std::string Str);
+std::string RemoveWhiteSpaces(std::string str);
 
 std::string NumberOffset(
-    size_t Num, size_t MaxNum, const char FillChar = ' ', const size_t Base = 10
+    size_t num, size_t maxNum, const char fillChar = ' ', const size_t base = 10
 );
 
-std::string ToLower(std::string Str);
-std::string ToUpper(std::string Str);
+std::string ToLower(std::string str);
+std::string ToUpper(std::string str);
 
 /* === Templates === */
 
-template <typename T> T StrToNum(const std::string& Str)
+template <typename T> T StrToNum(const std::string& str)
 {
-    T Val = T(0);
-    std::istringstream SStr(Str);
-    SStr >> Val;
-    return Val;
+    T val = T(0);
+    std::istringstream sstr(str);
+    sstr >> val;
+    return val;
 }
 
-template <typename T> std::string NumToHex(T Number, const size_t Size, const bool Prefix = true)
+template <typename T> std::string NumToHex(T number, const size_t Size, const bool Prefix = true)
 {
-    static const char* HexAlphabet = "0123456789abcdef";
+    static const char* hexAlphabet = "0123456789abcdef";
 
-    std::string Str;
+    std::string str;
     
     if (Prefix)
     {
         for (int i = 2*Size - 1; i >= 0; --i)
         {
-            Str += ToStr(
-                HexAlphabet[(Number >> i*4) & 0xF]
+            str += ToStr(
+                hexAlphabet[(number >> i*4) & 0xF]
             );
         }
     }
@@ -88,94 +88,94 @@ template <typename T> std::string NumToHex(T Number, const size_t Size, const bo
     {
         do
         {
-            Str = ToStr(HexAlphabet[Number & 0xF]) + Str;
-            Number >>= 4;
+            str = ToStr(hexAlphabet[number & 0xF]) + str;
+            number >>= 4;
         }
-        while (Number > 0);
+        while (number > 0);
     }
 
-    return Str;
+    return str;
 }
 
-template <typename T> std::string NumToHex(const T& Number, const bool Prefix = true)
+template <typename T> std::string NumToHex(const T& number, const bool Prefix = true)
 {
-    return NumToHex(Number, sizeof(T), Prefix);
+    return NumToHex(number, sizeof(T), Prefix);
 }
 
-template <typename T> std::string NumToOct(T Number)
+template <typename T> std::string NumToOct(T number)
 {
-    std::string Str;
+    std::string str;
     
     do
     {
-        Str = ToStr("01234567"[Number & 0x7]) + Str;
-        Number >>= 3;
+        str = ToStr("01234567"[number & 0x7]) + str;
+        number >>= 3;
     }
-    while (Number > 0);
+    while (number > 0);
     
-    return Str;
+    return str;
 }
 
-template <typename T> std::string NumToBin(T Number)
+template <typename T> std::string NumToBin(T number)
 {
-    std::string Str;
+    std::string str;
     
     do
     {
-        Str = ((Number & 0x1) != 0 ? "1" : "0") + Str;
-        Number >>= 1;
+        str = ((number & 0x1) != 0 ? "1" : "0") + str;
+        number >>= 1;
     }
-    while (Number > 0);
+    while (number > 0);
     
-    return Str;
+    return str;
 }
 
-template <typename T> T HexToNum(const std::string& Str)
+template <typename T> T HexToNum(const std::string& str)
 {
-    T Num = T(0);
-    std::stringstream SStr;
+    T num = T(0);
+    std::stringstream sstr;
     
-    SStr << std::hex << Str;
-    SStr >> Num;
+    sstr << std::hex << str;
+    sstr >> num;
 
-    return Num;
+    return num;
 }
 
-template <typename T> T OctToNum(const std::string& Str)
+template <typename T> T OctToNum(const std::string& str)
 {
-    T Num = T(0);
+    T num = T(0);
 
-    auto it = Str.begin();
+    auto it = str.begin();
 
-    if (Str.size() > 2 && Str[0] == '0' && Str[1] == 'c')
+    if (str.size() > 2 && str[0] == '0' && str[1] == 'c')
         it += 2;
 
-    for (; it != Str.end(); ++it)
+    for (; it != str.end(); ++it)
     {
-        Num <<= 3;
-        Num += ((*it) - '0') & 0x7;
+        num <<= 3;
+        num += ((*it) - '0') & 0x7;
     }
 
-    return Num;
+    return num;
 }
 
-template <typename T> T BinToNum(const std::string& Str)
+template <typename T> T BinToNum(const std::string& str)
 {
-    T Num = T(0);
+    T num = T(0);
 
-    auto it = Str.begin();
+    auto it = str.begin();
 
-    if (Str.size() > 2 && Str[0] == '0' && Str[1] == 'b')
+    if (str.size() > 2 && str[0] == '0' && str[1] == 'b')
         it += 2;
 
-    for (; it != Str.end(); ++it)
+    for (; it != str.end(); ++it)
     {
-        Num <<= 1;
+        num <<= 1;
         if (*it != '0')
-            ++Num;
+            ++num;
     }
 
-    return Num;
+    return num;
 }
 
 
