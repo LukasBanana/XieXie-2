@@ -29,6 +29,17 @@ Token::Token(const SourcePosition& pos, const Types type, const std::string& spe
     spell_  { spell }
 {
 }
+Token::Token(const SourcePosition& pos, const Types type, std::string&& spell) :
+    type_   { type             },
+    pos_    { pos              },
+    spell_  { std::move(spell) }
+{
+}
+
+SourceArea Token::Area() const
+{
+    return { Pos(), { Pos().Row(), Pos().Column() - Spell().size() } };
+}
 
 
 } // /namespace SyntaxAnalyzer

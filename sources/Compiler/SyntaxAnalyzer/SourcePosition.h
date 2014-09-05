@@ -40,12 +40,12 @@ class SourcePosition
         void Reset();
 
         //! Returns the row of the source position, beginning with 1.
-        inline unsigned int GetRow() const
+        inline unsigned int Row() const
         {
             return row_;
         }
         //! Returns the colummn of the source position, beginning with 1.
-        inline unsigned int GetColumn() const
+        inline unsigned int Column() const
         {
             return column_;
         }
@@ -62,7 +62,7 @@ class SourcePosition
 
 inline bool operator == (const SourcePosition& left, const SourcePosition& right)
 {
-    return left.GetRow() == right.GetRow() && left.GetColumn() == right.GetColumn();
+    return left.Row() == right.Row() && left.Column() == right.Column();
 }
 
 inline bool operator != (const SourcePosition& left, const SourcePosition& right)
@@ -72,12 +72,12 @@ inline bool operator != (const SourcePosition& left, const SourcePosition& right
 
 inline bool operator < (const SourcePosition& left, const SourcePosition& right)
 {
-    return left.GetRow() < right.GetRow() || ( left.GetRow() == right.GetRow() && left.GetColumn() < right.GetColumn() );
+    return left.Row() < right.Row() || ( left.Row() == right.Row() && left.Column() < right.Column() );
 }
 
 inline bool operator > (const SourcePosition& left, const SourcePosition& right)
 {
-    return left.GetRow() > right.GetRow() || ( left.GetRow() == right.GetRow() && left.GetColumn() > right.GetColumn() );
+    return left.Row() > right.Row() || ( left.Row() == right.Row() && left.Column() > right.Column() );
 }
 
 inline bool operator <= (const SourcePosition& left, const SourcePosition& right)

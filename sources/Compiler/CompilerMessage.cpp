@@ -11,30 +11,30 @@
 using namespace SyntaxAnalyzer;
 
 CompilerMessage::CompilerMessage(const Categories& category) :
-    category_(category)
+    category_{ category }
 {
 }
 CompilerMessage::CompilerMessage(const std::string& message, const Categories& category) :
-    category_   ( category ),
-    message_    ( message  )
+    category_   { category },
+    message_    { message  }
 {
 }
 CompilerMessage::CompilerMessage(
     const SourceArea& sourceArea, const std::string& message, const Categories& category) :
-        category_   ( category                                                         ),
-        sourceArea_ ( sourceArea                                                       ),
-        message_    ( CompilerMessage::ConstructMessage(category, sourceArea, message) )
+        category_   { category                                                         },
+        sourceArea_ { sourceArea                                                       },
+        message_    { CompilerMessage::ConstructMessage(category, sourceArea, message) }
 {
 }
 CompilerMessage::CompilerMessage(
     const SourceArea& sourceArea, const std::string& message,
     const std::string& line, const std::string& marker,
     const Categories& category) :
-        category_   ( category                                                         ),
-        sourceArea_ ( sourceArea                                                       ),
-        message_    ( CompilerMessage::ConstructMessage(category, sourceArea, message) ),
-        line_       ( line                                                             ),
-        marker_     ( marker                                                           )
+        category_   { category                                                         },
+        sourceArea_ { sourceArea                                                       },
+        message_    { CompilerMessage::ConstructMessage(category, sourceArea, message) },
+        line_       { line                                                             },
+        marker_     { marker                                                           }
 {
     /* Remove new-line character from source line */
     if (line_.size() > 0 && line_.back() == '\n')

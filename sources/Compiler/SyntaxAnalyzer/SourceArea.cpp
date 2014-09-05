@@ -56,7 +56,7 @@ void SourceArea::Reset()
 
 bool SourceArea::IsMultiLine() const
 {
-    return start.GetRow() != end.GetRow();
+    return start.Row() != end.Row();
 }
 
 

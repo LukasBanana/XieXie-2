@@ -10,6 +10,7 @@
 
 
 #include "SourcePosition.h"
+#include "SourceArea.h"
 #include "DeclPtr.h"
 
 #include <string>
@@ -36,11 +37,11 @@ class Token
             Ident = 0,      //!< (letter | '_') (letter | '_' | digit)*
 
             // Literals,
-            BoolLiteral,    //!< 'true' | 'false'
+            BoolLiteral,    //!< true | false
             IntLiteral,     //!< digit+
             FloatLiteral,   //!< digit+ '.' digit+
             StringLiteral,  //!< ('@')? '"' any '"'
-            PointerLiteral, //!< 'null'
+            PointerLiteral, //!< null
 
             // Operators
             BitwiseOrOp,    //!< |
@@ -53,11 +54,11 @@ class Token
             MulOp,          //!< *
             DivOp,          //!< /, %
 
-            EqualityOp,     //!< '=', '!='
-            RelationOp,     //!< '<', '>', '<=', '>='
-            CopyAssignOp,   //!< ':='
-            ModifyAssignOp, //!< '+=', '-=', '*=', '/=', '%=', '<<=', '>>=', '|=', '&=', '^='
-            PostAssignOp,   //!< '++', '--'
+            EqualityOp,     //!< =, !=
+            RelationOp,     //!< <, >, <=, >=
+            CopyAssignOp,   //!< :=
+            ModifyAssignOp, //!< +=, -=, *=, /=, %=, <<=, >>=, |=, &=, ^=
+            PostAssignOp,   //!< ++, --
 
             // Punctuation
             Dot,            //!< .
@@ -78,47 +79,47 @@ class Token
             RDParen,        //!< ]]
 
             // Special characters
-            At,             //!< '@'
+            At,             //!< @
 
             // Keywords: Types
-            Void,           //!< 'void'
-            Bool,           //!< 'bool'
-            Int,            //!< 'int'
-            Float,          //!< 'float'
+            Void,           //!< void
+            Bool,           //!< bool
+            Int,            //!< int
+            Float,          //!< float
 
-            Or,             //!< 'or'
-            And,            //!< 'and'
-            Not,            //!< 'not'
+            Or,             //!< or
+            And,            //!< and
+            Not,            //!< not
 
-            Do,             //!< 'do'
-            While,          //!< 'while'
-            For,            //!< 'for'
-            ForEach,        //!< 'foreach'
-            ForEver,        //!< 'forever'
+            Do,             //!< do
+            While,          //!< while
+            For,            //!< for
+            ForEach,        //!< foreach
+            ForEver,        //!< forever
             
-            If,             //!< 'if'
-            Else,           //!< 'else'
+            If,             //!< if
+            Else,           //!< else
             
-            Switch,         //!< 'switch'
-            Case,           //!< 'case'
-            Default,        //!< 'default'
+            Switch,         //!< switch
+            Case,           //!< case
+            Default,        //!< default
 
-            Break,          //!< 'break'
-            Continue,       //!< 'continue'
-            Return,         //!< 'return'
+            Break,          //!< break
+            Continue,       //!< continue
+            Return,         //!< return
 
-            Class,          //!< 'class'
-            Extern,         //!< 'extern'
-            Public,         //!< 'public'
-            Private,        //!< 'private'
-            Static,         //!< 'static'
-            Init,           //!< 'init'
-            Release,        //!< 'release'
+            Class,          //!< class
+            Extern,         //!< extern
+            Public,         //!< public
+            Private,        //!< private
+            Static,         //!< static
+            Init,           //!< init
+            Release,        //!< release
 
-            Enum,           //!< 'enum'
-            Flags,          //!< 'flags'
+            Enum,           //!< enum
+            Flags,          //!< flags
 
-            New,            //!< 'new'
+            New,            //!< new
 
             // Special tokens
             EndOfFile,
@@ -127,6 +128,14 @@ class Token
         Token(Token&& other);
         Token(const SourcePosition& pos, const Types type);
         Token(const SourcePosition& pos, const Types type, const std::string& spell);
+        Token(const SourcePosition& pos, const Types type, std::string&& spell);
+
+        /**
+        Returns the token source area (depending on the source position and spelling).
+        \see Spell
+        \see Pos
+        */
+        SourceArea Area() const;
 
         //! Returns the token type.
         inline Types Type() const

@@ -112,7 +112,7 @@ variable_decl_stmnt:		data_type_denoter IDENT variable_init? (',' IDENT variable
 variable_init:				':=' expr;
 
 // ARRAYS
-array_access_list:	array_access_list+;
+array_access_list:	array_access+;
 array_access:		'[' array_index ']';
 array_index:		arithmetic_expr;
 

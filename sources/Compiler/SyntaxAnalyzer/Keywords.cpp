@@ -18,44 +18,48 @@ static KeywordMapType GenerateKeywordMap()
 
     return
     {
-        { "void",       Ty::Void     },
-        { "bool",       Ty::Bool     },
-        { "int",        Ty::Int      },
-        { "float",      Ty::Float    },
+        { "true",       Ty::BoolLiteral    },
+        { "false",      Ty::BoolLiteral    },
+        { "null",       Ty::PointerLiteral },
 
-        { "or",         Ty::Or       },
-        { "and",        Ty::And      },
-        { "not",        Ty::Not      },
+        { "void",       Ty::Void           },
+        { "bool",       Ty::Bool           },
+        { "int",        Ty::Int            },
+        { "float",      Ty::Float          },
 
-        { "do",         Ty::Do       },
-        { "while",      Ty::While    },
-        { "for",        Ty::For      },
-        { "forEach",    Ty::ForEach  },
-        { "forEver",    Ty::ForEver  },
+        { "or",         Ty::Or             },
+        { "and",        Ty::And            },
+        { "not",        Ty::Not            },
+
+        { "do",         Ty::Do             },
+        { "while",      Ty::While          },
+        { "for",        Ty::For            },
+        { "forEach",    Ty::ForEach        },
+        { "forEver",    Ty::ForEver        },
             
-        { "if",         Ty::If       },
-        { "else",       Ty::Else     },
+        { "if",         Ty::If             },
+        { "else",       Ty::Else           },
             
-        { "switch",     Ty::Switch   },
-        { "case",       Ty::Case     },
-        { "default",    Ty::Default  },
+        { "switch",     Ty::Switch         },
+        { "case",       Ty::Case           },
+        { "default",    Ty::Default        },
 
-        { "break",      Ty::Break    },
-        { "continue",   Ty::Continue },
-        { "return",     Ty::Return   },
+        { "break",      Ty::Break          },
+        { "continue",   Ty::Continue       },
+        { "return",     Ty::Return         },
 
-        { "class",      Ty::Class    },
-        { "extern",     Ty::Extern   },
-        { "public",     Ty::Public   },
-        { "private",    Ty::Private  },
-        { "static",     Ty::Static   },
-        { "init",       Ty::Init     },
-        { "release",    Ty::Release  },
+        { "class",      Ty::Class          },
+        { "extern",     Ty::Extern         },
+        { "public",     Ty::Public         },
+        { "private",    Ty::Private        },
+        { "static",     Ty::Static         },
+        { "init",       Ty::Init           },
+        { "release",    Ty::Release        },
 
-        { "enum",       Ty::Enum     },
-        { "flags",      Ty::Flags    },
+        { "enum",       Ty::Enum           },
+        { "flags",      Ty::Flags          },
 
-        { "new",        Ty::New      },
+        { "new",        Ty::New            },
     };
 }
 
