@@ -1,0 +1,55 @@
+
+// Math Test 1
+// 05/09/2014
+
+extern class Math {
+	
+	static float Sqrt(float x)
+	
+	static float Sq(float x)
+	
+	static float DistanceSq(Vector3 a, Vector3 b)
+	
+}
+
+class Vector3 {
+	
+	void Normalize() {
+		float len := x*x + y*y + z*z
+		
+		if len != 0.0 and len != 1.0 {
+			len := 1.0 / Math.Sqrt(len)
+			
+			x *= len
+			y *= len
+			z *= len
+		}
+	}
+	
+	float x, y, z
+	
+}
+
+class Test {
+	
+	int Fibonacci(int n) {
+		if n <= 2 {
+			return 1
+		}
+		return Fibonacci(n - 1) + Fibonacci(n - 2)
+	}
+	
+	void Main() {
+		
+		Vector3[] coords := new Vector3[100]
+		
+		String str1 := "Hello"
+		String str2 := new String("World")
+		Log.WriteLine(str1 + ", " + str2)
+		
+		int n := 10
+		Log.WriteLine("Fibonacci(" + n + ") = " + Fibonacci(n))
+		
+	}
+	
+}
