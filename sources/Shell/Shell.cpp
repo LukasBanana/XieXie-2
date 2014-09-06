@@ -198,7 +198,7 @@ void Shell::ScanAndPrintTokens(const std::string& filename, bool showPos)
             if (tkn != nullptr && tkn->Type() != Token::Types::EndOfFile)
             {
                 if (showPos)
-                    PrintLn("(" + tkn->Pos().ToString() + ") '" + tkn->Spell() + "'");
+                    PrintLn("(" + tkn->Area().ToString() + ") '" + tkn->Spell() + "'");
                 else
                     PrintLn(tkn->Spell());
             }

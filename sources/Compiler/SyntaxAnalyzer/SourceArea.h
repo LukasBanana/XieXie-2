@@ -26,7 +26,7 @@ class SourceArea
     public:
         
         SourceArea() = default;
-        SourceArea(const SourcePosition& pos);
+        explicit SourceArea(const SourcePosition& pos);
         SourceArea(const SourcePosition& startPos, const SourcePosition& endPos);
 
         /**

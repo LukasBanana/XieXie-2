@@ -14,31 +14,55 @@ namespace SyntaxAnalyzer
 
 Token::Token(Token&& other) :
     type_   { other.type_             },
-    pos_    { other.pos_              },
+    area_   { other.area_             },
     spell_  { std::move(other.spell_) }
 {
 }
-Token::Token(const SourcePosition& pos, const Types type) :
+
+Token::Token(const SourceArea& area, const Types type) :
     type_   { type },
-    pos_    { pos  }
+    area_   { area }
 {
 }
-Token::Token(const SourcePosition& pos, const Types type, const std::string& spell) :
+Token::Token(const SourceArea& area, const Types type, const std::string& spell) :
     type_   { type  },
-    pos_    { pos   },
+    area_   { area  },
     spell_  { spell }
 {
 }
-Token::Token(const SourcePosition& pos, const Types type, std::string&& spell) :
+Token::Token(const SourceArea& area, const Types type, std::string&& spell) :
     type_   { type             },
-    pos_    { pos              },
+    area_   { area             },
     spell_  { std::move(spell) }
 {
 }
 
-SourceArea Token::Area() const
+Token::Token(const SourcePosition& pos, const Types type) :
+    type_   { type },
+    area_   { pos  }
 {
-    return { Pos(), { Pos().Row(), Pos().Column() - Spell().size() } };
+}
+Token::Token(const SourcePosition& pos, const Types type, const std::string& spell) :
+    type_   { type                         },
+    area_   { Token::BuildArea(pos, spell) },
+    spell_  { spell                        }
+{
+}
+Token::Token(const SourcePosition& pos, const Types type, std::string&& spell) :
+    type_   { type                         },
+    area_   { Token::BuildArea(pos, spell) },
+    spell_  { std::move(spell)             }
+{
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+SourceArea Token::BuildArea(const SourcePosition& pos, const std::string& spell)
+{
+    return { { pos.Row(), pos.Column() - spell.size() }, pos };
 }
 
 

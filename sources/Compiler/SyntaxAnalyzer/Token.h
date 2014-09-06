@@ -126,26 +126,30 @@ class Token
         };
 
         Token(Token&& other);
+
+        Token(const SourceArea& area, const Types type);
+        Token(const SourceArea& area, const Types type, const std::string& spell);
+        Token(const SourceArea& area, const Types type, std::string&& spell);
+
         Token(const SourcePosition& pos, const Types type);
         Token(const SourcePosition& pos, const Types type, const std::string& spell);
         Token(const SourcePosition& pos, const Types type, std::string&& spell);
 
-        /**
-        Returns the token source area (depending on the source position and spelling).
-        \see Spell
-        \see Pos
-        */
-        SourceArea Area() const;
+        //! Returns the token start source position.
+        inline const SourcePosition& Pos() const
+        {
+            return Area().start;
+        }
 
         //! Returns the token type.
         inline Types Type() const
         {
             return type_;
         }
-        //! Returns the token source position.
-        inline const SourcePosition& Pos() const
+        //! Returns the token source area.
+        inline const SourceArea& Area() const
         {
-            return pos_;
+            return area_;
         }
         //! Returns the token spelling.
         inline const std::string& Spell() const
@@ -155,8 +159,10 @@ class Token
 
     private:
 
+        static SourceArea BuildArea(const SourcePosition& pos, const std::string& spell);
+
         Types           type_;  //!< Type of this token.
-        SourcePosition  pos_;   //!< Source position of this token.
+        SourceArea      area_;  //!< Source area of this token.
         std::string     spell_; //!< Token spelling.
 
 };

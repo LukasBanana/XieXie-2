@@ -16,13 +16,13 @@ namespace SyntaxAnalyzer
 const SourceArea SourceArea::ignore;
 
 SourceArea::SourceArea(const SourcePosition& pos) :
-    start( pos ),
-    end  ( pos )
+    start{ pos },
+    end  { pos }
 {
 }
 SourceArea::SourceArea(const SourcePosition& startPos, const SourcePosition& endPos) :
-    start( startPos ),
-    end  ( endPos   )
+    start{ startPos },
+    end  { endPos   }
 {
 }
 

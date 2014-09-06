@@ -75,6 +75,7 @@ class Scanner
 
         TokenPtr Make(const Token::Types& type, bool takeChr = false);
         TokenPtr Make(const Token::Types& type, std::string& spell, bool takeChr = false);
+        TokenPtr Make(const Token::Types& type, std::string& spell, const SourceArea& area, bool takeChr = false);
 
         TokenPtr ScanToken();
 

@@ -16,8 +16,8 @@ namespace SyntaxAnalyzer
 const SourcePosition SourcePosition::ignore;
 
 SourcePosition::SourcePosition(unsigned int row, unsigned int column) :
-    row_   ( row    ),
-    column_( column )
+    row_   { row    },
+    column_{ column }
 {
 }
 

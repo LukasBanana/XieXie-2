@@ -39,7 +39,13 @@ class Test {
 		return Fibonacci(n - 1) + Fibonacci(n - 2)
 	}
 	
-	void Main() {
+	void OnMouseDown(int button) {
+		if button = 1 {
+			Fire()
+		}
+	}
+	
+	int Main(String[] args) {
 		
 		Vector3[] coords := new Vector3[100]
 		
@@ -49,6 +55,8 @@ class Test {
 		
 		int n := 10
 		Log.WriteLine("Fibonacci(" + n + ") = " + Fibonacci(n))
+		
+		return 0
 		
 	}
 	

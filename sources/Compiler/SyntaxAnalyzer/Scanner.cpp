@@ -116,7 +116,7 @@ char Scanner::TakeIt()
 
 void Scanner::Error(const std::string& msg)
 {
-    throw SyntaxError(Pos(), msg);
+    throw SyntaxError(SourceArea(Pos()), msg);
 }
 
 void Scanner::ErrorUnexpected()
@@ -195,6 +195,13 @@ TokenPtr Scanner::Make(const Token::Types& type, std::string& spell, bool takeCh
     if (takeChr)
         spell += TakeIt();
     return std::make_shared<Token>(Pos(), type, std::move(spell));
+}
+
+TokenPtr Scanner::Make(const Token::Types& type, std::string& spell, const SourceArea& area, bool takeChr)
+{
+    if (takeChr)
+        spell += TakeIt();
+    return std::make_shared<Token>(area, type, std::move(spell));
 }
 
 TokenPtr Scanner::ScanToken()
@@ -375,6 +382,7 @@ TokenPtr Scanner::ScanToken()
 TokenPtr Scanner::ScanStringLiteral()
 {
     std::string spell;
+    SourceArea area { Pos() };
 
     while (true)
     {
@@ -407,7 +415,11 @@ TokenPtr Scanner::ScanStringLiteral()
                 
             /* Check for closing '\"' character */
             if (Is('\"'))
+            {
+                TakeIt();
+                area.end = Pos();
                 break;
+            }
 
             /* Check for new-line character */
             if (Is('\n'))
@@ -416,9 +428,6 @@ TokenPtr Scanner::ScanStringLiteral()
             /* Append character to string literal */
             spell += TakeIt();
         }
-
-        /* Take closing '\"' character */
-        TakeIt();
 
         /* Search for next string literal (which will be appended to this token) */
         IgnoreWhiteSpaces();
@@ -430,12 +439,13 @@ TokenPtr Scanner::ScanStringLiteral()
     }
 
     /* Return final string literal token */
-    return Make(Token::Types::StringLiteral, spell);
+    return Make(Token::Types::StringLiteral, spell, area);
 }
 
 TokenPtr Scanner::ScanVerbatimStringLiteral()
 {
     std::string spell;
+    SourceArea area { Pos() };
 
     while (true)
     {
@@ -460,10 +470,13 @@ TokenPtr Scanner::ScanVerbatimStringLiteral()
                 TakeIt();
 
                 /* Check for double quotes */
-                if (Is('\"'))
-                    spell += "\\";
-                else
+                if (!Is('\"'))
+                {
+                    area.end = Pos();
                     break;
+                }
+                else
+                    spell += "\\";
             }
 
             /* Check for new-line character */
@@ -484,7 +497,7 @@ TokenPtr Scanner::ScanVerbatimStringLiteral()
     }
 
     /* Return final string literal token */
-    return Make(Token::Types::StringLiteral, spell);
+    return Make(Token::Types::StringLiteral, spell, area);
 }
 
 TokenPtr Scanner::ScanIdentifier()
