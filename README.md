@@ -1,4 +1,4 @@
-# XieXie 2.0 Compiler and VirtualMachine #
+# XièXiè Compiler and VirtualMachine (Version 2) #
 
 ### Features ###
 
@@ -9,4 +9,4 @@
 
 ### License ###
 
-BSD License
+3-Clause BSD License
