@@ -21,6 +21,8 @@ static KeywordMapType GenerateKeywordMap()
         { "true",       Ty::BoolLiteral    },
         { "false",      Ty::BoolLiteral    },
         { "null",       Ty::PointerLiteral },
+        { "this",       Ty::ObjectLiteral  },
+        { "super",      Ty::ObjectLiteral  },
 
         { "void",       Ty::Void           },
         { "bool",       Ty::Bool           },
@@ -34,12 +36,12 @@ static KeywordMapType GenerateKeywordMap()
         { "do",         Ty::Do             },
         { "while",      Ty::While          },
         { "for",        Ty::For            },
-        { "forEach",    Ty::ForEach        },
-        { "forEver",    Ty::ForEver        },
-            
+        { "foreach",    Ty::ForEach        },
+        { "forever",    Ty::ForEver        },
+
         { "if",         Ty::If             },
         { "else",       Ty::Else           },
-            
+
         { "switch",     Ty::Switch         },
         { "case",       Ty::Case           },
         { "default",    Ty::Default        },

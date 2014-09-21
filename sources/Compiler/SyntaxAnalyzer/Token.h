@@ -42,6 +42,7 @@ class Token
             FloatLiteral,   //!< digit+ '.' digit+
             StringLiteral,  //!< ('@')? '"' any '"'
             PointerLiteral, //!< null
+            ObjectLiteral,  //!< this | super
 
             // Operators
             BitwiseOrOp,    //!< |
@@ -81,7 +82,7 @@ class Token
             // Special characters
             At,             //!< @
 
-            // Keywords: Types
+            // Keywords
             Void,           //!< void
             Bool,           //!< bool
             Int,            //!< int

@@ -20,7 +20,7 @@ namespace XieXie
 {
 
 /**
-This is a C++ wrapper class (written against the C++98 standard) for the
+This is a C++ wrapper (written against the C++98 standard) for the
 xvm (XieXie VirtualMachine) which is written in plain C (c99).
 \code
 // Read byte code from file
@@ -718,7 +718,7 @@ class ByteCode
 };
 
 
-//! A virtual stack is required for to execute a program.
+//! A virtual stack is required to execute a program.
 class Stack
 {
 
