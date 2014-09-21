@@ -3,9 +3,9 @@
 ### Features ###
 
 * High Level Programming Language
-* Compiler (in progress)
+* Compiler written in C++11 (in progress)
 * Virtual Assembler (XASM)
-* Virtual Machine (written in plain C with C++ wrapper)
+* Virtual Machine (written in C99 with C++ wrapper)
 
 ### License ###
 
