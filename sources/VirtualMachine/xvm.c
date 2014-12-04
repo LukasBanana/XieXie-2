@@ -383,7 +383,7 @@ FLOATS are 32 bits wide.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 |          | 31.......26 | 25...........18 | 17................................0 |                                                              |
 -------------------------------------------------------------------------------------------------------------------------------------------------
-|          |             |                 |                                     | Pop R words from the stack and buffers them.                 |
+|          |             |                 |                                     | Pop R words from the stack and buffer them.                  |
 |          |             |                 |                                     | Pop the current stack frame.                                 |
 | RET      | 1 1 0 0 0 0 | R R R R R R R R | A A A A A A A A A A A A A A A A A A | Pop A words from the stack.                                  |
 |          |             |                 |                                     | Push the R words back onto the stack.                        |
@@ -1697,7 +1697,7 @@ INLINE STATIC stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
     if (stack_ptr > stack->storage)
         (*reg_sp) -= sizeof(stack_word_t);
     else
-        xvm_exception_throw("stack underflow", EXITCODE_STACK_OVERFLOW);
+        xvm_exception_throw("stack underflow", EXITCODE_STACK_UNDERFLOW);
     return *REG_TO_STACK_PTR(reg_sp);
 }
 
