@@ -1,34 +1,30 @@
 /*
- * Do-while statement AST header
+ * DoWhileStmnt.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_STATEMENT_LOOP_DOWHILE_H__
-#define __XX_AST_STATEMENT_LOOP_DOWHILE_H__
+#ifndef __XX_AST_DO_WHILE_STMNT_H__
+#define __XX_AST_DO_WHILE_STMNT_H__
 
 
-#include "LoopStmnt.h"
+#include "Stmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class DoWhileStmnt : public LoopStmnt
+class DoWhileStmnt : public Stmnt
 {
     
     public:
         
-        DefineASTVisitProc(DoWhileStmnt);
+        AST_INTERFACE(DoWhileStmnt);
 
-        LoopTypes LoopType() const
-        {
-            return LoopTypes::DoWhile;
-        }
-
-        ExprPtr condExpr;
+        CodeBlockPtr    codeBlock;
+        ExprPtr         condExpr;
 
 };
 

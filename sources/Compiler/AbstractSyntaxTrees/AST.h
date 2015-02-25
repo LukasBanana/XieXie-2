@@ -1,5 +1,5 @@
 /*
- * Abstract syntax tree header
+ * AST.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -25,10 +25,14 @@ namespace AbstractSyntaxTrees
 using namespace SyntaxAnalyzer;
 
 
-#define DefineASTVisitProc(n)                                                       \
-    void Visit(Visitor* visitor, void* args = nullptr)                              \
-    {                                                                               \
-        visitor->Visit##n(std::dynamic_pointer_cast<n>(shared_from_this()), args);  \
+#define AST_INTERFACE(name)                             \
+    Types Type() const override                         \
+    {                                                   \
+        return Types::name;                             \
+    }                                                   \
+    void Visit(Visitor* visitor, void* args = nullptr)  \
+    {                                                   \
+        visitor->Visit##name(this, args);               \
     }
 
 
@@ -39,14 +43,40 @@ The "Visit" class will be implemented by using the "DefineASTVisitProc" macro.
 The "std::shared_ptr<ASTClassName> Copy() const" function must be implemented implicitly,
 this function must copy the whole AST node.
 */
-class AST : public std::enable_shared_from_this<AST>
+class AST
 {
     
     public:
         
+        //! AST node types.
+        enum class Types
+        {
+            /* --- Common AST types --- */
+            CodeBlock,
+
+            /* --- Statements --- */
+            CtrlTransferStmnt,
+            IfStmnt,
+            ElseStmnt,
+            SwitchStmnt,
+            ForStmnt,
+            ForEachStmnt,
+            ForEverStmnt,
+            ForRangeStmnt,
+            WhileStmnt,
+            DoWhileStmnt,
+
+            /* --- Expressions --- */
+            BinaryExpr,
+            UnaryExpr,
+        };
+
         virtual ~AST()
         {
         }
+
+        //! Returns the AST node type.
+        virtual Types Type() const = 0;
 
         /**
         Virutal visitor function.
@@ -57,7 +87,7 @@ class AST : public std::enable_shared_from_this<AST>
         //! Refreshes for some AST nodes the source area (e.g. for all lists).
         virtual void RefreshSourceArea()
         {
-            /* Dummy */
+            // dummy
         }
 
         //! Area in the source code of this AST node.
@@ -67,13 +97,8 @@ class AST : public std::enable_shared_from_this<AST>
 
         AST() = default;
         AST(const SourceArea& area) :
-            sourceArea( area )
+            sourceArea{ area }
         {
-        }
-
-        template <typename T> inline std::shared_ptr<T> ThisPtr()
-        {
-            return std::dynamic_pointer_cast<T>(shared_from_this());
         }
 
 };

@@ -1,42 +1,31 @@
 /*
- * For-each statement AST header
+ * ForEachStmnt.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_STATEMENT_LOOP_FOREACH_H__
-#define __XX_AST_STATEMENT_LOOP_FOREACH_H__
+#ifndef __XX_AST_FOR_EACH_STMNT_H__
+#define __XX_AST_FOR_EACH_STMNT_H__
 
 
-#include "LoopStmnt.h"
+#include "Stmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-/**
-For-each statement.
-\code
-// Grammar
-forEachStmnt ::= 'foreach' varDeclStmnt ':' listExpr codeBlock
-\endcode
-*/
-class ForEachStmnt : public LoopStmnt
+class ForEachStmnt : public Stmnt
 {
     
     public:
         
-        DefineASTVisitProc(ForEachStmnt);
-
-        LoopTypes LoopType() const
-        {
-            return LoopTypes::ForEach;
-        }
+        AST_INTERFACE(ForEachStmnt);
 
         VariableDeclStmntPtr    varDeclStmnt;
         ExprPtr                 listExpr;
+        CodeBlockPtr            codeBlock;
 
 };
 

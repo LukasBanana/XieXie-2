@@ -1,39 +1,29 @@
 /*
- * For-ever statement AST header
+ * ForEverStmnt.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_STATEMENT_LOOP_FOREVER_H__
-#define __XX_AST_STATEMENT_LOOP_FOREVER_H__
+#ifndef __XX_AST_FOR_EVER_STMNT_H__
+#define __XX_AST_FOR_EVER_STMNT_H__
 
 
-#include "LoopStmnt.h"
+#include "Stmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-/**
-For-ever statement.
-\code
-// Grammar
-forEverStmnt ::= 'forever' codeBlock
-\endcode
-*/
-class ForEverStmnt : public LoopStmnt
+class ForEverStmnt : public Stmnt
 {
     
     public:
         
-        DefineASTVisitProc(ForEverStmnt);
+        AST_INTERFACE(ForEverStmnt);
 
-        LoopTypes LoopType() const
-        {
-            return LoopTypes::ForEver;
-        }
+        CodeBlockPtr codeBlock;
 
 };
 

@@ -19,7 +19,7 @@ namespace SyntaxAnalyzer
 {
 
 
-DeclPtr(SourceCode);
+DECL_SHR_PTR(SourceCode);
 
 //! Interface for a source code.
 class SourceCode

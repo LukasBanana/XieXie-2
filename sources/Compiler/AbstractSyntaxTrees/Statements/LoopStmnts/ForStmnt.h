@@ -5,32 +5,28 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_STATEMENT_LOOP_FOR_H__
-#define __XX_AST_STATEMENT_LOOP_FOR_H__
+#ifndef __XX_AST_FOR_STMNT_H__
+#define __XX_AST_FOR_STMNT_H__
 
 
-#include "LoopStmnt.h"
+#include "Stmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class ForStmnt : public LoopStmnt
+class ForStmnt : public Stmnt
 {
     
     public:
         
-        DefineASTVisitProc(ForStmnt);
-
-        LoopTypes LoopType() const
-        {
-            return LoopTypes::For;
-        }
+        AST_INTERFACE(ForStmnt);
 
         ForInitPtr      forInit;
         ExprPtr         condExpr;
         AssignStmntPtr  assignStmnt;
+        CodeBlockPtr    codeBlock;
 
 };
 

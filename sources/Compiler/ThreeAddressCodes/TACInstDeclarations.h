@@ -16,7 +16,7 @@ namespace ThreeAddressCodes
 {
 
 
-DeclPtr( TACInst );
+DECL_SHR_PTR( TACInst );
 
 
 } // /namespace ThreeAddressCodes

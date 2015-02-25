@@ -19,7 +19,7 @@ namespace ThreeAddressCodes
 {
 
 
-DeclPtr(TACConst);
+DECL_SHR_PTR(TACConst);
 
 //! TAC constant class.
 class TACConst

@@ -1,5 +1,5 @@
 /*
- * Visitor interface header
+ * Visitor.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -18,25 +18,17 @@ namespace AbstractSyntaxTrees
 
 /* === Macros === */
 
-#define VISIT           Visit(ThisPtr())
-#define VISIT_ARG(p)    Visit(ThisPtr(), p)
-
-#define DefAbstractVisitProc(n)                             \
-    virtual void Visit##n(n##Ptr ast, void* args = nullptr) \
-    {                                                       \
-        /* Dummy procedure (do nothing) */                  \
+#define DEF_ABSTRACT_VISIT_PROC(name)                           \
+    virtual void Visit##name(name* ast, void* args = nullptr)   \
+    {                                                           \
+        /* dummy */                                             \
     }
 
-#define DeclVisitProc(n) \
-    void Visit##n(n##Ptr ast, void* args = nullptr);
+#define DECL_VISIT_PROC(name) \
+    void Visit##name(name* ast, void* args = nullptr)
 
-#define DefVisitProc(c, n) \
-    void c::Visit##n(n##Ptr ast, void* args)
-
-#define class_visitor(n)                \
-    class n;                            \
-    typedef std::shared_ptr<n> n##Ptr;  \
-    class n : public Visitor
+#define DEF_VISIT_PROC(visitor, name) \
+    void visitor::Visit##name(name* ast, void* args)
 
 
 /* === Visitor interface === */
@@ -50,28 +42,26 @@ class Visitor
         {
         }
 
-        /* === Common AST nodes === */
+        /* --- Common AST nodes --- */
 
-        DefAbstractVisitProc( CodeBlock     )
+        DEF_ABSTRACT_VISIT_PROC( CodeBlock     );
 
-        /* === Statements === */
+        /* --- Statements --- */
 
-        DefAbstractVisitProc( Stmnt         )
-        DefAbstractVisitProc( StmntList     )
-        DefAbstractVisitProc( DoWhileStmnt  )
-        DefAbstractVisitProc( WhileStmnt    )
-        DefAbstractVisitProc( ForStmnt      )
-        DefAbstractVisitProc( ForRangeStmnt )
-        DefAbstractVisitProc( ForEachStmnt  )
-        DefAbstractVisitProc( ForEverStmnt  )
+        DEF_ABSTRACT_VISIT_PROC( Stmnt         );
+        DEF_ABSTRACT_VISIT_PROC( StmntList     );
+        DEF_ABSTRACT_VISIT_PROC( DoWhileStmnt  );
+        DEF_ABSTRACT_VISIT_PROC( WhileStmnt    );
+        DEF_ABSTRACT_VISIT_PROC( ForStmnt      );
+        DEF_ABSTRACT_VISIT_PROC( ForRangeStmnt );
+        DEF_ABSTRACT_VISIT_PROC( ForEachStmnt  );
+        DEF_ABSTRACT_VISIT_PROC( ForEverStmnt  );
 
     protected:
         
-        /* === Inline functions === */
-
-        inline Visitor* ThisPtr()
+        template <typename T> void Visit(T* ast, void* args = nullptr)
         {
-            return this;
+            ast->Visit(this, args);
         }
 
 };

@@ -1,34 +1,30 @@
 /*
- * While statement AST header
+ * WhileStmnt.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_STATEMENT_LOOP_WHILE_H__
-#define __XX_AST_STATEMENT_LOOP_WHILE_H__
+#ifndef __XX_AST_WHILE_STMNT_H__
+#define __XX_AST_WHILE_STMNT_H__
 
 
-#include "LoopStmnt.h"
+#include "Stmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class WhileStmnt : public LoopStmnt
+class WhileStmnt : public Stmnt
 {
     
     public:
         
-        DefineASTVisitProc(WhileStmnt);
+        AST_INTERFACE(WhileStmnt);
 
-        LoopTypes LoopType() const
-        {
-            return LoopTypes::While;
-        }
-
-        ExprPtr condExpr;
+        ExprPtr         condExpr;
+        CodeBlockPtr    codeBlock;
 
 };
 

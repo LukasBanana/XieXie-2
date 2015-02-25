@@ -16,19 +16,19 @@ namespace AbstractSyntaxTrees
 {
 
 
-DeclPtr( Visitor       );
-DeclPtr( AST           );
+DECL_SHR_PTR( Visitor       );
+DECL_SHR_PTR( AST           );
 
-DeclPtr( CodeBlock     );
+DECL_SHR_PTR( CodeBlock     );
 
-DeclPtr( Stmnt         );
-DeclPtr( StmntList     );
-DeclPtr( DoWhileStmnt  );
-DeclPtr( WhileStmnt    );
-DeclPtr( ForStmnt      );
-DeclPtr( ForRangeStmnt );
-DeclPtr( ForEachStmnt  );
-DeclPtr( ForEverStmnt  );
+DECL_SHR_PTR( Stmnt         );
+DECL_SHR_PTR( StmntList     );
+DECL_SHR_PTR( DoWhileStmnt  );
+DECL_SHR_PTR( WhileStmnt    );
+DECL_SHR_PTR( ForStmnt      );
+DECL_SHR_PTR( ForRangeStmnt );
+DECL_SHR_PTR( ForEachStmnt  );
+DECL_SHR_PTR( ForEverStmnt  );
 
 
 } // /namespace AbstractSyntaxTrees

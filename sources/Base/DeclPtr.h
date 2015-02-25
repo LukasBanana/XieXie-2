@@ -11,7 +11,7 @@
 
 #include <memory>
 
-#define DeclPtr(n)                                  \
+#define DECL_SHR_PTR(n)                             \
     class n;                                        \
     typedef std::shared_ptr<n> n##Ptr;              \
     typedef std::shared_ptr<const n> n##ConstPtr;
