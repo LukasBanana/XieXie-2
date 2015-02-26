@@ -16,21 +16,21 @@ decl_stmnt_list: 		decl_stmnt+;
 extern_decl_stmnt_list:	extern_decl_stmnt+;
 class_decl_stmnt_list:	class_decl_stmnt+;
 
-stmnt	: variable_decl_stmnt
+stmnt	: var_decl_stmnt
 		| branch_stmnt
 		| loop_stmnt
 		| assign_stmnt
 		| ctrl_transfer_stmnt;
 
-decl_stmnt	: variable_decl_stmnt
+decl_stmnt	: var_decl_stmnt
 			| class_decl_stmnt
 			| enum_decl_stmnt
 			| flags_decl_stmnt
-			| function_decl_stmnt
+			| proc_decl_stmnt
 			| init_decl_stmnt;
 
 extern_decl_stmnt	: extern_class_decl_stmnt
-					| extern_function_decl_stmnt
+					| extern_proc_decl_stmnt
 					| extern_init_decl_stmnt
 					| enum_decl_stmnt
 					| flags_decl_stmnt;
@@ -54,9 +54,9 @@ assign_stmnt	: copy_assign_stmnt
 				| post_operator_stmnt;
 
 // ASSIGN STATEMENTS
-copy_assign_stmnt:		(variable_name ':=')+ expr;
-modify_assign_stmnt:	variable_name ('+=' | '-=' | '*=' | '/=' | '%=' | '<<=' | '>>=' | '|=' | '&=' | '^=') expr;
-post_operator_stmnt:	variable_name ('++' | '--');
+copy_assign_stmnt:		(var_name ':=')+ expr;
+modify_assign_stmnt:	var_name ('+=' | '-=' | '*=' | '/=' | '%=' | '<<=' | '>>=' | '|=' | '&=' | '^=') expr;
+post_operator_stmnt:	var_name ('++' | '--');
 
 // BRANCH STATEMENTS
 if_stmnt:		'if' if_condition code_block else_stmnt?;
@@ -82,77 +82,86 @@ pattern				: expr_pattern
 
 expr_pattern: 		arithmetic_expr;
 
-enum_case_pattern:	(variable_name '.')? enum_case_name;
+enum_case_pattern:	(var_name '.')? enum_case_name;
 enum_case_name:		IDENT;
 
 // LOOP STATEMENTS
 for_stmnt:			'for' for_init? ';' arithmetic_expr? ';' assign_stmnt? code_block;
 for_each_stmnt:		'foreach' for_each_init ':' expr code_block;
 for_ever_stmnt:		'forever' code_block;
-for_range_stmnt:	'for' variable_ident ':' for_range '..' for_range ('->' for_range)? code_block;
+for_range_stmnt:	'for' IDENT ':' for_range '..' for_range ('->' for_range)? code_block;
 while_stmnt:		'while' expr code_block;
 do_while_stmnt:		'do' code_block 'while' expr;
 
-for_init:		variable_decl_stmnt | assign_stmnt;
-for_each_init:	variable_decl_stmnt;
-for_range:		INT_LITERAL;
+for_init:			var_decl_stmnt | assign_stmnt;
+for_each_init:		var_decl_stmnt;
+for_range:			INT_LITERAL;
 
 // ATTRIBUTES
-attribute_prefix:			'[[' attribute_list ']]';
-attribute_list:				attribute (',' attribute)+;
-attribute:					IDENT ('(' attribute_argument_list ')')?;
-attribute_argument_list:	attribute_argument (',' attribute_argument)*;
-attribute_argument:			expr;
+attrib_prefix:		'[[' attrib_list ']]';
+attrib_list:		attrib (',' attrib)+;
+attrib:				IDENT ('(' attrib_arg_list ')')?;
+attrib_arg_list:	attrib_arg (',' attrib_arg)*;
+attrib_arg:			expr;
 
 // VARIABLES
-variable_name:		variable_ident array_access_list? ('.' variable_name)?;
-variable_ident:		IDENT;
+var_name:			var_ident array_access? ('.' var_name)?;
+var_ident:			IDENT;
 
-variable_decl_stmnt:		data_type_denoter IDENT variable_init? (',' IDENT variable_init?)*;
-variable_init:				':=' expr;
+var_decl_stmnt:		type_denoter var_decl_list;
+var_decl_list:		var_decl (',' var_decl)*;
+var_decl:			IDENT var_init?
+var_init:			':=' expr;
 
 // ARRAYS
-array_access_list:	array_access+;
-array_access:		'[' array_index ']';
+array_access:		'[' array_index ']' array_access?;
 array_index:		arithmetic_expr;
 
 // CLASSES
 class_decl_stmnt:			intern_class_decl_stmnt | extern_class_decl_stmnt;
 intern_class_decl_stmnt:	'class' class_name type_inheritance? class_body;
 extern_class_decl_stmnt:	'extern' 'class' class_name extern_class_body;
-class_body:					'{' (class_visibility? decl_stmnt_list?)* '}';
+class_body:					'{' class_body_segment_list '}';
+class_body_segment_list:	class_body_segment*;
+class_body_segment:			class_visibility? decl_stmnt_list?;
 class_visibility:			class_visibility_type ':';
 class_visibility_type:		'public' | 'private';
 extern_class_body:			'{' extern_decl_stmnt_list? '}';
 class_name:					IDENT;
 
-type_inheritance:			':' variable_name;
-type_multi_inheritance:		':' variable_name (',' variable_name)*;
+type_inheritance:			':' var_name;
+type_multi_inheritance:		':' var_name (',' var_name)*;
 
 // ENUMERATIONS
-enum_decl_stmnt:	'enum' variable_ident enum_body;
+enum_decl_stmnt:	'enum' IDENT enum_body;
 enum_body:			'{' enum_entry_list? '}';
 enum_entry_list:	enum_entry (',' enum_entry)*;
 enum_entry:			enum_entry_name (':=' expr)?;
 enum_entry_name:	IDENT;
 
 // FLAGS
-flags_decl_stmnt:	'flags' variable_ident type_multi_inheritance? flags_body;
+flags_decl_stmnt:	'flags' IDENT type_multi_inheritance? flags_body;
 flags_body:			'{' flags_entry_list? '}';
 flags_entry_list:	flags_entry (',' flags_entry)*;
 flags_entry:		IDENT;
 
-// FUNCTIONS
-function_decl_stmnt:		attribute_prefix? function_head code_block;
-extern_function_decl_stmnt:	attribute_prefix? function_head;
-function_head:				function_modifier? return_type_denoter variable_ident '(' parameter_list? ')';
-function_modifier:			'static';
-parameter_list:				parameter (',' parameter)*;
-parameter:					data_type_denoter variable_ident (':=' expr)?;
+// PROCEDURES
+proc_decl_stmnt:			attrib_prefix? proc_signature code_block;
+extern_proc_decl_stmnt:		attrib_prefix? proc_signature;
+proc_signature:				proc_modifier? return_type_denoter IDENT '(' param_list? ')';
+proc_modifier:				'static';
 
-init_decl_stmnt:			attribute_prefix? init_head code_block;
-extern_init_decl_stmnt:		attribute_prefix? init_head;
-init_head:					function_modifier? 'init' '(' parameter_list? ')';
+init_decl_stmnt:			attrib_prefix? init_head code_block;
+extern_init_decl_stmnt:		attrib_prefix? init_head;
+init_head:					proc_modifier? 'init' '(' param_list? ')';
+
+// PARAMETERS:
+param_list:		param (',' param)*;
+param:			type_denoter IDENT (':=' expr)?;
+
+// ARGUMENTS
+arg_list:	arg (',' arg)*;
+arg:		(expr | IDENT ':' expr);
 
 // EXPRESSIONS
 expr_list:	expr (',' expr)*;
@@ -177,44 +186,42 @@ mul_expr:			div_expr ('*' div_expr)*;
 div_expr:			value_expr (('/' | '%') value_expr)*;
 
 value_expr			: literal_expr
-					| object_expr
+					| var_access_expr
+					| alloc_expr
 					| bracket_expr
 					| cast_expr
 					| call_expr
 					| unary_expr;
 
-object_expr			: variable_name
-					| new_expr;
+var_access_expr		: var_name
 
-new_expr:			'new' data_type_denoter (array_dimension | constructor_init)?;
+alloc_expr:			'new' type_denoter (array_dimension | ctor_init)?;
 array_dimension:	'[' arithmetic_expr ']';
-constructor_init:	'(' argument_list? ')';
+ctor_init:			'(' arg_list? ')';
 
 literal_expr:		LITERAL;
 bracket_expr:		'(' arithmetic_expr ')';
-cast_expr: 			'(' data_type_denoter ')' value_expr;
-call_expr:			function_call;
+cast_expr: 			'(' type_denoter ')' value_expr;
+call_expr:			proc_call;
 unary_expr:			('~' | '-' | 'not') value_expr;
 
-function_call:		variable_name '(' argument_list? ')';
-argument_list:		argument (',' argument)*;
-argument:			(expr | variable_ident ':' expr);
+proc_call:			var_name '(' arg_list? ')';
 
 // TYPE DENOTERS
-data_type_denoter	: builtin_type_denoter
-					| array_type_denoter
-					| class_type_denoter;
+type_denoter			: builtin_type_denoter
+						| array_type_denoter
+						| class_type_denoter;
 
 builtin_type_denoter	: BOOL_TYPE_DENOTER
 						| INT_TYPE_DENOTER
 						| FLOAT_TYPE_DENOTER;
 
-return_type_denoter	: VOID_TYPE_DENOTER
-					| data_type_denoter;
+return_type_denoter		: VOID_TYPE_DENOTER
+						| type_denoter;
 
-array_type_denoter:		data_type_denoter '[]';
+array_type_denoter:		type_denoter '[]';
 
-class_type_denoter:		variable_name;
+class_type_denoter:		var_name;
 
 VOID_TYPE_DENOTER:		'void';
 BOOL_TYPE_DENOTER:		'bool';
