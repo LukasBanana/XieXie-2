@@ -122,6 +122,12 @@ class Token
 
             New,            //!< new
 
+            // Reserved keywords (for later use)
+            Package,        //!< package
+            Alias,          //!< alias
+            Pattern,        //!< pattern
+            Sync,           //!< sync
+
             // Special tokens
             EndOfFile,
         };

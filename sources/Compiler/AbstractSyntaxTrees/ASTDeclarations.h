@@ -16,19 +16,61 @@ namespace AbstractSyntaxTrees
 {
 
 
-DECL_SHR_PTR( Visitor       );
-DECL_SHR_PTR( AST           );
+/* --- Abstract AST nodes --- */
 
-DECL_SHR_PTR( CodeBlock     );
+DECL_SHR_PTR( Visitor            );
+DECL_SHR_PTR( AST                );
+DECL_SHR_PTR( Stmnt              );
+DECL_SHR_PTR( Expr               );
+DECL_SHR_PTR( ProcSignature      );
+DECL_SHR_PTR( AttribPrefix       );
+DECL_SHR_PTR( TypeDenoter        );
 
-DECL_SHR_PTR( Stmnt         );
-DECL_SHR_PTR( StmntList     );
-DECL_SHR_PTR( DoWhileStmnt  );
-DECL_SHR_PTR( WhileStmnt    );
-DECL_SHR_PTR( ForStmnt      );
-DECL_SHR_PTR( ForRangeStmnt );
-DECL_SHR_PTR( ForEachStmnt  );
-DECL_SHR_PTR( ForEverStmnt  );
+/* --- Common AST nodes --- */
+
+DECL_SHR_PTR( CodeBlock          );
+DECL_SHR_PTR( ForInit            );
+DECL_SHR_PTR( VarName            );
+DECL_SHR_PTR( VarDecl            );
+DECL_SHR_PTR( Param              );
+DECL_SHR_PTR( Arg                );
+DECL_SHR_PTR( ProcSignature      );
+DECL_SHR_PTR( AttribPrefix       );
+DECL_SHR_PTR( EnumEntry          );
+DECL_SHR_PTR( ClassBodySegment   );
+DECL_SHR_PTR( ArrayAccess        );
+DECL_SHR_PTR( ProcCall           );
+
+/* --- Statements --- */
+
+DECL_SHR_PTR( DoWhileStmnt       );
+DECL_SHR_PTR( WhileStmnt         );
+DECL_SHR_PTR( ForStmnt           );
+DECL_SHR_PTR( ForRangeStmnt      );
+DECL_SHR_PTR( ForEachStmnt       );
+DECL_SHR_PTR( ForEverStmnt       );
+
+DECL_SHR_PTR( ClassDeclStmnt     );
+DECL_SHR_PTR( EnumDeclStmnt      );
+DECL_SHR_PTR( FlagsDeclStmnt     );
+DECL_SHR_PTR( ProcDeclStmnt      );
+DECL_SHR_PTR( VarDeclStmnt       );
+
+/* --- Expressions --- */
+
+DECL_SHR_PTR( BinaryExpr         );
+DECL_SHR_PTR( UnaryExpr          );
+DECL_SHR_PTR( LiteralExpr        );
+DECL_SHR_PTR( CastExpr           );
+DECL_SHR_PTR( CallExpr           );
+DECL_SHR_PTR( AllocExpr          );
+DECL_SHR_PTR( VarNameExpr        );
+
+/* --- Type denoters --- */
+
+DECL_SHR_PTR( BuiltinTypeDenoter );
+DECL_SHR_PTR( ArrayTypeDenoter   );
+DECL_SHR_PTR( ClassTypeDenoter   );
 
 
 } // /namespace AbstractSyntaxTrees

@@ -1,30 +1,31 @@
 /*
- * For init AST header
+ * FlagsDeclStmnt.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_FOR_INIT_H__
-#define __XX_AST_FOR_INIT_H__
+#ifndef __XX_AST_FLAGS_DECL_STMNT_H__
+#define __XX_AST_FLAGS_DECL_STMNT_H__
 
 
-#include "AST.h"
+#include "Stmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class ForInit : public AST
+class FlagsDeclStmnt : public Stmnt
 {
     
     public:
         
-        AST_INTERFACE(ForInit);
+        AST_INTERFACE(FlagsDeclStmnt);
 
-        VarDeclStmntPtr varDeclStmnt;
-        AssignStmntPtr  assignStmnt;
+        std::string                 ident;
+        std::vector<VarNamePtr>     inheritanceTypeNames;
+        std::vector<std::string>    entries;
 
 };
 

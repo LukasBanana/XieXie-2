@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <functional>
+#include <vector>
 
 
 namespace AbstractSyntaxTrees
@@ -53,12 +54,25 @@ class AST
         {
             /* --- Common AST types --- */
             CodeBlock,
+            ForInit,
+            VarName,
+            VarDecl,
+            Param,
+            Arg,
+            ProcSignature,
+            AttribPrefix,
+            EnumEntry,
+            ClassBodySegment,
+            ArrayAccess,
+            ProcCall,
 
             /* --- Statements --- */
             CtrlTransferStmnt,
+            
             IfStmnt,
             ElseStmnt,
             SwitchStmnt,
+
             ForStmnt,
             ForEachStmnt,
             ForEverStmnt,
@@ -66,9 +80,28 @@ class AST
             WhileStmnt,
             DoWhileStmnt,
 
+            ClassDeclStmnt,
+            VarDeclStmnt,
+            EnumDeclStmnt,
+            FlagsDeclStmnt,
+            ProcDeclStmnt,
+
+            ExternClassDeclStmnt,
+            ExternProcDeclStmnt,
+
             /* --- Expressions --- */
             BinaryExpr,
             UnaryExpr,
+            LiteralExpr,
+            CastExpr,
+            CallExpr,
+            AllocExpr,
+            VarNameExpr,
+
+            /* --- Type denoters --- */
+            BuiltinTypeDenoter,
+            ArrayTypeDenoter,
+            ClassTypeDenoter,
         };
 
         virtual ~AST()
