@@ -104,8 +104,10 @@ class AST
             LiteralExpr,
             CastExpr,
             CallExpr,
+            MemberCallExpr,
             AllocExpr,
             VarNameExpr,
+            InitListExpr,
 
             /* --- Type denoters --- */
             BuiltinTypeDenoter,

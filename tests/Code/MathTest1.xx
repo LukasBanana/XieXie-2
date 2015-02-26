@@ -4,26 +4,38 @@
 
 extern class Math {
 	
-	static float Sqrt(float x)
+	static float sqrt(float x)
 	
-	static float Sq(float x)
+	static float sq(float x)
 	
-	static float DistanceSq(Vector3 a, Vector3 b)
+	static float distanceSq(Vector3 a, Vector3 b)
 	
 }
 
 class Vector3 {
 	
-	void Normalize() {
+	init() {
+		x,y,z := 0.0
+	}
+	
+	void normalize() {
 		float len := x*x + y*y + z*z
 		
 		if len != 0.0 and len != 1.0 {
-			len := 1.0 / Math.Sqrt(len)
+			len := 1.0 / Math.sqrt(len)
 			
 			x *= len
 			y *= len
 			z *= len
 		}
+	}
+	
+	String toString() {
+		String s
+		for int i := 0 ; i < { x, y, z }.size() ; i++ {
+			s += i.toString()
+		}
+		return s
 	}
 	
 	float x, y, z
@@ -32,20 +44,20 @@ class Vector3 {
 
 class Test {
 	
-	int Fibonacci(int n) {
+	int fibonacci(int n) {
 		if n <= 2 {
 			return 1
 		}
-		return Fibonacci(n - 1) + Fibonacci(n - 2)
+		return fibonacci(n - 1) + fibonacci(n - 2)
 	}
 	
-	void OnMouseDown(int button) {
+	void onMouseDown(int button) {
 		if button = 1 {
-			Fire()
+			fire()
 		}
 	}
 	
-	int Main(String[] args) {
+	int main(String[] args) {
 		
 		Vector3[] coords := new Vector3[100]
 		

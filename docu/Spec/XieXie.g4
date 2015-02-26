@@ -77,7 +77,7 @@ continue_stmnt:	'continue';
 return_stmnt:	'return' expr?;
 
 // LOOP STATEMENTS
-for_stmnt:			'for' for_init? ';' arithmetic_expr? ';' assign_stmnt? code_block;
+for_stmnt:			'for' for_init? ';' expr? ';' assign_stmnt? code_block;
 for_each_stmnt:		'foreach' for_each_init ':' expr code_block;
 for_ever_stmnt:		'forever' code_block;
 for_range_stmnt:	'for' IDENT ':' for_range '..' for_range ('->' for_range)? code_block;
@@ -106,7 +106,7 @@ var_init:			':=' expr;
 
 // ARRAYS
 array_access:		'[' array_index ']' array_access?;
-array_index:		arithmetic_expr;
+array_index:		expr;
 
 // CLASSES
 class_decl_stmnt:			intern_class_decl_stmnt | extern_class_decl_stmnt;
@@ -157,12 +157,7 @@ arg:		(expr | IDENT ':' expr);
 // EXPRESSIONS
 expr_list:	expr (',' expr)*;
 
-expr	: arithmetic_expr
-		| init_list_expr;
-
-init_list_expr: '{' expr_list? '}';
-
-arithmetic_expr:	logic_or_expr;
+expr:				logic_or_expr;
 logic_or_expr:		logic_and_expr ('or' logic_and_expr)*;
 logic_and_expr:		bitwise_or_expr ('and' bitwise_or_expr)*;
 bitwise_or_expr:	bitwise_xor_expr ('|' bitwise_xor_expr)*;
@@ -176,27 +171,33 @@ sub_expr:			mul_expr ('-' mul_expr)*;
 mul_expr:			div_expr ('*' div_expr)*;
 div_expr:			value_expr (('/' | '%') value_expr)*;
 
-value_expr			: literal_expr
+value_expr:			(primary_value_expr | value_expr member_proc_call)
+
+primary_value_expr	: literal_expr
 					| var_access_expr
 					| alloc_expr
 					| bracket_expr
 					| cast_expr
 					| call_expr
-					| unary_expr;
+					| unary_expr
+					| init_list_expr;
 
 var_access_expr		: var_name
 
+init_list_expr: 	'{' expr_list? '}';
+
 alloc_expr:			'new' type_denoter (array_dimension | ctor_init)?;
-array_dimension:	'[' arithmetic_expr ']';
+array_dimension:	'[' expr ']';
 ctor_init:			'(' arg_list? ')';
 
 literal_expr:		LITERAL;
-bracket_expr:		'(' arithmetic_expr ')';
+bracket_expr:		'(' expr ')';
 cast_expr: 			'(' type_denoter ')' value_expr;
 call_expr:			proc_call;
 unary_expr:			('~' | '-' | 'not') value_expr;
 
 proc_call:			var_name '(' arg_list? ')';
+member_proc_call:	'.' IDENT '(' arg_list? ')';
 
 // TYPE DENOTERS
 type_denoter			: builtin_type_denoter
