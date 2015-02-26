@@ -1,30 +1,30 @@
 /*
- * For init AST header
+ * SwitchStmnt.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_FOR_INIT_H__
-#define __XX_AST_FOR_INIT_H__
+#ifndef __XX_AST_SWITCH_STMNT_H__
+#define __XX_AST_SWITCH_STMNT_H__
 
 
-#include "AST.h"
+#include "Stmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class ForInit : public AST
+class SwitchStmnt : public Stmnt
 {
     
     public:
         
-        AST_INTERFACE(ForInit);
+        AST_INTERFACE_EXT(SwitchStmnt, Stmnt);
 
-        VarDeclStmntPtr varDeclStmnt;
-        AssignStmntPtr  assignStmnt;
+        ExprPtr                     expr;
+        std::vector<SwitchCasePtr>  cases;
 
 };
 

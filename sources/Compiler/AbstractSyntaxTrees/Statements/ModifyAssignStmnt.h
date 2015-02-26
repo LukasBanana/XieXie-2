@@ -1,12 +1,12 @@
 /*
- * WhileStmnt.h
+ * ModifyAssignStmnt.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_WHILE_STMNT_H__
-#define __XX_AST_WHILE_STMNT_H__
+#ifndef __XX_AST_MODIFY_ASSIGN_STMNT_H__
+#define __XX_AST_MODIFY_ASSIGN_STMNT_H__
 
 
 #include "Stmnt.h"
@@ -16,15 +16,15 @@ namespace AbstractSyntaxTrees
 {
 
 
-class WhileStmnt : public Stmnt
+class ModifyAssignStmnt : public Stmnt
 {
     
     public:
         
-        AST_INTERFACE_EXT(WhileStmnt, Stmnt);
+        AST_INTERFACE_EXT(ModifyAssignStmnt, Stmnt);
 
-        ExprPtr         condExpr;
-        CodeBlockPtr    codeBlock;
+        VarNamePtr  varName;
+        ExprPtr     expr;
 
 };
 

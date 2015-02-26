@@ -1,5 +1,5 @@
 /*
- * Code block AST header
+ * CodeBlock.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -9,7 +9,7 @@
 #define __XX_AST_CODE_BLOCK_H__
 
 
-#include "StmntList.h"
+#include "AST.h"
 
 
 namespace AbstractSyntaxTrees
@@ -21,18 +21,11 @@ class CodeBlock : public AST
     
     public:
         
-        DefineASTVisitProc(CodeBlock);
+        AST_INTERFACE(CodeBlock);
 
-        void RefreshSourceArea()
-        {
-            if (stmntList)
-            {
-                stmntList->RefreshSourceArea();
-                sourceArea = stmntList->sourceArea;
-            }
-        }
+        void RefreshSourceArea();
 
-        StmntListPtr stmntList;
+        std::vector<StmntPtr> stmnts;
 
 };
 

@@ -18,59 +18,73 @@ namespace AbstractSyntaxTrees
 
 /* --- Abstract AST nodes --- */
 
-DECL_SHR_PTR( Visitor            );
-DECL_SHR_PTR( AST                );
-DECL_SHR_PTR( Stmnt              );
-DECL_SHR_PTR( Expr               );
-DECL_SHR_PTR( ProcSignature      );
-DECL_SHR_PTR( AttribPrefix       );
-DECL_SHR_PTR( TypeDenoter        );
+DECL_SHR_PTR( Visitor              );
+DECL_SHR_PTR( AST                  );
+DECL_SHR_PTR( Stmnt                );
+DECL_SHR_PTR( Expr                 );
+DECL_SHR_PTR( ProcSignature        );
+DECL_SHR_PTR( AttribPrefix         );
+DECL_SHR_PTR( TypeDenoter          );
 
 /* --- Common AST nodes --- */
 
-DECL_SHR_PTR( CodeBlock          );
-DECL_SHR_PTR( ForInit            );
-DECL_SHR_PTR( VarName            );
-DECL_SHR_PTR( VarDecl            );
-DECL_SHR_PTR( Param              );
-DECL_SHR_PTR( Arg                );
-DECL_SHR_PTR( ProcSignature      );
-DECL_SHR_PTR( AttribPrefix       );
-DECL_SHR_PTR( EnumEntry          );
-DECL_SHR_PTR( ClassBodySegment   );
-DECL_SHR_PTR( ArrayAccess        );
-DECL_SHR_PTR( ProcCall           );
+DECL_SHR_PTR( CodeBlock            );
+DECL_SHR_PTR( ForInit              );
+DECL_SHR_PTR( VarName              );
+DECL_SHR_PTR( VarDecl              );
+DECL_SHR_PTR( Param                );
+DECL_SHR_PTR( Arg                  );
+DECL_SHR_PTR( ProcSignature        );
+DECL_SHR_PTR( AttribPrefix         );
+DECL_SHR_PTR( EnumEntry            );
+DECL_SHR_PTR( ClassBodySegment     );
+DECL_SHR_PTR( ArrayAccess          );
+DECL_SHR_PTR( ProcCall             );
+DECL_SHR_PTR( SwitchCase           );
 
 /* --- Statements --- */
 
-DECL_SHR_PTR( DoWhileStmnt       );
-DECL_SHR_PTR( WhileStmnt         );
-DECL_SHR_PTR( ForStmnt           );
-DECL_SHR_PTR( ForRangeStmnt      );
-DECL_SHR_PTR( ForEachStmnt       );
-DECL_SHR_PTR( ForEverStmnt       );
+DECL_SHR_PTR( ReturnStmnt          );
+DECL_SHR_PTR( CtrlTransferStmnt    );
 
-DECL_SHR_PTR( ClassDeclStmnt     );
-DECL_SHR_PTR( EnumDeclStmnt      );
-DECL_SHR_PTR( FlagsDeclStmnt     );
-DECL_SHR_PTR( ProcDeclStmnt      );
-DECL_SHR_PTR( VarDeclStmnt       );
+DECL_SHR_PTR( IfStmnt              );
+DECL_SHR_PTR( SwitchStmnt          );
+
+DECL_SHR_PTR( DoWhileStmnt         );
+DECL_SHR_PTR( WhileStmnt           );
+DECL_SHR_PTR( ForStmnt             );
+DECL_SHR_PTR( ForRangeStmnt        );
+DECL_SHR_PTR( ForEachStmnt         );
+DECL_SHR_PTR( ForEverStmnt         );
+
+DECL_SHR_PTR( ClassDeclStmnt       );
+DECL_SHR_PTR( VarDeclStmnt         );
+DECL_SHR_PTR( EnumDeclStmnt        );
+DECL_SHR_PTR( FlagsDeclStmnt       );
+DECL_SHR_PTR( ProcDeclStmnt        );
+
+DECL_SHR_PTR( CopyAssignStmnt      );
+DECL_SHR_PTR( ModifyAssignStmnt    );
+DECL_SHR_PTR( PostOperatorStmnt    );
+
+DECL_SHR_PTR( ExternClassDeclStmnt );
+DECL_SHR_PTR( ExternProcDeclStmnt  );
 
 /* --- Expressions --- */
 
-DECL_SHR_PTR( BinaryExpr         );
-DECL_SHR_PTR( UnaryExpr          );
-DECL_SHR_PTR( LiteralExpr        );
-DECL_SHR_PTR( CastExpr           );
-DECL_SHR_PTR( CallExpr           );
-DECL_SHR_PTR( AllocExpr          );
-DECL_SHR_PTR( VarNameExpr        );
+DECL_SHR_PTR( BinaryExpr           );
+DECL_SHR_PTR( UnaryExpr            );
+DECL_SHR_PTR( LiteralExpr          );
+DECL_SHR_PTR( CastExpr             );
+DECL_SHR_PTR( CallExpr             );
+DECL_SHR_PTR( AllocExpr            );
+DECL_SHR_PTR( VarNameExpr          );
 
 /* --- Type denoters --- */
 
-DECL_SHR_PTR( BuiltinTypeDenoter );
-DECL_SHR_PTR( ArrayTypeDenoter   );
-DECL_SHR_PTR( ClassTypeDenoter   );
+DECL_SHR_PTR( BuiltinTypeDenoter   );
+DECL_SHR_PTR( ArrayTypeDenoter     );
+DECL_SHR_PTR( DeclTypeDenoter      );
 
 
 } // /namespace AbstractSyntaxTrees

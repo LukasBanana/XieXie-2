@@ -16,12 +16,12 @@ namespace AbstractSyntaxTrees
 {
 
 
-class VarNameExpr : public AST
+class VarNameExpr : public Expr
 {
     
     public:
         
-        AST_INTERFACE(VarNameExpr);
+        AST_INTERFACE_EXT(VarNameExpr, Expr);
 
         VarNamePtr varName;
 

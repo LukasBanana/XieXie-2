@@ -1,5 +1,5 @@
 /*
- * For statement AST header
+ * ForStmnt.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -21,11 +21,11 @@ class ForStmnt : public Stmnt
     
     public:
         
-        AST_INTERFACE(ForStmnt);
+        AST_INTERFACE_EXT(ForStmnt, Stmnt);
 
         ForInitPtr      forInit;
         ExprPtr         condExpr;
-        AssignStmntPtr  assignStmnt;
+        StmntPtr        assignStmnt;
         CodeBlockPtr    codeBlock;
 
 };

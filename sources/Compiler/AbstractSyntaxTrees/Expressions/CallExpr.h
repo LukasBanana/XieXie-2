@@ -16,12 +16,12 @@ namespace AbstractSyntaxTrees
 {
 
 
-class CallExpr : public AST
+class CallExpr : public Expr
 {
     
     public:
         
-        AST_INTERFACE(CallExpr);
+        AST_INTERFACE_EXT(CallExpr, Expr);
 
         ProcCallPtr procCall;
 

@@ -21,11 +21,11 @@ class ForEachStmnt : public Stmnt
     
     public:
         
-        AST_INTERFACE(ForEachStmnt);
+        AST_INTERFACE_EXT(ForEachStmnt, Stmnt);
 
-        VariableDeclStmntPtr    varDeclStmnt;
-        ExprPtr                 listExpr;
-        CodeBlockPtr            codeBlock;
+        VarDeclStmntPtr varDeclStmnt;
+        ExprPtr         listExpr;
+        CodeBlockPtr    codeBlock;
 
 };
 

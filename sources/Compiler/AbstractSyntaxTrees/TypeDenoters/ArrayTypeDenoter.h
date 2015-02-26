@@ -1,30 +1,29 @@
 /*
- * WhileStmnt.h
+ * ArrayTypeDenoter.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_WHILE_STMNT_H__
-#define __XX_AST_WHILE_STMNT_H__
+#ifndef __XX_AST_ARRAY_TYPE_DENOTER_H__
+#define __XX_AST_ARRAY_TYPE_DENOTER_H__
 
 
-#include "Stmnt.h"
+#include "TypeDenoter.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class WhileStmnt : public Stmnt
+class ArrayTypeDenoter : public TypeDenoter
 {
     
     public:
         
-        AST_INTERFACE_EXT(WhileStmnt, Stmnt);
+        AST_INTERFACE_EXT(ArrayTypeDenoter, TypeDenoter);
 
-        ExprPtr         condExpr;
-        CodeBlockPtr    codeBlock;
+        TypeDenoterPtr typeDenoter;
 
 };
 

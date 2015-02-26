@@ -16,12 +16,12 @@ namespace AbstractSyntaxTrees
 {
 
 
-class UnaryExpr : public AST
+class UnaryExpr : public Expr
 {
     
     public:
         
-        AST_INTERFACE(UnaryExpr);
+        AST_INTERFACE_EXT(UnaryExpr, Expr);
 
         std::string unaryOperator;
         ExprPtr     expr;

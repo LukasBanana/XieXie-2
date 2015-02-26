@@ -21,7 +21,7 @@ class VarDeclStmnt : public Stmnt
     
     public:
         
-        AST_INTERFACE(VarDeclStmnt);
+        AST_INTERFACE_EXT(VarDeclStmnt, Stmnt);
 
         TypeDenoterPtr          typeDenoter;
         std::vector<VarDeclPtr> varDecl;

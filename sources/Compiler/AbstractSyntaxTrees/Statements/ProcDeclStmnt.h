@@ -21,7 +21,7 @@ class ProcDeclStmnt : public Stmnt
     
     public:
         
-        AST_INTERFACE(ProcDeclStmnt);
+        AST_INTERFACE_EXT(ProcDeclStmnt, Stmnt);
 
         AttribPrefixPtr     attribPrefix; // may be null
         ProcSignaturePtr    procSignature;

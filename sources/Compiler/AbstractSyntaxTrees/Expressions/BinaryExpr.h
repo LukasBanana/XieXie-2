@@ -16,12 +16,12 @@ namespace AbstractSyntaxTrees
 {
 
 
-class BinaryExpr : public AST
+class BinaryExpr : public Expr
 {
     
     public:
         
-        AST_INTERFACE(BinaryExpr);
+        AST_INTERFACE_EXT(BinaryExpr, Expr);
 
         ExprPtr     lhsExpr;
         std::string binaryOperator;

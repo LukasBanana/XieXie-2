@@ -26,7 +26,9 @@ namespace AbstractSyntaxTrees
 using namespace SyntaxAnalyzer;
 
 
-#define AST_INTERFACE(name)                             \
+#define AST_INTERFACE_EXT(name, super)                  \
+    name() = default;                                   \
+    name(const SourceArea& area) : super{ area } {}     \
     Types Type() const override                         \
     {                                                   \
         return Types::name;                             \
@@ -35,6 +37,8 @@ using namespace SyntaxAnalyzer;
     {                                                   \
         visitor->Visit##name(this, args);               \
     }
+
+#define AST_INTERFACE(name) AST_INTERFACE_EXT(name, AST)
 
 
 /**
@@ -65,12 +69,13 @@ class AST
             ClassBodySegment,
             ArrayAccess,
             ProcCall,
+            SwitchCase,
 
             /* --- Statements --- */
+            ReturnStmnt,
             CtrlTransferStmnt,
-            
+
             IfStmnt,
-            ElseStmnt,
             SwitchStmnt,
 
             ForStmnt,
@@ -85,6 +90,10 @@ class AST
             EnumDeclStmnt,
             FlagsDeclStmnt,
             ProcDeclStmnt,
+
+            CopyAssignStmnt,
+            ModifyAssignStmnt,
+            PostOperatorStmnt,
 
             ExternClassDeclStmnt,
             ExternProcDeclStmnt,
@@ -101,7 +110,7 @@ class AST
             /* --- Type denoters --- */
             BuiltinTypeDenoter,
             ArrayTypeDenoter,
-            ClassTypeDenoter,
+            DeclTypeDenoter,
         };
 
         virtual ~AST()

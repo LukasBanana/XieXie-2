@@ -1,30 +1,31 @@
 /*
- * WhileStmnt.h
+ * TypeDenoter.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_WHILE_STMNT_H__
-#define __XX_AST_WHILE_STMNT_H__
+#ifndef __XX_AST_TYPE_DENOTER_H__
+#define __XX_AST_TYPE_DENOTER_H__
 
 
-#include "Stmnt.h"
+#include "AST.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class WhileStmnt : public Stmnt
+class TypeDenoter : public AST
 {
     
-    public:
+    protected:
         
-        AST_INTERFACE_EXT(WhileStmnt, Stmnt);
-
-        ExprPtr         condExpr;
-        CodeBlockPtr    codeBlock;
+        TypeDenoter() = default;
+        TypeDenoter(const SourceArea& area) :
+            AST{ area }
+        {
+        }
 
 };
 

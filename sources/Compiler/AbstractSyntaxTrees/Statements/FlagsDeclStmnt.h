@@ -21,7 +21,7 @@ class FlagsDeclStmnt : public Stmnt
     
     public:
         
-        AST_INTERFACE(FlagsDeclStmnt);
+        AST_INTERFACE_EXT(FlagsDeclStmnt, Stmnt);
 
         std::string                 ident;
         std::vector<VarNamePtr>     inheritanceTypeNames;

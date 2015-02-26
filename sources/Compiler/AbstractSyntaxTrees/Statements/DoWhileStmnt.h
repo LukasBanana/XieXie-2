@@ -21,7 +21,7 @@ class DoWhileStmnt : public Stmnt
     
     public:
         
-        AST_INTERFACE(DoWhileStmnt);
+        AST_INTERFACE_EXT(DoWhileStmnt, Stmnt);
 
         CodeBlockPtr    codeBlock;
         ExprPtr         condExpr;

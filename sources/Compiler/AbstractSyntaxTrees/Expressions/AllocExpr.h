@@ -16,12 +16,12 @@ namespace AbstractSyntaxTrees
 {
 
 
-class AllocExpr : public AST
+class AllocExpr : public Expr
 {
     
     public:
         
-        AST_INTERFACE(AllocExpr);
+        AST_INTERFACE_EXT(AllocExpr, Expr);
 
         TypeDenoterPtr      typeDenoter;
         ExprPtr             arrayDimExpr; // may be null

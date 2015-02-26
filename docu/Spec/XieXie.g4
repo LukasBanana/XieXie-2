@@ -54,7 +54,7 @@ assign_stmnt	: copy_assign_stmnt
 				| post_operator_stmnt;
 
 // ASSIGN STATEMENTS
-copy_assign_stmnt:		(var_name ':=')+ expr;
+copy_assign_stmnt:		var_name (',' var_name)* ':=' expr;
 modify_assign_stmnt:	var_name ('+=' | '-=' | '*=' | '/=' | '%=' | '<<=' | '>>=' | '|=' | '&=' | '^=') expr;
 post_operator_stmnt:	var_name ('++' | '--');
 
@@ -69,21 +69,12 @@ switch_case:		(case_label | default_label) stmnt_list;
 case_label:			'case' case_item_list ':';
 default_label:		'default' ':';
 case_item_list:		case_item (',' case_item)*;
-case_item:			pattern;
+case_item:			expr;
 
 // CTRL TRANSFER STATEMENTS
 break_stmnt:	'break';
 continue_stmnt:	'continue';
 return_stmnt:	'return' expr?;
-
-// PATTERNS
-pattern				: expr_pattern
-					| enum_case_pattern;
-
-expr_pattern: 		arithmetic_expr;
-
-enum_case_pattern:	(var_name '.')? enum_case_name;
-enum_case_name:		IDENT;
 
 // LOOP STATEMENTS
 for_stmnt:			'for' for_init? ';' arithmetic_expr? ';' assign_stmnt? code_block;
@@ -210,7 +201,7 @@ proc_call:			var_name '(' arg_list? ')';
 // TYPE DENOTERS
 type_denoter			: builtin_type_denoter
 						| array_type_denoter
-						| class_type_denoter;
+						| decl_type_denoter;
 
 builtin_type_denoter	: BOOL_TYPE_DENOTER
 						| INT_TYPE_DENOTER
@@ -221,7 +212,7 @@ return_type_denoter		: VOID_TYPE_DENOTER
 
 array_type_denoter:		type_denoter '[]';
 
-class_type_denoter:		var_name;
+decl_type_denoter:		var_name;
 
 VOID_TYPE_DENOTER:		'void';
 BOOL_TYPE_DENOTER:		'bool';

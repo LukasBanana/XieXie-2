@@ -44,6 +44,10 @@ class Token
             PointerLiteral, //!< null
             ObjectLiteral,  //!< this | super
 
+            // Type denoters
+            BuiltinType,    //!< bool, int, float
+            Void,           //!< void
+
             // Operators
             BitwiseOrOp,    //!< |
             BitwiseXorOp,   //!< ^
@@ -83,11 +87,6 @@ class Token
             At,             //!< @
 
             // Keywords
-            Void,           //!< void
-            Bool,           //!< bool
-            Int,            //!< int
-            Float,          //!< float
-
             Or,             //!< or
             And,            //!< and
             Not,            //!< not

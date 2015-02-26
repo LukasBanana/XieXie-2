@@ -21,7 +21,7 @@ class ForEverStmnt : public Stmnt
     
     public:
         
-        AST_INTERFACE(ForEverStmnt);
+        AST_INTERFACE_EXT(ForEverStmnt, Stmnt);
 
         CodeBlockPtr codeBlock;
 

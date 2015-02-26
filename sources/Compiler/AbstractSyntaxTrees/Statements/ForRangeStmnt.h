@@ -21,13 +21,13 @@ class ForRangeStmnt : public Stmnt
     
     public:
         
-        AST_INTERFACE(ForRangeStmnt);
+        AST_INTERFACE_EXT(ForRangeStmnt, Stmnt);
 
-        VariableIdentPtr    varIdent;
-        IntLiteralPtr       rangeStart;
-        IntLiteralPtr       rangeEnd;
-        IntLiteralPtr       rangeStep;
-        CodeBlockPtr        codeBlock;
+        std::string     varIdent;
+        std::string     rangeStart;
+        std::string     rangeEnd;
+        std::string     rangeStep; // may be empty (default step, +1 or -1)
+        CodeBlockPtr    codeBlock;
 
 };
 

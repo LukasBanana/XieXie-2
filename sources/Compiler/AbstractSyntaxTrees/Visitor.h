@@ -44,49 +44,63 @@ class Visitor
 
         /* --- Common AST nodes --- */
 
-        DEF_ABSTRACT_VISIT_PROC( CodeBlock          );
-        DEF_ABSTRACT_VISIT_PROC( ForInit            );
-        DEF_ABSTRACT_VISIT_PROC( VarName            );
-        DEF_ABSTRACT_VISIT_PROC( VarDecl            );
-        DEF_ABSTRACT_VISIT_PROC( Param              );
-        DEF_ABSTRACT_VISIT_PROC( Arg                );
-        DEF_ABSTRACT_VISIT_PROC( ProcSignature      );
-        DEF_ABSTRACT_VISIT_PROC( AttribPrefix       );
-        DEF_ABSTRACT_VISIT_PROC( EnumEntry          );
-        DEF_ABSTRACT_VISIT_PROC( ClassBodySegment   );
-        DEF_ABSTRACT_VISIT_PROC( ArrayAccess        );
-        DEF_ABSTRACT_VISIT_PROC( ProcCall           );
+        DEF_ABSTRACT_VISIT_PROC( CodeBlock            );
+        DEF_ABSTRACT_VISIT_PROC( ForInit              );
+        DEF_ABSTRACT_VISIT_PROC( VarName              );
+        DEF_ABSTRACT_VISIT_PROC( VarDecl              );
+        DEF_ABSTRACT_VISIT_PROC( Param                );
+        DEF_ABSTRACT_VISIT_PROC( Arg                  );
+        DEF_ABSTRACT_VISIT_PROC( ProcSignature        );
+        DEF_ABSTRACT_VISIT_PROC( AttribPrefix         );
+        DEF_ABSTRACT_VISIT_PROC( EnumEntry            );
+        DEF_ABSTRACT_VISIT_PROC( ClassBodySegment     );
+        DEF_ABSTRACT_VISIT_PROC( ArrayAccess          );
+        DEF_ABSTRACT_VISIT_PROC( ProcCall             );
+        DEF_ABSTRACT_VISIT_PROC( SwitchCase           );
 
         /* --- Statements --- */
 
-        DEF_ABSTRACT_VISIT_PROC( DoWhileStmnt       );
-        DEF_ABSTRACT_VISIT_PROC( WhileStmnt         );
-        DEF_ABSTRACT_VISIT_PROC( ForStmnt           );
-        DEF_ABSTRACT_VISIT_PROC( ForRangeStmnt      );
-        DEF_ABSTRACT_VISIT_PROC( ForEachStmnt       );
-        DEF_ABSTRACT_VISIT_PROC( ForEverStmnt       );
+        DEF_ABSTRACT_VISIT_PROC( ReturnStmnt          );
+        DEF_ABSTRACT_VISIT_PROC( CtrlTransferStmnt    );
 
-        DEF_ABSTRACT_VISIT_PROC( ClassDeclStmnt     );
-        DEF_ABSTRACT_VISIT_PROC( EnumDeclStmnt      );
-        DEF_ABSTRACT_VISIT_PROC( FlagsDeclStmnt     );
-        DEF_ABSTRACT_VISIT_PROC( ProcDeclStmnt      );
-        DEF_ABSTRACT_VISIT_PROC( VarDeclStmnt       );
+        DEF_ABSTRACT_VISIT_PROC( IfStmnt              );
+        DEF_ABSTRACT_VISIT_PROC( SwitchStmnt          );
+
+        DEF_ABSTRACT_VISIT_PROC( DoWhileStmnt         );
+        DEF_ABSTRACT_VISIT_PROC( WhileStmnt           );
+        DEF_ABSTRACT_VISIT_PROC( ForStmnt             );
+        DEF_ABSTRACT_VISIT_PROC( ForRangeStmnt        );
+        DEF_ABSTRACT_VISIT_PROC( ForEachStmnt         );
+        DEF_ABSTRACT_VISIT_PROC( ForEverStmnt         );
+
+        DEF_ABSTRACT_VISIT_PROC( ClassDeclStmnt       );
+        DEF_ABSTRACT_VISIT_PROC( VarDeclStmnt         );
+        DEF_ABSTRACT_VISIT_PROC( EnumDeclStmnt        );
+        DEF_ABSTRACT_VISIT_PROC( FlagsDeclStmnt       );
+        DEF_ABSTRACT_VISIT_PROC( ProcDeclStmnt        );
+
+        DEF_ABSTRACT_VISIT_PROC( CopyAssignStmnt      );
+        DEF_ABSTRACT_VISIT_PROC( ModifyAssignStmnt    );
+        DEF_ABSTRACT_VISIT_PROC( PostOperatorStmnt    );
+
+        DEF_ABSTRACT_VISIT_PROC( ExternClassDeclStmnt );
+        DEF_ABSTRACT_VISIT_PROC( ExternProcDeclStmnt  );
 
         /* --- Expressions --- */
 
-        DEF_ABSTRACT_VISIT_PROC( BinaryExpr         );
-        DEF_ABSTRACT_VISIT_PROC( UnaryExpr          );
-        DEF_ABSTRACT_VISIT_PROC( LiteralExpr        );
-        DEF_ABSTRACT_VISIT_PROC( CastExpr           );
-        DEF_ABSTRACT_VISIT_PROC( CallExpr           );
-        DEF_ABSTRACT_VISIT_PROC( AllocExpr          );
-        DEF_ABSTRACT_VISIT_PROC( VarNameExpr        );
+        DEF_ABSTRACT_VISIT_PROC( BinaryExpr           );
+        DEF_ABSTRACT_VISIT_PROC( UnaryExpr            );
+        DEF_ABSTRACT_VISIT_PROC( LiteralExpr          );
+        DEF_ABSTRACT_VISIT_PROC( CastExpr             );
+        DEF_ABSTRACT_VISIT_PROC( CallExpr             );
+        DEF_ABSTRACT_VISIT_PROC( AllocExpr            );
+        DEF_ABSTRACT_VISIT_PROC( VarNameExpr          );
 
         /* --- Type denoters --- */
 
-        DEF_ABSTRACT_VISIT_PROC( BuiltinTypeDenoter );
-        DEF_ABSTRACT_VISIT_PROC( ArrayTypeDenoter   );
-        DEF_ABSTRACT_VISIT_PROC( ClassTypeDenoter   );
+        DEF_ABSTRACT_VISIT_PROC( BuiltinTypeDenoter   );
+        DEF_ABSTRACT_VISIT_PROC( ArrayTypeDenoter     );
+        DEF_ABSTRACT_VISIT_PROC( DeclTypeDenoter      );
 
     protected:
         

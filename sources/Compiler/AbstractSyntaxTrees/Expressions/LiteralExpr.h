@@ -16,12 +16,12 @@ namespace AbstractSyntaxTrees
 {
 
 
-class LiteralExpr : public AST
+class LiteralExpr : public Expr
 {
     
     public:
         
-        AST_INTERFACE(LiteralExpr);
+        AST_INTERFACE_EXT(LiteralExpr, Expr);
 
         std::string     literal;
 

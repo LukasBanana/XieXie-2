@@ -21,7 +21,7 @@ class ClassDeclStmnt : public Stmnt
     
     public:
         
-        AST_INTERFACE(ClassDeclStmnt);
+        AST_INTERFACE_EXT(ClassDeclStmnt, Stmnt);
 
         std::string                         ident;
         VarNamePtr                          inheritanceTypeName; // may be null

@@ -16,12 +16,12 @@ namespace AbstractSyntaxTrees
 {
 
 
-class CastExpr : public AST
+class CastExpr : public Expr
 {
     
     public:
         
-        AST_INTERFACE(CastExpr);
+        AST_INTERFACE_EXT(CastExpr, Expr);
 
         TypeDenoterPtr  typeDenoter;
         ExprPtr         expr;

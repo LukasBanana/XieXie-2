@@ -25,9 +25,9 @@ static KeywordMapType GenerateKeywordMap()
         { "super",      Ty::ObjectLiteral  },
 
         { "void",       Ty::Void           },
-        { "bool",       Ty::Bool           },
-        { "int",        Ty::Int            },
-        { "float",      Ty::Float          },
+        { "bool",       Ty::BuiltinType    },
+        { "int",        Ty::BuiltinType    },
+        { "float",      Ty::BuiltinType    },
 
         { "or",         Ty::Or             },
         { "and",        Ty::And            },

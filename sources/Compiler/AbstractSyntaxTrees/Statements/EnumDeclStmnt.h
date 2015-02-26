@@ -21,7 +21,7 @@ class EnumDeclStmnt : public Stmnt
     
     public:
         
-        AST_INTERFACE(EnumDeclStmnt);
+        AST_INTERFACE_EXT(EnumDeclStmnt, Stmnt);
 
         std::string                 ident;
         std::vector<EnumEntryPtr>   entries;
