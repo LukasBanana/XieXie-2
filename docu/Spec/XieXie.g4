@@ -144,7 +144,7 @@ proc_modifier:				'static';
 
 init_decl_stmnt:			attrib_prefix? init_head code_block;
 extern_init_decl_stmnt:		attrib_prefix? init_head;
-init_head:					proc_modifier? 'init' '(' param_list? ')';
+init_head:					'init' '(' param_list? ')';
 
 // PARAMETERS:
 param_list:		param (',' param)*;

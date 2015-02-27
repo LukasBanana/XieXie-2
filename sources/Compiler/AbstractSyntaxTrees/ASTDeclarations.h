@@ -63,6 +63,7 @@ DECL_SHR_PTR( VarDeclStmnt         );
 DECL_SHR_PTR( EnumDeclStmnt        );
 DECL_SHR_PTR( FlagsDeclStmnt       );
 DECL_SHR_PTR( ProcDeclStmnt        );
+DECL_SHR_PTR( InitDeclStmnt        );
 
 DECL_SHR_PTR( CopyAssignStmnt      );
 DECL_SHR_PTR( ModifyAssignStmnt    );

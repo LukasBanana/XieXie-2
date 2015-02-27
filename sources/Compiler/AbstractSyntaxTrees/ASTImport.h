@@ -49,6 +49,7 @@
 #include "EnumDeclStmnt.h"
 #include "FlagsDeclStmnt.h"
 #include "ProcDeclStmnt.h"
+#include "InitDeclStmnt.h"
 
 #include "CopyAssignStmnt.h"
 #include "ModifyAssignStmnt.h"

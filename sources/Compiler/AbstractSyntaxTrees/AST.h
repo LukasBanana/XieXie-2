@@ -93,6 +93,7 @@ class AST
             EnumDeclStmnt,
             FlagsDeclStmnt,
             ProcDeclStmnt,
+            InitDeclStmnt,
 
             CopyAssignStmnt,
             ModifyAssignStmnt,

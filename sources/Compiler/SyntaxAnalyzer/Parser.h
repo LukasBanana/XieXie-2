@@ -101,8 +101,8 @@ class Parser
         VarDeclStmntPtr         ParseVarDeclStmnt();
         EnumDeclStmntPtr        ParseEnumDeclStmnt();
         FlagsDeclStmntPtr       ParseFlagsDeclStmnt();
-        ProcDeclStmntPtr        ParseProcDeclStmnt();
-        ProcDeclStmntPtr        ParseExternProcDeclStmnt();
+        ProcDeclStmntPtr        ParseProcDeclStmnt(bool isExtern = false);
+        InitDeclStmntPtr        ParseInitDeclStmnt(bool isExtern = false);
 
         CopyAssignStmntPtr      ParseCopyAssignStmnt();
         ModifyAssignStmntPtr    ParseModifyAssignStmnt();

@@ -635,7 +635,8 @@ FlagsDeclStmntPtr Parser::ParseFlagsDeclStmnt()
 }
 
 // proc_decl_stmnt: attrib_prefix? proc_signature code_block;
-ProcDeclStmntPtr Parser::ParseProcDeclStmnt()
+// extern_proc_decl_stmnt: attrib_prefix? proc_signature;
+ProcDeclStmntPtr Parser::ParseProcDeclStmnt(bool isExtern)
 {
     auto ast = Make<ProcDeclStmnt>();
 
@@ -643,20 +644,30 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt()
         ast->attribPrefix = ParseAttribPrefix();
 
     ast->procSignature = ParseProcSignature();
-    ast->codeBlock = ParseCodeBlock();
+
+    if (!isExtern)
+        ast->codeBlock = ParseCodeBlock();
 
     return ast;
 }
 
-// extern_proc_decl_stmnt: attrib_prefix? proc_signature;
-ProcDeclStmntPtr Parser::ParseExternProcDeclStmnt()
+// init_decl_stmnt: attrib_prefix? init_head code_block;
+// extern_init_decl_stmnt: attrib_prefix? init_head;
+// init_head: 'init' '(' param_list? ')';
+InitDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 {
-    auto ast = Make<ProcDeclStmnt>();
+    auto ast = Make<InitDeclStmnt>();
 
     if (Is(Tokens::LDParen))
         ast->attribPrefix = ParseAttribPrefix();
 
-    ast->procSignature = ParseProcSignature();
+    Accept(Tokens::Init);
+    Accept(Tokens::LBracket);
+    ast->params = ParseParamList();
+    Accept(Tokens::RBracket);
+
+    if (!isExtern)
+        ast->codeBlock = ParseCodeBlock();
 
     return ast;
 }

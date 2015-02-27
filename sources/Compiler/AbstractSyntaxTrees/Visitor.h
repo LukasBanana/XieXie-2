@@ -81,6 +81,7 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( EnumDeclStmnt        );
         DEF_ABSTRACT_VISIT_PROC( FlagsDeclStmnt       );
         DEF_ABSTRACT_VISIT_PROC( ProcDeclStmnt        );
+        DEF_ABSTRACT_VISIT_PROC( InitDeclStmnt        );
 
         DEF_ABSTRACT_VISIT_PROC( CopyAssignStmnt      );
         DEF_ABSTRACT_VISIT_PROC( ModifyAssignStmnt    );
