@@ -21,9 +21,15 @@ class CtrlTransferStmnt : public Stmnt
     
     public:
         
+        enum class Transfers
+        {
+            Break,
+            Continue,
+        };
+
         AST_INTERFACE_EXT(CtrlTransferStmnt, Stmnt);
 
-        std::string ctrlTransfer; // "break" or "continue"
+        Transfers ctrlTransfer = Transfers::Break; // "break" or "continue"
 
 };
 

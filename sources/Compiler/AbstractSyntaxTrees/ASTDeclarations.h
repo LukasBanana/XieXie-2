@@ -59,6 +59,7 @@ DECL_SHR_PTR( ForEachStmnt         );
 DECL_SHR_PTR( ForEverStmnt         );
 
 DECL_SHR_PTR( ClassDeclStmnt       );
+DECL_SHR_PTR( ExternClassDeclStmnt );
 DECL_SHR_PTR( VarDeclStmnt         );
 DECL_SHR_PTR( EnumDeclStmnt        );
 DECL_SHR_PTR( FlagsDeclStmnt       );
@@ -67,9 +68,6 @@ DECL_SHR_PTR( ProcDeclStmnt        );
 DECL_SHR_PTR( CopyAssignStmnt      );
 DECL_SHR_PTR( ModifyAssignStmnt    );
 DECL_SHR_PTR( PostOperatorStmnt    );
-
-DECL_SHR_PTR( ExternClassDeclStmnt );
-DECL_SHR_PTR( ExternProcDeclStmnt  );
 
 /* --- Expressions --- */
 

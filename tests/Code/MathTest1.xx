@@ -55,6 +55,7 @@ class Test {
 	void onMouseDown(int button) {
 		if button = 1 {
 			fire()
+			return
 		}
 	}
 	

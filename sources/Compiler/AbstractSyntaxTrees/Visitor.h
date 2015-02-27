@@ -75,6 +75,7 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( ForEverStmnt         );
 
         DEF_ABSTRACT_VISIT_PROC( ClassDeclStmnt       );
+        DEF_ABSTRACT_VISIT_PROC( ExternClassDeclStmnt );
         DEF_ABSTRACT_VISIT_PROC( VarDeclStmnt         );
         DEF_ABSTRACT_VISIT_PROC( EnumDeclStmnt        );
         DEF_ABSTRACT_VISIT_PROC( FlagsDeclStmnt       );
@@ -83,9 +84,6 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( CopyAssignStmnt      );
         DEF_ABSTRACT_VISIT_PROC( ModifyAssignStmnt    );
         DEF_ABSTRACT_VISIT_PROC( PostOperatorStmnt    );
-
-        DEF_ABSTRACT_VISIT_PROC( ExternClassDeclStmnt );
-        DEF_ABSTRACT_VISIT_PROC( ExternProcDeclStmnt  );
 
         /* --- Expressions --- */
 

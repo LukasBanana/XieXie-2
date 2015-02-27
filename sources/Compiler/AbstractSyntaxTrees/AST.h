@@ -87,6 +87,7 @@ class AST
             DoWhileStmnt,
 
             ClassDeclStmnt,
+            ExternClassDeclStmnt,
             VarDeclStmnt,
             EnumDeclStmnt,
             FlagsDeclStmnt,
@@ -95,9 +96,6 @@ class AST
             CopyAssignStmnt,
             ModifyAssignStmnt,
             PostOperatorStmnt,
-
-            ExternClassDeclStmnt,
-            ExternProcDeclStmnt,
 
             /* --- Expressions --- */
             BinaryExpr,

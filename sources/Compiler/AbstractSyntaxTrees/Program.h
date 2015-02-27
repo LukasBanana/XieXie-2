@@ -23,7 +23,7 @@ class Program : public AST
         
         AST_INTERFACE(Program);
 
-        std::vector<ClassDeclStmntPtr> classDeclStmnts;
+        std::vector<StmntPtr> classDeclStmnts;
 
 };
 
