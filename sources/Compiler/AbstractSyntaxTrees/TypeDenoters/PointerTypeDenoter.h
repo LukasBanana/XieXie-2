@@ -1,30 +1,32 @@
 /*
- * Arg.h
+ * PointerTypeDenoter.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_ARG_H__
-#define __XX_AST_ARG_H__
+#ifndef __XX_AST_POINTER_TYPE_DENOTER_H__
+#define __XX_AST_POINTER_TYPE_DENOTER_H__
 
 
-#include "AST.h"
+#include "TypeDenoter.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class Arg : public AST
+class PointerTypeDenoter : public TypeDenoter
 {
     
     public:
         
-        AST_INTERFACE(Arg);
+        AST_INTERFACE_EXT(PointerTypeDenoter, TypeDenoter);
 
-        std::string paramIdent; // may be empty (used for named parameters)
-        ExprPtr     expr;
+        VarNamePtr declName;
+
+        // dast
+        StmntPtr declStmnt;
 
 };
 

@@ -1,5 +1,5 @@
 /*
- * Scanner file
+ * Scanner.cpp
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -46,7 +46,7 @@ TokenPtr Scanner::Next()
 
                 /* Check for end-of-file */
                 if (Is(0))
-                    return Make(Token::Types::EndOfFile);
+                    return Make(Tokens::EndOfFile);
                 
                 /* Scan commentaries */
                 if (Is('/'))
@@ -65,10 +65,10 @@ TokenPtr Scanner::Next()
                         if (Is('='))
                         {
                             spell += TakeIt();
-                            return Make(Token::Types::ModifyAssignOp, spell);
+                            return Make(Tokens::ModifyAssignOp, spell);
                         }
 
-                        return Make(Token::Types::DivOp, spell);
+                        return Make(Tokens::DivOp, spell);
                     }
                 }
                 else
@@ -179,7 +179,7 @@ void Scanner::IgnoreCommentBlock()
     }
 }
 
-TokenPtr Scanner::Make(const Token::Types& type, bool takeChr)
+TokenPtr Scanner::Make(const Tokens& type, bool takeChr)
 {
     if (takeChr)
     {
@@ -190,14 +190,14 @@ TokenPtr Scanner::Make(const Token::Types& type, bool takeChr)
     return std::make_shared<Token>(Pos(), type);
 }
 
-TokenPtr Scanner::Make(const Token::Types& type, std::string& spell, bool takeChr)
+TokenPtr Scanner::Make(const Tokens& type, std::string& spell, bool takeChr)
 {
     if (takeChr)
         spell += TakeIt();
     return std::make_shared<Token>(Pos(), type, std::move(spell));
 }
 
-TokenPtr Scanner::Make(const Token::Types& type, std::string& spell, const SourceArea& area, bool takeChr)
+TokenPtr Scanner::Make(const Tokens& type, std::string& spell, const SourceArea& area, bool takeChr)
 {
     if (takeChr)
         spell += TakeIt();
@@ -229,7 +229,7 @@ TokenPtr Scanner::ScanToken()
         if (Is('\"'))
             return ScanVerbatimStringLiteral();
 
-        return Make(Token::Types::At, spell);
+        return Make(Tokens::At, spell);
     }
 
     /* Scan operators */
@@ -240,17 +240,17 @@ TokenPtr Scanner::ScanToken()
         if (Is('='))
         {
             spell += TakeIt();
-            return Make(Token::Types::CopyAssignOp, spell);
+            return Make(Tokens::CopyAssignOp, spell);
         }
 
-        return Make(Token::Types::Colon, spell);
+        return Make(Tokens::Colon, spell);
     }
 
     if (Is('='))
-        return Make(Token::Types::EqualityOp, spell, true);
+        return Make(Tokens::EqualityOp, spell, true);
 
     if (Is('~'))
-        return Make(Token::Types::BitwiseNotOp, spell, true);
+        return Make(Tokens::BitwiseNotOp, spell, true);
 
     if (Is('!'))
     {
@@ -259,7 +259,7 @@ TokenPtr Scanner::ScanToken()
         if (Is('='))
         {
             spell += TakeIt();
-            return Make(Token::Types::EqualityOp, spell);
+            return Make(Tokens::EqualityOp, spell);
         }
 
         ErrorUnexpected();
@@ -272,10 +272,10 @@ TokenPtr Scanner::ScanToken()
         if (Is('='))
         {
             spell += TakeIt();
-            return Make(Token::Types::ModifyAssignOp, spell);
+            return Make(Tokens::ModifyAssignOp, spell);
         }
 
-        return Make(Token::Types::DivOp, spell);
+        return Make(Tokens::DivOp, spell);
     }
 
     if (Is('*'))
@@ -285,10 +285,10 @@ TokenPtr Scanner::ScanToken()
         if (Is('='))
         {
             spell += TakeIt();
-            return Make(Token::Types::ModifyAssignOp, spell);
+            return Make(Tokens::ModifyAssignOp, spell);
         }
 
-        return Make(Token::Types::MulOp, spell);
+        return Make(Tokens::MulOp, spell);
     }
 
     if (Is('^'))
@@ -298,10 +298,10 @@ TokenPtr Scanner::ScanToken()
         if (Is('='))
         {
             spell += TakeIt();
-            return Make(Token::Types::ModifyAssignOp, spell);
+            return Make(Tokens::ModifyAssignOp, spell);
         }
 
-        return Make(Token::Types::BitwiseXorOp, spell);
+        return Make(Tokens::BitwiseXorOp, spell);
     }
 
     if (Is('+'))
@@ -319,10 +319,10 @@ TokenPtr Scanner::ScanToken()
         if (Is('='))
         {
             spell += TakeIt();
-            return Make(Token::Types::ModifyAssignOp, spell);
+            return Make(Tokens::ModifyAssignOp, spell);
         }
 
-        return Make(Token::Types::BitwiseAndOp, spell);
+        return Make(Tokens::BitwiseAndOp, spell);
     }
 
     if (Is('|'))
@@ -332,10 +332,10 @@ TokenPtr Scanner::ScanToken()
         if (Is('='))
         {
             spell += TakeIt();
-            return Make(Token::Types::ModifyAssignOp, spell);
+            return Make(Tokens::ModifyAssignOp, spell);
         }
 
-        return Make(Token::Types::BitwiseOrOp, spell);
+        return Make(Tokens::BitwiseOrOp, spell);
     }
 
     /* Scan special cases */
@@ -343,16 +343,16 @@ TokenPtr Scanner::ScanToken()
     {
         spell += TakeIt();
         if (Is('['))
-            return Make(Token::Types::LDParen, spell, true);
-        return Make(Token::Types::LParen, spell);
+            return Make(Tokens::LDParen, spell, true);
+        return Make(Tokens::LParen, spell);
     }
 
     if (Is(']'))
     {
         spell += TakeIt();
         if (state.allowRDParen && Is(']'))
-            return Make(Token::Types::RDParen, spell, true);
-        return Make(Token::Types::RParen, spell);
+            return Make(Tokens::RDParen, spell, true);
+        return Make(Tokens::RParen, spell);
     }
 
     /* Scan punctuation, special characters and brackets */
@@ -360,18 +360,18 @@ TokenPtr Scanner::ScanToken()
     {
         spell += TakeIt();
         if (Is('.'))
-            return Make(Token::Types::RangeSep, spell, true);
-        return Make(Token::Types::Dot, spell);
+            return Make(Tokens::RangeSep, spell, true);
+        return Make(Tokens::Dot, spell);
     }
 
     switch (chr_)
     {
-        case ';': return Make(Token::Types::Semicolon, true); break;
-        case ',': return Make(Token::Types::Comma,     true); break;
-        case '(': return Make(Token::Types::LBracket,  true); break;
-        case ')': return Make(Token::Types::RBracket,  true); break;
-        case '{': return Make(Token::Types::LCurly,    true); break;
-        case '}': return Make(Token::Types::RCurly,    true); break;
+        case ';': return Make(Tokens::Semicolon, true); break;
+        case ',': return Make(Tokens::Comma,     true); break;
+        case '(': return Make(Tokens::LBracket,  true); break;
+        case ')': return Make(Tokens::RBracket,  true); break;
+        case '{': return Make(Tokens::LCurly,    true); break;
+        case '}': return Make(Tokens::RCurly,    true); break;
     }
 
     ErrorUnexpected();
@@ -439,7 +439,7 @@ TokenPtr Scanner::ScanStringLiteral()
     }
 
     /* Return final string literal token */
-    return Make(Token::Types::StringLiteral, spell, area);
+    return Make(Tokens::StringLiteral, spell, area);
 }
 
 TokenPtr Scanner::ScanVerbatimStringLiteral()
@@ -497,7 +497,7 @@ TokenPtr Scanner::ScanVerbatimStringLiteral()
     }
 
     /* Return final string literal token */
-    return Make(Token::Types::StringLiteral, spell, area);
+    return Make(Tokens::StringLiteral, spell, area);
 }
 
 TokenPtr Scanner::ScanIdentifier()
@@ -519,7 +519,7 @@ TokenPtr Scanner::ScanIdentifier()
         return Make(it->second, spell);
 
     /* Return as identifier */
-    return Make(Token::Types::Ident, spell);
+    return Make(Tokens::Ident, spell);
 }
 
 TokenPtr Scanner::ScanAssignShiftRelationOp(const char chr)
@@ -534,16 +534,16 @@ TokenPtr Scanner::ScanAssignShiftRelationOp(const char chr)
         if (Is('='))
         {
             spell += TakeIt();
-            return Make(Token::Types::ModifyAssignOp, spell);
+            return Make(Tokens::ModifyAssignOp, spell);
         }
 
-        return Make(Token::Types::ShiftOp, spell);
+        return Make(Tokens::ShiftOp, spell);
     }
 
     if (Is('='))
         spell += TakeIt();
 
-    return Make(Token::Types::RelationOp, spell);
+    return Make(Tokens::RelationOp, spell);
 }
 
 TokenPtr Scanner::ScanPlusOp()
@@ -554,15 +554,15 @@ TokenPtr Scanner::ScanPlusOp()
     if (Is('+'))
     {
         spell += TakeIt();
-        return Make(Token::Types::PostAssignOp, spell);
+        return Make(Tokens::PostAssignOp, spell);
     }
     else if (Is('='))
     {
         spell += TakeIt();
-        return Make(Token::Types::ModifyAssignOp, spell);
+        return Make(Tokens::ModifyAssignOp, spell);
     }
 
-    return Make(Token::Types::AddOp, spell);
+    return Make(Tokens::AddOp, spell);
 }
 
 TokenPtr Scanner::ScanMinusOp()
@@ -573,20 +573,20 @@ TokenPtr Scanner::ScanMinusOp()
     if (Is('-'))
     {
         spell += TakeIt();
-        return Make(Token::Types::PostAssignOp, spell);
+        return Make(Tokens::PostAssignOp, spell);
     }
     else if (Is('='))
     {
         spell += TakeIt();
-        return Make(Token::Types::ModifyAssignOp, spell);
+        return Make(Tokens::ModifyAssignOp, spell);
     }
     else if (Is('>'))
     {
         spell += TakeIt();
-        return Make(Token::Types::Arrow, spell);
+        return Make(Tokens::Arrow, spell);
     }
 
-    return Make(Token::Types::SubOp, spell);
+    return Make(Tokens::SubOp, spell);
 }
 
 TokenPtr Scanner::ScanNumber()
@@ -618,7 +618,7 @@ TokenPtr Scanner::ScanNumber()
     }
 
     /* Parse integer or floating-point number */
-    auto type = Token::Types::IntLiteral;
+    auto type = Tokens::IntLiteral;
 
     ScanDecimalLiteral(spell);
 
@@ -631,7 +631,7 @@ TokenPtr Scanner::ScanNumber()
         else
             Error("floating-point literals must have a decimal on both sides of the dot (e.g. '0.0' but not '0.' or '.0')");
 
-        type = Token::Types::FloatLiteral;
+        type = Tokens::FloatLiteral;
     }
 
     if (std::isalpha(UChr()) || Is('.'))
@@ -654,7 +654,7 @@ TokenPtr Scanner::ScanHexNumber()
 
     /* Convert literal to decimal */
     spell = ToStr(HexToNum<int>(spell));
-    return Make(Token::Types::IntLiteral, spell);
+    return Make(Tokens::IntLiteral, spell);
 }
 
 TokenPtr Scanner::ScanOctNumber()
@@ -670,7 +670,7 @@ TokenPtr Scanner::ScanOctNumber()
 
     /* Convert literal to decimal */
     spell = ToStr(OctToNum<int>(spell));
-    return Make(Token::Types::IntLiteral, spell);
+    return Make(Tokens::IntLiteral, spell);
 }
 
 TokenPtr Scanner::ScanBinNumber()
@@ -686,7 +686,7 @@ TokenPtr Scanner::ScanBinNumber()
 
     /* Convert literal to decimal */
     spell = ToStr(BinToNum<int>(spell));
-    return Make(Token::Types::IntLiteral, spell);
+    return Make(Tokens::IntLiteral, spell);
 }
 
 void Scanner::ScanDecimalLiteral(std::string& spell)

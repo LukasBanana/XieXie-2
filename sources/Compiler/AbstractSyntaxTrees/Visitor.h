@@ -44,6 +44,7 @@ class Visitor
 
         /* --- Common AST nodes --- */
 
+        DEF_ABSTRACT_VISIT_PROC( Program              );
         DEF_ABSTRACT_VISIT_PROC( CodeBlock            );
         DEF_ABSTRACT_VISIT_PROC( ForInit              );
         DEF_ABSTRACT_VISIT_PROC( VarName              );
@@ -102,7 +103,7 @@ class Visitor
 
         DEF_ABSTRACT_VISIT_PROC( BuiltinTypeDenoter   );
         DEF_ABSTRACT_VISIT_PROC( ArrayTypeDenoter     );
-        DEF_ABSTRACT_VISIT_PROC( DeclTypeDenoter      );
+        DEF_ABSTRACT_VISIT_PROC( PointerTypeDenoter   );
 
     protected:
         

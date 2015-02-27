@@ -1,5 +1,5 @@
 /*
- * Compiler message header
+ * CompilerMessage.h
  * 
  * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -112,17 +112,17 @@ template <CompilerMessage::Categories C> class CommonCompilerMessage : public Co
 {
     public:
         CommonCompilerMessage(const std::string& message) :
-            CompilerMessage(message, C)
+            CompilerMessage{ message, C }
         {
         }
         CommonCompilerMessage(const SyntaxAnalyzer::SourceArea& sourceArea, const std::string& message) :
-            CompilerMessage(sourceArea, message, C)
+            CompilerMessage{ sourceArea, message, C }
         {
         }
         CommonCompilerMessage(
             const SyntaxAnalyzer::SourceArea& sourceArea, const std::string& message,
             const std::string& line, const std::string& marker) :
-                CompilerMessage(sourceArea, message, line, marker, C)
+                CompilerMessage{ sourceArea, message, line, marker, C }
         {
         }
 };

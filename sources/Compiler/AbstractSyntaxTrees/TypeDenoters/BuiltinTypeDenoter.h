@@ -23,18 +23,23 @@ class BuiltinTypeDenoter : public TypeDenoter
         
         AST_INTERFACE_EXT(BuiltinTypeDenoter, TypeDenoter);
 
-        enum class BasicTypes
+        enum class TypeNames
         {
-            Void,       // void
-            Boolean,    // bool
-            Integer,    // short, ushort, int, uint, long, ulong
-            Float,      // float, double
+            Void,
+            Bool,
+            //Byte,
+            //UByte,
+            //Short,
+            //UShort,
+            Int,
+            //UInt,
+            //Long,
+            //ULong,
+            Float,
+            //Double,
         };
 
-        //! \throws std::invalid_argument
-        BasicTypes BasicType() const;
-
-        std::string typeName; // e.g. "int", "float", "bool"
+        TypeNames typeName = TypeNames::Void; // e.g. "int", "float", "bool"
 
 };
 

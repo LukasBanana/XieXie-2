@@ -263,6 +263,16 @@ static bool IsIdentChar(char chr)
         chr == '_';
 }
 
+// extended identifiers are required for 'name mangling'!
+static bool IsExtIdentChar(char chr)
+{
+    return
+        chr == ',' ||
+        chr == '@' ||
+        IsDigit(chr) ||
+        IsIdentChar(chr);
+}
+
 Assembler::Token Assembler::NextToken()
 {
     /* Ignore white spaces */
@@ -374,7 +384,7 @@ Assembler::Token Assembler::ScanIdentifier()
     if (!IsIdentChar(chr_))
         ErrorUnexpectedChar();
 
-    while (IsIdentChar(chr_) || IsDigit(chr_))
+    while (IsExtIdentChar(chr_))
         spell += TakeIt();
 
     /* Check for data field */

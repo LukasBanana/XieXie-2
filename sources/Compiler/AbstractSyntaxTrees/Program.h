@@ -1,32 +1,29 @@
 /*
- * DeclTypeDenoter.h
+ * Program.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_DECL_TYPE_DENOTER_H__
-#define __XX_AST_DECL_TYPE_DENOTER_H__
+#ifndef __XX_AST_PROGRAM_H__
+#define __XX_AST_PROGRAM_H__
 
 
-#include "TypeDenoter.h"
+#include "AST.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class DeclTypeDenoter : public TypeDenoter
+class Program : public AST
 {
     
     public:
         
-        AST_INTERFACE_EXT(DeclTypeDenoter, TypeDenoter);
+        AST_INTERFACE(Program);
 
-        VarNamePtr declName;
-
-        // dast
-        StmntPtr declStmnt;
+        std::vector<ClassDeclStmntPtr> classDeclStmnts;
 
 };
 

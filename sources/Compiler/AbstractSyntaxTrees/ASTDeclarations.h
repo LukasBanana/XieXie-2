@@ -28,6 +28,7 @@ DECL_SHR_PTR( TypeDenoter          );
 
 /* --- Common AST nodes --- */
 
+DECL_SHR_PTR( Program              );
 DECL_SHR_PTR( CodeBlock            );
 DECL_SHR_PTR( ForInit              );
 DECL_SHR_PTR( VarName              );
@@ -86,7 +87,7 @@ DECL_SHR_PTR( InitListExpr         );
 
 DECL_SHR_PTR( BuiltinTypeDenoter   );
 DECL_SHR_PTR( ArrayTypeDenoter     );
-DECL_SHR_PTR( DeclTypeDenoter      );
+DECL_SHR_PTR( PointerTypeDenoter   );
 
 
 } // /namespace AbstractSyntaxTrees

@@ -8,6 +8,7 @@
 #include "BuiltinTypeDenoter.h"
 #include "CodeBlock.h"
 #include "Stmnt.h"
+#include "VarName.h"
 
 #include <exception>
 #include <initializer_list>
@@ -18,33 +19,17 @@ namespace AbstractSyntaxTrees
 {
 
 
-bool ContainsString(const std::string& str, const std::initializer_list<std::string>& list)
+/*bool ContainsString(const std::string& str, const std::initializer_list<std::string>& list)
 {
     return std::find(list.begin(), list.end(), str) != list.end();
-}
+}*/
 
 
-/* --- BuiltinTypeDenoter --- */
+/* --- VarName --- */
 
-BuiltinTypeDenoter::BasicTypes BuiltinTypeDenoter::BasicType() const
+std::string VarName::FullName(const std::string& sep) const
 {
-    /* Check for valid type denoters */
-    if (typeName == "void")
-        return BasicTypes::Void;
-    if (typeName == "bool")
-        return BasicTypes::Boolean;
-    if (typeName == "int")
-        return BasicTypes::Integer;
-    if (typeName == "float")
-        return BasicTypes::Float;
-    
-    /* Check for reserved type denoters */
-    if (ContainsString(typeName, { "short", "ushort", "uint", "long", "ulong", "double" }))
-        throw std::invalid_argument("reserved built-in type denoter \"" + typeName + "\" for future use");
-
-    /* Unknown built-in type denoter */
-    throw std::invalid_argument("unknown built-in type denoter \"" + typeName + "\"");
-    return BasicTypes::Void;
+    return (next != nullptr) ? (ident + sep + next->FullName(sep)) : ident;
 }
 
 

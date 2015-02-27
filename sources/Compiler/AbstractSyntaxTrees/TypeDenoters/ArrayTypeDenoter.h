@@ -23,7 +23,7 @@ class ArrayTypeDenoter : public TypeDenoter
         
         AST_INTERFACE_EXT(ArrayTypeDenoter, TypeDenoter);
 
-        TypeDenoterPtr typeDenoter;
+        TypeDenoterPtr lowerTypeDenoter;
 
 };
 

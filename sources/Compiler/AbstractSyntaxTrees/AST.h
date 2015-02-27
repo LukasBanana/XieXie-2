@@ -57,6 +57,7 @@ class AST
         enum class Types
         {
             /* --- Common AST types --- */
+            Program,
             CodeBlock,
             ForInit,
             VarName,
@@ -112,7 +113,7 @@ class AST
             /* --- Type denoters --- */
             BuiltinTypeDenoter,
             ArrayTypeDenoter,
-            DeclTypeDenoter,
+            PointerTypeDenoter,
         };
 
         virtual ~AST()

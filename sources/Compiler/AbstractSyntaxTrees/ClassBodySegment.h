@@ -21,9 +21,15 @@ class ClassBodySegment : public AST
     
     public:
         
+        enum class Visibilities
+        {
+            Public, // default visibility
+            Private,
+        };
+
         AST_INTERFACE(ClassBodySegment);
 
-        std::string             visibility; // may be empty (default visibility)
+        Visibilities            visibility = Visibilities::Public;
         std::vector<StmntPtr>   declStmnts;
 
 };

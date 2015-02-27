@@ -23,8 +23,9 @@ class ClassDeclStmnt : public Stmnt
         
         AST_INTERFACE_EXT(ClassDeclStmnt, Stmnt);
 
+        AttribPrefixPtr                     attribPrefix;           // may be null
         std::string                         ident;
-        VarNamePtr                          inheritanceTypeName; // may be null
+        VarNamePtr                          inheritanceTypeName;    // may be null
         std::vector<ClassBodySegmentPtr>    bodySegments;
 
 };

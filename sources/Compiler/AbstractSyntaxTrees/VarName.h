@@ -23,6 +23,9 @@ class VarName : public AST
         
         AST_INTERFACE(VarName);
 
+        //! Returns the full variable name; each identifier is separated by "sep".
+        std::string FullName(const std::string& sep = ".") const;
+
         std::string     ident;
         ArrayAccessPtr  arrayAccess;    // may be null
         VarNamePtr      next;           // may be null

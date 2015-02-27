@@ -1,5 +1,5 @@
 /*
- * Scanner header
+ * Scanner.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -57,6 +57,8 @@ class Scanner
         
         /* === Functions === */
 
+        using Tokens = Token::Types;
+
         char Take(char chr);
         char TakeIt();
 
@@ -73,9 +75,9 @@ class Scanner
         void IgnoreCommentLine();
         void IgnoreCommentBlock();
 
-        TokenPtr Make(const Token::Types& type, bool takeChr = false);
-        TokenPtr Make(const Token::Types& type, std::string& spell, bool takeChr = false);
-        TokenPtr Make(const Token::Types& type, std::string& spell, const SourceArea& area, bool takeChr = false);
+        TokenPtr Make(const Tokens& type, bool takeChr = false);
+        TokenPtr Make(const Tokens& type, std::string& spell, bool takeChr = false);
+        TokenPtr Make(const Tokens& type, std::string& spell, const SourceArea& area, bool takeChr = false);
 
         TokenPtr ScanToken();
 
@@ -107,9 +109,7 @@ class Scanner
         /* === Members === */
 
         SourceCodePtr   source_;
-        
         char            chr_            = 0;
-
         ErrorReporter*  errorReporter_  = nullptr;
 
 };

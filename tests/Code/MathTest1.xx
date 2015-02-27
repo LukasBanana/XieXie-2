@@ -2,6 +2,7 @@
 // Math Test 1
 // 05/09/2014
 
+[[deprecated("This is a test deprecation hint")]]
 extern class Math {
 	
 	static float sqrt(float x)
@@ -57,7 +58,7 @@ class Test {
 		}
 	}
 	
-	int main(String[] args) {
+	static int main(String[] args) {
 		
 		Vector3[] coords := new Vector3[100]
 		
