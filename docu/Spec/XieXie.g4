@@ -109,7 +109,7 @@ array_access:		'[' array_index ']' array_access?;
 array_index:		expr;
 
 // CLASSES
-class_decl_stmnt:			intern_class_decl_stmnt | extern_class_decl_stmnt;
+class_decl_stmnt:			attrib_prefix? intern_class_decl_stmnt | extern_class_decl_stmnt;
 intern_class_decl_stmnt:	'class' class_name type_inheritance? class_body;
 extern_class_decl_stmnt:	'extern' 'class' class_name extern_class_body;
 class_body:					'{' class_body_segment_list '}';
@@ -202,7 +202,7 @@ member_proc_call:	'.' IDENT '(' arg_list? ')';
 // TYPE DENOTERS
 type_denoter			: builtin_type_denoter
 						| array_type_denoter
-						| decl_type_denoter;
+						| pointer_type_denoter;
 
 builtin_type_denoter	: BOOL_TYPE_DENOTER
 						| INT_TYPE_DENOTER
@@ -213,7 +213,7 @@ return_type_denoter		: VOID_TYPE_DENOTER
 
 array_type_denoter:		type_denoter '[]';
 
-decl_type_denoter:		var_name;
+pointer_type_denoter:	var_name;
 
 VOID_TYPE_DENOTER:		'void';
 BOOL_TYPE_DENOTER:		'bool';
