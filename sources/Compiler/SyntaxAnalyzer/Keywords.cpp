@@ -52,8 +52,8 @@ static KeywordMapType GenerateKeywordMap()
 
         { "class",      Ty::Class          },
         { "extern",     Ty::Extern         },
-        { "public",     Ty::Public         },
-        { "private",    Ty::Private        },
+        { "public",     Ty::Visibility     },
+        { "private",    Ty::Visibility     },
         { "static",     Ty::Static         },
         { "init",       Ty::Init           },
         { "release",    Ty::Release        },

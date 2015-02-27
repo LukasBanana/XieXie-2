@@ -21,10 +21,18 @@ class PostOperatorStmnt : public Stmnt
     
     public:
         
+        enum class Operators
+        {
+            Inc,
+            Dec,
+        };
+
         AST_INTERFACE_EXT(PostOperatorStmnt, Stmnt);
 
+        static Operators GetOperator(const std::string& spell);
+
         VarNamePtr  varName;
-        std::string postOperator;
+        Operators   postOperator = Operators::Inc;
 
 };
 

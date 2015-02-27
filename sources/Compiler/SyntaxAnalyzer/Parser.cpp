@@ -155,14 +155,52 @@ VarDeclPtr Parser::ParseVarDecl()
     return nullptr;
 }
 
+// param: type_denoter IDENT (':=' expr)?;
 ParamPtr Parser::ParseParam()
 {
-    return nullptr;
+    auto ast = Make<Param>();
+
+    ast->typeDenoter = ParseTypeDenoter();
+    ast->ident = AcceptIdent();
+
+    if (Is(Tokens::CopyAssignOp))
+    {
+        AcceptIt();
+        ast->defaultArgExpr = ParseExpr();
+    }
+
+    return ast;
 }
 
+// arg: (expr | IDENT ':' expr);
 ArgPtr Parser::ParseArg()
 {
-    return nullptr;
+    auto ast = Make<Arg>();
+
+    if (Is(Tokens::Ident))
+    {
+        /* Determine if argument has named parameter */
+        auto tkn = AcceptIt();
+        if (Is(Tokens::Colon))
+        {
+            /* Parse argument with named parameter */
+            ast->paramIdent = tkn->Spell();
+            AcceptIt();
+            ast->expr = ParseExpr();
+        }
+        else
+        {
+            /* Parse regular argument */
+            ast->expr = ParseExpr(tkn);
+        }
+    }
+    else
+    {
+        /* Parse regular argument */
+        ast->expr = ParseExpr();
+    }
+
+    return ast;
 }
 
 ProcSignaturePtr Parser::ParseProcSignature()
@@ -180,29 +218,84 @@ EnumEntryPtr Parser::ParseEnumEntry()
     return nullptr;
 }
 
+// class_body_segment: class_visibility? decl_stmnt_list?;
 ClassBodySegmentPtr Parser::ParseClassBodySegment()
 {
-    return nullptr;
+    auto ast = Make<ClassBodySegment>();
+
+    if (Is(Tokens::Visibility))
+    {
+        auto vis = AcceptIt()->Spell();
+        ast->visibility = (vis == "private" ? ClassBodySegment::Visibilities::Private : ClassBodySegment::Visibilities::Public);
+    }
+
+    ast->declStmnts = ParseDeclStmntList(Tokens::Visibility);
+
+    return ast;
 }
 
+// array_access: '[' expr ']' array_access?;
 ArrayAccessPtr Parser::ParseArrayAccess()
 {
-    return nullptr;
+    auto ast = Make<ArrayAccess>();
+
+    Accept(Tokens::LParen);
+    ast->indexExpr = ParseExpr();
+    Accept(Tokens::RParen);
+
+    if (Is(Tokens::LParen))
+        ast->next = ParseArrayAccess();
+
+    return ast;
 }
 
+// proc_call: var_name '(' arg_list? ')';
 ProcCallPtr Parser::ParseProcCall()
 {
-    return nullptr;
+    auto ast = Make<ProcCall>();
+
+    ast->procName = ParseVarName();
+    Accept(Tokens::LBracket);
+    ast->args = ParseArgList();
+    Accept(Tokens::RBracket);
+
+    return ast;
 }
 
+// switch_case: (case_label | default_label) stmnt_list;
+// case_label: 'case' case_item_list ':';
+// default_label: 'default' ':';
 SwitchCasePtr Parser::ParseSwitchCase()
 {
-    return nullptr;
+    auto ast = Make<SwitchCase>();
+
+    if (Is(Tokens::Default))
+    {
+        AcceptIt();
+        Accept(Tokens::Colon);
+    }
+    else if (Is(Tokens::Case))
+    {
+        Accept(Tokens::Case);
+        ast->items = ParseExprList(Tokens::Comma);
+        Accept(Tokens::Colon);
+    }
+    else
+        ErrorUnexpected("expected switch case block: 'case' or 'default'");
+
+    ast->stmnts = ParseSwitchCaseStmntList();
+
+    return ast;
 }
 
 /* --- Statements --- */
 
 StmntPtr Parser::ParseStmnt()
+{
+    return nullptr;
+}
+
+StmntPtr Parser::ParseDeclStmnt()
 {
     return nullptr;
 }
@@ -277,9 +370,20 @@ IfStmntPtr Parser::ParseElseStmnt()
     return ast;
 }
 
+// switch_stmnt: 'switch' expr '{' switch_case_list? '}';
 SwitchStmntPtr Parser::ParseSwitchStmnt()
 {
-    return nullptr;
+    auto ast = Make<SwitchStmnt>();
+
+    Accept(Tokens::Switch);
+
+    ast->expr = ParseExpr();
+
+    Accept(Tokens::LCurly);
+    ast->cases = ParseSwitchCaseList();
+    Accept(Tokens::RCurly);
+
+    return ast;
 }
 
 StmntPtr Parser::ParseAbstractForStmnt()
@@ -439,24 +543,44 @@ ProcDeclStmntPtr Parser::ParseExternProcDeclStmnt()
     return nullptr;
 }
 
+// copy_assign_stmnt: var_name (',' var_name)* ':=' expr;
 CopyAssignStmntPtr Parser::ParseCopyAssignStmnt()
 {
-    return nullptr;
+    auto ast = Make<CopyAssignStmnt>();
+
+    ast->varNames = ParseVarNameList(Tokens::Comma);
+    Accept(Tokens::CopyAssignOp);
+    ast->expr = ParseExpr();
+
+    return ast;
 }
 
+// modify_assign_stmnt: var_name ('+=' | '-=' | '*=' | '/=' | '%=' | '<<=' | '>>=' | '|=' | '&=' | '^=') expr;
 ModifyAssignStmntPtr Parser::ParseModifyAssignStmnt()
 {
-    return nullptr;
+    auto ast = Make<ModifyAssignStmnt>();
+
+    ast->varName = ParseVarName();
+    ast->modifyOperator = ModifyAssignStmnt::GetOperator(Accept(Tokens::ModifyAssignOp)->Spell());
+    ast->expr = ParseExpr();
+
+    return ast;
 }
 
+// post_operator_stmnt: var_name ('++' | '--');
 PostOperatorStmntPtr Parser::ParsePostOperatorStmnt()
 {
-    return nullptr;
+    auto ast = Make<PostOperatorStmnt>();
+
+    ast->varName = ParseVarName();
+    ast->postOperator = PostOperatorStmnt::GetOperator(Accept(Tokens::PostAssignOp)->Spell());
+
+    return ast;
 }
 
 /* --- Expressions --- */
 
-ExprPtr Parser::ParseExpr()
+ExprPtr Parser::ParseExpr(const TokenPtr& identTkn)
 {
     return nullptr;
 }
@@ -508,46 +632,144 @@ InitListExprPtr Parser::ParseInitListExpr()
 
 /* --- Type denoters --- */
 
+// type_denoter : builtin_type_denoter | array_type_denoter | pointer_type_denoter;
 TypeDenoterPtr Parser::ParseTypeDenoter()
 {
-    return nullptr;
+    TypeDenoterPtr ast;
+
+    if (Is(Tokens::BuiltinType))
+        ast = ParseBuiltinTypeDenoter();
+    else if (Is(Tokens::Ident))
+        ast = ParsePointerTypeDenoter();
+    else
+        ErrorUnexpected("expected type denoter (built-in or pointer type)");
+
+    while (Is(Tokens::LParen))
+        ast = ParseArrayTypeDenoter(ast);
+
+    return ast;
 }
 
+// builtin_type_denoter: 'bool' | 'int' | 'float'
 BuiltinTypeDenoterPtr Parser::ParseBuiltinTypeDenoter()
 {
-    return nullptr;
+    auto ast = Make<BuiltinTypeDenoter>();
+
+    ast->typeName = BuiltinTypeDenoter::GetTypeName(Accept(Tokens::BuiltinType)->Spell());
+
+    return ast;
 }
 
-ArrayTypeDenoterPtr Parser::ParseArrayTypeDenoter()
-{
-    return nullptr;
-}
-
+// pointer_type_denoter: var_name;
 PointerTypeDenoterPtr Parser::ParsePointerTypeDenoter()
 {
-    return nullptr;
+    auto ast = Make<PointerTypeDenoter>();
+
+    ast->declName = ParseVarName();
+
+    return ast;
+}
+
+// array_type_denoter: type_denoter '[]';
+ArrayTypeDenoterPtr Parser::ParseArrayTypeDenoter(const TypeDenoterPtr& lowerTypeDenoter)
+{
+    auto ast = Make<ArrayTypeDenoter>();
+
+    ast->lowerTypeDenoter = lowerTypeDenoter;
+
+    Accept(Tokens::LParen);
+    Accept(Tokens::RParen);
+
+    return ast;
 }
 
 /* --- Lists --- */
 
-std::vector<StmntPtr> Parser::ParseStmntList(const Tokens terminatorToken)
+template <typename ASTNode> std::vector<ASTNode> Parser::ParseList(
+    const std::function<ASTNode()>& parseFunc, const Tokens terminatorToken)
 {
-    std::vector<StmntPtr> list;
+    std::vector<ASTNode> list;
 
     while (!Is(terminatorToken))
-        list.push_back(ParseStmnt());
+        list.push_back(parseFunc());
 
     return list;
 }
 
-std::vector<ClassBodySegmentPtr> Parser::ParseClassBodySegmentList()
+template <typename ASTNode> std::vector<ASTNode> Parser::ParseList(
+    const std::function<ASTNode()>& parseFunc, const std::initializer_list<Tokens>& terminatorTokens)
 {
-    std::vector<ClassBodySegmentPtr> list;
+    std::vector<ASTNode> list;
 
-    //while (!Is(Tokens::RCurly))
-    //    list.push_back(ParseStmnt());
+    while (!IsAny(terminatorTokens))
+        list.push_back(parseFunc());
 
     return list;
+}
+
+template <typename ASTNode> std::vector<ASTNode> Parser::ParseSeparatedList(
+    const std::function<ASTNode()>& parseFunc, const Tokens separatorToken)
+{
+    std::vector<ASTNode> list;
+
+    while (true)
+    {
+        list.push_back(parseFunc());
+        if (Is(separatorToken))
+            AcceptIt();
+        else
+            break;
+    }
+
+    return list;
+}
+
+std::vector<StmntPtr> Parser::ParseStmntList(const Tokens terminatorToken)
+{
+    return ParseList<StmntPtr>(std::bind(&Parser::ParseStmnt, this), terminatorToken);
+}
+
+std::vector<StmntPtr> Parser::ParseDeclStmntList(const Tokens terminatorToken)
+{
+    return ParseList<StmntPtr>(std::bind(&Parser::ParseDeclStmnt, this), terminatorToken);
+}
+
+std::vector<ClassBodySegmentPtr> Parser::ParseClassBodySegmentList()
+{
+    return ParseList<ClassBodySegmentPtr>(std::bind(&Parser::ParseClassBodySegment, this), Tokens::RCurly);
+}
+
+std::vector<SwitchCasePtr> Parser::ParseSwitchCaseList()
+{
+    return ParseList<SwitchCasePtr>(std::bind(&Parser::ParseSwitchCase, this), Tokens::RCurly);
+}
+
+std::vector<StmntPtr> Parser::ParseSwitchCaseStmntList()
+{
+    return ParseList<StmntPtr>(
+        std::bind(&Parser::ParseStmnt, this),
+        { Tokens::RCurly, Tokens::Case, Tokens::Default }
+    );
+}
+
+std::vector<VarNamePtr> Parser::ParseVarNameList(const Tokens separatorToken)
+{
+    return ParseSeparatedList<VarNamePtr>(std::bind(&Parser::ParseVarName, this), separatorToken);
+}
+
+std::vector<ExprPtr> Parser::ParseExprList(const Tokens separatorToken)
+{
+    return ParseSeparatedList<ExprPtr>(std::bind(&Parser::ParseExpr, this, nullptr), separatorToken);
+}
+
+std::vector<ArgPtr> Parser::ParseArgList()
+{
+    return ParseSeparatedList<ArgPtr>(std::bind(&Parser::ParseArg, this), Tokens::Comma);
+}
+
+std::vector<ParamPtr> Parser::ParseParamList()
+{
+    return ParseSeparatedList<ParamPtr>(std::bind(&Parser::ParseParam, this), Tokens::Comma);
 }
 
 /* --- Base functions --- */
@@ -568,6 +790,11 @@ void Parser::PopProcHasReturnType()
 bool Parser::ProcHasReturnType() const
 {
     return !procHasReturnTypeStack_.empty() && procHasReturnTypeStack_.top();
+}
+
+bool Parser::IsAny(const std::initializer_list<Tokens>& types) const
+{
+    return std::find(types.begin(), types.end(), tkn_->Type()) != types.end();
 }
 
 

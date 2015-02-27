@@ -39,6 +39,9 @@ class BuiltinTypeDenoter : public TypeDenoter
             //Double,
         };
 
+        //! Returns the type name for the specified type spelling.
+        static TypeNames GetTypeName(const std::string& spell);
+
         TypeNames typeName = TypeNames::Void; // e.g. "int", "float", "bool"
 
 };

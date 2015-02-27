@@ -110,8 +110,7 @@ class Token
 
             Class,          //!< class
             Extern,         //!< extern
-            Public,         //!< public
-            Private,        //!< private
+            Visibility,     //!< public, private
             Static,         //!< static
             Init,           //!< init
             Release,        //!< release

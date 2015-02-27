@@ -6,6 +6,8 @@
  */
 
 #include "BuiltinTypeDenoter.h"
+#include "PostOperatorStmnt.h"
+#include "ModifyAssignStmnt.h"
 #include "CodeBlock.h"
 #include "Stmnt.h"
 #include "VarName.h"
@@ -47,6 +49,60 @@ void CodeBlock::RefreshSourceArea()
         sourceArea.start    = stmnts.front()->sourceArea.start;
         sourceArea.end      = stmnts.back()->sourceArea.end;
     }
+}
+
+
+/* --- BuiltinTypeDenoter --- */
+
+BuiltinTypeDenoter::TypeNames BuiltinTypeDenoter::GetTypeName(const std::string& spell)
+{
+    if (spell == "bool")
+        return TypeNames::Bool;
+    if (spell == "int")
+        return TypeNames::Int;
+    if (spell == "float")
+        return TypeNames::Float;
+    return TypeNames::Void;
+}
+
+
+/* --- PostOperatorStmnt --- */
+
+PostOperatorStmnt::Operators PostOperatorStmnt::GetOperator(const std::string& spell)
+{
+    if (spell == "++")
+        return Operators::Inc;
+    if (spell == "--")
+        return Operators::Dec;
+    throw std::invalid_argument("invalid post-operator \"" + spell + "\"");
+}
+
+
+/* --- ModifyAssignStmnt --- */
+
+ModifyAssignStmnt::Operators ModifyAssignStmnt::GetOperator(const std::string& spell)
+{
+    if (spell == "+=")
+        return Operators::Add;
+    if (spell == "-=")
+        return Operators::Sub;
+    if (spell == "*=")
+        return Operators::Mul;
+    if (spell == "/=")
+        return Operators::Div;
+    if (spell == "%=")
+        return Operators::Mod;
+    if (spell == "<<=")
+        return Operators::LShift;
+    if (spell == ">>=")
+        return Operators::RShift;
+    if (spell == "|=")
+        return Operators::Or;
+    if (spell == "&=")
+        return Operators::And;
+    if (spell == "^=")
+        return Operators::XOr;
+    throw std::invalid_argument("invalid modify-assign-operator \"" + spell + "\"");
 }
 
 

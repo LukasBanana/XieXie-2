@@ -14,6 +14,8 @@
 
 #include <string>
 #include <stack>
+#include <functional>
+#include <initializer_list>
 
 
 namespace SyntaxAnalyzer
@@ -75,6 +77,7 @@ class Parser
         /* --- Statements --- */
 
         StmntPtr                ParseStmnt();
+        StmntPtr                ParseDeclStmnt();
 
         ReturnStmntPtr          ParseReturnStmnt();
         CtrlTransferStmntPtr    ParseCtrlTransferStmnt();
@@ -106,7 +109,7 @@ class Parser
 
         /* --- Expressions --- */
 
-        ExprPtr                 ParseExpr();
+        ExprPtr                 ParseExpr(const TokenPtr& identTkn = nullptr);
 
         BinaryExprPtr           ParseBinaryExpr();
         UnaryExprPtr            ParseUnaryExpr();
@@ -123,19 +126,41 @@ class Parser
         TypeDenoterPtr          ParseTypeDenoter();
 
         BuiltinTypeDenoterPtr   ParseBuiltinTypeDenoter();
-        ArrayTypeDenoterPtr     ParseArrayTypeDenoter();
         PointerTypeDenoterPtr   ParsePointerTypeDenoter();
+        ArrayTypeDenoterPtr     ParseArrayTypeDenoter(const TypeDenoterPtr& lowerTypeDenoter);
 
         /* --- Lists --- */
 
+        template <typename ASTNode> std::vector<ASTNode> ParseList(
+            const std::function<ASTNode()>& parseFunc,
+            const Tokens terminatorToken
+        );
+        template <typename ASTNode> std::vector<ASTNode> ParseList(
+            const std::function<ASTNode()>& parseFunc,
+            const std::initializer_list<Tokens>& terminatorTokens
+        );
+        template <typename ASTNode> std::vector<ASTNode> ParseSeparatedList(
+            const std::function<ASTNode()>& parseFunc,
+            const Tokens separatorToken
+        );
+
         std::vector<StmntPtr>               ParseStmntList(const Tokens terminatorToken);
+        std::vector<StmntPtr>               ParseDeclStmntList(const Tokens terminatorToken);
         std::vector<ClassBodySegmentPtr>    ParseClassBodySegmentList();
+        std::vector<SwitchCasePtr>          ParseSwitchCaseList();
+        std::vector<StmntPtr>               ParseSwitchCaseStmntList();
+        std::vector<VarNamePtr>             ParseVarNameList(const Tokens separatorToken);
+        std::vector<ExprPtr>                ParseExprList(const Tokens separatorToken);
+        std::vector<ArgPtr>                 ParseArgList();
+        std::vector<ParamPtr>               ParseParamList();
 
         /* --- Base functions --- */
 
         void PushProcHasReturnType(bool hasReturnType);
         void PopProcHasReturnType();
         bool ProcHasReturnType() const;
+
+        bool IsAny(const std::initializer_list<Tokens>& types) const;
 
         inline bool Is(const Tokens type) const
         {

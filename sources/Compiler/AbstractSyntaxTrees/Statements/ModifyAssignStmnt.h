@@ -21,9 +21,26 @@ class ModifyAssignStmnt : public Stmnt
     
     public:
         
+        enum class Operators
+        {
+            Add,
+            Sub,
+            Mul,
+            Div,
+            Mod,
+            LShift,
+            RShift,
+            Or,
+            And,
+            XOr,
+        };
+
         AST_INTERFACE_EXT(ModifyAssignStmnt, Stmnt);
 
+        static Operators GetOperator(const std::string& spell);
+
         VarNamePtr  varName;
+        Operators   modifyOperator = Operators::Add;
         ExprPtr     expr;
 
 };
