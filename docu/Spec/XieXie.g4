@@ -90,7 +90,7 @@ for_range:			INT_LITERAL;
 
 // ATTRIBUTES
 attrib_prefix:		'[[' attrib_list ']]';
-attrib_list:		attrib (',' attrib)+;
+attrib_list:		attrib (',' attrib)*;
 attrib:				IDENT ('(' attrib_arg_list ')')?;
 attrib_arg_list:	attrib_arg (',' attrib_arg)*;
 attrib_arg:			expr;
