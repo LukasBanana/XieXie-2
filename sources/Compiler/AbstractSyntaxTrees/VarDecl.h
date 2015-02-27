@@ -1,30 +1,30 @@
 /*
- * VarDeclStmnt.h
+ * VarDecl.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_VAR_DECL_STMNT_H__
-#define __XX_AST_VAR_DECL_STMNT_H__
+#ifndef __XX_AST_VAR_DECL_H__
+#define __XX_AST_VAR_DECL_H__
 
 
-#include "Stmnt.h"
+#include "AST.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class VarDeclStmnt : public Stmnt
+class VarDecl : public AST
 {
     
     public:
         
-        AST_INTERFACE_EXT(VarDeclStmnt, Stmnt);
+        AST_INTERFACE(VarDecl);
 
-        TypeDenoterPtr          typeDenoter;
-        std::vector<VarDeclPtr> varDecls;
+        std::string ident;
+        ExprPtr     initExpr; // may be null
 
 };
 

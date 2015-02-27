@@ -54,7 +54,8 @@ static KeywordMapType GenerateKeywordMap()
         { "extern",     Ty::Extern         },
         { "public",     Ty::Visibility     },
         { "private",    Ty::Visibility     },
-        { "static",     Ty::Static         },
+        { "static",     Ty::ProcModifier   },
+        //{ "abstract",   Ty::ProcModifier   },
         { "init",       Ty::Init           },
         { "release",    Ty::Release        },
 

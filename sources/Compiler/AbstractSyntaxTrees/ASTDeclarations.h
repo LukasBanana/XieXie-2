@@ -22,8 +22,6 @@ DECL_SHR_PTR( Visitor              );
 DECL_SHR_PTR( AST                  );
 DECL_SHR_PTR( Stmnt                );
 DECL_SHR_PTR( Expr                 );
-DECL_SHR_PTR( ProcSignature        );
-DECL_SHR_PTR( AttribPrefix         );
 DECL_SHR_PTR( TypeDenoter          );
 
 /* --- Common AST nodes --- */
@@ -37,6 +35,7 @@ DECL_SHR_PTR( Param                );
 DECL_SHR_PTR( Arg                  );
 DECL_SHR_PTR( ProcSignature        );
 DECL_SHR_PTR( AttribPrefix         );
+DECL_SHR_PTR( Attrib               );
 DECL_SHR_PTR( EnumEntry            );
 DECL_SHR_PTR( ClassBodySegment     );
 DECL_SHR_PTR( ArrayAccess          );

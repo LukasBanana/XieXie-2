@@ -114,12 +114,13 @@ CodeBlockPtr Parser::ParseCodeBlock()
     auto ast = Make<CodeBlock>();
 
     Accept(Tokens::LCurly);
-    ast->stmnts = ParseStmntList(Tokens::RCurly);
+    ast->stmnts = ParseStmntList();
     Accept(Tokens::RCurly);
 
     return ast;
 }
 
+// for_init: var_decl_stmnt | assign_stmnt;
 ForInitPtr Parser::ParseForInit()
 {
     return nullptr;
@@ -144,15 +145,27 @@ VarNamePtr Parser::ParseVarName()
     return ast;
 }
 
+// type_inheritance: ':' var_name;
 VarNamePtr Parser::ParseTypeInheritance()
 {
     Accept(Tokens::Colon);
     return ParseVarName();
 }
 
+// var_decl: IDENT (':=' expr)?
 VarDeclPtr Parser::ParseVarDecl()
 {
-    return nullptr;
+    auto ast = Make<VarDecl>();
+
+    ast->ident = AcceptIdent();
+
+    if (Is(Tokens::CopyAssignOp))
+    {
+        AcceptIt();
+        ast->initExpr = ParseExpr();
+    }
+
+    return ast;
 }
 
 // param: type_denoter IDENT (':=' expr)?;
@@ -203,19 +216,68 @@ ArgPtr Parser::ParseArg()
     return ast;
 }
 
+// proc_signature: proc_modifier? return_type_denoter IDENT '(' param_list? ')';
+// proc_modifier: 'static';
 ProcSignaturePtr Parser::ParseProcSignature()
 {
-    return nullptr;
+    auto ast = Make<ProcSignature>();
+
+    if (Is(Tokens::ProcModifier))
+        ast->modifier = ProcSignature::GetModifier(AcceptIt()->Spell());
+
+    ast->returnTypeDenoter = ParseTypeDenoter();
+    ast->ident = AcceptIdent();
+
+    Accept(Tokens::LBracket);
+    ast->params = ParseParamList();
+    Accept(Tokens::RBracket);
+
+    return ast;
 }
 
+// attrib_prefix: '[[' attrib_list ']]';
 AttribPrefixPtr Parser::ParseAttribPrefix()
 {
-    return nullptr;
+    auto ast = Make<AttribPrefix>();
+
+    Accept(Tokens::LDParen);
+    ast->attribs = ParseAttribList();
+    Accept(Tokens::RDParen);
+
+    return ast;
 }
 
+// attrib: IDENT ('(' attrib_arg_list ')')?;
+AttribPtr Parser::ParseAttrib()
+{
+    auto ast = Make<Attrib>();
+
+    ast->ident = AcceptIdent();
+
+    if (Is(Tokens::LBracket))
+    {
+        AcceptIt();
+        ast->exprs = ParseExprList();
+        Accept(Tokens::RBracket);
+    }
+
+    return ast;
+}
+
+// enum_entry: IDENT (':=' expr)?;
 EnumEntryPtr Parser::ParseEnumEntry()
 {
-    return nullptr;
+    auto ast = Make<EnumEntry>();
+
+    ast->ident = AcceptIdent();
+
+    if (Is(Tokens::CopyAssignOp))
+    {
+        AcceptIt();
+        ast->valueExpr = ParseExpr();
+    }
+
+    return ast;
 }
 
 // class_body_segment: class_visibility? decl_stmnt_list?;
@@ -277,7 +339,7 @@ SwitchCasePtr Parser::ParseSwitchCase()
     else if (Is(Tokens::Case))
     {
         Accept(Tokens::Case);
-        ast->items = ParseExprList(Tokens::Comma);
+        ast->items = ParseExprList();
         Accept(Tokens::Colon);
     }
     else
@@ -290,11 +352,13 @@ SwitchCasePtr Parser::ParseSwitchCase()
 
 /* --- Statements --- */
 
+//!TODO!
 StmntPtr Parser::ParseStmnt()
 {
     return nullptr;
 }
 
+//!TODO!
 StmntPtr Parser::ParseDeclStmnt()
 {
     return nullptr;
@@ -409,6 +473,7 @@ StmntPtr Parser::ParseAbstractForStmnt()
     return ParseForStmnt(false);
 }
 
+//!TODO!
 ForStmntPtr Parser::ParseForStmnt(bool parseComplete, const TokenPtr& identTkn)
 {
     return nullptr;
@@ -440,6 +505,7 @@ ForEverStmntPtr Parser::ParseForEverStmnt()
     return ast;
 }
 
+//!TODO!
 ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& identTkn)
 {
     return nullptr;
@@ -518,29 +584,81 @@ ExternClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr&
     return nullptr;
 }
 
+// var_decl_stmnt: type_denoter var_decl_list;
 VarDeclStmntPtr Parser::ParseVarDeclStmnt()
 {
-    return nullptr;
+    auto ast = Make<VarDeclStmnt>();
+
+    ast->typeDenoter = ParseTypeDenoter();
+    ast->varDecls = ParseVarDeclList();
+
+    return ast;
 }
 
+// enum_decl_stmnt: 'enum' IDENT enum_body;
+// enum_body: '{' enum_entry_list? '}';
 EnumDeclStmntPtr Parser::ParseEnumDeclStmnt()
 {
-    return nullptr;
+    auto ast = Make<EnumDeclStmnt>();
+
+    Accept(Tokens::Enum);
+    ast->ident = AcceptIdent();
+
+    Accept(Tokens::LCurly);
+    ast->entries = ParseEnumEntryList();
+    Accept(Tokens::RCurly);
+
+    return ast;
 }
 
+// flags_decl_stmnt: 'flags' IDENT type_multi_inheritance? flags_body;
+// flags_body: '{' flags_entry_list? '}';
+// type_multi_inheritance: ':' var_name (',' var_name)*;
 FlagsDeclStmntPtr Parser::ParseFlagsDeclStmnt()
 {
-    return nullptr;
+    auto ast = Make<FlagsDeclStmnt>();
+
+    Accept(Tokens::Flags);
+    ast->ident = AcceptIdent();
+
+    if (Is(Tokens::Colon))
+    {
+        AcceptIt();
+        ast->inheritanceTypeNames = ParseVarNameList();
+    }
+
+    Accept(Tokens::LCurly);
+    ast->entries = ParseIdentList();
+    Accept(Tokens::RCurly);
+
+    return ast;
 }
 
+// proc_decl_stmnt: attrib_prefix? proc_signature code_block;
 ProcDeclStmntPtr Parser::ParseProcDeclStmnt()
 {
-    return nullptr;
+    auto ast = Make<ProcDeclStmnt>();
+
+    if (Is(Tokens::LDParen))
+        ast->attribPrefix = ParseAttribPrefix();
+
+    ast->procSignature = ParseProcSignature();
+    ast->codeBlock = ParseCodeBlock();
+
+    return ast;
 }
 
+// extern_proc_decl_stmnt: attrib_prefix? proc_signature;
 ProcDeclStmntPtr Parser::ParseExternProcDeclStmnt()
 {
-    return nullptr;
+    auto ast = Make<ProcDeclStmnt>();
+
+    if (Is(Tokens::LDParen))
+        ast->attribPrefix = ParseAttribPrefix();
+
+    ast->procSignature = ParseProcSignature();
+
+    return ast;
 }
 
 // copy_assign_stmnt: var_name (',' var_name)* ':=' expr;
@@ -548,7 +666,7 @@ CopyAssignStmntPtr Parser::ParseCopyAssignStmnt()
 {
     auto ast = Make<CopyAssignStmnt>();
 
-    ast->varNames = ParseVarNameList(Tokens::Comma);
+    ast->varNames = ParseVarNameList();
     Accept(Tokens::CopyAssignOp);
     ast->expr = ParseExpr();
 
@@ -757,6 +875,11 @@ std::vector<VarNamePtr> Parser::ParseVarNameList(const Tokens separatorToken)
     return ParseSeparatedList<VarNamePtr>(std::bind(&Parser::ParseVarName, this), separatorToken);
 }
 
+std::vector<VarDeclPtr> Parser::ParseVarDeclList(const Tokens separatorToken)
+{
+    return ParseSeparatedList<VarDeclPtr>(std::bind(&Parser::ParseVarDecl, this), separatorToken);
+}
+
 std::vector<ExprPtr> Parser::ParseExprList(const Tokens separatorToken)
 {
     return ParseSeparatedList<ExprPtr>(std::bind(&Parser::ParseExpr, this, nullptr), separatorToken);
@@ -770,6 +893,21 @@ std::vector<ArgPtr> Parser::ParseArgList()
 std::vector<ParamPtr> Parser::ParseParamList()
 {
     return ParseSeparatedList<ParamPtr>(std::bind(&Parser::ParseParam, this), Tokens::Comma);
+}
+
+std::vector<AttribPtr> Parser::ParseAttribList()
+{
+    return ParseSeparatedList<AttribPtr>(std::bind(&Parser::ParseAttrib, this), Tokens::Comma);
+}
+
+std::vector<EnumEntryPtr> Parser::ParseEnumEntryList()
+{
+    return ParseSeparatedList<EnumEntryPtr>(std::bind(&Parser::ParseEnumEntry, this), Tokens::Comma);
+}
+
+std::vector<std::string> Parser::ParseIdentList(const Tokens separatorToken)
+{
+    return ParseSeparatedList<std::string>(std::bind(&Parser::AcceptIdent, this), Tokens::Comma);
 }
 
 /* --- Base functions --- */

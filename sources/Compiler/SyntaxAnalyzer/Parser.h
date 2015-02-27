@@ -68,6 +68,7 @@ class Parser
         ArgPtr                  ParseArg();
         ProcSignaturePtr        ParseProcSignature();
         AttribPrefixPtr         ParseAttribPrefix();
+        AttribPtr               ParseAttrib();
         EnumEntryPtr            ParseEnumEntry();
         ClassBodySegmentPtr     ParseClassBodySegment();
         ArrayAccessPtr          ParseArrayAccess();
@@ -144,15 +145,19 @@ class Parser
             const Tokens separatorToken
         );
 
-        std::vector<StmntPtr>               ParseStmntList(const Tokens terminatorToken);
-        std::vector<StmntPtr>               ParseDeclStmntList(const Tokens terminatorToken);
+        std::vector<StmntPtr>               ParseStmntList(const Tokens terminatorToken = Tokens::RCurly);
+        std::vector<StmntPtr>               ParseDeclStmntList(const Tokens terminatorToken = Tokens::Visibility);
         std::vector<ClassBodySegmentPtr>    ParseClassBodySegmentList();
         std::vector<SwitchCasePtr>          ParseSwitchCaseList();
         std::vector<StmntPtr>               ParseSwitchCaseStmntList();
-        std::vector<VarNamePtr>             ParseVarNameList(const Tokens separatorToken);
-        std::vector<ExprPtr>                ParseExprList(const Tokens separatorToken);
+        std::vector<VarNamePtr>             ParseVarNameList(const Tokens separatorToken = Tokens::Comma);
+        std::vector<VarDeclPtr>             ParseVarDeclList(const Tokens separatorToken = Tokens::Comma);
+        std::vector<ExprPtr>                ParseExprList(const Tokens separatorToken = Tokens::Comma);
         std::vector<ArgPtr>                 ParseArgList();
         std::vector<ParamPtr>               ParseParamList();
+        std::vector<AttribPtr>              ParseAttribList();
+        std::vector<EnumEntryPtr>           ParseEnumEntryList();
+        std::vector<std::string>            ParseIdentList(const Tokens separatorToken = Tokens::Comma);
 
         /* --- Base functions --- */
 

@@ -30,6 +30,8 @@ class ProcSignature : public AST
 
         AST_INTERFACE(ProcSignature);
 
+        static Modifiers GetModifier(const std::string& spell);
+
         Modifiers               modifier = Modifiers::None;
         TypeDenoterPtr          returnTypeDenoter;          // may be null (for "void" type)
         std::string             ident;

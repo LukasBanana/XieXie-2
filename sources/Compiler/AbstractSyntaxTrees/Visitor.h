@@ -53,6 +53,7 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( Arg                  );
         DEF_ABSTRACT_VISIT_PROC( ProcSignature        );
         DEF_ABSTRACT_VISIT_PROC( AttribPrefix         );
+        DEF_ABSTRACT_VISIT_PROC( Attrib               );
         DEF_ABSTRACT_VISIT_PROC( EnumEntry            );
         DEF_ABSTRACT_VISIT_PROC( ClassBodySegment     );
         DEF_ABSTRACT_VISIT_PROC( ArrayAccess          );

@@ -111,7 +111,7 @@ class Token
             Class,          //!< class
             Extern,         //!< extern
             Visibility,     //!< public, private
-            Static,         //!< static
+            ProcModifier,   //!< static, abstract
             Init,           //!< init
             Release,        //!< release
 

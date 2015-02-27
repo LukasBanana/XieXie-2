@@ -11,6 +11,7 @@
 #include "CodeBlock.h"
 #include "Stmnt.h"
 #include "VarName.h"
+#include "ProcSignature.h"
 
 #include <exception>
 #include <initializer_list>
@@ -103,6 +104,18 @@ ModifyAssignStmnt::Operators ModifyAssignStmnt::GetOperator(const std::string& s
     if (spell == "^=")
         return Operators::XOr;
     throw std::invalid_argument("invalid modify-assign-operator \"" + spell + "\"");
+}
+
+
+/* --- ProcSignature --- */
+
+ProcSignature::Modifiers ProcSignature::GetModifier(const std::string& spell)
+{
+    if (spell == "static")
+        return Modifiers::Static;
+    //if (spell == "abstract")
+    //    return Modifiers::Abstract;
+    throw std::invalid_argument("invalid procedure modifier \"" + spell + "\"");
 }
 
 

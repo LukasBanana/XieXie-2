@@ -66,6 +66,7 @@ class AST
             Arg,
             ProcSignature,
             AttribPrefix,
+            Attrib,
             EnumEntry,
             ClassBodySegment,
             ArrayAccess,

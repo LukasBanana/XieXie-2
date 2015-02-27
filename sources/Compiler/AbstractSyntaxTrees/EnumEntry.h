@@ -1,30 +1,30 @@
 /*
- * VarDeclStmnt.h
+ * EnumEntry.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_VAR_DECL_STMNT_H__
-#define __XX_AST_VAR_DECL_STMNT_H__
+#ifndef __XX_AST_ENUM_ENTRY_H__
+#define __XX_AST_ENUM_ENTRY_H__
 
 
-#include "Stmnt.h"
+#include "AST.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class VarDeclStmnt : public Stmnt
+class EnumEntry : public AST
 {
     
     public:
         
-        AST_INTERFACE_EXT(VarDeclStmnt, Stmnt);
+        AST_INTERFACE(EnumEntry);
 
-        TypeDenoterPtr          typeDenoter;
-        std::vector<VarDeclPtr> varDecls;
+        std::string ident;
+        ExprPtr     valueExpr; // may be empty (default indexed value)
 
 };
 
