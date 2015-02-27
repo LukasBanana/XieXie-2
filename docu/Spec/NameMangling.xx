@@ -1,0 +1,28 @@
+
+// Name Mangling in XieXie-2.0
+
+extern class Test {
+	int size()
+	int size(bool x)
+	int size(int x)
+	float size(float x)
+	int size(int x, float y)
+	int size(Test obj)
+	int size(int[] array)
+	int size(int[][] array)
+	int size(Test[] array)
+	int size(int x, float[] array)
+}
+
+/*
+CTest.Psize:			; class "Test": procedure "size": no parameters
+CTest.Psize,B:			; class "Test": procedure "size": bool
+CTest.Psize,I:			; class "Test": procedure "size": int
+CTest.Psize,F:			; class "Test": procedure "size": float
+CTest.Psize,I,F:		; class "Test": procedure "size": int, float
+CTest.Psize,R@CTest:	; class "Test": procedure "size": reference to class "Test"
+CTest.Psize,A@I:		; class "Test": procedure "size": array to ints
+CTest.Psize,A@A@I:		; class "Test": procedure "size": array to arrays to ints
+CTest.Psize,A@R@CTest:	; class "Test": procedure "size": array to references to class "Test"
+CTest.Psize,I,A@F:		; class "Test": procedure "size": int, array to floats
+*/
