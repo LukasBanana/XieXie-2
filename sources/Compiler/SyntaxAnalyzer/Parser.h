@@ -122,15 +122,30 @@ class Parser
 
         ExprPtr                 ParseExpr(const TokenPtr& identTkn = nullptr);
 
-        BinaryExprPtr           ParseBinaryExpr();
-        UnaryExprPtr            ParseUnaryExpr();
-        LiteralExprPtr          ParseLiteralExpr();
-        CastExprPtr             ParseCastExpr();
-        CallExprPtr             ParseCallExpr();
-        MemberCallExprPtr       ParseMemberCallExpr();
+        ExprPtr                 ParseAbstractBinaryExpr(
+            const std::function<ExprPtr(const TokenPtr&)>& parseFunc,
+            const Tokens binaryOperatorToken, const TokenPtr& identTkn = nullptr
+        );
+
+        ExprPtr                 ParseLogicOrExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseLogicAndExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseBitwiseOrExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseBitwiseXOrExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseBitwiseAndExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseEqualityExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseRelationExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseShiftExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseAddExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseSubExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseMulExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseDivExpr(const TokenPtr& identTkn = nullptr);
+
+        ExprPtr                 ParseValueExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParsePrimaryValueExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseBracketOrCastExpr();
+
         AllocExprPtr            ParseAllocExpr();
-        VarNameExprPtr          ParseVarNameExpr();
-        InitListExprPtr         ParseInitListExpr();
+        UnaryExprPtr            ParseUnaryExpr();
 
         /* --- Type denoters --- */
 

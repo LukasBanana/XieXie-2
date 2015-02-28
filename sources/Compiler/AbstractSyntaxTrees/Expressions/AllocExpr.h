@@ -24,7 +24,6 @@ class AllocExpr : public Expr
         AST_INTERFACE_EXT(AllocExpr, Expr);
 
         TypeDenoterPtr      typeDenoter;
-        ExprPtr             arrayDimExpr; // may be null
         std::vector<ArgPtr> ctorArgs;
 
 };

@@ -21,10 +21,34 @@ class BinaryExpr : public Expr
     
     public:
         
+        enum class Operators
+        {
+            LogicOr,
+            LogicAnd,
+            BitwiseOr,
+            BitwiseXOr,
+            BitwiseAnd,
+            Equal,
+            Inequal,
+            Less,
+            LessEqual,
+            Greater,
+            GreaterEqual,
+            Add,
+            Sub,
+            Mul,
+            Div,
+            Mod,
+            LShift,
+            RShift,
+        };
+
         AST_INTERFACE_EXT(BinaryExpr, Expr);
 
+        static Operators GetOperator(const std::string& spell);
+
         ExprPtr     lhsExpr;
-        std::string binaryOperator;
+        Operators   binaryOperator = Operators::LogicOr;
         ExprPtr     rhsExpr;
 
 };

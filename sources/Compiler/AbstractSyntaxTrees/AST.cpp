@@ -8,6 +8,8 @@
 #include "BuiltinTypeDenoter.h"
 #include "PostOperatorStmnt.h"
 #include "ModifyAssignStmnt.h"
+#include "UnaryExpr.h"
+#include "BinaryExpr.h"
 #include "CodeBlock.h"
 #include "Stmnt.h"
 #include "VarName.h"
@@ -16,11 +18,23 @@
 #include <exception>
 #include <initializer_list>
 #include <algorithm>
+#include <map>
 
 
 namespace AbstractSyntaxTrees
 {
 
+
+/* --- <Internal> --- */
+
+template <typename T> T MapSpellToType(
+    const std::string& spell, const std::map<std::string, T>& list, const std::string& error)
+{
+    auto it = list.find(spell);
+    if (it != list.end())
+        return it->second;
+    throw std::invalid_argument(error);
+}
 
 /*bool ContainsString(const std::string& str, const std::initializer_list<std::string>& list)
 {
@@ -71,11 +85,14 @@ BuiltinTypeDenoter::TypeNames BuiltinTypeDenoter::GetTypeName(const std::string&
 
 PostOperatorStmnt::Operators PostOperatorStmnt::GetOperator(const std::string& spell)
 {
-    if (spell == "++")
-        return Operators::Inc;
-    if (spell == "--")
-        return Operators::Dec;
-    throw std::invalid_argument("invalid post-operator \"" + spell + "\"");
+    return MapSpellToType<Operators>(
+        spell,
+        {
+            { "++", Operators::Inc },
+            { "--", Operators::Dec },
+        },
+        "invalid post-operator \"" + spell + "\""
+    );
 }
 
 
@@ -83,27 +100,22 @@ PostOperatorStmnt::Operators PostOperatorStmnt::GetOperator(const std::string& s
 
 ModifyAssignStmnt::Operators ModifyAssignStmnt::GetOperator(const std::string& spell)
 {
-    if (spell == "+=")
-        return Operators::Add;
-    if (spell == "-=")
-        return Operators::Sub;
-    if (spell == "*=")
-        return Operators::Mul;
-    if (spell == "/=")
-        return Operators::Div;
-    if (spell == "%=")
-        return Operators::Mod;
-    if (spell == "<<=")
-        return Operators::LShift;
-    if (spell == ">>=")
-        return Operators::RShift;
-    if (spell == "|=")
-        return Operators::Or;
-    if (spell == "&=")
-        return Operators::And;
-    if (spell == "^=")
-        return Operators::XOr;
-    throw std::invalid_argument("invalid modify-assign-operator \"" + spell + "\"");
+    return MapSpellToType<Operators>(
+        spell,
+        {
+            { "+=",  Operators::Add    },
+            { "-=",  Operators::Sub    },
+            { "*=",  Operators::Mul    },
+            { "/=",  Operators::Div    },
+            { "%=",  Operators::Mod    },
+            { "<<=", Operators::LShift },
+            { ">>=", Operators::RShift },
+            { "|=",  Operators::Or     },
+            { "&=",  Operators::And    },
+            { "^=",  Operators::XOr    },
+        },
+        "invalid modify-assign-operator \"" + spell + "\""
+    );
 }
 
 
@@ -111,11 +123,61 @@ ModifyAssignStmnt::Operators ModifyAssignStmnt::GetOperator(const std::string& s
 
 ProcSignature::Modifiers ProcSignature::GetModifier(const std::string& spell)
 {
-    if (spell == "static")
-        return Modifiers::Static;
-    //if (spell == "abstract")
-    //    return Modifiers::Abstract;
-    throw std::invalid_argument("invalid procedure modifier \"" + spell + "\"");
+    return MapSpellToType<Modifiers>(
+        spell,
+        {
+            { "static",   Modifiers::Static   },
+            //{ "abstract", Modifiers::Abstract },
+        },
+        "invalid procedure modifier \"" + spell + "\""
+    );
+}
+
+
+/* --- UnaryExpr --- */
+
+UnaryExpr::Operators UnaryExpr::GetOperator(const std::string& spell)
+{
+    return MapSpellToType<Operators>(
+        spell,
+        {
+            { "not", Operators::LogicNot   },
+            { "~",   Operators::BitwiseNot },
+            { "-",   Operators::Negate     },
+        },
+        "invalid unary operator \"" + spell + "\""
+    );
+}
+
+
+/* --- BinaryExpr --- */
+
+BinaryExpr::Operators BinaryExpr::GetOperator(const std::string& spell)
+{
+    return MapSpellToType<Operators>(
+        spell,
+        {
+            { "or",  Operators::LogicOr      },
+            { "and", Operators::LogicAnd     },
+            { "|",   Operators::BitwiseOr    },
+            { "^",   Operators::BitwiseXOr   },
+            { "&",   Operators::BitwiseAnd   },
+            { "=",   Operators::Equal        },
+            { "!=",  Operators::Inequal      },
+            { "<",   Operators::Less         },
+            { "<=",  Operators::LessEqual    },
+            { ">",   Operators::Greater      },
+            { ">=",  Operators::GreaterEqual },
+            { "+",   Operators::Add          },
+            { "-",   Operators::Sub          },
+            { "*",   Operators::Mul          },
+            { "/",   Operators::Div          },
+            { "%",   Operators::Mod          },
+            { "<<",  Operators::LShift       },
+            { ">>",  Operators::RShift       },
+        },
+        "invalid binary operator \"" + spell + "\""
+    );
 }
 
 

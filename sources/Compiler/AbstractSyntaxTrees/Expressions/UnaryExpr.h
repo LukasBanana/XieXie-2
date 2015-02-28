@@ -21,7 +21,16 @@ class UnaryExpr : public Expr
     
     public:
         
+        enum class Operators
+        {
+            LogicNot,
+            BitwiseNot,
+            Negate,
+        };
+
         AST_INTERFACE_EXT(UnaryExpr, Expr);
+
+        static Operators GetOperator(const std::string& spell);
 
         std::string unaryOperator;
         ExprPtr     expr;

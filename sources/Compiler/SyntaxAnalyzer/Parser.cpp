@@ -14,6 +14,8 @@ namespace SyntaxAnalyzer
 {
 
 
+using namespace std::placeholders;
+
 ProgramPtr Parser::ParseSource(const SourceCodePtr& source, ErrorReporter& errorReporter)
 {
     return nullptr;
@@ -938,54 +940,164 @@ PostOperatorStmntPtr Parser::ParsePostOperatorStmnt(const VarNamePtr& varName)
 
 /* --- Expressions --- */
 
+// expr: logic_or_expr;
 ExprPtr Parser::ParseExpr(const TokenPtr& identTkn)
 {
-    return nullptr;
+    return ParseLogicOrExpr(identTkn);
 }
 
-BinaryExprPtr Parser::ParseBinaryExpr()
+ExprPtr Parser::ParseAbstractBinaryExpr(
+    const std::function<ExprPtr(const TokenPtr&)>& parseFunc,
+    const Tokens binaryOperatorToken, const TokenPtr& identTkn)
 {
-    return nullptr;
+    auto lhs = parseFunc(identTkn);
+
+    if (Is(binaryOperatorToken))
+    {
+        auto ast = Make<BinaryExpr>();
+
+        ast->lhsExpr = lhs;
+        AcceptIt();
+        ast->rhsExpr = parseFunc(nullptr);
+    }
+
+    return lhs;
 }
 
-UnaryExprPtr Parser::ParseUnaryExpr()
+// logic_or_expr: logic_and_expr ('or' logic_and_expr)*;
+ExprPtr Parser::ParseLogicOrExpr(const TokenPtr& identTkn)
 {
-    return nullptr;
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseLogicAndExpr, this, _1), Tokens::Or, identTkn);
 }
 
-LiteralExprPtr Parser::ParseLiteralExpr()
+// logic_and_expr: bitwise_or_expr ('and' bitwise_or_expr)*;
+ExprPtr Parser::ParseLogicAndExpr(const TokenPtr& identTkn)
 {
-    return nullptr;
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseBitwiseOrExpr, this, _1), Tokens::And, identTkn);
 }
 
-CastExprPtr Parser::ParseCastExpr()
+// bitwise_or_expr: bitwise_xor_expr ('|' bitwise_xor_expr)*;
+ExprPtr Parser::ParseBitwiseOrExpr(const TokenPtr& identTkn)
 {
-    return nullptr;
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseBitwiseXOrExpr, this, _1), Tokens::BitwiseOrOp, identTkn);
 }
 
-CallExprPtr Parser::ParseCallExpr()
+// bitwise_xor_expr: bitwise_and_expr ('^' bitwise_and_expr)*;
+ExprPtr Parser::ParseBitwiseXOrExpr(const TokenPtr& identTkn)
 {
-    return nullptr;
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseBitwiseAndExpr, this, _1), Tokens::BitwiseXorOp, identTkn);
 }
 
-MemberCallExprPtr Parser::ParseMemberCallExpr()
+// bitwise_and_expr: equality_expr ('&' equality_expr)*;
+ExprPtr Parser::ParseBitwiseAndExpr(const TokenPtr& identTkn)
 {
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseEqualityExpr, this, _1), Tokens::BitwiseAndOp, identTkn);
+}
+
+// equality_expr: relation_expr (('=' | '!=') relation_expr)*;
+ExprPtr Parser::ParseEqualityExpr(const TokenPtr& identTkn)
+{
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseRelationExpr, this, _1), Tokens::EqualityOp, identTkn);
+}
+
+// relation_expr: shift_expr (('<' | '>' | '<=' | '>=') shift_expr)*;
+ExprPtr Parser::ParseRelationExpr(const TokenPtr& identTkn)
+{
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseShiftExpr, this, _1), Tokens::RelationOp, identTkn);
+}
+
+// shift_expr: add_expr (('<<' | '>>') add_expr)*;
+ExprPtr Parser::ParseShiftExpr(const TokenPtr& identTkn)
+{
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseAddExpr, this, _1), Tokens::ShiftOp, identTkn);
+}
+
+// add_expr: sub_expr ('+' sub_expr)*;
+ExprPtr Parser::ParseAddExpr(const TokenPtr& identTkn)
+{
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseSubExpr, this, _1), Tokens::AddOp, identTkn);
+}
+
+// sub_expr: mul_expr ('-' mul_expr)*;
+ExprPtr Parser::ParseSubExpr(const TokenPtr& identTkn)
+{
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseMulExpr, this, _1), Tokens::SubOp, identTkn);
+}
+
+// mul_expr: div_expr ('*' div_expr)*;
+ExprPtr Parser::ParseMulExpr(const TokenPtr& identTkn)
+{
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseDivExpr, this, _1), Tokens::MulOp, identTkn);
+}
+
+// div_expr: value_expr (('/' | '%') value_expr)*;
+ExprPtr Parser::ParseDivExpr(const TokenPtr& identTkn)
+{
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseValueExpr, this, _1), Tokens::DivOp, identTkn);
+}
+
+// value_expr: (primary_value_expr | value_expr member_proc_call)
+ExprPtr Parser::ParseValueExpr(const TokenPtr& identTkn)
+{
+    auto primaryExpr = ParsePrimaryValueExpr(identTkn);
+
+
     return nullptr;
 }
 
+// primary_value_expr : literal_expr | var_access_expr | alloc_expr | bracket_expr | cast_expr | call_expr | unary_expr | init_list_expr;
+ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn)
+{
+    switch (TknType())
+    {
+        case Tokens::New:
+            return ParseAllocExpr();
+        case Tokens::LBracket:
+            return ParseBracketOrCastExpr();
+        case Tokens::Not:
+        case Tokens::BitwiseNotOp:
+        case Tokens::SubOp:
+            return ParseUnaryExpr();
+    }
+    return nullptr;
+}
+
+// bracket_expr: '(' expr ')';
+// cast_expr: '(' type_denoter ')' value_expr;
+ExprPtr Parser::ParseBracketOrCastExpr()
+{
+    //!TODO!
+    return nullptr;
+}
+
+// alloc_expr: 'new' type_denoter ctor_init?;
+// ctor_init: '(' arg_list? ')';
 AllocExprPtr Parser::ParseAllocExpr()
 {
-    return nullptr;
+    auto ast = Make<AllocExpr>();
+
+    Accept(Tokens::New);
+
+    ast->typeDenoter = ParseTypeDenoter();
+
+    if (Is(Tokens::LBracket))
+    {
+        Accept(Tokens::LBracket);
+        ast->ctorArgs = ParseArgList();
+        Accept(Tokens::RBracket);
+    }
+
+    return ast;
 }
 
-VarNameExprPtr Parser::ParseVarNameExpr()
+// unary_expr: ('~' | '-' | 'not') value_expr;
+UnaryExprPtr Parser::ParseUnaryExpr()
 {
-    return nullptr;
-}
+    auto ast = Make<UnaryExpr>();
 
-InitListExprPtr Parser::ParseInitListExpr()
-{
-    return nullptr;
+    ast->unaryOperator;
+
+    return ast;
 }
 
 /* --- Type denoters --- */

@@ -62,7 +62,7 @@ class Test {
 	
 	static int main(String[] args) {
 		
-		Vector3[] coords := new Vector3[100]
+		Vector3[] coords := new Vector3[](100)
 		
 		String str1 := "Hello"
 		String str2 := new String("World")
