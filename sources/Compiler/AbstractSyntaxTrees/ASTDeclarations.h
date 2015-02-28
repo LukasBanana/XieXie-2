@@ -28,7 +28,6 @@ DECL_SHR_PTR( TypeDenoter          );
 
 DECL_SHR_PTR( Program              );
 DECL_SHR_PTR( CodeBlock            );
-DECL_SHR_PTR( ForInit              );
 DECL_SHR_PTR( VarName              );
 DECL_SHR_PTR( VarDecl              );
 DECL_SHR_PTR( Param                );

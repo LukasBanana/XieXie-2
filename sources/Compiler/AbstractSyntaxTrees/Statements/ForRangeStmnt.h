@@ -24,9 +24,9 @@ class ForRangeStmnt : public Stmnt
         AST_INTERFACE_EXT(ForRangeStmnt, Stmnt);
 
         std::string     varIdent;
-        std::string     rangeStart;
-        std::string     rangeEnd;
-        std::string     rangeStep; // may be empty (default step, +1 or -1)
+        int             rangeStart  = 0;
+        int             rangeEnd    = 0;
+        unsigned int    rangeStep   = 1; // may be empty
         CodeBlockPtr    codeBlock;
 
 };

@@ -23,9 +23,9 @@ class ProcDeclStmnt : public Stmnt
         
         AST_INTERFACE_EXT(ProcDeclStmnt, Stmnt);
 
-        AttribPrefixPtr     attribPrefix; // may be null
+        AttribPrefixPtr     attribPrefix;   // may be null
         ProcSignaturePtr    procSignature;
-        CodeBlockPtr        codeBlock; // may be null (for extern procedures)
+        CodeBlockPtr        codeBlock;      // may be null (for extern procedures)
 
 };
 

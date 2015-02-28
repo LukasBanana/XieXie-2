@@ -63,6 +63,19 @@ static KeywordMapType GenerateKeywordMap()
         { "flags",      Ty::Flags          },
 
         { "new",        Ty::New            },
+
+        { "package",    Ty::Reserved       },
+        { "alias",      Ty::Reserved       },
+        { "pattern",    Ty::Reserved       },
+        { "sync",       Ty::Reserved       },
+        { "byte",       Ty::Reserved       },
+        { "ubyte",      Ty::Reserved       },
+        { "short",      Ty::Reserved       },
+        { "ushort",     Ty::Reserved       },
+        { "uint",       Ty::Reserved       },
+        { "long",       Ty::Reserved       },
+        { "ulong",      Ty::Reserved       },
+        { "double",     Ty::Reserved       },
     };
 }
 

@@ -78,15 +78,15 @@ return_stmnt:	'return' expr?;
 
 // LOOP STATEMENTS
 for_stmnt:			'for' for_init? ';' expr? ';' assign_stmnt? code_block;
+for_range_stmnt:	'for' IDENT ':' for_range '..' for_range ('->' INT_LITERAL)? code_block;
 for_each_stmnt:		'foreach' for_each_init ':' expr code_block;
 for_ever_stmnt:		'forever' code_block;
-for_range_stmnt:	'for' IDENT ':' for_range '..' for_range ('->' for_range)? code_block;
 while_stmnt:		'while' expr code_block;
 do_while_stmnt:		'do' code_block 'while' expr;
 
 for_init:			var_decl_stmnt | assign_stmnt;
 for_each_init:		var_decl_stmnt;
-for_range:			INT_LITERAL;
+for_range:			NEGATION? INT_LITERAL;
 
 // ATTRIBUTES
 attrib_prefix:		'[[' attrib_list ']]';
@@ -109,9 +109,9 @@ array_access:		'[' array_index ']' array_access?;
 array_index:		expr;
 
 // CLASSES
-class_decl_stmnt:			attrib_prefix? intern_class_decl_stmnt | extern_class_decl_stmnt;
+class_decl_stmnt:			attrib_prefix? intern_class_decl_stmnt | ('extern' extern_class_decl_stmnt);
 intern_class_decl_stmnt:	'class' class_name type_inheritance? class_body;
-extern_class_decl_stmnt:	'extern' 'class' class_name extern_class_body;
+extern_class_decl_stmnt:	'class' class_name extern_class_body;
 class_body:					'{' class_body_segment_list '}';
 class_body_segment_list:	class_body_segment*;
 class_body_segment:			class_visibility? decl_stmnt_list?;
@@ -275,6 +275,8 @@ ESCAPE_CHAR	: '\\' [0\\tnr"']
 			| '\\U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;
 
 IDENT:	(LETTER | '_') (LETTER | '_' | DEC_DIGIT)*;			// Identifier
+
+NEGATION:	'-'
 
 // WHITE SPACES & COMMENTS
 WS:				[ \t\r\n]+ -> skip;									// Skip white spaces

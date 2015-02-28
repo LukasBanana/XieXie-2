@@ -46,7 +46,6 @@ class Visitor
 
         DEF_ABSTRACT_VISIT_PROC( Program              );
         DEF_ABSTRACT_VISIT_PROC( CodeBlock            );
-        DEF_ABSTRACT_VISIT_PROC( ForInit              );
         DEF_ABSTRACT_VISIT_PROC( VarName              );
         DEF_ABSTRACT_VISIT_PROC( VarDecl              );
         DEF_ABSTRACT_VISIT_PROC( Param                );

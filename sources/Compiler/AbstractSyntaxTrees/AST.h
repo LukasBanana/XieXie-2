@@ -59,7 +59,6 @@ class AST
             /* --- Common AST types --- */
             Program,
             CodeBlock,
-            ForInit,
             VarName,
             VarDecl,
             Param,

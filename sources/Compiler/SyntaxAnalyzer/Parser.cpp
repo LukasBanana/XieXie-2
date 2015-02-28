@@ -7,16 +7,12 @@
 
 #include "Parser.h"
 #include "ASTImport.h"
+#include "StringModifier.h"
 
 
 namespace SyntaxAnalyzer
 {
 
-
-template <typename T, typename... Args> std::shared_ptr<T> Make(Args&&... args)
-{
-    return std::make_shared<T>(std::forward<Args>(args)...);
-}
 
 ProgramPtr Parser::ParseSource(const SourceCodePtr& source, ErrorReporter& errorReporter)
 {
@@ -96,6 +92,29 @@ std::string Parser::AcceptIdent()
     return Accept(Tokens::Ident)->Spell();
 }
 
+int Parser::AcceptSignedIntLiteral()
+{
+    /* Parse optional negative number */
+    bool isNegative = false;
+
+    if (Is(Tokens::SubOp))
+    {
+        AcceptIt();
+        isNegative = true;
+    }
+
+    /* Parse integer literal */
+    auto spell = Accept(Tokens::IntLiteral)->Spell();
+    auto value = StrToNum<int>(spell);
+
+    return isNegative ? -value : value;
+}
+
+unsigned int Parser::AcceptUnsignedIntLiteral()
+{
+    return StrToNum<unsigned int>(Accept(Tokens::IntLiteral)->Spell());
+}
+
 /* --- Common AST nodes --- */
 
 ProgramPtr Parser::ParseProgram()
@@ -120,18 +139,12 @@ CodeBlockPtr Parser::ParseCodeBlock()
     return ast;
 }
 
-// for_init: var_decl_stmnt | assign_stmnt;
-ForInitPtr Parser::ParseForInit()
-{
-    return nullptr;
-}
-
 // var_name: IDENT array_access? ('.' var_name)?;
-VarNamePtr Parser::ParseVarName()
+VarNamePtr Parser::ParseVarName(const TokenPtr& identTkn)
 {
     auto ast = Make<VarName>();
 
-    ast->ident = AcceptIdent();
+    ast->ident = (identTkn != nullptr ? identTkn->Spell() : AcceptIdent());
     
     if (Is(Tokens::LParen))
         ast->arrayAccess = ParseArrayAccess();
@@ -352,16 +365,131 @@ SwitchCasePtr Parser::ParseSwitchCase()
 
 /* --- Statements --- */
 
-//!TODO!
+// stmnt: var_decl_stmnt | branch_stmnt | loop_stmnt | assign_stmnt | ctrl_transfer_stmnt;
 StmntPtr Parser::ParseStmnt()
 {
+    switch (TknType())
+    {
+        case Tokens::For:
+            return ParseForOrForRangeStmnt();
+        case Tokens::ForEach:
+            return ParseForEachStmnt();
+        case Tokens::ForEver:
+            return ParseForEverStmnt();
+        case Tokens::While:
+            return ParseWhileStmnt();
+        case Tokens::Do:
+            return ParseDoWhileStmnt();
+        case Tokens::Break:
+        case Tokens::Continue:
+        case Tokens::Return:
+            return ParseCtrlTransferStmnt();
+    }
+    return ParseVarDeclOrAssignStmnt();
+}
+
+// decl_stmnt: var_decl_stmnt | class_decl_stmnt | enum_decl_stmnt | flags_decl_stmnt | proc_decl_stmnt | init_decl_stmnt;
+StmntPtr Parser::ParseDeclStmnt()
+{
+    switch (TknType())
+    {
+        case Tokens::Extern:
+        case Tokens::Class:
+            return ParseClassDeclStmnt();
+        case Tokens::Enum:
+            return ParseEnumDeclStmnt();
+        case Tokens::Flags:
+            return ParseFlagsDeclStmnt();
+        case Tokens::Init:
+            return ParseInitDeclStmnt();
+        case Tokens::LDParen:
+            return ParseClassDeclOrProcDeclStmnt();
+    }
+    return ParseVarDeclOrProcDeclStmnt();
+}
+
+// extern_decl_stmnt: extern_class_decl_stmnt | extern_proc_decl_stmnt | extern_init_decl_stmnt | enum_decl_stmnt | flags_decl_stmnt;
+StmntPtr Parser::ParseExternDeclStmnt()
+{
+    switch (TknType())
+    {
+        case Tokens::Class:
+            return ParseExternClassDeclStmnt();
+        case Tokens::Init:
+            return ParseInitDeclStmnt(true);
+        case Tokens::Enum:
+            return ParseEnumDeclStmnt();
+        case Tokens::Flags:
+            return ParseFlagsDeclStmnt();
+    }
+    return ParseProcDeclStmnt(true);
+}
+
+// (var_decl_stmnt | assign_stmnt)
+StmntPtr Parser::ParseVarDeclOrAssignStmnt(const TokenPtr& identTkn)
+{
+    /* Check for built-in type denoter */
+    if (Is(Tokens::BuiltinType))
+        return ParseVarDeclStmnt();
+
+    /* Parse variable name for both pointer type denoter and assign statement */
+    auto varName = ParseVarName(identTkn);
+
+    /* Check for array type denoter or identifier for variable declaration */
+    if (Is(Tokens::LParen) || Is(Tokens::Ident))
+        return ParseVarDeclStmnt(varName);
+
+    /* Parse assign statement */
+    return ParseAssignStmnt(varName);
+}
+
+// (var_decl_stmnt | proc_decl_stmnt)
+StmntPtr Parser::ParseVarDeclOrProcDeclStmnt()
+{
+    //!TODO!
     return nullptr;
 }
 
-//!TODO!
-StmntPtr Parser::ParseDeclStmnt()
+// (proc_decl_stmnt | class_decl_stmnt)
+StmntPtr Parser::ParseClassDeclOrProcDeclStmnt()
 {
+    //!TODO!
     return nullptr;
+}
+
+// ctrl_transfer_stmnt: break_stmnt | continue_stmnt | return_stmnt;
+StmntPtr Parser::ParseCtrlTransferStmnt()
+{
+    if (Is(Tokens::Break))
+        return ParseBreakStmnt();
+    if (Is(Tokens::Continue))
+        return ParseContinueStmnt();
+    if (Is(Tokens::Return))
+        return ParseReturnStmnt();
+    ErrorUnexpected("expected control transfer statement: 'break', 'continue', 'return'");
+    return nullptr;
+}
+
+// break_stmnt: 'break';
+CtrlTransferStmntPtr Parser::ParseBreakStmnt()
+{
+    auto ast = Make<CtrlTransferStmnt>();
+
+    Accept(Tokens::Break);
+    ast->ctrlTransfer = CtrlTransferStmnt::Transfers::Break;
+
+    return ast;
+}
+
+// continue_stmnt: 'continue';
+CtrlTransferStmntPtr Parser::ParseContinueStmnt()
+{
+    auto ast = Make<CtrlTransferStmnt>();
+
+    Accept(Tokens::Continue);
+    ast->ctrlTransfer = CtrlTransferStmnt::Transfers::Continue;
+
+    return ast;
 }
 
 // return_stmnt: 'return' expr?;
@@ -373,27 +501,6 @@ ReturnStmntPtr Parser::ParseReturnStmnt()
 
     if (ProcHasReturnType())
         ast->expr = ParseExpr();
-
-    return ast;
-}
-
-// ctrl_transfer_stmnt : 'break' | 'continue'
-CtrlTransferStmntPtr Parser::ParseCtrlTransferStmnt()
-{
-    auto ast = Make<CtrlTransferStmnt>();
-
-    if (Is(Tokens::Break))
-    {
-        AcceptIt();
-        ast->ctrlTransfer = CtrlTransferStmnt::Transfers::Break;
-    }
-    else if (Is(Tokens::Continue))
-    {
-        AcceptIt();
-        ast->ctrlTransfer = CtrlTransferStmnt::Transfers::Continue;
-    }
-    else
-        ErrorUnexpected("expected control transfer statement ('break' or 'continue')");
 
     return ast;
 }
@@ -450,7 +557,8 @@ SwitchStmntPtr Parser::ParseSwitchStmnt()
     return ast;
 }
 
-StmntPtr Parser::ParseAbstractForStmnt()
+// (for_stmnt | for_range_stmnt)
+StmntPtr Parser::ParseForOrForRangeStmnt()
 {
     Accept(Tokens::For);
 
@@ -473,10 +581,64 @@ StmntPtr Parser::ParseAbstractForStmnt()
     return ParseForStmnt(false);
 }
 
-//!TODO!
+// for_stmnt: 'for' for_init? ';' expr? ';' assign_stmnt? code_block;
+// for_init: var_decl_stmnt | assign_stmnt;
 ForStmntPtr Parser::ParseForStmnt(bool parseComplete, const TokenPtr& identTkn)
 {
-    return nullptr;
+    auto ast = Make<ForStmnt>();
+
+    /* Parse for-statement initialization */
+    if (parseComplete)
+        Accept(Tokens::For);
+
+    if (!Is(Tokens::Semicolon))
+        ast->initStmnt = ParseVarDeclOrAssignStmnt(identTkn);
+    Accept(Tokens::Semicolon);
+
+    if (!Is(Tokens::Semicolon))
+        ast->condExpr = ParseExpr();
+    Accept(Tokens::Semicolon);
+
+    if (!Is(Tokens::LCurly))
+        ast->assignStmnt = ParseAssignStmnt();
+
+    /* Parse for-statement code block */
+    ast->codeBlock = ParseCodeBlock();
+
+    return ast;
+}
+
+// for_range_stmnt: 'for' IDENT ':' INT_LITERAL '..' INT_LITERAL ('->' INT_LITERAL)? code_block;
+ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& identTkn)
+{
+    auto ast = Make<ForRangeStmnt>();
+
+    /* Parse for-statement initialization */
+    if (parseComplete)
+        Accept(Tokens::For);
+
+    if (identTkn)
+        ast->varIdent = identTkn->Spell();
+    else
+        ast->varIdent = AcceptIdent();
+
+    Accept(Tokens::Colon);
+
+    /* Parse range literals */
+    ast->rangeStart = AcceptSignedIntLiteral();
+    Accept(Tokens::RangeSep);
+    ast->rangeEnd = AcceptSignedIntLiteral();
+
+    if (Is(Tokens::Arrow))
+    {
+        AcceptIt();
+        ast->rangeStep = AcceptUnsignedIntLiteral();
+    }
+
+    /* Parse for-statement code block */
+    ast->codeBlock = ParseCodeBlock();
+
+    return ast;
 }
 
 // for_each_stmnt: 'foreach' for_each_init ':' expr code_block;
@@ -505,12 +667,6 @@ ForEverStmntPtr Parser::ParseForEverStmnt()
     return ast;
 }
 
-//!TODO!
-ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& identTkn)
-{
-    return nullptr;
-}
-
 // while_stmnt: 'while' expr code_block;
 WhileStmntPtr Parser::ParseWhileStmnt()
 {
@@ -536,7 +692,7 @@ DoWhileStmntPtr Parser::ParseDoWhileStmnt()
     return ast;
 }
 
-// class_decl_stmnt: attrib_prefix? intern_class_decl_stmnt | extern_class_decl_stmnt;
+// class_decl_stmnt: attrib_prefix? intern_class_decl_stmnt | ('extern' extern_class_decl_stmnt);
 StmntPtr Parser::ParseClassDeclStmnt()
 {
     AttribPrefixPtr attribPrefix;
@@ -544,8 +700,13 @@ StmntPtr Parser::ParseClassDeclStmnt()
     if (Is(Tokens::LDParen))
         attribPrefix = ParseAttribPrefix();
 
+    if (Is(Tokens::Extern))
+    {
+        AcceptIt();
+        return ParseExternClassDeclStmnt(attribPrefix);
+    }
+        
     return ParseInternClassDeclStmnt(attribPrefix);
-    //return Is(Tokens::Extern) ? ParseExternClassDeclStmnt(attribPrefix) : ParseInternClassDeclStmnt(attribPrefix);
 }
 
 // intern_class_decl_stmnt: 'class' class_name type_inheritance? class_body;
@@ -566,30 +727,26 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
     return ast;
 }
 
-// extern_class_decl_stmnt: 'extern' 'class' class_name extern_class_body;
+// extern_class_decl_stmnt: 'class' class_name extern_class_body;
 ExternClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
-    /*auto ast = Make<ExternClassDeclStmnt>();
+    auto ast = Make<ExternClassDeclStmnt>();
 
     ast->attribPrefix = attribPrefix;
-
-    Accept(Tokens::Extern);
     Accept(Tokens::Class);
 
     ast->ident = AcceptIdent();
+    ast->stmnts = ParseExternDeclStmntList();
 
-    //...
-
-    return ast;*/
-    return nullptr;
+    return ast;
 }
 
 // var_decl_stmnt: type_denoter var_decl_list;
-VarDeclStmntPtr Parser::ParseVarDeclStmnt()
+VarDeclStmntPtr Parser::ParseVarDeclStmnt(const VarNamePtr& varName)
 {
     auto ast = Make<VarDeclStmnt>();
 
-    ast->typeDenoter = ParseTypeDenoter();
+    ast->typeDenoter = ParseTypeDenoter(varName);
     ast->varDecls = ParseVarDeclList();
 
     return ast;
@@ -672,12 +829,37 @@ InitDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
     return ast;
 }
 
+// assign_stmnt: copy_assign_stmnt | modify_assign_stmnt | post_operator_stmnt;
+StmntPtr Parser::ParseAssignStmnt(VarNamePtr varName)
+{
+    if (!varName)
+        varName = ParseVarName();
+
+    if (Is(Tokens::ModifyAssignOp))
+        return ParseModifyAssignStmnt(varName);
+    if (Is(Tokens::PostAssignOp))
+        return ParsePostOperatorStmnt(varName);
+
+    return ParseCopyAssignStmnt(varName);
+}
+
 // copy_assign_stmnt: var_name (',' var_name)* ':=' expr;
-CopyAssignStmntPtr Parser::ParseCopyAssignStmnt()
+CopyAssignStmntPtr Parser::ParseCopyAssignStmnt(const VarNamePtr& varName)
 {
     auto ast = Make<CopyAssignStmnt>();
 
-    ast->varNames = ParseVarNameList();
+    if (varName)
+    {
+        if (Is(Tokens::Comma))
+        {
+            AcceptIt();
+            ast->varNames = ParseVarNameList();
+        }
+        ast->varNames.insert(ast->varNames.begin(), varName);
+    }
+    else
+        ast->varNames = ParseVarNameList();
+
     Accept(Tokens::CopyAssignOp);
     ast->expr = ParseExpr();
 
@@ -685,11 +867,11 @@ CopyAssignStmntPtr Parser::ParseCopyAssignStmnt()
 }
 
 // modify_assign_stmnt: var_name ('+=' | '-=' | '*=' | '/=' | '%=' | '<<=' | '>>=' | '|=' | '&=' | '^=') expr;
-ModifyAssignStmntPtr Parser::ParseModifyAssignStmnt()
+ModifyAssignStmntPtr Parser::ParseModifyAssignStmnt(const VarNamePtr& varName)
 {
     auto ast = Make<ModifyAssignStmnt>();
 
-    ast->varName = ParseVarName();
+    ast->varName = (varName != nullptr ? varName : ParseVarName());
     ast->modifyOperator = ModifyAssignStmnt::GetOperator(Accept(Tokens::ModifyAssignOp)->Spell());
     ast->expr = ParseExpr();
 
@@ -697,11 +879,11 @@ ModifyAssignStmntPtr Parser::ParseModifyAssignStmnt()
 }
 
 // post_operator_stmnt: var_name ('++' | '--');
-PostOperatorStmntPtr Parser::ParsePostOperatorStmnt()
+PostOperatorStmntPtr Parser::ParsePostOperatorStmnt(const VarNamePtr& varName)
 {
     auto ast = Make<PostOperatorStmnt>();
 
-    ast->varName = ParseVarName();
+    ast->varName = (varName != nullptr ? varName : ParseVarName());
     ast->postOperator = PostOperatorStmnt::GetOperator(Accept(Tokens::PostAssignOp)->Spell());
 
     return ast;
@@ -762,11 +944,13 @@ InitListExprPtr Parser::ParseInitListExpr()
 /* --- Type denoters --- */
 
 // type_denoter : builtin_type_denoter | array_type_denoter | pointer_type_denoter;
-TypeDenoterPtr Parser::ParseTypeDenoter()
+TypeDenoterPtr Parser::ParseTypeDenoter(const VarNamePtr& varName)
 {
     TypeDenoterPtr ast;
 
-    if (Is(Tokens::BuiltinType))
+    if (varName)
+        ast = ParsePointerTypeDenoter(varName);
+    else if (Is(Tokens::BuiltinType))
         ast = ParseBuiltinTypeDenoter();
     else if (Is(Tokens::Ident))
         ast = ParsePointerTypeDenoter();
@@ -790,11 +974,11 @@ BuiltinTypeDenoterPtr Parser::ParseBuiltinTypeDenoter()
 }
 
 // pointer_type_denoter: var_name;
-PointerTypeDenoterPtr Parser::ParsePointerTypeDenoter()
+PointerTypeDenoterPtr Parser::ParsePointerTypeDenoter(const VarNamePtr& varName)
 {
     auto ast = Make<PointerTypeDenoter>();
 
-    ast->declName = ParseVarName();
+    ast->declName = (varName != nullptr ? varName : ParseVarName());
 
     return ast;
 }
@@ -863,6 +1047,11 @@ std::vector<StmntPtr> Parser::ParseDeclStmntList(const Tokens terminatorToken)
     return ParseList<StmntPtr>(std::bind(&Parser::ParseDeclStmnt, this), terminatorToken);
 }
 
+std::vector<StmntPtr> Parser::ParseExternDeclStmntList(const Tokens terminatorToken)
+{
+    return ParseList<StmntPtr>(std::bind(&Parser::ParseExternDeclStmnt, this), terminatorToken);
+}
+
 std::vector<ClassBodySegmentPtr> Parser::ParseClassBodySegmentList()
 {
     return ParseList<ClassBodySegmentPtr>(std::bind(&Parser::ParseClassBodySegment, this), Tokens::RCurly);
@@ -883,7 +1072,7 @@ std::vector<StmntPtr> Parser::ParseSwitchCaseStmntList()
 
 std::vector<VarNamePtr> Parser::ParseVarNameList(const Tokens separatorToken)
 {
-    return ParseSeparatedList<VarNamePtr>(std::bind(&Parser::ParseVarName, this), separatorToken);
+    return ParseSeparatedList<VarNamePtr>(std::bind(&Parser::ParseVarName, this, nullptr), separatorToken);
 }
 
 std::vector<VarDeclPtr> Parser::ParseVarDeclList(const Tokens separatorToken)
@@ -922,6 +1111,11 @@ std::vector<std::string> Parser::ParseIdentList(const Tokens separatorToken)
 }
 
 /* --- Base functions --- */
+
+template <typename T, typename... Args> std::shared_ptr<T> Parser::Make(Args&&... args)
+{
+    return std::make_shared<T>(tkn_->Area(), std::forward<Args>(args)...);
+}
 
 void Parser::PushProcHasReturnType(bool hasReturnType)
 {

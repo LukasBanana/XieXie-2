@@ -55,13 +55,14 @@ class Parser
         TokenPtr AcceptIt();
 
         std::string AcceptIdent();
+        int AcceptSignedIntLiteral();
+        unsigned int AcceptUnsignedIntLiteral();
 
         /* --- Common AST nodes --- */
 
         ProgramPtr              ParseProgram();
         CodeBlockPtr            ParseCodeBlock();
-        ForInitPtr              ParseForInit();
-        VarNamePtr              ParseVarName();
+        VarNamePtr              ParseVarName(const TokenPtr& identTkn = nullptr);
         VarNamePtr              ParseTypeInheritance();
         VarDeclPtr              ParseVarDecl();
         ParamPtr                ParseParam();
@@ -79,34 +80,41 @@ class Parser
 
         StmntPtr                ParseStmnt();
         StmntPtr                ParseDeclStmnt();
+        StmntPtr                ParseExternDeclStmnt();
+        StmntPtr                ParseVarDeclOrAssignStmnt(const TokenPtr& identTkn = nullptr);
+        StmntPtr                ParseVarDeclOrProcDeclStmnt();
+        StmntPtr                ParseClassDeclOrProcDeclStmnt();
 
+        StmntPtr                ParseCtrlTransferStmnt();
+        CtrlTransferStmntPtr    ParseBreakStmnt();
+        CtrlTransferStmntPtr    ParseContinueStmnt();
         ReturnStmntPtr          ParseReturnStmnt();
-        CtrlTransferStmntPtr    ParseCtrlTransferStmnt();
 
         IfStmntPtr              ParseIfStmnt();
         IfStmntPtr              ParseElseStmnt();
         SwitchStmntPtr          ParseSwitchStmnt();
 
-        StmntPtr                ParseAbstractForStmnt();
+        StmntPtr                ParseForOrForRangeStmnt();
         ForStmntPtr             ParseForStmnt(bool parseComplete = true, const TokenPtr& identTkn = nullptr);
+        ForRangeStmntPtr        ParseForRangeStmnt(bool parseComplete = true, const TokenPtr& identTkn = nullptr);
         ForEachStmntPtr         ParseForEachStmnt();
         ForEverStmntPtr         ParseForEverStmnt();
-        ForRangeStmntPtr        ParseForRangeStmnt(bool parseComplete = true, const TokenPtr& identTkn = nullptr);
         WhileStmntPtr           ParseWhileStmnt();
         DoWhileStmntPtr         ParseDoWhileStmnt();
 
         StmntPtr                ParseClassDeclStmnt();
         ClassDeclStmntPtr       ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         ExternClassDeclStmntPtr ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
-        VarDeclStmntPtr         ParseVarDeclStmnt();
+        VarDeclStmntPtr         ParseVarDeclStmnt(const VarNamePtr& varName = nullptr);
         EnumDeclStmntPtr        ParseEnumDeclStmnt();
         FlagsDeclStmntPtr       ParseFlagsDeclStmnt();
         ProcDeclStmntPtr        ParseProcDeclStmnt(bool isExtern = false);
         InitDeclStmntPtr        ParseInitDeclStmnt(bool isExtern = false);
 
-        CopyAssignStmntPtr      ParseCopyAssignStmnt();
-        ModifyAssignStmntPtr    ParseModifyAssignStmnt();
-        PostOperatorStmntPtr    ParsePostOperatorStmnt();
+        StmntPtr                ParseAssignStmnt(VarNamePtr varName = nullptr);
+        CopyAssignStmntPtr      ParseCopyAssignStmnt(const VarNamePtr& varName = nullptr);
+        ModifyAssignStmntPtr    ParseModifyAssignStmnt(const VarNamePtr& varName = nullptr);
+        PostOperatorStmntPtr    ParsePostOperatorStmnt(const VarNamePtr& varName = nullptr);
 
         /* --- Expressions --- */
 
@@ -124,10 +132,10 @@ class Parser
 
         /* --- Type denoters --- */
 
-        TypeDenoterPtr          ParseTypeDenoter();
+        TypeDenoterPtr          ParseTypeDenoter(const VarNamePtr& varName = nullptr);
 
         BuiltinTypeDenoterPtr   ParseBuiltinTypeDenoter();
-        PointerTypeDenoterPtr   ParsePointerTypeDenoter();
+        PointerTypeDenoterPtr   ParsePointerTypeDenoter(const VarNamePtr& varName = nullptr);
         ArrayTypeDenoterPtr     ParseArrayTypeDenoter(const TypeDenoterPtr& lowerTypeDenoter);
 
         /* --- Lists --- */
@@ -147,6 +155,7 @@ class Parser
 
         std::vector<StmntPtr>               ParseStmntList(const Tokens terminatorToken = Tokens::RCurly);
         std::vector<StmntPtr>               ParseDeclStmntList(const Tokens terminatorToken = Tokens::Visibility);
+        std::vector<StmntPtr>               ParseExternDeclStmntList(const Tokens terminatorToken = Tokens::RCurly);
         std::vector<ClassBodySegmentPtr>    ParseClassBodySegmentList();
         std::vector<SwitchCasePtr>          ParseSwitchCaseList();
         std::vector<StmntPtr>               ParseSwitchCaseStmntList();
@@ -161,15 +170,22 @@ class Parser
 
         /* --- Base functions --- */
 
+        //! Makes a new AST node shared pointer.
+        template <typename T, typename... Args> std::shared_ptr<T> Make(Args&&... args);
+
         void PushProcHasReturnType(bool hasReturnType);
         void PopProcHasReturnType();
         bool ProcHasReturnType() const;
 
         bool IsAny(const std::initializer_list<Tokens>& types) const;
 
+        inline Tokens TknType() const
+        {
+            return tkn_->Type();
+        }
         inline bool Is(const Tokens type) const
         {
-            return tkn_->Type() == type;
+            return TknType() == type;
         }
         inline bool Is(const std::string& spell) const
         {

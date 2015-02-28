@@ -13,7 +13,6 @@
 
 #include "Program.h"
 #include "CodeBlock.h"
-#include "ForInit.h"
 #include "VarName.h"
 #include "VarDecl.h"
 #include "Param.h"
@@ -44,7 +43,7 @@
 #include "DoWhileStmnt.h"
 
 #include "ClassDeclStmnt.h"
-//#include "ExternClassDeclStmnt.h"
+#include "ExternClassDeclStmnt.h"
 #include "VarDeclStmnt.h"
 #include "EnumDeclStmnt.h"
 #include "FlagsDeclStmnt.h"

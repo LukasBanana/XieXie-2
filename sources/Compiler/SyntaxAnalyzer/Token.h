@@ -121,10 +121,7 @@ class Token
             New,            //!< new
 
             // Reserved keywords (for later use)
-            Package,        //!< package
-            Alias,          //!< alias
-            Pattern,        //!< pattern
-            Sync,           //!< sync
+            Reserved,       //!< package, alias, pattern, sync, byte, ubyte, short, ushort, uint, long, ulong, double
 
             // Special tokens
             EndOfFile,
