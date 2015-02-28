@@ -186,8 +186,7 @@ var_access_expr		: var_name
 
 init_list_expr: 	'{' expr_list? '}';
 
-alloc_expr:			'new' type_denoter (array_dimension | ctor_init)?;
-array_dimension:	'[' expr ']';
+alloc_expr:			'new' type_denoter ctor_init?;
 ctor_init:			'(' arg_list? ')';
 
 literal_expr:		LITERAL;
