@@ -182,7 +182,7 @@ primary_value_expr	: literal_expr
 					| unary_expr
 					| init_list_expr;
 
-var_access_expr		: var_name
+var_access_expr		: var_name;
 
 init_list_expr: 	'{' expr_list? '}';
 

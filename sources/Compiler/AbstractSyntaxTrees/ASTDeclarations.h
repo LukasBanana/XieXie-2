@@ -77,7 +77,7 @@ DECL_SHR_PTR( CastExpr             );
 DECL_SHR_PTR( CallExpr             );
 DECL_SHR_PTR( MemberCallExpr       );
 DECL_SHR_PTR( AllocExpr            );
-DECL_SHR_PTR( VarNameExpr          );
+DECL_SHR_PTR( VarAccessExpr        );
 DECL_SHR_PTR( InitListExpr         );
 
 /* --- Type denoters --- */

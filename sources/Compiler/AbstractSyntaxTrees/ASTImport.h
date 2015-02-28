@@ -64,7 +64,7 @@
 #include "CallExpr.h"
 #include "MemberCallExpr.h"
 #include "AllocExpr.h"
-#include "VarNameExpr.h"
+#include "VarAccessExpr.h"
 #include "InitListExpr.h"
 
 

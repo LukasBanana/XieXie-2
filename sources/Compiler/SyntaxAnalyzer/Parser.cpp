@@ -327,11 +327,11 @@ ArrayAccessPtr Parser::ParseArrayAccess()
 }
 
 // proc_call: var_name '(' arg_list? ')';
-ProcCallPtr Parser::ParseProcCall()
+ProcCallPtr Parser::ParseProcCall(const VarNamePtr& varName)
 {
     auto ast = Make<ProcCall>();
 
-    ast->procName = ParseVarName();
+    ast->procName = (varName != nullptr ? varName : ParseVarName());
     Accept(Tokens::LBracket);
     ast->args = ParseArgList();
     Accept(Tokens::RBracket);
@@ -1041,6 +1041,7 @@ ExprPtr Parser::ParseValueExpr(const TokenPtr& identTkn)
 {
     auto primaryExpr = ParsePrimaryValueExpr(identTkn);
 
+    //!TODO!
 
     return nullptr;
 }
@@ -1050,6 +1051,13 @@ ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn)
 {
     switch (TknType())
     {
+        case Tokens::BoolLiteral:
+        case Tokens::IntLiteral:
+        case Tokens::FloatLiteral:
+        case Tokens::StringLiteral:
+        case Tokens::PointerLiteral:
+        case Tokens::ObjectLiteral:
+            return ParseLiteralExpr();
         case Tokens::New:
             return ParseAllocExpr();
         case Tokens::LBracket:
@@ -1058,15 +1066,34 @@ ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn)
         case Tokens::BitwiseNotOp:
         case Tokens::SubOp:
             return ParseUnaryExpr();
+        case Tokens::LCurly:
+            return ParseInitListExpr();
     }
-    return nullptr;
+    return ParseVarAccessOrCallExpr(identTkn);
+}
+
+// var_access_expr: var_name;
+// call_expr: proc_call;
+ExprPtr Parser::ParseVarAccessOrCallExpr(const TokenPtr& identTkn)
+{
+    /* Parse variable name */
+    auto varName = ParseVarName(identTkn);
+
+    /* Check for procedure call expression */
+    if (Is(Tokens::LBracket))
+        return ParseCallExpr(varName);
+
+    /* Parse variable access expression */
+    return ParseVarAccessExpr(varName);
 }
 
 // bracket_expr: '(' expr ')';
 // cast_expr: '(' type_denoter ')' value_expr;
 ExprPtr Parser::ParseBracketOrCastExpr()
 {
-    //!TODO!
+    
+
+
     return nullptr;
 }
 
@@ -1095,7 +1122,93 @@ UnaryExprPtr Parser::ParseUnaryExpr()
 {
     auto ast = Make<UnaryExpr>();
 
-    ast->unaryOperator;
+    switch (TknType())
+    {
+        case Tokens::Not:
+            AcceptIt();
+            ast->unaryOperator = UnaryExpr::Operators::LogicNot;
+            break;
+        case Tokens::BitwiseNotOp:
+            AcceptIt();
+            ast->unaryOperator = UnaryExpr::Operators::BitwiseNot;
+            break;
+        case Tokens::SubOp:
+            AcceptIt();
+            ast->unaryOperator = UnaryExpr::Operators::Negate;
+            break;
+        default:
+            ErrorUnexpected("expected unary expression: '~', '-', 'not'");
+            break;
+    }
+
+    ast->expr = ParseValueExpr();
+
+    return ast;
+}
+
+// init_list_expr: '{' expr_list? '}';
+InitListExprPtr Parser::ParseInitListExpr()
+{
+    auto ast = Make<InitListExpr>();
+
+    Accept(Tokens::LCurly);
+    ast->exprs = ParseExprList();
+    Accept(Tokens::RCurly);
+
+    return ast;
+}
+
+// literal: bool_literal | int_literal | float_literal | string_literal | pointer_literal | object_literal;
+LiteralExprPtr Parser::ParseLiteralExpr()
+{
+    auto ast = Make<LiteralExpr>();
+
+    switch (TknType())
+    {
+        case Tokens::BoolLiteral:
+            ast->type = LiteralExpr::Literals::Bool;
+            break;
+        case Tokens::IntLiteral:
+            ast->type = LiteralExpr::Literals::Int;
+            break;
+        case Tokens::FloatLiteral:
+            ast->type = LiteralExpr::Literals::Float;
+            break;
+        case Tokens::StringLiteral:
+            ast->type = LiteralExpr::Literals::String;
+            break;
+        case Tokens::PointerLiteral:
+            ast->type = LiteralExpr::Literals::Pointer;
+            break;
+        case Tokens::ObjectLiteral:
+            ast->type = LiteralExpr::Literals::Object;
+            break;
+        default:
+            ErrorUnexpected("expected literal expression");
+            break;
+    }
+
+    ast->literal = AcceptIt()->Spell();
+
+    return ast;
+}
+
+// call_expr: proc_call;
+CallExprPtr Parser::ParseCallExpr(const VarNamePtr& varName)
+{
+    auto ast = Make<CallExpr>();
+
+    ast->procCall = ParseProcCall(varName);
+
+    return ast;
+}
+
+// var_access_expr: var_name;
+VarAccessExprPtr Parser::ParseVarAccessExpr(const VarNamePtr& varName)
+{
+    auto ast = Make<VarAccessExpr>();
+
+    ast->varName = (varName != nullptr ? varName : ParseVarName());
 
     return ast;
 }

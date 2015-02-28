@@ -21,12 +21,20 @@ class LiteralExpr : public Expr
     
     public:
         
+        enum class Literals
+        {
+            Bool,
+            Int,
+            Float,
+            String,
+            Pointer,
+            Object,
+        };
+
         AST_INTERFACE_EXT(LiteralExpr, Expr);
 
-        std::string     literal;
-
-        // dast
-        TypeDenoterPtr  typeDenoter;
+        std::string literal;
+        Literals    type = Literals::Bool;
 
 };
 

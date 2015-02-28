@@ -95,7 +95,7 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( CallExpr             );
         DEF_ABSTRACT_VISIT_PROC( MemberCallExpr       );
         DEF_ABSTRACT_VISIT_PROC( AllocExpr            );
-        DEF_ABSTRACT_VISIT_PROC( VarNameExpr          );
+        DEF_ABSTRACT_VISIT_PROC( VarAccessExpr        );
         DEF_ABSTRACT_VISIT_PROC( InitListExpr         );
 
         /* --- Type denoters --- */

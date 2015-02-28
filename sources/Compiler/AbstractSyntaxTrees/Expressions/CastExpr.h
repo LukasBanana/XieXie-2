@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_CALL_EXPR_H__
-#define __XX_AST_CALL_EXPR_H__
+#ifndef __XX_AST_CAST_EXPR_H__
+#define __XX_AST_CAST_EXPR_H__
 
 
 #include "Expr.h"

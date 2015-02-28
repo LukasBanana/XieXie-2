@@ -106,7 +106,7 @@ class AST
             CallExpr,
             MemberCallExpr,
             AllocExpr,
-            VarNameExpr,
+            VarAccessExpr,
             InitListExpr,
 
             /* --- Type denoters --- */

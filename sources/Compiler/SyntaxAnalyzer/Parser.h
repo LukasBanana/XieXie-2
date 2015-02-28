@@ -73,7 +73,7 @@ class Parser
         EnumEntryPtr            ParseEnumEntry();
         ClassBodySegmentPtr     ParseClassBodySegment();
         ArrayAccessPtr          ParseArrayAccess();
-        ProcCallPtr             ParseProcCall();
+        ProcCallPtr             ParseProcCall(const VarNamePtr& varName = nullptr);
         SwitchCasePtr           ParseSwitchCase();
 
         /* --- Statements --- */
@@ -142,10 +142,15 @@ class Parser
 
         ExprPtr                 ParseValueExpr(const TokenPtr& identTkn = nullptr);
         ExprPtr                 ParsePrimaryValueExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseVarAccessOrCallExpr(const TokenPtr& identTkn = nullptr);
         ExprPtr                 ParseBracketOrCastExpr();
 
         AllocExprPtr            ParseAllocExpr();
         UnaryExprPtr            ParseUnaryExpr();
+        InitListExprPtr         ParseInitListExpr();
+        LiteralExprPtr          ParseLiteralExpr();
+        CallExprPtr             ParseCallExpr(const VarNamePtr& varName = nullptr);
+        VarAccessExprPtr        ParseVarAccessExpr(const VarNamePtr& varName = nullptr);
 
         /* --- Type denoters --- */
 

@@ -32,7 +32,7 @@ class UnaryExpr : public Expr
 
         static Operators GetOperator(const std::string& spell);
 
-        std::string unaryOperator;
+        Operators   unaryOperator = Operators::LogicNot;
         ExprPtr     expr;
 
 };
