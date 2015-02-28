@@ -9,6 +9,7 @@ extern class Math {
 	
 	static float sq(float x)
 	
+	[[deprecated("\"distanceSq\" is also deprecated")]]
 	static float distanceSq(Vector3 a, Vector3 b)
 	
 }

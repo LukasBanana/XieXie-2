@@ -64,10 +64,10 @@ class Parser
         CodeBlockPtr            ParseCodeBlock();
         VarNamePtr              ParseVarName(const TokenPtr& identTkn = nullptr);
         VarNamePtr              ParseTypeInheritance();
-        VarDeclPtr              ParseVarDecl();
+        VarDeclPtr              ParseVarDecl(const TokenPtr& identTkn = nullptr);
         ParamPtr                ParseParam();
         ArgPtr                  ParseArg();
-        ProcSignaturePtr        ParseProcSignature();
+        ProcSignaturePtr        ParseProcSignature(const TypeDenoterPtr& typeDenoter = nullptr, const TokenPtr& identTkn = nullptr);
         AttribPrefixPtr         ParseAttribPrefix();
         AttribPtr               ParseAttrib();
         EnumEntryPtr            ParseEnumEntry();
@@ -102,13 +102,15 @@ class Parser
         WhileStmntPtr           ParseWhileStmnt();
         DoWhileStmntPtr         ParseDoWhileStmnt();
 
-        StmntPtr                ParseClassDeclStmnt();
+        StmntPtr                ParseClassDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
         ClassDeclStmntPtr       ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         ExternClassDeclStmntPtr ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         VarDeclStmntPtr         ParseVarDeclStmnt(const VarNamePtr& varName = nullptr);
+        VarDeclStmntPtr         ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn);
         EnumDeclStmntPtr        ParseEnumDeclStmnt();
         FlagsDeclStmntPtr       ParseFlagsDeclStmnt();
-        ProcDeclStmntPtr        ParseProcDeclStmnt(bool isExtern = false);
+        ProcDeclStmntPtr        ParseProcDeclStmnt(bool isExtern = false, AttribPrefixPtr attribPrefix = nullptr);
+        ProcDeclStmntPtr        ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn);
         InitDeclStmntPtr        ParseInitDeclStmnt(bool isExtern = false);
 
         StmntPtr                ParseAssignStmnt(VarNamePtr varName = nullptr);
@@ -133,6 +135,7 @@ class Parser
         /* --- Type denoters --- */
 
         TypeDenoterPtr          ParseTypeDenoter(const VarNamePtr& varName = nullptr);
+        TypeDenoterPtr          ParseReturnTypeDenoter(const VarNamePtr& varName = nullptr);
 
         BuiltinTypeDenoterPtr   ParseBuiltinTypeDenoter();
         PointerTypeDenoterPtr   ParsePointerTypeDenoter(const VarNamePtr& varName = nullptr);
