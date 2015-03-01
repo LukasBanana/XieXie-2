@@ -98,7 +98,8 @@ attrib_arg_list:	attrib_arg (',' attrib_arg)*;
 attrib_arg:			expr;
 
 // VARIABLES
-var_name:			IDENT array_access? ('.' var_name)?;
+var_name:			(OBJECT_IDENT | var_name_sub) ('.' var_name_sub)?;
+var_name_sub:		IDENT array_access? ('.' var_name_sub)?;
 
 var_decl_stmnt:		type_denoter var_decl_list;
 var_decl_list:		var_decl (',' var_decl)*;
@@ -140,8 +141,8 @@ flags_entry:		IDENT;
 // PROCEDURES
 proc_decl_stmnt:			attrib_prefix? proc_signature code_block;
 extern_proc_decl_stmnt:		attrib_prefix? proc_signature;
-proc_signature:				proc_modifier? return_type_denoter IDENT '(' param_list? ')';
-proc_modifier:				'static';
+proc_signature:				storage_modifier? return_type_denoter IDENT '(' param_list? ')';
+storage_modifier:			'static';
 
 init_decl_stmnt:			attrib_prefix? init_head code_block;
 extern_init_decl_stmnt:		attrib_prefix? init_head;
@@ -233,9 +234,7 @@ LITERAL	: BIN_LITERAL
 		| DEC_LITERAL
 		| HEX_LITERAL
 		| BOOL_LITERAL
-		| NULL_LITERAL
-		| THIS_LITERAL
-		| STRING_LITERAL;
+		| NULL_LITERAL;
 
 BIN_LITERAL:	'0b' BIN_DIGIT+;
 OCT_LITERAL:	'0o' OCT_DIGIT+;
@@ -243,8 +242,6 @@ DEC_LITERAL:	DEC_DIGIT+;
 HEX_LITERAL:	'0x' HEX_DIGIT+;
 
 NULL_LITERAL:	'null';
-THIS_LITERAL:	'this';
-SUPER_LITERAL:	'super';
 
 BOOL_LITERAL	: 'true'
 				| 'false';
@@ -274,7 +271,8 @@ ESCAPE_CHAR	: '\\' [0\\tnr"']
 			| '\\u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 			| '\\U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;
 
-IDENT:	(LETTER | '_') (LETTER | '_' | DEC_DIGIT)*;			// Identifier
+IDENT:			(LETTER | '_') (LETTER | '_' | DEC_DIGIT)*;			// Identifier
+OBJECT_IDENT:	'this' | 'super';
 
 NEGATION:	'-'
 

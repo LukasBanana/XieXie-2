@@ -56,6 +56,7 @@ DEF_VISIT_PROC(ASTViewer, VarName)
 {
     AST_INFO("VarName");
     AST_STRING(ident);
+    Visit(ast->arrayAccess);
     Visit(ast->next);
 }
 

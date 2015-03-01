@@ -28,7 +28,6 @@ class LiteralExpr : public Expr
             Float,
             String,
             Pointer,
-            Object,
         };
 
         AST_INTERFACE_EXT(LiteralExpr, Expr);

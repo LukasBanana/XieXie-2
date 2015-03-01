@@ -534,7 +534,11 @@ TokenPtr Scanner::ScanIdentifier()
     /* Scan reserved words */
     auto it = Keywords().find(spell);
     if (it != Keywords().end())
+    {
+        if (it->second == Tokens::Reserved)
+            Error("identifier \"" + spell + "\" is reserved for future use");
         return Make(it->second, spell);
+    }
 
     /* Return as identifier */
     return Make(Tokens::Ident, spell);

@@ -21,8 +21,8 @@ static KeywordMapType GenerateKeywordMap()
         { "true",       Ty::BoolLiteral    },
         { "false",      Ty::BoolLiteral    },
         { "null",       Ty::PointerLiteral },
-        { "this",       Ty::ObjectLiteral  },
-        { "super",      Ty::ObjectLiteral  },
+        { "this",       Ty::ObjectIdent    },
+        { "super",      Ty::ObjectIdent    },
 
         { "void",       Ty::Void           },
         { "bool",       Ty::BuiltinType    },
@@ -54,8 +54,7 @@ static KeywordMapType GenerateKeywordMap()
         { "extern",     Ty::Extern         },
         { "public",     Ty::Visibility     },
         { "private",    Ty::Visibility     },
-        { "static",     Ty::ProcModifier   },
-        //{ "abstract",   Ty::ProcModifier   },
+        { "static",     Ty::Static         },
         { "init",       Ty::Init           },
         { "release",    Ty::Release        },
 
@@ -64,6 +63,7 @@ static KeywordMapType GenerateKeywordMap()
 
         { "new",        Ty::New            },
 
+        { "abstract",   Ty::Reserved       },
         { "package",    Ty::Reserved       },
         { "alias",      Ty::Reserved       },
         { "pattern",    Ty::Reserved       },
@@ -76,6 +76,7 @@ static KeywordMapType GenerateKeywordMap()
         { "long",       Ty::Reserved       },
         { "ulong",      Ty::Reserved       },
         { "double",     Ty::Reserved       },
+        { "const",      Ty::Reserved       },
     };
 }
 

@@ -99,7 +99,7 @@ class Vector3 {
 	}
 	
 	float Length() {
-		return Math.Sqrt(x*x + y*y + z*z);
+		return Math.Sqrt(x*x + y*y + z*z)
 	}
 	
 	Vector3 Normalize() {
@@ -133,7 +133,7 @@ class Vector3 {
 class Vehicle {
 	
 	enum Types {
-		__Unspecified__
+		__Unspecified__,
 		Car,
 		MotorCycle
 	}
@@ -165,13 +165,15 @@ class Car : Vehicle {
 class AppTest {
 	
 	int num := 10
+	int foo := -1
 	
 	int Main(String[] args) {
 		int result := 3
 	
 		// For loops
 		foreach String arg : args {
-			if x > y > z or ( y = 3 and z = 4 ) {
+			//if x > y > z or ( y = 3 or z = 4 ) {
+			if x > y and y > z or ( y = 3 or z = 4 ) {
 				Log.Write("A")
 			} else if arg.Size() > 10 {
 				Log.Write("B")
@@ -195,40 +197,40 @@ class AppTest {
 			Log.WriteLine("Hello, World")
 		}
 		
-		for int i : 10 .. 1 -> 2 {
+		for i : 10 .. 1 -> 2 {
 			Log.WriteLine("Hello, World")
 		}
 		
 		// Boolean expressions
 		int a, b, c
 		
-		bool b0 := a > b > c
+		//bool b0 := a > b > c
 		bool b1 := a > b and b > c
 		
-		bool b2 := (a = b = c) = b1
+		//bool b2 := (a = b = c) = b1
 		bool b3 := (a = b and b = c) = b1
 		
 		// Constants
-		const int const_x := 42
+		int const_x := 42
 		
 		// Arrays
-		int[][] arrayList := new int[][2]
+		int[][] arrayList := new int[][](2)
 		
-		arrayList[0] := new int[2]
+		arrayList[0] := new int[](2)
 		arrayList[0][0] := 1
 		arrayList[0][1] := 2
 		
-		arrayList[1] := new int[2]
+		arrayList[1] := new int[](2)
 		arrayList[1][0] := 3
 		arrayList[1][1] := 4
 		
 		// Strings
-		String s = new String()
+		String s := new String()
 		
 		// Objects
 		Mouse mouse := Mouse.GetInstance()
 		
-		Vector3[] vertices := new Vector3[100]
+		Vector3[] vertices := new Vector3[](100)
 		
 		foreach Vector3 vert : vertices {
 			vert.x := Math.Random()
@@ -245,6 +247,11 @@ class AppTest {
 			default:
 				Log.WriteLine("default case")
 		}
+		
+		// Expressions
+		a := (int)3.5
+		b := (a + (int)2.6) * (int)(float)a*a
+		Object s2 := (Object)"test".test()
 
 		return result
 	}

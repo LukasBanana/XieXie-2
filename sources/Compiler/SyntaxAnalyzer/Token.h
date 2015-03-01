@@ -35,6 +35,7 @@ class Token
 
             // Identifiers
             Ident = 0,      //!< (letter | '_') (letter | '_' | digit)*
+            ObjectIdent,    //!< this | super
 
             // Literals,
             BoolLiteral,    //!< true | false
@@ -42,7 +43,6 @@ class Token
             FloatLiteral,   //!< digit+ '.' digit+
             StringLiteral,  //!< ('@')? '"' any '"'
             PointerLiteral, //!< null
-            ObjectLiteral,  //!< this | super
 
             // Type denoters
             BuiltinType,    //!< bool, int, float
@@ -111,7 +111,7 @@ class Token
             Class,          //!< class
             Extern,         //!< extern
             Visibility,     //!< public, private
-            ProcModifier,   //!< static, abstract
+            Static,         //!< static
             Init,           //!< init
             Release,        //!< release
 
@@ -121,7 +121,7 @@ class Token
             New,            //!< new
 
             // Reserved keywords (for later use)
-            Reserved,       //!< package, alias, pattern, sync, byte, ubyte, short, ushort, uint, long, ulong, double
+            Reserved,       //!< abstract, package, alias, pattern, sync, byte, ubyte, short, ushort, uint, long, ulong, double, const
 
             // Special tokens
             EndOfFile,

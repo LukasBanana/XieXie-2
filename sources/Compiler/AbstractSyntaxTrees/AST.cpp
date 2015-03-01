@@ -13,7 +13,6 @@
 #include "CodeBlock.h"
 #include "Stmnt.h"
 #include "VarName.h"
-#include "ProcSignature.h"
 #include "ClassBodySegment.h"
 
 #include <exception>
@@ -116,21 +115,6 @@ ModifyAssignStmnt::Operators ModifyAssignStmnt::GetOperator(const std::string& s
             { "^=",  Operators::XOr    },
         },
         "invalid modify-assign-operator \"" + spell + "\""
-    );
-}
-
-
-/* --- ProcSignature --- */
-
-ProcSignature::Modifiers ProcSignature::GetModifier(const std::string& spell)
-{
-    return MapSpellToType<Modifiers>(
-        spell,
-        {
-            { "static",   Modifiers::Static   },
-            //{ "abstract", Modifiers::Abstract },
-        },
-        "invalid procedure modifier \"" + spell + "\""
     );
 }
 

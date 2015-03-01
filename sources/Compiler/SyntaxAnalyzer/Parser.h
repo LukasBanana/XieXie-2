@@ -56,6 +56,7 @@ class Parser
         TokenPtr Accept(const Tokens type, const std::string& spell);
         TokenPtr AcceptIt();
 
+        TokenPtr AcceptAnyIdent();
         std::string AcceptIdent();
         int AcceptSignedIntLiteral();
         unsigned int AcceptUnsignedIntLiteral();
@@ -65,17 +66,18 @@ class Parser
         void                    ParseProgram(std::vector<StmntPtr>& classDeclStmnts);
 
         CodeBlockPtr            ParseCodeBlock();
-        VarNamePtr              ParseVarName(const TokenPtr& identTkn = nullptr);
+        VarNamePtr              ParseVarName(TokenPtr identTkn = nullptr, bool hasArrayAccess = false);
+        VarNamePtr              ParseVarNameSub();
         VarNamePtr              ParseTypeInheritance();
         VarDeclPtr              ParseVarDecl(const TokenPtr& identTkn = nullptr);
         ParamPtr                ParseParam();
         ArgPtr                  ParseArg();
-        ProcSignaturePtr        ParseProcSignature(const TypeDenoterPtr& typeDenoter = nullptr, const TokenPtr& identTkn = nullptr);
+        ProcSignaturePtr        ParseProcSignature(const TypeDenoterPtr& typeDenoter = nullptr, const TokenPtr& identTkn = nullptr, bool isStatic = false);
         AttribPrefixPtr         ParseAttribPrefix();
         AttribPtr               ParseAttrib();
         EnumEntryPtr            ParseEnumEntry();
         ClassBodySegmentPtr     ParseClassBodySegment();
-        ArrayAccessPtr          ParseArrayAccess();
+        ArrayAccessPtr          ParseArrayAccess(bool hasArrayAccess = false);
         ProcCallPtr             ParseProcCall(const VarNamePtr& varName = nullptr);
         SwitchCasePtr           ParseSwitchCase();
 
@@ -85,6 +87,7 @@ class Parser
         StmntPtr                ParseDeclStmnt();
         StmntPtr                ParseExternDeclStmnt();
         StmntPtr                ParseVarNameStmnt(TokenPtr identTkn = nullptr);
+        StmntPtr                ParseVarNameStmntSub(const TokenPtr& identTkn);
         StmntPtr                ParseVarDeclOrProcDeclStmnt();
         StmntPtr                ParseClassDeclOrProcDeclStmnt();
 
@@ -109,12 +112,12 @@ class Parser
         StmntPtr                ParseClassDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
         ClassDeclStmntPtr       ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         ExternClassDeclStmntPtr ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
-        VarDeclStmntPtr         ParseVarDeclStmnt(const TokenPtr& identTkn = nullptr);
-        VarDeclStmntPtr         ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn);
+        VarDeclStmntPtr         ParseVarDeclStmnt(const TokenPtr& identTkn = nullptr, bool hasArrayType = false);
+        VarDeclStmntPtr         ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
         EnumDeclStmntPtr        ParseEnumDeclStmnt();
         FlagsDeclStmntPtr       ParseFlagsDeclStmnt();
         ProcDeclStmntPtr        ParseProcDeclStmnt(bool isExtern = false, AttribPrefixPtr attribPrefix = nullptr);
-        ProcDeclStmntPtr        ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn);
+        ProcDeclStmntPtr        ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
         InitDeclStmntPtr        ParseInitDeclStmnt(bool isExtern = false);
 
         StmntPtr                ParseAssignStmnt(VarNamePtr varName = nullptr);
@@ -161,12 +164,12 @@ class Parser
 
         /* --- Type denoters --- */
 
-        TypeDenoterPtr          ParseTypeDenoter(const TokenPtr& identTkn = nullptr);
+        TypeDenoterPtr          ParseTypeDenoter(const TokenPtr& identTkn = nullptr, bool hasArrayType = false);
         TypeDenoterPtr          ParseReturnTypeDenoter(const TokenPtr& identTkn = nullptr);
 
         BuiltinTypeDenoterPtr   ParseBuiltinTypeDenoter();
         PointerTypeDenoterPtr   ParsePointerTypeDenoter(const TokenPtr& identTkn = nullptr);
-        ArrayTypeDenoterPtr     ParseArrayTypeDenoter(const TypeDenoterPtr& lowerTypeDenoter);
+        ArrayTypeDenoterPtr     ParseArrayTypeDenoter(const TypeDenoterPtr& lowerTypeDenoter, bool hasArrayType = false);
 
         /* --- Lists --- */
 

@@ -21,18 +21,9 @@ class ProcSignature : public AST
     
     public:
         
-        enum class Modifiers
-        {
-            None,
-            Static,
-            //Abstract,
-        };
-
         AST_INTERFACE(ProcSignature);
 
-        static Modifiers GetModifier(const std::string& spell);
-
-        Modifiers               modifier = Modifiers::None;
+        bool                    isStatic = false;
         TypeDenoterPtr          returnTypeDenoter;          // may be null (for "void" type)
         std::string             ident;
         std::vector<ParamPtr>   params;
