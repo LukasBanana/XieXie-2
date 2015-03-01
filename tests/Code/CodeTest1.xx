@@ -252,6 +252,7 @@ class AppTest {
 		a := (int)3.5
 		b := (a + (int)2.6) * (int)(float)a*a
 		Object s2 := (Object)"test".test()
+		a := a - b - c * d - e + f - g
 
 		return result
 	}
