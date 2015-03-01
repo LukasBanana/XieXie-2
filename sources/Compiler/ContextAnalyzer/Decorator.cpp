@@ -442,7 +442,7 @@ void Decorator::VisitVarName(VarName& ast)
 {
     const auto fullName = ast.FullName();
 
-    auto symbol = FetchSymbol(ast.ident, fullName);
+    auto symbol = FetchSymbol(ast.ident, fullName, &ast);
     if (symbol)
     {
         /* Decorate AST node */
@@ -462,7 +462,7 @@ void Decorator::DecorateVarName(VarName& ast, Stmnt* symbol, const std::string& 
         if (scopedStmnt)
             DecorateVarNameSub(*ast.next, scopedStmnt->symTab, fullName);
         else
-            Error("undeclared namespace \"" + ast.next->ident + "\" (in \"" + fullName + "\")", &ast);
+            Error("undeclared namespace \"" + ast.ident + "\" (in \"" + fullName + "\")", &ast);
     }
 }
 
