@@ -584,6 +584,15 @@ StmntPtr Parser::ParseVarDeclOrProcDeclStmnt()
         isStatic = true;
     }
 
+    /* Check for procedure declaration */
+    if (Is(Tokens::Void))
+    {
+        /* Parse type denoter and identifier */
+        auto typeDenoter = ParseReturnTypeDenoter();
+        auto identTkn = Accept(Tokens::Ident);
+        return ParseProcDeclStmnt(typeDenoter, identTkn, isStatic);
+    }
+
     /* Parse type denoter and identifier */
     auto typeDenoter = ParseTypeDenoter();
     auto identTkn = Accept(Tokens::Ident);
