@@ -9,22 +9,29 @@
 #define __XX_AST_VAR_DECL_H__
 
 
-#include "AST.h"
+#include "Stmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class VarDecl : public AST
+/**
+This class is exceptionally a statement to allow to refer
+to this variable declaration in a symbol table.
+*/
+class VarDecl : public Stmnt
 {
     
     public:
         
-        AST_INTERFACE(VarDecl);
+        AST_INTERFACE_EXT(VarDecl, Stmnt);
 
-        std::string ident;
-        ExprPtr     initExpr; // may be null
+        std::string     ident;
+        ExprPtr         initExpr;               // may be null
+
+        // dast
+        VarDeclStmnt*   declStmntRef = nullptr; // base declaration statement (this is already decorated inside the parser)
 
 };
 

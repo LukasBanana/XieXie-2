@@ -26,6 +26,9 @@ class ProcCall : public AST
         VarNamePtr          procName;
         std::vector<ArgPtr> args;
 
+        // dast
+        ProcDeclStmnt*      declStmntRef = nullptr; // reference to the procedure declaration statement
+
 };
 
 

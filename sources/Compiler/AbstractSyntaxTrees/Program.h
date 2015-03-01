@@ -9,19 +9,20 @@
 #define __XX_AST_PROGRAM_H__
 
 
-#include "AST.h"
+#include "ScopedStmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class Program : public AST
+//! \note The "Program" AST node must be a scoped statement, to provide the "FetchSymbol" function!
+class Program : public ScopedStmnt
 {
     
     public:
         
-        AST_INTERFACE(Program);
+        AST_INTERFACE_EXT(Program, ScopedStmnt);
 
         std::vector<StmntPtr> classDeclStmnts;
 

@@ -9,19 +9,19 @@
 #define __XX_AST_PROC_INIT_STMNT_H__
 
 
-#include "Stmnt.h"
+#include "ScopedStmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class InitDeclStmnt : public Stmnt
+class InitDeclStmnt : public ScopedStmnt
 {
     
     public:
         
-        AST_INTERFACE_EXT(InitDeclStmnt, Stmnt);
+        AST_INTERFACE_EXT(InitDeclStmnt, ScopedStmnt);
 
         AttribPrefixPtr         attribPrefix; // may be null
         std::vector<ParamPtr>   params;

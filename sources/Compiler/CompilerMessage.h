@@ -128,13 +128,13 @@ template <CompilerMessage::Categories C> class CommonCompilerMessage : public Co
 };
 
 
-typedef CommonCompilerMessage< CompilerMessage::Categories::Warning      > CompilerWarning;
-typedef CommonCompilerMessage< CompilerMessage::Categories::SyntaxError  > SyntaxError;
-typedef CommonCompilerMessage< CompilerMessage::Categories::ContextError > ContextError;
-typedef CommonCompilerMessage< CompilerMessage::Categories::CodeGenError > CodeGenError;
-typedef CommonCompilerMessage< CompilerMessage::Categories::StateError   > StateError;
-typedef CommonCompilerMessage< CompilerMessage::Categories::FileError    > FileError;
-typedef CommonCompilerMessage< CompilerMessage::Categories::AsmError     > AssemblerError;
+using CompilerWarning   = CommonCompilerMessage< CompilerMessage::Categories::Warning      >;
+using SyntaxError       = CommonCompilerMessage< CompilerMessage::Categories::SyntaxError  >;
+using ContextError      = CommonCompilerMessage< CompilerMessage::Categories::ContextError >;
+using CodeGenError      = CommonCompilerMessage< CompilerMessage::Categories::CodeGenError >;
+using StateError        = CommonCompilerMessage< CompilerMessage::Categories::StateError   >;
+using FileError         = CommonCompilerMessage< CompilerMessage::Categories::FileError    >;
+using AssemblerError    = CommonCompilerMessage< CompilerMessage::Categories::AsmError     >;
 
 
 #endif

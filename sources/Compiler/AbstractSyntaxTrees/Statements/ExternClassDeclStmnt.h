@@ -9,19 +9,19 @@
 #define __XX_AST_EXTERN_CLASS_DECL_STMNT_H__
 
 
-#include "Stmnt.h"
+#include "ScopedStmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class ExternClassDeclStmnt : public Stmnt
+class ExternClassDeclStmnt : public ScopedStmnt
 {
     
     public:
         
-        AST_INTERFACE_EXT(ExternClassDeclStmnt, Stmnt);
+        AST_INTERFACE_EXT(ExternClassDeclStmnt, ScopedStmnt);
 
         AttribPrefixPtr         attribPrefix; // may be null
         std::string             ident;

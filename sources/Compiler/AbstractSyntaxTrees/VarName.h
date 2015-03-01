@@ -27,8 +27,11 @@ class VarName : public AST
         std::string FullName(const std::string& sep = ".") const;
 
         std::string     ident;
-        ArrayAccessPtr  arrayAccess;    // may be null
-        VarNamePtr      next;           // may be null
+        ArrayAccessPtr  arrayAccess;            // may be null
+        VarNamePtr      next;                   // may be null
+
+        // dast
+        Stmnt*          declStmntRef = nullptr; // reference to the declaration statement
 
 };
 

@@ -9,23 +9,23 @@
 #define __XX_AST_PROC_DECL_STMNT_H__
 
 
-#include "Stmnt.h"
+#include "ScopedStmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class ProcDeclStmnt : public Stmnt
+class ProcDeclStmnt : public ScopedStmnt
 {
     
     public:
         
-        AST_INTERFACE_EXT(ProcDeclStmnt, Stmnt);
+        AST_INTERFACE_EXT(ProcDeclStmnt, ScopedStmnt);
 
-        AttribPrefixPtr     attribPrefix;   // may be null
-        ProcSignaturePtr    procSignature;
-        CodeBlockPtr        codeBlock;      // may be null (for extern procedures)
+        AttribPrefixPtr         attribPrefix;   // may be null
+        ProcSignaturePtr        procSignature;
+        CodeBlockPtr            codeBlock;      // may be null (for extern procedures)
 
 };
 

@@ -13,6 +13,7 @@
 #include "Scanner.h"
 #include "SourceFile.h"
 #include "Parser.h"
+#include "Decorator.h"
 #include "ASTViewer.h"
 
 #include <iostream>
@@ -164,20 +165,28 @@ void Shell::CompileFile(const std::string& filename)
 {
     #if 1//!!!
     
-    log_.Message("parse file \"" + filename + "\"");
-
-    SyntaxAnalyzer::Parser parser;
     ErrorReporter errorReporter;
 
+    /* Parse program */
+    log_.Message("parse file \"" + filename + "\" ...");
+    SyntaxAnalyzer::Parser parser;
     auto program = parser.ParseSource(filename, errorReporter);
-
-    errorReporter.Flush(log_);
 
     if (program)
     {
-        ASTViewer viewer(log_);
-        viewer.ViewProgram(*program);
+        /* Decorate program */
+        log_.Message("context analysis ...");
+        ContextAnalyzer::Decorator decorator;
+        if (decorator.DecorateProgram(*program, errorReporter))
+        {
+            /* Show syntax tree */
+            ASTViewer viewer(log_);
+            viewer.ViewProgram(*program);
+        }
     }
+
+    /*  */
+    errorReporter.Flush(log_);
 
     #endif
 }

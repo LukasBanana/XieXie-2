@@ -914,6 +914,10 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TokenPtr& identTkn, bool hasArra
     ast->typeDenoter = ParseTypeDenoter(identTkn, hasArrayType);
     ast->varDecls = ParseVarDeclList(Tokens::Comma);
 
+    /* Forward decoration */
+    for (auto& decl : ast->varDecls)
+        decl->declStmntRef = ast.get();
+
     return ast;
 }
 
@@ -933,6 +937,10 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, con
         ast->varDecls = ParseVarDeclList(Tokens::Comma);
     }
     ast->varDecls.insert(ast->varDecls.begin(), varDecl);
+
+    /* Forward decoration */
+    for (auto& decl : ast->varDecls)
+        decl->declStmntRef = ast.get();
 
     return ast;
 }

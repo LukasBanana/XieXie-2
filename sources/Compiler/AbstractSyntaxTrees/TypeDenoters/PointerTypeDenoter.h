@@ -26,7 +26,7 @@ class PointerTypeDenoter : public TypeDenoter
         std::string declIdent;
 
         // dast
-        StmntPtr    declStmnt;
+        Stmnt*      declStmntRef = nullptr; // reference to the declaration statement
 
 };
 
