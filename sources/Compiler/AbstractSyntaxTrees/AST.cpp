@@ -36,6 +36,17 @@ template <typename T> T MapSpellToType(
     throw std::invalid_argument(error);
 }
 
+template <typename T> std::string MapTypeToSpell(
+    const T& type, const std::map<std::string, T>& list)
+{
+    for (const auto& it : list)
+    {
+        if (it.second == type)
+            return it.first;
+    }
+    return "";
+}
+
 /*bool ContainsString(const std::string& str, const std::initializer_list<std::string>& list)
 {
     return std::find(list.begin(), list.end(), str) != list.end();
@@ -121,48 +132,68 @@ ModifyAssignStmnt::Operators ModifyAssignStmnt::GetOperator(const std::string& s
 
 /* --- UnaryExpr --- */
 
+static std::map<std::string, UnaryExpr::Operators> MapUnaryExpr()
+{
+    using Ty = UnaryExpr::Operators;
+    return std::map<std::string, Ty>
+    {
+        { "not", Ty::LogicNot   },
+        { "~",   Ty::BitwiseNot },
+        { "-",   Ty::Negate     },
+    };
+}
+
 UnaryExpr::Operators UnaryExpr::GetOperator(const std::string& spell)
 {
     return MapSpellToType<Operators>(
-        spell,
-        {
-            { "not", Operators::LogicNot   },
-            { "~",   Operators::BitwiseNot },
-            { "-",   Operators::Negate     },
-        },
-        "invalid unary operator \"" + spell + "\""
+        spell, MapUnaryExpr(), "invalid unary operator \"" + spell + "\""
     );
+}
+
+std::string UnaryExpr::GetOperatorSpell(const Operators op)
+{
+    return MapTypeToSpell<Operators>(op, MapUnaryExpr());
 }
 
 
 /* --- BinaryExpr --- */
 
+static std::map<std::string, BinaryExpr::Operators> MapBinaryExpr()
+{
+    using Ty = BinaryExpr::Operators;
+    return std::map<std::string, Ty>
+    {
+        { "or",  Ty::LogicOr      },
+        { "and", Ty::LogicAnd     },
+        { "|",   Ty::BitwiseOr    },
+        { "^",   Ty::BitwiseXOr   },
+        { "&",   Ty::BitwiseAnd   },
+        { "=",   Ty::Equal        },
+        { "!=",  Ty::Inequal      },
+        { "<",   Ty::Less         },
+        { "<=",  Ty::LessEqual    },
+        { ">",   Ty::Greater      },
+        { ">=",  Ty::GreaterEqual },
+        { "+",   Ty::Add          },
+        { "-",   Ty::Sub          },
+        { "*",   Ty::Mul          },
+        { "/",   Ty::Div          },
+        { "%",   Ty::Mod          },
+        { "<<",  Ty::LShift       },
+        { ">>",  Ty::RShift       },
+    };
+}
+
 BinaryExpr::Operators BinaryExpr::GetOperator(const std::string& spell)
 {
     return MapSpellToType<Operators>(
-        spell,
-        {
-            { "or",  Operators::LogicOr      },
-            { "and", Operators::LogicAnd     },
-            { "|",   Operators::BitwiseOr    },
-            { "^",   Operators::BitwiseXOr   },
-            { "&",   Operators::BitwiseAnd   },
-            { "=",   Operators::Equal        },
-            { "!=",  Operators::Inequal      },
-            { "<",   Operators::Less         },
-            { "<=",  Operators::LessEqual    },
-            { ">",   Operators::Greater      },
-            { ">=",  Operators::GreaterEqual },
-            { "+",   Operators::Add          },
-            { "-",   Operators::Sub          },
-            { "*",   Operators::Mul          },
-            { "/",   Operators::Div          },
-            { "%",   Operators::Mod          },
-            { "<<",  Operators::LShift       },
-            { ">>",  Operators::RShift       },
-        },
-        "invalid binary operator \"" + spell + "\""
+        spell, MapBinaryExpr(), "invalid binary operator \"" + spell + "\""
     );
+}
+
+std::string BinaryExpr::GetOperatorSpell(const Operators op)
+{
+    return MapTypeToSpell<Operators>(op, MapBinaryExpr());
 }
 
 

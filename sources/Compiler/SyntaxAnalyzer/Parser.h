@@ -11,6 +11,7 @@
 
 #include "Scanner.h"
 #include "ASTDeclarations.h"
+#include "BinaryExpr.h"
 
 #include <string>
 #include <stack>
@@ -49,6 +50,7 @@ class Parser
         void ErrorUnexpected(bool breakParsing = true);
         void ErrorUnexpected(const Tokens expectedType, bool breakParsing = true);
         void ErrorUnexpected(const std::string& hint, bool breakParsing = true);
+        void ErrorInternal(const std::string& msg);
 
         /* --- Token parsing --- */
 
@@ -205,6 +207,8 @@ class Parser
 
         //! Makes a new AST node shared pointer.
         template <typename T, typename... Args> std::shared_ptr<T> Make(Args&&... args);
+
+        ExprPtr BuildBinaryExprTree(std::vector<ExprPtr>& exprs, std::vector<BinaryExpr::Operators>& ops);
 
         void PushProcHasReturnType(bool hasReturnType);
         void PopProcHasReturnType();

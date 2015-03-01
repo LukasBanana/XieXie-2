@@ -46,6 +46,7 @@ class BinaryExpr : public Expr
         AST_INTERFACE_EXT(BinaryExpr, Expr);
 
         static Operators GetOperator(const std::string& spell);
+        static std::string GetOperatorSpell(const Operators op);
 
         ExprPtr     lhsExpr;
         Operators   binaryOperator = Operators::LogicOr;

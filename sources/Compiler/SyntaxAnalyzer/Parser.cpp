@@ -34,7 +34,7 @@ bool Parser::ParseSource(Program& program, const SourceCodePtr& source, ErrorRep
     {
         return false;
     }
-    return true;
+    return !errorReporter_->HasErrors();
 }
 
 ProgramPtr Parser::ParseSource(const std::string& filename, ErrorReporter& errorReporter)
@@ -50,7 +50,8 @@ ProgramPtr Parser::ParseSource(const std::string& filename, ErrorReporter& error
         /* Parse program */
         auto program = Make<Program>();
         ParseProgram(program->classDeclStmnts);
-        return program;
+
+        return errorReporter_->HasErrors() ? nullptr : program;
     }
     catch (const std::exception&)
     {
@@ -95,6 +96,12 @@ void Parser::ErrorUnexpected(const Tokens expectedType, bool breakParsing)
 void Parser::ErrorUnexpected(const std::string& hint, bool breakParsing)
 {
     Error("unexpected token \"" + tkn_->Spell() + "\" (" + hint +" )", breakParsing);
+}
+
+void Parser::ErrorInternal(const std::string& msg)
+{
+    errorReporter_->Add(StateError(msg));
+    throw std::exception();
 }
 
 /* --- Token parsing --- */
@@ -1103,25 +1110,29 @@ ExprPtr Parser::ParseExpr(const TokenPtr& identTkn)
     return ParseLogicOrExpr(identTkn);
 }
 
-//!TODO! -> left-to-right expression evaluation!!!
 ExprPtr Parser::ParseAbstractBinaryExpr(
     const std::function<ExprPtr(const TokenPtr&)>& parseFunc,
     const Tokens binaryOperatorToken, const TokenPtr& identTkn)
 {
-    auto lhs = parseFunc(identTkn);
+    /* Parse sub expressions */
+    std::vector<ExprPtr> exprs;
+    std::vector<BinaryExpr::Operators> ops;
 
-    if (Is(binaryOperatorToken))
+    /* Parse primary expression */
+    exprs.push_back(parseFunc(identTkn));
+
+    while (Is(binaryOperatorToken))
     {
-        auto ast = Make<BinaryExpr>();
+        /* Parse binary operator */
+        auto spell = AcceptIt()->Spell();
+        ops.push_back(BinaryExpr::GetOperator(spell));
 
-        ast->lhsExpr = lhs;
-        AcceptIt();
-        ast->rhsExpr = ParseAbstractBinaryExpr(parseFunc, binaryOperatorToken);
-
-        return ast;
+        /* Parse next sub-expression */
+        exprs.push_back(parseFunc(nullptr));
     }
 
-    return lhs;
+    /* Build (left-to-rigth) binary expression tree */
+    return BuildBinaryExprTree(exprs, ops);
 }
 
 // logic_or_expr: logic_and_expr ('or' logic_and_expr)*;
@@ -1620,6 +1631,31 @@ template <typename T, typename... Args> std::shared_ptr<T> Parser::Make(Args&&..
     return std::make_shared<T>(tkn_->Area(), std::forward<Args>(args)...);
 }
 
+ExprPtr Parser::BuildBinaryExprTree(std::vector<ExprPtr>& exprs, std::vector<BinaryExpr::Operators>& ops)
+{
+    if (exprs.empty())
+        ErrorInternal("sub-expressions must not be empty (" + ToStr(__FUNCTION__) + ")");
+
+    if (exprs.size() > 1)
+    {
+        if (exprs.size() != ops.size() + 1)
+            ErrorInternal("sub-expressions and operators have uncorrelated number of elements (" + ToStr(__FUNCTION__) + ")");
+
+        auto ast = Make<BinaryExpr>();
+
+        ast->rhsExpr = exprs.back();
+        ast->binaryOperator = ops.back();
+
+        exprs.pop_back();
+        ops.pop_back();
+
+        ast->lhsExpr = BuildBinaryExprTree(exprs, ops);
+
+        return ast;
+    }
+    return exprs.front();
+}
+
 void Parser::PushProcHasReturnType(bool hasReturnType)
 {
     procHasReturnTypeStack_.push(hasReturnType);
@@ -1628,7 +1664,7 @@ void Parser::PushProcHasReturnType(bool hasReturnType)
 void Parser::PopProcHasReturnType()
 {
     if (procHasReturnTypeStack_.empty())
-        throw std::runtime_error("stack underflow for procedure-has-return-type information");
+        ErrorInternal("stack underflow for procedure-has-return-type information");
     else
         procHasReturnTypeStack_.pop();
 }

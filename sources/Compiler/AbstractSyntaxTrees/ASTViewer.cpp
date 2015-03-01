@@ -304,14 +304,14 @@ DEF_VISIT_PROC(ASTViewer, BinaryExpr)
 {
     AST_INFO("BinaryExpr");
     Visit(ast->lhsExpr);
-    //ast->binaryOperator!!!
+    String("binaryOperator", BinaryExpr::GetOperatorSpell(ast->binaryOperator));
     Visit(ast->rhsExpr);
 }
 
 DEF_VISIT_PROC(ASTViewer, UnaryExpr)
 {
     AST_INFO("UnaryExpr");
-    //ast->unaryOperator!!!
+    String("unaryOperator", UnaryExpr::GetOperatorSpell(ast->unaryOperator));
     Visit(ast->expr);
 }
 

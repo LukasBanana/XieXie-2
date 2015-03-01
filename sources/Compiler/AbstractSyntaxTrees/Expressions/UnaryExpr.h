@@ -31,6 +31,7 @@ class UnaryExpr : public Expr
         AST_INTERFACE_EXT(UnaryExpr, Expr);
 
         static Operators GetOperator(const std::string& spell);
+        static std::string GetOperatorSpell(const Operators op);
 
         Operators   unaryOperator = Operators::LogicNot;
         ExprPtr     expr;
