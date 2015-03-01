@@ -16,6 +16,7 @@
 
 #include <string>
 #include <functional>
+#include <stack>
 
 
 namespace SyntaxAnalyzer
@@ -28,11 +29,6 @@ class Scanner
     
     public:
         
-        struct State
-        {
-            bool allowRDParen = false; //!< Allows to scan the 'Token::Types::RDParent' token (']]').
-        };
-
         Scanner() = default;
 
         bool ScanSource(const SourceCodePtr& source, ErrorReporter& errorReporter);
@@ -50,23 +46,32 @@ class Scanner
             return source_.get();
         }
 
-        //! Scanner state
-        State state;
-
     private:
         
+        /* === Structures === */
+
+        struct State
+        {
+            //! Allows to scan the 'Token::Types::RDParent' token (']]').
+            bool allowRDParen = false;
+        };
+
         /* === Functions === */
 
         using Tokens = Token::Types;
 
-        char Take(char chr);
-        char TakeIt();
+        /* --- Error handling --- */
 
         void Error(const std::string& msg);
         void ErrorUnexpected();
         void ErrorUnexpected(char expectedChar);
         void ErrorEOF();
         void ErrorLetterInNumber();
+
+        /* --- Scanning --- */
+
+        char Take(char chr);
+        char TakeIt();
 
         //! Ignores all characters which comply the specified predicate.
         void Ignore(const std::function<bool (char)>& pred);
@@ -106,11 +111,20 @@ class Scanner
             return static_cast<unsigned char>(chr_);
         }
 
+        /* --- State management --- */
+
+        State GetState() const;
+
+        void PushState(const State& state);
+        void PopState();
+
         /* === Members === */
 
-        SourceCodePtr   source_;
-        char            chr_            = 0;
-        ErrorReporter*  errorReporter_  = nullptr;
+        SourceCodePtr       source_;
+        char                chr_            = 0;
+        ErrorReporter*      errorReporter_  = nullptr;
+
+        std::stack<State>   stateStack_;
 
 };
 

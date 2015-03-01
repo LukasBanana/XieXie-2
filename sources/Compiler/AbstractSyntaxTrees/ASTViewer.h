@@ -25,15 +25,18 @@ class ASTViewer : public Visitor
         
         ASTViewer(Log& log);
 
-        DECL_VISITOR_INTERFACE;
+        void ViewProgram(Program& ast, bool showPos = false);
 
     private:
         
+        DECL_VISITOR_INTERFACE;
+
         void Info(const std::string& info, const AST* ast = nullptr);
         void Value(const std::string& ident, const std::string& value);
         void String(const std::string& ident, const std::string& value);
 
         Log& log_;
+        bool showPos_ = false;
 
 };
 

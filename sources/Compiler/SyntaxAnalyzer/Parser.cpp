@@ -39,8 +39,24 @@ bool Parser::ParseSource(Program& program, const SourceCodePtr& source, ErrorRep
 
 ProgramPtr Parser::ParseSource(const std::string& filename, ErrorReporter& errorReporter)
 {
-    auto program = Make<Program>();
-    return ParseSource(*program, std::make_shared<SourceFile>(filename), errorReporter) ? program : nullptr;
+    try
+    {
+        /* Initialize parser */
+        errorReporter_ = &errorReporter;
+
+        scanner_.ScanSource(std::make_shared<SourceFile>(filename), errorReporter);
+        AcceptIt();
+
+        /* Parse program */
+        auto program = Make<Program>();
+        ParseProgram(program->classDeclStmnts);
+        return program;
+    }
+    catch (const std::exception&)
+    {
+        /* ignore */
+    }
+    return nullptr;
 }
 
 
@@ -153,7 +169,8 @@ CodeBlockPtr Parser::ParseCodeBlock()
     auto ast = Make<CodeBlock>();
 
     Accept(Tokens::LCurly);
-    ast->stmnts = ParseStmntList();
+    if (!Is(Tokens::RCurly))
+        ast->stmnts = ParseStmntList();
     Accept(Tokens::RCurly);
 
     return ast;
@@ -262,7 +279,8 @@ ProcSignaturePtr Parser::ParseProcSignature(const TypeDenoterPtr& typeDenoter, c
     ast->ident = (identTkn != nullptr ? identTkn->Spell() : AcceptIdent());
 
     Accept(Tokens::LBracket);
-    ast->params = ParseParamList();
+    if (!Is(Tokens::RBracket))
+        ast->params = ParseParamList();
     Accept(Tokens::RBracket);
 
     return ast;
@@ -321,7 +339,7 @@ ClassBodySegmentPtr Parser::ParseClassBodySegment()
     if (Is(Tokens::Visibility))
         ast->visibility = ClassBodySegment::GetVisibility(AcceptIt()->Spell());
 
-    ast->declStmnts = ParseDeclStmntList(Tokens::Visibility);
+    ast->declStmnts = ParseDeclStmntList();
 
     return ast;
 }
@@ -348,7 +366,8 @@ ProcCallPtr Parser::ParseProcCall(const VarNamePtr& varName)
 
     ast->procName = (varName != nullptr ? varName : ParseVarName());
     Accept(Tokens::LBracket);
-    ast->args = ParseArgList();
+    if (!Is(Tokens::RBracket))
+        ast->args = ParseArgList();
     Accept(Tokens::RBracket);
 
     return ast;
@@ -387,6 +406,10 @@ StmntPtr Parser::ParseStmnt()
 {
     switch (TknType())
     {
+        case Tokens::If:
+            return ParseIfStmnt();
+        case Tokens::Switch:
+            return ParseSwitchStmnt();
         case Tokens::For:
             return ParseForOrForRangeStmnt();
         case Tokens::ForEach:
@@ -601,7 +624,8 @@ SwitchStmntPtr Parser::ParseSwitchStmnt()
     ast->expr = ParseExpr();
 
     Accept(Tokens::LCurly);
-    ast->cases = ParseSwitchCaseList();
+    if (!Is(Tokens::RCurly))
+        ast->cases = ParseSwitchCaseList();
     Accept(Tokens::RCurly);
 
     return ast;
@@ -752,7 +776,7 @@ StmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
         AcceptIt();
         return ParseExternClassDeclStmnt(attribPrefix);
     }
-        
+
     return ParseInternClassDeclStmnt(attribPrefix);
 }
 
@@ -769,7 +793,10 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
     if (Is(Tokens::Colon))
         ast->inheritanceTypeName = ParseTypeInheritance();
     
-    ast->bodySegments = ParseClassBodySegmentList();
+    Accept(Tokens::LCurly);
+    if (!Is(Tokens::RCurly))
+        ast->bodySegments = ParseClassBodySegmentList();
+    Accept(Tokens::RCurly);
 
     return ast;
 }
@@ -783,7 +810,11 @@ ExternClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr&
     Accept(Tokens::Class);
 
     ast->ident = AcceptIdent();
-    ast->stmnts = ParseExternDeclStmntList();
+
+    Accept(Tokens::LCurly);
+    if (!Is(Tokens::RCurly))
+        ast->stmnts = ParseExternDeclStmntList();
+    Accept(Tokens::RCurly);
 
     return ast;
 }
@@ -828,7 +859,8 @@ EnumDeclStmntPtr Parser::ParseEnumDeclStmnt()
     ast->ident = AcceptIdent();
 
     Accept(Tokens::LCurly);
-    ast->entries = ParseEnumEntryList();
+    if (!Is(Tokens::RCurly))
+        ast->entries = ParseEnumEntryList();
     Accept(Tokens::RCurly);
 
     return ast;
@@ -851,7 +883,8 @@ FlagsDeclStmntPtr Parser::ParseFlagsDeclStmnt()
     }
 
     Accept(Tokens::LCurly);
-    ast->entries = ParseIdentList();
+    if (!Is(Tokens::RCurly))
+        ast->entries = ParseIdentList();
     Accept(Tokens::RCurly);
 
     return ast;
@@ -871,7 +904,13 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(bool isExtern, AttribPrefixPtr attri
     ast->procSignature = ParseProcSignature();
 
     if (!isExtern)
-        ast->codeBlock = ParseCodeBlock();
+    {
+        PushProcHasReturnType(!ast->procSignature->returnTypeDenoter->IsVoid());
+        {
+            ast->codeBlock = ParseCodeBlock();
+        }
+        PopProcHasReturnType();
+    }
 
     return ast;
 }
@@ -883,7 +922,12 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, c
     auto ast = Make<ProcDeclStmnt>();
 
     ast->procSignature = ParseProcSignature(typeDenoter, identTkn);
-    ast->codeBlock = ParseCodeBlock();
+
+    PushProcHasReturnType(!ast->procSignature->returnTypeDenoter->IsVoid());
+    {
+        ast->codeBlock = ParseCodeBlock();
+    }
+    PopProcHasReturnType();
 
     return ast;
 }
@@ -900,7 +944,8 @@ InitDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 
     Accept(Tokens::Init);
     Accept(Tokens::LBracket);
-    ast->params = ParseParamList();
+    if (!Is(Tokens::RBracket))
+        ast->params = ParseParamList();
     Accept(Tokens::RBracket);
 
     if (!isExtern)
@@ -977,6 +1022,7 @@ ExprPtr Parser::ParseExpr(const TokenPtr& identTkn)
     return ParseLogicOrExpr(identTkn);
 }
 
+//!TODO! -> left-to-right expression evaluation!!!
 ExprPtr Parser::ParseAbstractBinaryExpr(
     const std::function<ExprPtr(const TokenPtr&)>& parseFunc,
     const Tokens binaryOperatorToken, const TokenPtr& identTkn)
@@ -989,7 +1035,7 @@ ExprPtr Parser::ParseAbstractBinaryExpr(
 
         ast->lhsExpr = lhs;
         AcceptIt();
-        ast->rhsExpr = parseFunc(nullptr);
+        ast->rhsExpr = ParseAbstractBinaryExpr(parseFunc, binaryOperatorToken);
 
         return ast;
     }
@@ -1162,7 +1208,8 @@ AllocExprPtr Parser::ParseAllocExpr()
     if (Is(Tokens::LBracket))
     {
         Accept(Tokens::LBracket);
-        ast->ctorArgs = ParseArgList();
+        if (!Is(Tokens::RBracket))
+            ast->ctorArgs = ParseArgList();
         Accept(Tokens::RBracket);
     }
 
@@ -1204,7 +1251,8 @@ InitListExprPtr Parser::ParseInitListExpr()
     auto ast = Make<InitListExpr>();
 
     Accept(Tokens::LCurly);
-    ast->exprs = ParseExprList();
+    if (!Is(Tokens::RCurly))
+        ast->exprs = ParseExprList();
     Accept(Tokens::RCurly);
 
     return ast;
@@ -1240,7 +1288,7 @@ LiteralExprPtr Parser::ParseLiteralExpr()
             break;
     }
 
-    ast->literal = AcceptIt()->Spell();
+    ast->value = AcceptIt()->Spell();
 
     return ast;
 }
@@ -1416,9 +1464,9 @@ std::vector<StmntPtr> Parser::ParseStmntList(const Tokens terminatorToken)
     return ParseList<StmntPtr>(std::bind(&Parser::ParseStmnt, this), terminatorToken);
 }
 
-std::vector<StmntPtr> Parser::ParseDeclStmntList(const Tokens terminatorToken)
+std::vector<StmntPtr> Parser::ParseDeclStmntList()
 {
-    return ParseList<StmntPtr>(std::bind(&Parser::ParseDeclStmnt, this), terminatorToken);
+    return ParseList<StmntPtr>(std::bind(&Parser::ParseDeclStmnt, this), { Tokens::Visibility, Tokens::RCurly });
 }
 
 std::vector<StmntPtr> Parser::ParseExternDeclStmntList(const Tokens terminatorToken)

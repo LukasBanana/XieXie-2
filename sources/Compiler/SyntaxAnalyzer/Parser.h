@@ -184,7 +184,7 @@ class Parser
         );
 
         std::vector<StmntPtr>               ParseStmntList(const Tokens terminatorToken = Tokens::RCurly);
-        std::vector<StmntPtr>               ParseDeclStmntList(const Tokens terminatorToken = Tokens::Visibility);
+        std::vector<StmntPtr>               ParseDeclStmntList();
         std::vector<StmntPtr>               ParseExternDeclStmntList(const Tokens terminatorToken = Tokens::RCurly);
         std::vector<ClassBodySegmentPtr>    ParseClassBodySegmentList();
         std::vector<SwitchCasePtr>          ParseSwitchCaseList();

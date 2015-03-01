@@ -176,7 +176,7 @@ void Shell::CompileFile(const std::string& filename)
     if (program)
     {
         ASTViewer viewer(log_);
-        viewer.VisitProgram(program.get());
+        viewer.ViewProgram(*program);
     }
 
     #endif

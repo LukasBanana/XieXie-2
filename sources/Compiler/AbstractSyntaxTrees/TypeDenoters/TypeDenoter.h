@@ -19,6 +19,13 @@ namespace AbstractSyntaxTrees
 class TypeDenoter : public AST
 {
     
+    public:
+
+        virtual bool IsVoid() const
+        {
+            return false;
+        }
+
     protected:
         
         TypeDenoter() = default;

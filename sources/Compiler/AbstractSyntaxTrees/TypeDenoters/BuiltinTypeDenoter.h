@@ -42,6 +42,11 @@ class BuiltinTypeDenoter : public TypeDenoter
         //! Returns the type name for the specified type spelling.
         static TypeNames GetTypeName(const std::string& spell);
 
+        bool IsVoid() const override
+        {
+            return typeName == TypeNames::Void;
+        }
+
         TypeNames typeName = TypeNames::Void; // e.g. "int", "float", "bool"
 
 };

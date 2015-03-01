@@ -99,20 +99,7 @@ SourcePosition Scanner::Pos() const
  * ======= Private: =======
  */
 
-char Scanner::Take(char chr)
-{
-    if (chr_ != chr)
-        ErrorUnexpected(chr);
-    return TakeIt();
-}
-
-char Scanner::TakeIt()
-{
-    /* Get next character and return previous one */
-    auto prevChr = chr_;
-    chr_ = source_->Next();
-    return prevChr;
-}
+/* --- Error handling --- */
 
 void Scanner::Error(const std::string& msg)
 {
@@ -139,6 +126,23 @@ void Scanner::ErrorEOF()
 void Scanner::ErrorLetterInNumber()
 {
     Error("letter '" + ToStr(chr_) + "' is not allowed within a number");
+}
+
+/* --- Scanning --- */
+
+char Scanner::Take(char chr)
+{
+    if (chr_ != chr)
+        ErrorUnexpected(chr);
+    return TakeIt();
+}
+
+char Scanner::TakeIt()
+{
+    /* Get next character and return previous one */
+    auto prevChr = chr_;
+    chr_ = source_->Next();
+    return prevChr;
 }
 
 void Scanner::Ignore(const std::function<bool (char)>& pred)
@@ -343,15 +347,29 @@ TokenPtr Scanner::ScanToken()
     {
         spell += TakeIt();
         if (Is('['))
+        {
+            /* Push new state */
+            auto state = GetState();
+            state.allowRDParen = true;
+            PushState(state);
+
+            /* Return special case token */
             return Make(Tokens::LDParen, spell, true);
+        }
         return Make(Tokens::LParen, spell);
     }
 
     if (Is(']'))
     {
         spell += TakeIt();
-        if (state.allowRDParen && Is(']'))
+        if (GetState().allowRDParen && Is(']'))
+        {
+            /* Pop previous state */
+            PopState();
+
+            /* Return special case token */
             return Make(Tokens::RDParen, spell, true);
+        }
         return Make(Tokens::RParen, spell);
     }
 
@@ -704,6 +722,22 @@ bool Scanner::IsEscapeChar() const
         Is( 'b') || Is( 'f') || Is( 'n') ||
         Is( 'r') || Is( 't') || Is( 'v') ||
         Is( 'x') || Is( 'u') || Is( 'U');
+}
+
+Scanner::State Scanner::GetState() const
+{
+    return stateStack_.empty() ? State() : stateStack_.top();
+}
+
+void Scanner::PushState(const State& state)
+{
+    stateStack_.push(state);
+}
+
+void Scanner::PopState()
+{
+    if (!stateStack_.empty())
+        stateStack_.pop();
 }
 
 

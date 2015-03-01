@@ -24,7 +24,7 @@ class Vector3 {
 		float len := x*x + y*y + z*z
 		
 		if len != 0.0 and len != 1.0 {
-			len := 1.0 / Math.sqrt(len)
+			len := 1.0 / Math.sqrt(x: len)
 			
 			x *= len
 			y *= len
