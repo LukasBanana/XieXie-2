@@ -16,11 +16,14 @@ decl_stmnt_list: 		decl_stmnt+;
 extern_decl_stmnt_list:	extern_decl_stmnt+;
 class_decl_stmnt_list:	class_decl_stmnt+;
 
-stmnt	: var_decl_stmnt
+stmnt	: var_name_stmnt
 		| branch_stmnt
 		| loop_stmnt
-		| assign_stmnt
 		| ctrl_transfer_stmnt;
+
+var_name_stmnt	: var_decl_stmnt
+				| assign_stmnt
+				| proc_call_stmnt;
 
 decl_stmnt	: var_decl_stmnt
 			| class_decl_stmnt
@@ -53,6 +56,8 @@ assign_stmnt	: copy_assign_stmnt
 				| modify_assign_stmnt
 				| post_operator_stmnt;
 
+proc_call_stmnt: proc_call;
+
 // ASSIGN STATEMENTS
 copy_assign_stmnt:		var_name (',' var_name)* ':=' expr;
 modify_assign_stmnt:	var_name ('+=' | '-=' | '*=' | '/=' | '%=' | '<<=' | '>>=' | '|=' | '&=' | '^=') expr;
@@ -77,16 +82,13 @@ continue_stmnt:	'continue';
 return_stmnt:	'return' expr?;
 
 // LOOP STATEMENTS
-for_stmnt:			'for' for_init? ';' expr? ';' assign_stmnt? code_block;
+for_stmnt:			'for' var_name_stmnt? ';' expr? ';' assign_stmnt? code_block;
 for_range_stmnt:	'for' IDENT ':' for_range '..' for_range ('->' INT_LITERAL)? code_block;
-for_each_stmnt:		'foreach' for_each_init ':' expr code_block;
+for_each_stmnt:		'foreach' var_decl_stmnt ':' expr code_block;
 for_ever_stmnt:		'forever' code_block;
+for_range:			NEGATION? INT_LITERAL;
 while_stmnt:		'while' expr code_block;
 do_while_stmnt:		'do' code_block 'while' expr;
-
-for_init:			var_decl_stmnt | assign_stmnt;
-for_each_init:		var_decl_stmnt;
-for_range:			NEGATION? INT_LITERAL;
 
 // ATTRIBUTES
 attrib_prefix:		'[[' attrib_list ']]';
@@ -96,8 +98,7 @@ attrib_arg_list:	attrib_arg (',' attrib_arg)*;
 attrib_arg:			expr;
 
 // VARIABLES
-var_name:			var_ident array_access? ('.' var_name)?;
-var_ident:			IDENT;
+var_name:			IDENT array_access? ('.' var_name)?;
 
 var_decl_stmnt:		type_denoter var_decl_list;
 var_decl_list:		var_decl (',' var_decl)*;
@@ -171,7 +172,7 @@ sub_expr:			mul_expr ('-' mul_expr)*;
 mul_expr:			div_expr ('*' div_expr)*;
 div_expr:			value_expr (('/' | '%') value_expr)*;
 
-value_expr:			(primary_value_expr | value_expr member_proc_call)
+value_expr:			primary_value_expr ('.' member_call_expr)*;
 
 primary_value_expr	: literal_expr
 					| var_access_expr
@@ -193,10 +194,10 @@ literal_expr:		LITERAL;
 bracket_expr:		'(' expr ')';
 cast_expr: 			'(' type_denoter ')' value_expr;
 call_expr:			proc_call;
+member_call_expr:	IDENT '(' arg_list? ')';
 unary_expr:			('~' | '-' | 'not') value_expr;
 
 proc_call:			var_name '(' arg_list? ')';
-member_proc_call:	'.' IDENT '(' arg_list? ')';
 
 // TYPE DENOTERS
 type_denoter			: builtin_type_denoter
@@ -212,7 +213,7 @@ return_type_denoter		: VOID_TYPE_DENOTER
 
 array_type_denoter:		type_denoter '[]';
 
-pointer_type_denoter:	var_name;
+pointer_type_denoter:	IDENT;
 
 VOID_TYPE_DENOTER:		'void';
 BOOL_TYPE_DENOTER:		'bool';
