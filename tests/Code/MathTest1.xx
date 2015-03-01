@@ -69,7 +69,7 @@ class Test {
 		Log.WriteLine(str1 + ", " + str2)
 		
 		int n := 10
-		Log.WriteLine("Fibonacci(" + n + ") = " + Fibonacci(n))
+		Log.WriteLine("Fibonacci(" + n + ") = " + fibonacci(n))
 		
 		return 0
 		

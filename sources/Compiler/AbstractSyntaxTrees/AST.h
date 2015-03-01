@@ -87,7 +87,6 @@ class AST
             DoWhileStmnt,
 
             ClassDeclStmnt,
-            ExternClassDeclStmnt,
             VarDeclStmnt,
             EnumDeclStmnt,
             FlagsDeclStmnt,

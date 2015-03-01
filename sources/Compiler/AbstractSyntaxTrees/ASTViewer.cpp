@@ -230,14 +230,6 @@ DEF_VISIT_PROC(ASTViewer, ClassDeclStmnt)
     Visit(ast->bodySegments);
 }
 
-DEF_VISIT_PROC(ASTViewer, ExternClassDeclStmnt)
-{
-    AST_INFO("ExternClassDeclStmnt");
-    Visit(ast->attribPrefix);
-    AST_STRING(ident);
-    Visit(ast->stmnts);
-}
-
 DEF_VISIT_PROC(ASTViewer, VarDeclStmnt)
 {
     AST_INFO("VarDeclStmnt");

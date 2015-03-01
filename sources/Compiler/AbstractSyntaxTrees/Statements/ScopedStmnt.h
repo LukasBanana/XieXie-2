@@ -18,6 +18,11 @@ namespace AbstractSyntaxTrees
 {
 
 
+
+class ScopedStmnt;
+
+using StmntSymbolTable = ContextAnalyzer::SymbolTable<ScopedStmnt, Stmnt>;
+
 class ScopedStmnt : public Stmnt
 {
     
@@ -40,9 +45,13 @@ class ScopedStmnt : public Stmnt
 
     protected:
         
-        ScopedStmnt() = default;
+        ScopedStmnt() :
+            symTab{ *this }
+        {
+        }
         ScopedStmnt(const SourceArea& area) :
-            Stmnt{ area }
+            Stmnt   { area  },
+            symTab  { *this }
         {
         }
 

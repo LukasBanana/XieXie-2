@@ -111,9 +111,9 @@ class Parser
         WhileStmntPtr           ParseWhileStmnt();
         DoWhileStmntPtr         ParseDoWhileStmnt();
 
-        StmntPtr                ParseClassDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
+        ClassDeclStmntPtr       ParseClassDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
         ClassDeclStmntPtr       ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
-        ExternClassDeclStmntPtr ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
+        ClassDeclStmntPtr       ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         VarDeclStmntPtr         ParseVarDeclStmnt(const TokenPtr& identTkn = nullptr, bool hasArrayType = false);
         VarDeclStmntPtr         ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
         EnumDeclStmntPtr        ParseEnumDeclStmnt();

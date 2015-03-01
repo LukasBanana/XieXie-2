@@ -67,7 +67,6 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( ForEverStmnt         );    \
                                                 \
     DECL_VISIT_PROC( ClassDeclStmnt       );    \
-    DECL_VISIT_PROC( ExternClassDeclStmnt );    \
     DECL_VISIT_PROC( VarDeclStmnt         );    \
     DECL_VISIT_PROC( EnumDeclStmnt        );    \
     DECL_VISIT_PROC( FlagsDeclStmnt       );    \
@@ -141,7 +140,6 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( ForEverStmnt         );
 
         DEF_ABSTRACT_VISIT_PROC( ClassDeclStmnt       );
-        DEF_ABSTRACT_VISIT_PROC( ExternClassDeclStmnt );
         DEF_ABSTRACT_VISIT_PROC( VarDeclStmnt         );
         DEF_ABSTRACT_VISIT_PROC( EnumDeclStmnt        );
         DEF_ABSTRACT_VISIT_PROC( FlagsDeclStmnt       );

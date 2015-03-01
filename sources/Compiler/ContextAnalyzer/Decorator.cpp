@@ -9,6 +9,8 @@
 #include "ErrorReporter.h"
 #include "ASTImport.h"
 
+#include <algorithm>
+
 
 namespace ContextAnalyzer
 {
@@ -22,7 +24,7 @@ bool Decorator::DecorateProgram(Program& program, ErrorReporter& errorReporter)
 
         Visit(&program);
 
-        return true;
+        return !errorReporter_->HasErrors();
     }
     catch (const ContextError& err)
     {
@@ -63,26 +65,6 @@ void Decorator::Error(const std::string& msg, bool breakAnalysis)
 
 /* --- Common AST nodes --- */
 
-void Decorator::PushSymTab(ScopedStmnt& ast)
-{
-    symTab_ = &(ast.symTab);
-    symTabStack_.push(symTab_);
-}
-
-void Decorator::PopSymTab()
-{
-    if (symTabStack_.empty())
-        throw std::runtime_error("symbol table stack underflow");
-    else
-    {
-        symTabStack_.pop();
-        if (symTabStack_.empty())
-            symTab_ = nullptr;
-        else
-            symTab_ = symTabStack_.top();
-    }
-}
-
 DEF_VISIT_PROC(Decorator, Program)
 {
     /* Initialize decoration state */
@@ -104,29 +86,30 @@ DEF_VISIT_PROC(Decorator, Program)
 
 DEF_VISIT_PROC(Decorator, CodeBlock)
 {
-    symTab_->OpenScope();
+    OpenScope();
     {
         Visit(ast->stmnts);
     }
-    symTab_->CloseScope();
+    CloseScope();
 }
 
 DEF_VISIT_PROC(Decorator, VarName)
 {
+    VisitVarName(*ast);
+
     Visit(ast->arrayAccess);
     Visit(ast->next);
 }
 
 DEF_VISIT_PROC(Decorator, VarDecl)
 {
-    symTab_->Register(ast->ident, ast);
+    RegisterSymbol(ast->ident, ast);
     Visit(ast->initExpr);
 }
 
 DEF_VISIT_PROC(Decorator, Param)
 {
-    Visit(ast->typeDenoter);
-    Visit(ast->defaultArgExpr);
+    //if (IsAnalyzeCode())
 }
 
 DEF_VISIT_PROC(Decorator, Arg)
@@ -175,7 +158,11 @@ DEF_VISIT_PROC(Decorator, ProcCall)
 DEF_VISIT_PROC(Decorator, SwitchCase)
 {
     Visit(ast->items);
-    Visit(ast->stmnts);
+    OpenScope();
+    {
+        Visit(ast->stmnts);
+    }
+    CloseScope();
 }
 
 /* --- Statements --- */
@@ -221,22 +208,35 @@ DEF_VISIT_PROC(Decorator, WhileStmnt)
 
 DEF_VISIT_PROC(Decorator, ForStmnt)
 {
-    Visit(ast->initStmnt);
-    Visit(ast->condExpr);
-    Visit(ast->assignStmnt);
-    Visit(ast->codeBlock);
+    OpenScope();
+    {
+        Visit(ast->initStmnt);
+        Visit(ast->condExpr);
+        Visit(ast->assignStmnt);
+        Visit(ast->codeBlock);
+    }
+    CloseScope();
 }
 
 DEF_VISIT_PROC(Decorator, ForRangeStmnt)
 {
-    Visit(ast->codeBlock);
+    OpenScope();
+    {
+        RegisterSymbol(ast->varIdent, ast);
+        Visit(ast->codeBlock);
+    }
+    CloseScope();
 }
 
 DEF_VISIT_PROC(Decorator, ForEachStmnt)
 {
-    Visit(ast->varDeclStmnt);
-    Visit(ast->listExpr);
-    Visit(ast->codeBlock);
+    OpenScope();
+    {
+        Visit(ast->varDeclStmnt);
+        Visit(ast->listExpr);
+        Visit(ast->codeBlock);
+    }
+    CloseScope();
 }
 
 DEF_VISIT_PROC(Decorator, ForEverStmnt)
@@ -249,7 +249,7 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
     switch (state_)
     {
         case States::RegisterClassSymbols:
-            symTab_->Register(ast->ident, ast);
+            RegisterSymbol(ast->ident, ast);
             break;
 
         case States::RegisterMemberSymbols:
@@ -272,36 +272,14 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
     }
 }
 
-DEF_VISIT_PROC(Decorator, ExternClassDeclStmnt)
-{
-    switch (state_)
-    {
-        case States::RegisterClassSymbols:
-            symTab_->Register(ast->ident, ast);
-            break;
-
-        case States::RegisterMemberSymbols:
-            PushSymTab(*ast);
-            {
-                Visit(ast->stmnts);
-            }
-            PopSymTab();
-            break;
-
-        case States::AnalyzeCode:
-            PushSymTab(*ast);
-            {
-                Visit(ast->attribPrefix);
-            }
-            PopSymTab();
-            break;
-    }
-}
-
 DEF_VISIT_PROC(Decorator, VarDeclStmnt)
 {
-    Visit(ast->typeDenoter);
-    Visit(ast->varDecls);
+    if ( ( state_ == States::RegisterMemberSymbols && symTab_->GetOwner().Type() == AST::Types::ClassDeclStmnt ) ||
+         ( IsAnalyzeCode() && symTab_->GetOwner().Type() == AST::Types::ProcDeclStmnt ) )
+    {
+        Visit(ast->typeDenoter);
+        Visit(ast->varDecls);
+    }
 }
 
 DEF_VISIT_PROC(Decorator, EnumDeclStmnt)
@@ -318,7 +296,7 @@ DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
     switch (state_)
     {
         case States::RegisterMemberSymbols:
-            symTab_->Register(ast->procSignature->ident, ast);
+            RegisterSymbol(ast->procSignature->ident, ast);
             break;
 
         case States::AnalyzeCode:
@@ -335,13 +313,16 @@ DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
 
 DEF_VISIT_PROC(Decorator, InitDeclStmnt)
 {
-    PushSymTab(*ast);
-
-    Visit(ast->attribPrefix);
-    Visit(ast->params);
-    Visit(ast->codeBlock);
-
-    PopSymTab();
+    if (IsAnalyzeCode())
+    {
+        PushSymTab(*ast);
+        {
+            Visit(ast->attribPrefix);
+            Visit(ast->params);
+            Visit(ast->codeBlock);
+        }
+        PopSymTab();
+    }
 }
 
 DEF_VISIT_PROC(Decorator, CopyAssignStmnt)
@@ -424,10 +405,136 @@ DEF_VISIT_PROC(Decorator, ArrayTypeDenoter)
 
 DEF_VISIT_PROC(Decorator, PointerTypeDenoter)
 {
+    auto symbol = FetchSymbol(ast->declIdent, ast->declIdent, ast);
+    if (symbol)
+        ast->declStmntRef = symbol;
 }
 
-/* --- Misc --- */
+/* --- Decoration --- */
 
+Stmnt* Decorator::FetchSymbolFromScope(const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast)
+{
+    auto symbol = symTab.Fetch(ident);
+    if (!symbol)
+        Error("undeclared identifier \"" + ident + "\" (in \"" + fullName + "\")", ast);
+    return symbol;
+}
+
+Stmnt* Decorator::FetchSymbol(const std::string& ident, const std::string& fullName, const AST* ast)
+{
+    /* Search in scope */
+    auto symbol = symTab_->Fetch(ident);
+    if (!symbol)
+    {
+        /* Search in class namespace */
+        if (class_)
+            symbol = class_->symTab.Fetch(ident);
+        if (!symbol)
+        {
+            /* Search in global namespace */
+            symbol = FetchSymbolFromScope(ident, program_->symTab, fullName, ast);
+        }
+    }
+    return symbol;
+}
+
+void Decorator::VisitVarName(VarName& ast)
+{
+    const auto fullName = ast.FullName();
+
+    auto symbol = FetchSymbol(ast.ident, fullName);
+    if (symbol)
+    {
+        /* Decorate AST node */
+        DecorateVarName(ast, symbol, fullName);
+    }
+}
+
+void Decorator::DecorateVarName(VarName& ast, Stmnt* symbol, const std::string& fullName)
+{
+    /* Decorate AST node */
+    ast.declStmntRef = symbol;
+
+    /* Decorate sub AST node */
+    if (ast.next)
+    {
+        auto scopedStmnt = dynamic_cast<ScopedStmnt*>(symbol);
+        if (scopedStmnt)
+            DecorateVarNameSub(*ast.next, scopedStmnt->symTab, fullName);
+        else
+            Error("undeclared namespace \"" + ast.next->ident + "\" (in \"" + fullName + "\")", &ast);
+    }
+}
+
+void Decorator::DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName)
+{
+    /* Search in current scope */
+    auto symbol = FetchSymbolFromScope(ast.ident, symTab, fullName, &ast);
+    if (symbol)
+        DecorateVarName(ast, symbol, fullName);
+}
+
+/* --- Symbol table --- */
+
+void Decorator::PushSymTab(ScopedStmnt& ast)
+{
+    /* Push symbol table */
+    symTab_ = &(ast.symTab);
+    symTabStack_.push_back(symTab_);
+
+    /* Update reference to inner class */
+    if (ast.Type() == AST::Types::ClassDeclStmnt)
+        class_ = dynamic_cast<ClassDeclStmnt*>(&ast);
+}
+
+void Decorator::PopSymTab()
+{
+    if (symTabStack_.empty())
+        throw std::runtime_error("symbol table stack underflow");
+    else
+    {
+        /* Pop symbol table */
+        symTabStack_.pop_back();
+        if (symTabStack_.empty())
+            symTab_ = nullptr;
+        else
+        {
+            symTab_ = symTabStack_.back();
+
+            /* Update reference to inner class */
+            for (auto it = symTabStack_.rbegin(); it != symTabStack_.rend(); ++it)
+            {
+                if ((*it)->GetOwner().Type() == AST::Types::ClassDeclStmnt)
+                {
+                    class_ = dynamic_cast<ClassDeclStmnt*>(&((*it)->GetOwner()));
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void Decorator::OpenScope()
+{
+    symTab_->OpenScope();
+}
+
+void Decorator::CloseScope()
+{
+    symTab_->CloseScope();
+}
+
+void Decorator::RegisterSymbol(const std::string& ident, Stmnt* symbol)
+{
+    try
+    {
+        symTab_->Register(ident, symbol);
+    }
+    catch (const std::runtime_error& err)
+    {
+        Error(err.what(), symbol);
+    }
+}
 
 
 } // /namespace ContextAnalyzer

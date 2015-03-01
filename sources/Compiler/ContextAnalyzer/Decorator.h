@@ -50,8 +50,30 @@ class Decorator : public Visitor
 
         DECL_VISITOR_INTERFACE;
 
+        /* --- Decoration --- */
+
+        Stmnt* FetchSymbolFromScope(const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast = nullptr);
+        Stmnt* FetchSymbol(const std::string& ident, const std::string& fullName, const AST* ast = nullptr);
+        void VisitVarName(VarName& ast);
+        void DecorateVarName(VarName& ast, Stmnt* symbol, const std::string& fullName);
+        void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
+
+        /* --- Symbol table --- */
+
         void PushSymTab(ScopedStmnt& ast);
         void PopSymTab();
+
+        void OpenScope();
+        void CloseScope();
+
+        void RegisterSymbol(const std::string& ident, Stmnt* symbol);
+
+        /* --- States --- */
+
+        inline bool IsAnalyzeCode() const
+        {
+            return state_ == States::AnalyzeCode;
+        }
 
         /* === Members === */
 
@@ -61,7 +83,9 @@ class Decorator : public Visitor
         Program*                        program_        = nullptr;
 
         StmntSymbolTable*               symTab_         = nullptr; //!< Reference to the current symbol table.
-        std::stack<StmntSymbolTable*>   symTabStack_;
+        std::vector<StmntSymbolTable*>  symTabStack_;
+
+        ClassDeclStmnt*                 class_          = nullptr; //!< Reference to the current class declaration.
 
 };
 

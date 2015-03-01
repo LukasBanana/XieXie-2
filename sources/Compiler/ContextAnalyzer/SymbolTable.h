@@ -21,7 +21,7 @@ namespace ContextAnalyzer
 
 
 //! Common symbol table class with a single scope.
-template <typename SymbolType> class SymbolTable
+template <typename OwnerType, typename SymbolType> class SymbolTable
 {
     
     public:
@@ -29,7 +29,8 @@ template <typename SymbolType> class SymbolTable
         //! Override symbol callback procedure. Must return true to allow a symbol override.
         using OnOverrideProc = std::function<bool (SymbolType* symbol)>;
 
-        SymbolTable()
+        SymbolTable(OwnerType& owner) :
+            owner_{ owner }
         {
             /* Open global scope */
             OpenScope();
@@ -119,6 +120,12 @@ template <typename SymbolType> class SymbolTable
             return scopeStack_.size();
         }
 
+        //! Returns the owner of this symbol table.
+        inline OwnerType& GetOwner() const
+        {
+            return owner_;
+        }
+
     private:
         
         struct Symbol
@@ -136,12 +143,12 @@ template <typename SymbolType> class SymbolTable
         */
         std::stack<std::vector<std::string>> scopeStack_;
 
+        OwnerType& owner_;
+
 };
 
 
 } // /namespace ContextAnalyzer
-
-using StmntSymbolTable = ContextAnalyzer::SymbolTable<AbstractSyntaxTrees::Stmnt>;
 
 
 #endif

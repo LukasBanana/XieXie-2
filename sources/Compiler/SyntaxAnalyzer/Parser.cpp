@@ -853,7 +853,7 @@ DoWhileStmntPtr Parser::ParseDoWhileStmnt()
 }
 
 // class_decl_stmnt: attrib_prefix? intern_class_decl_stmnt | ('extern' extern_class_decl_stmnt);
-StmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
+ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
 {
     if (!attribPrefix && Is(Tokens::LDParen))
         attribPrefix = ParseAttribPrefix();
@@ -889,10 +889,11 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
 }
 
 // extern_class_decl_stmnt: 'class' class_name extern_class_body;
-ExternClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
+ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
-    auto ast = Make<ExternClassDeclStmnt>();
+    auto ast = Make<ClassDeclStmnt>();
 
+    ast->isExtern = true;
     ast->attribPrefix = attribPrefix;
     Accept(Tokens::Class);
 
@@ -900,7 +901,13 @@ ExternClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr&
 
     Accept(Tokens::LCurly);
     if (!Is(Tokens::RCurly))
-        ast->stmnts = ParseExternDeclStmntList();
+    {
+        auto bodySegment = Make<ClassBodySegment>();
+
+        bodySegment->declStmnts = ParseExternDeclStmntList();
+
+        ast->bodySegments.push_back(bodySegment);
+    }
     Accept(Tokens::RCurly);
 
     return ast;
@@ -1524,7 +1531,7 @@ template <typename ASTNode> std::vector<ASTNode> Parser::ParseList(
     const std::function<ASTNode()>& parseFunc, const Tokens terminatorToken)
 {
     std::vector<ASTNode> list;
-
+    
     while (!Is(terminatorToken))
         list.push_back(parseFunc());
 

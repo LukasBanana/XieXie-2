@@ -44,7 +44,6 @@
 #include "DoWhileStmnt.h"
 
 #include "ClassDeclStmnt.h"
-#include "ExternClassDeclStmnt.h"
 #include "VarDeclStmnt.h"
 #include "EnumDeclStmnt.h"
 #include "FlagsDeclStmnt.h"

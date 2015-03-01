@@ -23,6 +23,7 @@ class ClassDeclStmnt : public ScopedStmnt
         
         AST_INTERFACE_EXT(ClassDeclStmnt, ScopedStmnt);
 
+        bool                                isExtern = false;
         AttribPrefixPtr                     attribPrefix;           // may be null
         std::string                         ident;
         VarNamePtr                          inheritanceTypeName;    // may be null
