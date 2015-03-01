@@ -53,7 +53,7 @@ static std::string GenerateTypeLabel(const ArrayTypeDenoter& typeDenoter)
 
 static std::string GenerateTypeLabel(const PointerTypeDenoter& typeDenoter)
 {
-    return "R@" + typeDenoter.declName->FullName();
+    return "R@" + typeDenoter.declIdent;
 }
 
 static std::string GenerateAbstractTypeLabel(const TypeDenoter* typeDenoter)

@@ -1,32 +1,29 @@
 /*
- * PointerTypeDenoter.h
+ * ProcCallStmnt.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_AST_POINTER_TYPE_DENOTER_H__
-#define __XX_AST_POINTER_TYPE_DENOTER_H__
+#ifndef __XX_AST_PROC_CALL_STMNT_H__
+#define __XX_AST_PROC_CALL_STMNT_H__
 
 
-#include "TypeDenoter.h"
+#include "Stmnt.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
 
-class PointerTypeDenoter : public TypeDenoter
+class ProcCallStmnt : public Stmnt
 {
     
     public:
         
-        AST_INTERFACE_EXT(PointerTypeDenoter, TypeDenoter);
+        AST_INTERFACE_EXT(ProcCallStmnt, Stmnt);
 
-        std::string declIdent;
-
-        // dast
-        StmntPtr    declStmnt;
+        ProcCallPtr procCall;
 
 };
 

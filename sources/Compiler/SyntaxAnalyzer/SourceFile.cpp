@@ -12,6 +12,11 @@ namespace SyntaxAnalyzer
 {
 
 
+SourceFile::SourceFile(const std::string& filename)
+{
+    ReadFile(filename);
+}
+
 bool SourceFile::ReadFile(const std::string& filename)
 {
     /* Open file and store filename */

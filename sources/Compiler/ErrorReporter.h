@@ -14,6 +14,8 @@
 #include <vector>
 
 
+class Log;
+
 class ErrorReporter
 {
     
@@ -22,7 +24,7 @@ class ErrorReporter
         void Add(const CompilerMessage& message);
 
         //! Prints all messages to console and clears the message list.
-        void Flush();
+        void Flush(Log& log);
 
         bool HasErrors() const
         {

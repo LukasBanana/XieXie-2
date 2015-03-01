@@ -6,8 +6,8 @@
  */
 
 #include "Assembler.h"
-#include "Console.h"
 #include "StringModifier.h"
+#include "Log.h"
 
 #include <exception>
 
@@ -20,9 +20,10 @@ namespace XieXie
 
 using namespace VirtualMachine;
 
-Assembler::Assembler() :
+Assembler::Assembler(Log& log) :
     byteCode_   { std::make_shared< ByteCode   >() },
-    intrinsics_ { std::make_shared< Intrinsics >() }
+    intrinsics_ { std::make_shared< Intrinsics >() },
+    log_        { log                              }
 {
     EstablishMnemonicTable();
 }
@@ -34,7 +35,7 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
 
     if (!inFile.good())
     {
-        Console::Error("reading file \"" + inFilename + "\" failed");
+        log_.Error("reading file \"" + inFilename + "\" failed");
         return false;
     }
 
@@ -93,7 +94,7 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
     /* Prints errors */
     bool hasErrors = errorReporter_.HasErrors();
 
-    errorReporter_.Flush();
+    errorReporter_.Flush(log_);
 
     if (hasErrors)
         return false;
@@ -1078,7 +1079,7 @@ bool Assembler::CreateByteCode(const std::string& outFilename)
 {
     if (!byteCode_->Finalize())
     {
-        Console::Error("failed to finalize byte code");
+        log_.Error("failed to finalize byte code");
         return false;
     }
     return byteCode_->WriteToFile(outFilename);

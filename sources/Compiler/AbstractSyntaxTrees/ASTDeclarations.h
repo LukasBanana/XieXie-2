@@ -45,6 +45,7 @@ DECL_SHR_PTR( SwitchCase           );
 
 DECL_SHR_PTR( ReturnStmnt          );
 DECL_SHR_PTR( CtrlTransferStmnt    );
+DECL_SHR_PTR( ProcCallStmnt        );
 
 DECL_SHR_PTR( IfStmnt              );
 DECL_SHR_PTR( SwitchStmnt          );
@@ -74,7 +75,7 @@ DECL_SHR_PTR( BinaryExpr           );
 DECL_SHR_PTR( UnaryExpr            );
 DECL_SHR_PTR( LiteralExpr          );
 DECL_SHR_PTR( CastExpr             );
-DECL_SHR_PTR( CallExpr             );
+DECL_SHR_PTR( ProcCallExpr         );
 DECL_SHR_PTR( MemberCallExpr       );
 DECL_SHR_PTR( AllocExpr            );
 DECL_SHR_PTR( VarAccessExpr        );

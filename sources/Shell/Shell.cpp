@@ -6,13 +6,14 @@
  */
 
 #include "Shell.h"
-#include "Console.h"
 #include "Version.h"
 #include "StringModifier.h"
 
 #include "Assembler.h"
 #include "Scanner.h"
 #include "SourceFile.h"
+#include "Parser.h"
+#include "ASTViewer.h"
 
 #include <iostream>
 #include <exception>
@@ -20,12 +21,9 @@
 
 
 /*
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!! TODO -> Refactor the shell completely !!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 */
 
-using namespace Console;
 using namespace SyntaxAnalyzer;
 
 bool Shell::ExecuteCommandLine(const ArgList& args)
@@ -62,7 +60,7 @@ bool Shell::ExecuteCommandLine(const ArgList& args)
                 else if (arg == "--show-pos")
                     showPos = true;
                 else
-                    Error("unknown command flag \"" + arg + "\"");
+                    log_.Error("unknown command flag \"" + arg + "\"");
             }
             else if (arg == "input")
                 WaitForUserInput();
@@ -74,13 +72,13 @@ bool Shell::ExecuteCommandLine(const ArgList& args)
                 if (file.good())
                     filenames.push_back(arg);
                 else
-                    Error("file not found: \"" + arg + "\"");
+                    log_.Error("file not found: \"" + arg + "\"");
             }
         }
     }
     catch (const std::exception& err)
     {
-        Error(err.what());
+        log_.Error(err.what());
     }
 
     /* Process input files */
@@ -132,7 +130,7 @@ void Shell::WaitForUserInput()
 
 void Shell::CmdVersion()
 {
-    Messages(
+    log_.Messages(
         {
             "XieXie Compiler " + Version::AsString(),
             "Copyright (c) 2014  Lukas Hermanns"
@@ -142,7 +140,7 @@ void Shell::CmdVersion()
 
 void Shell::CmdHelp()
 {
-    Message("no help available yet");
+    log_.Message("no help available yet");
     //...
 }
 
@@ -159,25 +157,42 @@ void Shell::ProcessFile(const std::string& filename)
     else if (fileExt == "xasm")
         AssembleFile(filename);
     else
-        Error("unknown file extension \"" + fileExt + "\"");
+        log_.Error("unknown file extension \"" + fileExt + "\"");
 }
 
 void Shell::CompileFile(const std::string& filename)
 {
-    //...
+    #if 1//!!!
+    
+    log_.Message("parse file \"" + filename + "\"");
+
+    SyntaxAnalyzer::Parser parser;
+    ErrorReporter errorReporter;
+
+    auto program = parser.ParseSource(filename, errorReporter);
+
+    errorReporter.Flush(log_);
+
+    if (program)
+    {
+        ASTViewer viewer(log_);
+        viewer.VisitProgram(program.get());
+    }
+
+    #endif
 }
 
 void Shell::AssembleFile(const std::string& filename)
 {
     /* Assemble code */
-    Console::Message("assemble file \"" + filename + "\"");
+    log_.Message("assemble file \"" + filename + "\"");
 
-    XieXie::Assembler assembler;
+    XieXie::Assembler assembler(log_);
 
     if (assembler.AssembleFile(filename, filename + ".xbc"))
-        Console::Success("assembling XASM file succeeded");
+        log_.Success("assembling XASM file succeeded");
     else
-        Console::Error("assembling XASM file failed");
+        log_.Error("assembling XASM file failed");
 }
 
 void Shell::ScanAndPrintTokens(const std::string& filename, bool showPos)
@@ -198,15 +213,15 @@ void Shell::ScanAndPrintTokens(const std::string& filename, bool showPos)
             if (tkn != nullptr && tkn->Type() != Token::Types::EndOfFile)
             {
                 if (showPos)
-                    PrintLn("(" + tkn->Area().ToString() + ") '" + tkn->Spell() + "'");
+                    log_.PrintLn("(" + tkn->Area().ToString() + ") '" + tkn->Spell() + "'");
                 else
-                    PrintLn(tkn->Spell());
+                    log_.PrintLn(tkn->Spell());
             }
             else
                 break;
         }
 
-        errorReporter.Flush();
+        errorReporter.Flush(log_);
     }
 }
 

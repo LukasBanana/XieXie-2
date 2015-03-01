@@ -14,6 +14,7 @@
 #include "Stmnt.h"
 #include "VarName.h"
 #include "ProcSignature.h"
+#include "ClassBodySegment.h"
 
 #include <exception>
 #include <initializer_list>
@@ -177,6 +178,21 @@ BinaryExpr::Operators BinaryExpr::GetOperator(const std::string& spell)
             { ">>",  Operators::RShift       },
         },
         "invalid binary operator \"" + spell + "\""
+    );
+}
+
+
+/* --- ClassBodySegment --- */
+
+ClassBodySegment::Visibilities ClassBodySegment::GetVisibility(const std::string& spell)
+{
+    return MapSpellToType<Visibilities>(
+        spell,
+        {
+            { "private", Visibilities::Private },
+            { "public",  Visibilities::Public  },
+        },
+        "invalid class visibility \"" + spell + "\""
     );
 }
 

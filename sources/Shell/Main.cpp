@@ -6,7 +6,8 @@
  */
 
 #include "Shell.h"
-#include "Console.h"
+
+#include <iostream>
 
 
 int main(int argc, char* argv[])
@@ -25,7 +26,7 @@ int main(int argc, char* argv[])
         shell.ExecuteCommandLine(args);
     }
     else
-        Console::Message("Enter \"xxc help\" for the man page");
+        std::cout << "enter \"xxc help\" for the man page" << std::endl;
 
     return 0;
 }

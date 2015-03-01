@@ -31,6 +31,7 @@
 
 #include "ReturnStmnt.h"
 #include "CtrlTransferStmnt.h"
+#include "ProcCallStmnt.h"
 
 #include "IfStmnt.h"
 #include "SwitchStmnt.h"
@@ -61,7 +62,7 @@
 #include "UnaryExpr.h"
 #include "LiteralExpr.h"
 #include "CastExpr.h"
-#include "CallExpr.h"
+#include "ProcCallExpr.h"
 #include "MemberCallExpr.h"
 #include "AllocExpr.h"
 #include "VarAccessExpr.h"

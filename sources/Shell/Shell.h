@@ -9,6 +9,8 @@
 #define __XX_SHELL_H__
 
 
+#include "Log.h"
+
 #include <string>
 #include <vector>
 
@@ -36,6 +38,8 @@ class Shell
         void AssembleFile(const std::string& filename);
 
         void ScanAndPrintTokens(const std::string& filename, bool showPos = false);
+
+        Log log_;
 
 };
 

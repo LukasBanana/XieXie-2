@@ -21,6 +21,8 @@
 #include <array>
 
 
+class Log;
+
 namespace XieXie
 {
 
@@ -42,7 +44,7 @@ class Assembler
     
     public:
         
-        Assembler();
+        Assembler(Log& log);
 
         bool AssembleFile(const std::string& inFilename, const std::string& outFilename);
 
@@ -251,7 +253,8 @@ class Assembler
 
         std::map<std::string, InstrCategory> mnemonicTable_;
 
-        ErrorReporter errorReporter_;
+        Log&            log_;
+        ErrorReporter   errorReporter_;
 
 };
 

@@ -6,7 +6,7 @@
  */
 
 #include "ErrorReporter.h"
-#include "Console.h"
+#include "Log.h"
 
 
 void ErrorReporter::Add(const CompilerMessage& message)
@@ -16,12 +16,12 @@ void ErrorReporter::Add(const CompilerMessage& message)
         hasErrors_ = true;
 }
 
-void ErrorReporter::Flush()
+void ErrorReporter::Flush(Log& log)
 {
     if (!messages_.empty())
     {
         for (const auto& msg : messages_)
-            Console::Message(msg.Message());
+            log.Message(msg.Message());
 
         hasErrors_ = false;
         messages_.clear();

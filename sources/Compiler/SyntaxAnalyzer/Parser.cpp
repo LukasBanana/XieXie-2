@@ -8,6 +8,7 @@
 #include "Parser.h"
 #include "ASTImport.h"
 #include "StringModifier.h"
+#include "SourceFile.h"
 
 
 namespace SyntaxAnalyzer
@@ -16,9 +17,30 @@ namespace SyntaxAnalyzer
 
 using namespace std::placeholders;
 
-ProgramPtr Parser::ParseSource(const SourceCodePtr& source, ErrorReporter& errorReporter)
+bool Parser::ParseSource(Program& program, const SourceCodePtr& source, ErrorReporter& errorReporter)
 {
-    return nullptr;
+    try
+    {
+        /* Initialize parser */
+        errorReporter_ = &errorReporter;
+
+        scanner_.ScanSource(source, errorReporter);
+        AcceptIt();
+
+        /* Parse program */
+        ParseProgram(program.classDeclStmnts);
+    }
+    catch (const std::exception&)
+    {
+        return false;
+    }
+    return true;
+}
+
+ProgramPtr Parser::ParseSource(const std::string& filename, ErrorReporter& errorReporter)
+{
+    auto program = Make<Program>();
+    return ParseSource(*program, std::make_shared<SourceFile>(filename), errorReporter) ? program : nullptr;
 }
 
 
@@ -119,14 +141,10 @@ unsigned int Parser::AcceptUnsignedIntLiteral()
 
 /* --- Common AST nodes --- */
 
-ProgramPtr Parser::ParseProgram()
+void Parser::ParseProgram(std::vector<StmntPtr>& classDeclStmnts)
 {
-    auto ast = Make<Program>();
-
     while (!Is(Tokens::EndOfFile))
-        ast->classDeclStmnts.push_back(ParseClassDeclStmnt());
-
-    return ast;
+        classDeclStmnts.push_back(ParseClassDeclStmnt());
 }
 
 // code_block: '{' stmnt_list? '}';
@@ -301,10 +319,7 @@ ClassBodySegmentPtr Parser::ParseClassBodySegment()
     auto ast = Make<ClassBodySegment>();
 
     if (Is(Tokens::Visibility))
-    {
-        auto vis = AcceptIt()->Spell();
-        ast->visibility = (vis == "private" ? ClassBodySegment::Visibilities::Private : ClassBodySegment::Visibilities::Public);
-    }
+        ast->visibility = ClassBodySegment::GetVisibility(AcceptIt()->Spell());
 
     ast->declStmnts = ParseDeclStmntList(Tokens::Visibility);
 
@@ -367,7 +382,7 @@ SwitchCasePtr Parser::ParseSwitchCase()
 
 /* --- Statements --- */
 
-// stmnt: var_decl_stmnt | branch_stmnt | loop_stmnt | assign_stmnt | ctrl_transfer_stmnt;
+// stmnt: var_name_stmnt | branch_stmnt | loop_stmnt | ctrl_transfer_stmnt;
 StmntPtr Parser::ParseStmnt()
 {
     switch (TknType())
@@ -387,7 +402,7 @@ StmntPtr Parser::ParseStmnt()
         case Tokens::Return:
             return ParseCtrlTransferStmnt();
     }
-    return ParseVarDeclOrAssignStmnt();
+    return ParseVarNameStmnt();
 }
 
 // decl_stmnt: var_decl_stmnt | class_decl_stmnt | enum_decl_stmnt | flags_decl_stmnt | proc_decl_stmnt | init_decl_stmnt;
@@ -427,19 +442,26 @@ StmntPtr Parser::ParseExternDeclStmnt()
     return ParseProcDeclStmnt(true);
 }
 
-// (var_decl_stmnt | assign_stmnt)
-StmntPtr Parser::ParseVarDeclOrAssignStmnt(const TokenPtr& identTkn)
+// var_name_stmnt: var_decl_stmnt | assign_stmnt | proc_call_stmnt;
+StmntPtr Parser::ParseVarNameStmnt(TokenPtr identTkn)
 {
     /* Check for built-in type denoter */
     if (Is(Tokens::BuiltinType))
         return ParseVarDeclStmnt();
 
     /* Parse variable name for both pointer type denoter and assign statement */
-    auto varName = ParseVarName(identTkn);
+    if (!identTkn)
+        identTkn = Accept(Tokens::Ident);
 
     /* Check for array type denoter or identifier for variable declaration */
     if (Is(Tokens::LParen) || Is(Tokens::Ident))
-        return ParseVarDeclStmnt(varName);
+        return ParseVarDeclStmnt(identTkn);
+
+    auto varName = ParseVarName(identTkn);
+
+    /* Check for procedure call statement */
+    if (Is(Tokens::LBracket))
+        return ParseProcCallStmnt(varName);
 
     /* Parse assign statement */
     return ParseAssignStmnt(varName);
@@ -523,6 +545,16 @@ ReturnStmntPtr Parser::ParseReturnStmnt()
     return ast;
 }
 
+// proc_call_stmnt: proc_call;
+ProcCallStmntPtr Parser::ParseProcCallStmnt(const VarNamePtr& varName)
+{
+    auto ast = Make<ProcCallStmnt>();
+
+    ast->procCall = ParseProcCall(varName);
+
+    return ast;
+}
+
 // if_stmnt: 'if' expr code_block else_stmnt?;
 IfStmntPtr Parser::ParseIfStmnt()
 {
@@ -599,8 +631,7 @@ StmntPtr Parser::ParseForOrForRangeStmnt()
     return ParseForStmnt(false);
 }
 
-// for_stmnt: 'for' for_init? ';' expr? ';' assign_stmnt? code_block;
-// for_init: var_decl_stmnt | assign_stmnt;
+// for_stmnt: 'for' var_name_stmnt? ';' expr? ';' assign_stmnt? code_block;
 ForStmntPtr Parser::ParseForStmnt(bool parseComplete, const TokenPtr& identTkn)
 {
     auto ast = Make<ForStmnt>();
@@ -610,7 +641,7 @@ ForStmntPtr Parser::ParseForStmnt(bool parseComplete, const TokenPtr& identTkn)
         Accept(Tokens::For);
 
     if (!Is(Tokens::Semicolon))
-        ast->initStmnt = ParseVarDeclOrAssignStmnt(identTkn);
+        ast->initStmnt = ParseVarNameStmnt(identTkn);
     Accept(Tokens::Semicolon);
 
     if (!Is(Tokens::Semicolon))
@@ -758,11 +789,11 @@ ExternClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr&
 }
 
 // var_decl_stmnt: type_denoter var_decl_list;
-VarDeclStmntPtr Parser::ParseVarDeclStmnt(const VarNamePtr& varName)
+VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TokenPtr& identTkn)
 {
     auto ast = Make<VarDeclStmnt>();
 
-    ast->typeDenoter = ParseTypeDenoter(varName);
+    ast->typeDenoter = ParseTypeDenoter(identTkn);
     ast->varDecls = ParseVarDeclList(Tokens::Comma);
 
     return ast;
@@ -959,6 +990,8 @@ ExprPtr Parser::ParseAbstractBinaryExpr(
         ast->lhsExpr = lhs;
         AcceptIt();
         ast->rhsExpr = parseFunc(nullptr);
+
+        return ast;
     }
 
     return lhs;
@@ -1036,14 +1069,18 @@ ExprPtr Parser::ParseDivExpr(const TokenPtr& identTkn)
     return ParseAbstractBinaryExpr(std::bind(&Parser::ParseValueExpr, this, _1), Tokens::DivOp, identTkn);
 }
 
-// value_expr: (primary_value_expr | value_expr member_proc_call)
+// value_expr: primary_value_expr ('.' member_proc_call)*;
 ExprPtr Parser::ParseValueExpr(const TokenPtr& identTkn)
 {
-    auto primaryExpr = ParsePrimaryValueExpr(identTkn);
+    auto expr = ParsePrimaryValueExpr(identTkn);
 
-    //!TODO!
+    while (Is(Tokens::Dot))
+    {
+        AcceptIt();
+        expr = ParseMemberCallExpr(expr);
+    }
 
-    return nullptr;
+    return expr;
 }
 
 // primary_value_expr : literal_expr | var_access_expr | alloc_expr | bracket_expr | cast_expr | call_expr | unary_expr | init_list_expr;
@@ -1069,19 +1106,19 @@ ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn)
         case Tokens::LCurly:
             return ParseInitListExpr();
     }
-    return ParseVarAccessOrCallExpr(identTkn);
+    return ParseVarAccessOrProcCallExpr(identTkn);
 }
 
 // var_access_expr: var_name;
 // call_expr: proc_call;
-ExprPtr Parser::ParseVarAccessOrCallExpr(const TokenPtr& identTkn)
+ExprPtr Parser::ParseVarAccessOrProcCallExpr(const TokenPtr& identTkn)
 {
     /* Parse variable name */
     auto varName = ParseVarName(identTkn);
 
     /* Check for procedure call expression */
     if (Is(Tokens::LBracket))
-        return ParseCallExpr(varName);
+        return ParseProcCallExpr(varName);
 
     /* Parse variable access expression */
     return ParseVarAccessExpr(varName);
@@ -1091,10 +1128,25 @@ ExprPtr Parser::ParseVarAccessOrCallExpr(const TokenPtr& identTkn)
 // cast_expr: '(' type_denoter ')' value_expr;
 ExprPtr Parser::ParseBracketOrCastExpr()
 {
-    
+    Accept(Tokens::LBracket);
 
+    /* Check for built-in type denoter */
+    if (Is(Tokens::BuiltinType))
+        return ParseCastExpr(false);
 
-    return nullptr;
+    if (Is(Tokens::Ident))
+    {
+        /* Parse identifier and then check for type denoter */
+        auto identTkn = AcceptIt();
+
+        if (Is(Tokens::LParen) || Is(Tokens::RBracket))
+            return ParseCastExpr(false, identTkn);
+
+        return ParseBracketExpr(false, identTkn);
+    }
+
+    /* Parse bracket expression */
+    return ParseBracketExpr(false);
 }
 
 // alloc_expr: 'new' type_denoter ctor_init?;
@@ -1193,10 +1245,38 @@ LiteralExprPtr Parser::ParseLiteralExpr()
     return ast;
 }
 
-// call_expr: proc_call;
-CallExprPtr Parser::ParseCallExpr(const VarNamePtr& varName)
+// bracket_expr: '(' expr ')';
+ExprPtr Parser::ParseBracketExpr(bool parseComplete, const TokenPtr& identTkn)
 {
-    auto ast = Make<CallExpr>();
+    if (parseComplete)
+        Accept(Tokens::LBracket);
+
+    auto ast = ParseExpr();
+    Accept(Tokens::RBracket);
+
+    return ast;
+}
+
+// cast_expr: '(' type_denoter ')' value_expr;
+CastExprPtr Parser::ParseCastExpr(bool parseComplete, const TokenPtr& identTkn)
+{
+    auto ast = Make<CastExpr>();
+
+    if (parseComplete)
+        Accept(Tokens::LBracket);
+    
+    ast->typeDenoter = ParseTypeDenoter(identTkn);
+    Accept(Tokens::RBracket);
+
+    ast->expr = ParseValueExpr();
+
+    return ast;
+}
+
+// call_expr: proc_call;
+ProcCallExprPtr Parser::ParseProcCallExpr(const VarNamePtr& varName)
+{
+    auto ast = Make<ProcCallExpr>();
 
     ast->procCall = ParseProcCall(varName);
 
@@ -1213,15 +1293,26 @@ VarAccessExprPtr Parser::ParseVarAccessExpr(const VarNamePtr& varName)
     return ast;
 }
 
+// member_call_expr: IDENT '(' arg_list? ')';
+MemberCallExprPtr Parser::ParseMemberCallExpr(const ExprPtr& objectExpr)
+{
+    auto ast = Make<MemberCallExpr>();
+
+    ast->objectExpr = objectExpr;
+    ast->procCall = ParseProcCall();
+
+    return ast;
+}
+
 /* --- Type denoters --- */
 
 // type_denoter : builtin_type_denoter | array_type_denoter | pointer_type_denoter;
-TypeDenoterPtr Parser::ParseTypeDenoter(const VarNamePtr& varName)
+TypeDenoterPtr Parser::ParseTypeDenoter(const TokenPtr& identTkn)
 {
     TypeDenoterPtr ast;
 
-    if (varName)
-        ast = ParsePointerTypeDenoter(varName);
+    if (identTkn)
+        ast = ParsePointerTypeDenoter(identTkn);
     else if (Is(Tokens::BuiltinType))
         ast = ParseBuiltinTypeDenoter();
     else if (Is(Tokens::Ident))
@@ -1236,14 +1327,14 @@ TypeDenoterPtr Parser::ParseTypeDenoter(const VarNamePtr& varName)
 }
 
 // return_type_denoter: VOID_TYPE_DENOTER | type_denoter;
-TypeDenoterPtr Parser::ParseReturnTypeDenoter(const VarNamePtr& varName)
+TypeDenoterPtr Parser::ParseReturnTypeDenoter(const TokenPtr& identTkn)
 {
     if (Is(Tokens::Void))
     {
         AcceptIt();
         return Make<BuiltinTypeDenoter>();
     }
-    return ParseTypeDenoter(varName);
+    return ParseTypeDenoter(identTkn);
 }
 
 // builtin_type_denoter: 'bool' | 'int' | 'float'
@@ -1257,11 +1348,11 @@ BuiltinTypeDenoterPtr Parser::ParseBuiltinTypeDenoter()
 }
 
 // pointer_type_denoter: var_name;
-PointerTypeDenoterPtr Parser::ParsePointerTypeDenoter(const VarNamePtr& varName)
+PointerTypeDenoterPtr Parser::ParsePointerTypeDenoter(const TokenPtr& identTkn)
 {
     auto ast = Make<PointerTypeDenoter>();
 
-    ast->declName = (varName != nullptr ? varName : ParseVarName());
+    ast->declIdent = (identTkn != nullptr ? identTkn->Spell() : AcceptIdent());
 
     return ast;
 }

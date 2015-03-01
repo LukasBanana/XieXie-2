@@ -10,7 +10,6 @@
 
 
 #include "SourceArea.h"
-#include "Console.h"
 #include "ASTDeclarations.h"
 #include "Visitor.h"
 
@@ -75,6 +74,7 @@ class AST
             /* --- Statements --- */
             ReturnStmnt,
             CtrlTransferStmnt,
+            ProcCallStmnt,
 
             IfStmnt,
             SwitchStmnt,
@@ -103,7 +103,7 @@ class AST
             UnaryExpr,
             LiteralExpr,
             CastExpr,
-            CallExpr,
+            ProcCallExpr,
             MemberCallExpr,
             AllocExpr,
             VarAccessExpr,

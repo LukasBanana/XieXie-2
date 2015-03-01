@@ -27,6 +27,9 @@ class Expr : public AST
         {
         }
 
+        // dast
+        TypeDenoterPtr typeDenoter;
+
 };
 
 

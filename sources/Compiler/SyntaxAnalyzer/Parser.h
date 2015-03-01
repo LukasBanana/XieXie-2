@@ -16,6 +16,7 @@
 #include <stack>
 #include <functional>
 #include <initializer_list>
+#include <fstream>
 
 
 namespace SyntaxAnalyzer
@@ -32,7 +33,8 @@ class Parser
         
         Parser() = default;
 
-        ProgramPtr ParseSource(const SourceCodePtr& source, ErrorReporter& errorReporter);
+        bool ParseSource(Program& program, const SourceCodePtr& source, ErrorReporter& errorReporter);
+        ProgramPtr ParseSource(const std::string& filename, ErrorReporter& errorReporter);
 
     private:
         
@@ -60,7 +62,8 @@ class Parser
 
         /* --- Common AST nodes --- */
 
-        ProgramPtr              ParseProgram();
+        void                    ParseProgram(std::vector<StmntPtr>& classDeclStmnts);
+
         CodeBlockPtr            ParseCodeBlock();
         VarNamePtr              ParseVarName(const TokenPtr& identTkn = nullptr);
         VarNamePtr              ParseTypeInheritance();
@@ -81,7 +84,7 @@ class Parser
         StmntPtr                ParseStmnt();
         StmntPtr                ParseDeclStmnt();
         StmntPtr                ParseExternDeclStmnt();
-        StmntPtr                ParseVarDeclOrAssignStmnt(const TokenPtr& identTkn = nullptr);
+        StmntPtr                ParseVarNameStmnt(TokenPtr identTkn = nullptr);
         StmntPtr                ParseVarDeclOrProcDeclStmnt();
         StmntPtr                ParseClassDeclOrProcDeclStmnt();
 
@@ -89,6 +92,7 @@ class Parser
         CtrlTransferStmntPtr    ParseBreakStmnt();
         CtrlTransferStmntPtr    ParseContinueStmnt();
         ReturnStmntPtr          ParseReturnStmnt();
+        ProcCallStmntPtr        ParseProcCallStmnt(const VarNamePtr& varName = nullptr);
 
         IfStmntPtr              ParseIfStmnt();
         IfStmntPtr              ParseElseStmnt();
@@ -105,7 +109,7 @@ class Parser
         StmntPtr                ParseClassDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
         ClassDeclStmntPtr       ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         ExternClassDeclStmntPtr ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
-        VarDeclStmntPtr         ParseVarDeclStmnt(const VarNamePtr& varName = nullptr);
+        VarDeclStmntPtr         ParseVarDeclStmnt(const TokenPtr& identTkn = nullptr);
         VarDeclStmntPtr         ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn);
         EnumDeclStmntPtr        ParseEnumDeclStmnt();
         FlagsDeclStmntPtr       ParseFlagsDeclStmnt();
@@ -142,23 +146,26 @@ class Parser
 
         ExprPtr                 ParseValueExpr(const TokenPtr& identTkn = nullptr);
         ExprPtr                 ParsePrimaryValueExpr(const TokenPtr& identTkn = nullptr);
-        ExprPtr                 ParseVarAccessOrCallExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseVarAccessOrProcCallExpr(const TokenPtr& identTkn = nullptr);
         ExprPtr                 ParseBracketOrCastExpr();
 
         AllocExprPtr            ParseAllocExpr();
         UnaryExprPtr            ParseUnaryExpr();
         InitListExprPtr         ParseInitListExpr();
         LiteralExprPtr          ParseLiteralExpr();
-        CallExprPtr             ParseCallExpr(const VarNamePtr& varName = nullptr);
+        ExprPtr                 ParseBracketExpr(bool parseComplete = true, const TokenPtr& identTkn = nullptr);
+        CastExprPtr             ParseCastExpr(bool parseComplete = true, const TokenPtr& identTkn = nullptr);
+        ProcCallExprPtr         ParseProcCallExpr(const VarNamePtr& varName = nullptr);
         VarAccessExprPtr        ParseVarAccessExpr(const VarNamePtr& varName = nullptr);
+        MemberCallExprPtr       ParseMemberCallExpr(const ExprPtr& objectExpr);
 
         /* --- Type denoters --- */
 
-        TypeDenoterPtr          ParseTypeDenoter(const VarNamePtr& varName = nullptr);
-        TypeDenoterPtr          ParseReturnTypeDenoter(const VarNamePtr& varName = nullptr);
+        TypeDenoterPtr          ParseTypeDenoter(const TokenPtr& identTkn = nullptr);
+        TypeDenoterPtr          ParseReturnTypeDenoter(const TokenPtr& identTkn = nullptr);
 
         BuiltinTypeDenoterPtr   ParseBuiltinTypeDenoter();
-        PointerTypeDenoterPtr   ParsePointerTypeDenoter(const VarNamePtr& varName = nullptr);
+        PointerTypeDenoterPtr   ParsePointerTypeDenoter(const TokenPtr& identTkn = nullptr);
         ArrayTypeDenoterPtr     ParseArrayTypeDenoter(const TypeDenoterPtr& lowerTypeDenoter);
 
         /* --- Lists --- */

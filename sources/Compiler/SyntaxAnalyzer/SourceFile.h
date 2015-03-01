@@ -25,6 +25,7 @@ class SourceFile : public SourceCode
     public:
         
         SourceFile() = default;
+        SourceFile(const std::string& filename);
 
         bool ReadFile(const std::string& filename);
 
