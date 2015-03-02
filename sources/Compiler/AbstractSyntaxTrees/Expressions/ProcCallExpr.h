@@ -23,7 +23,7 @@ class ProcCallExpr : public Expr
         
         AST_INTERFACE_EXT(ProcCallExpr, Expr);
 
-        TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
         ProcCallPtr procCall;
 

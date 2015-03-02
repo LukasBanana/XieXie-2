@@ -23,7 +23,7 @@ class VarAccessExpr : public Expr
         
         AST_INTERFACE_EXT(VarAccessExpr, Expr);
 
-        TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
         VarNamePtr varName;
 

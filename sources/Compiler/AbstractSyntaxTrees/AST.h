@@ -25,9 +25,7 @@ namespace AbstractSyntaxTrees
 using namespace SyntaxAnalyzer;
 
 
-#define AST_INTERFACE_EXT(name, super)                  \
-    name() = default;                                   \
-    name(const SourceArea& area) : super{ area } {}     \
+#define AST_INTERFACE_BASE(name)                        \
     Types Type() const override                         \
     {                                                   \
         return Types::name;                             \
@@ -36,6 +34,11 @@ using namespace SyntaxAnalyzer;
     {                                                   \
         visitor->Visit##name(this, args);               \
     }
+
+#define AST_INTERFACE_EXT(name, super)                  \
+    name() = default;                                   \
+    name(const SourceArea& area) : super{ area } {}     \
+    AST_INTERFACE_BASE(name)
 
 #define AST_INTERFACE(name) AST_INTERFACE_EXT(name, AST)
 
@@ -137,7 +140,7 @@ class AST
         Returns the type denoter for this AST node or null if the AST node has no type denoter,
         e.g. variable tpye, procedure return type etc.
         */
-        virtual TypeDenoter* GetTypeDenoter() const
+        virtual const TypeDenoter* GetTypeDenoter() const
         {
             return nullptr;
         }

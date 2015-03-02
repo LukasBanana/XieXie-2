@@ -11,6 +11,8 @@
 
 #include "Expr.h"
 
+#include <string>
+
 
 namespace AbstractSyntaxTrees
 {
@@ -32,10 +34,21 @@ class LiteralExpr : public Expr
 
         AST_INTERFACE_EXT(LiteralExpr, Expr);
 
-        //TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
-        std::string value;
-        Literals    type = Literals::Bool;
+        void SetType(const Literals type);
+
+        inline Literals GetType() const
+        {
+            return type_;
+        }
+
+        std::string     value;
+
+    private:
+        
+        Literals        type_ = Literals::Bool;
+        TypeDenoterPtr  thisTypeDenoter_; // type denoter for this literal expression
 
 };
 

@@ -27,7 +27,7 @@ class VarDecl : public Stmnt
         
         AST_INTERFACE_EXT(VarDecl, Stmnt);
 
-        TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
         std::string     ident;
         ExprPtr         initExpr;               // may be null

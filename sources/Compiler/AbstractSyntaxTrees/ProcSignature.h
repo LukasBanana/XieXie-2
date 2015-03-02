@@ -23,7 +23,7 @@ class ProcSignature : public AST
         
         AST_INTERFACE(ProcSignature);
 
-        TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
         bool                    isStatic = false;
         TypeDenoterPtr          returnTypeDenoter;          // may be null (for "void" type)

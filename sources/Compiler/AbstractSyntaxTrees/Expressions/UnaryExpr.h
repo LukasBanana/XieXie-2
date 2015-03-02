@@ -30,7 +30,7 @@ class UnaryExpr : public Expr
 
         AST_INTERFACE_EXT(UnaryExpr, Expr);
 
-        TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
         static Operators GetOperator(const std::string& spell);
         static std::string GetOperatorSpell(const Operators op);

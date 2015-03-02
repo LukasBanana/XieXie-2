@@ -23,7 +23,7 @@ class VarDeclStmnt : public Stmnt
         
         AST_INTERFACE_EXT(VarDeclStmnt, Stmnt);
 
-        TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
         bool                    isStatic = false;
         TypeDenoterPtr          typeDenoter;

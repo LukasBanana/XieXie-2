@@ -23,7 +23,7 @@ class VarName : public AST
         
         AST_INTERFACE(VarName);
 
-        TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
         //! Returns the full variable name; each identifier is separated by "sep".
         std::string FullName(const std::string& sep = ".") const;

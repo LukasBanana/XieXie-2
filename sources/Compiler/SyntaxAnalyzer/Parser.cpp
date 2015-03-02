@@ -1381,19 +1381,19 @@ LiteralExprPtr Parser::ParseLiteralExpr()
     switch (TknType())
     {
         case Tokens::BoolLiteral:
-            ast->type = LiteralExpr::Literals::Bool;
+            ast->SetType(LiteralExpr::Literals::Bool);
             break;
         case Tokens::IntLiteral:
-            ast->type = LiteralExpr::Literals::Int;
+            ast->SetType(LiteralExpr::Literals::Int);
             break;
         case Tokens::FloatLiteral:
-            ast->type = LiteralExpr::Literals::Float;
+            ast->SetType(LiteralExpr::Literals::Float);
             break;
         case Tokens::StringLiteral:
-            ast->type = LiteralExpr::Literals::String;
+            ast->SetType(LiteralExpr::Literals::String);
             break;
         case Tokens::PointerLiteral:
-            ast->type = LiteralExpr::Literals::Pointer;
+            ast->SetType(LiteralExpr::Literals::Pointer);
             break;
         default:
             ErrorUnexpected("expected literal expression");

@@ -47,7 +47,7 @@ template <typename T> std::string MapTypeToSpell(
 
 /* --- VarName --- */
 
-TypeDenoter* VarName::GetTypeDenoter() const
+const TypeDenoter* VarName::GetTypeDenoter() const
 {
     /* Return type denoter of the last variable name AST node */
     auto& last = GetLast();
@@ -72,7 +72,7 @@ const VarName& VarName::GetLast() const
 
 /* --- VarDecl --- */
 
-TypeDenoter* VarDecl::GetTypeDenoter() const
+const TypeDenoter* VarDecl::GetTypeDenoter() const
 {
     return parentRef != nullptr ? parentRef->GetTypeDenoter() : nullptr;
 }
@@ -80,7 +80,7 @@ TypeDenoter* VarDecl::GetTypeDenoter() const
 
 /* --- VarDeclStmnt --- */
 
-TypeDenoter* VarDeclStmnt::GetTypeDenoter() const
+const TypeDenoter* VarDeclStmnt::GetTypeDenoter() const
 {
     return typeDenoter.get();
 }
@@ -103,9 +103,34 @@ void CodeBlock::UpdateSourceArea()
 }
 
 
+/* --- LiteralExpr --- */
+
+const TypeDenoter* LiteralExpr::GetTypeDenoter() const
+{
+    return thisTypeDenoter_.get();
+}
+
+void LiteralExpr::SetType(const Literals type)
+{
+    type_ = type;
+    switch (type_)
+    {
+        case Literals::Bool:
+        case Literals::Int:
+        case Literals::Float:
+            thisTypeDenoter_ = std::make_shared<BuiltinTypeDenoter>();
+            break;
+        case Literals::String:
+        case Literals::Pointer:
+            thisTypeDenoter_ = std::make_shared<PointerTypeDenoter>();
+            break;
+    }
+}
+
+
 /* --- ProcSignature --- */
 
-TypeDenoter* ProcSignature::GetTypeDenoter() const
+const TypeDenoter* ProcSignature::GetTypeDenoter() const
 {
     return returnTypeDenoter.get();
 }
@@ -113,7 +138,7 @@ TypeDenoter* ProcSignature::GetTypeDenoter() const
 
 /* --- ProcDeclStmnt --- */
 
-TypeDenoter* ProcDeclStmnt::GetTypeDenoter() const
+const TypeDenoter* ProcDeclStmnt::GetTypeDenoter() const
 {
     return procSignature->GetTypeDenoter();
 }
@@ -121,7 +146,7 @@ TypeDenoter* ProcDeclStmnt::GetTypeDenoter() const
 
 /* --- ProcCallExpr --- */
 
-TypeDenoter* ProcCallExpr::GetTypeDenoter() const
+const TypeDenoter* ProcCallExpr::GetTypeDenoter() const
 {
     return procCall->GetTypeDenoter();
 }
@@ -129,7 +154,7 @@ TypeDenoter* ProcCallExpr::GetTypeDenoter() const
 
 /* --- MemberCallExpr --- */
 
-TypeDenoter* MemberCallExpr::GetTypeDenoter() const
+const TypeDenoter* MemberCallExpr::GetTypeDenoter() const
 {
     return procCall->GetTypeDenoter();
 }
@@ -137,7 +162,7 @@ TypeDenoter* MemberCallExpr::GetTypeDenoter() const
 
 /* --- UnaryExpr --- */
 
-TypeDenoter* UnaryExpr::GetTypeDenoter() const
+const TypeDenoter* UnaryExpr::GetTypeDenoter() const
 {
     return expr->GetTypeDenoter();
 }
@@ -145,7 +170,7 @@ TypeDenoter* UnaryExpr::GetTypeDenoter() const
 
 /* --- AllocExpr --- */
 
-TypeDenoter* AllocExpr::GetTypeDenoter() const
+const TypeDenoter* AllocExpr::GetTypeDenoter() const
 {
     return typeDenoter.get();
 }
@@ -153,9 +178,33 @@ TypeDenoter* AllocExpr::GetTypeDenoter() const
 
 /* --- VarAccessExpr --- */
 
-TypeDenoter* VarAccessExpr::GetTypeDenoter() const
+const TypeDenoter* VarAccessExpr::GetTypeDenoter() const
 {
     return varName->GetLast().GetTypeDenoter();
+}
+
+
+/* --- ClassDeclStmnt --- */
+
+const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const
+{
+    return &thisTypeDenoter_;
+}
+
+
+/* --- EnumDeclStmnt --- */
+
+const TypeDenoter* EnumDeclStmnt::GetTypeDenoter() const
+{
+    return &thisTypeDenoter_;
+}
+
+
+/* --- FlagsDeclStmnt --- */
+
+const TypeDenoter* FlagsDeclStmnt::GetTypeDenoter() const
+{
+    return &thisTypeDenoter_;
 }
 
 

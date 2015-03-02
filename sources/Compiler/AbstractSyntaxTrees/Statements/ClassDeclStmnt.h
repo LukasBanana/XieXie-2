@@ -10,6 +10,7 @@
 
 
 #include "ScopedStmnt.h"
+#include "PointerTypeDenoter.h"
 
 
 namespace AbstractSyntaxTrees
@@ -21,13 +22,30 @@ class ClassDeclStmnt : public ScopedStmnt
     
     public:
         
-        AST_INTERFACE_EXT(ClassDeclStmnt, ScopedStmnt);
+        AST_INTERFACE_BASE(ClassDeclStmnt);
+
+        ClassDeclStmnt()
+        {
+            thisTypeDenoter_.declRef = this;
+        }
+        ClassDeclStmnt(const SourceArea& area) :
+            ScopedStmnt{ area }
+        {
+            thisTypeDenoter_.declRef = this;
+        }
+
+        const TypeDenoter* GetTypeDenoter() const override;
 
         bool                                isExtern = false;
         AttribPrefixPtr                     attribPrefix;           // may be null
         std::string                         ident;
         VarNamePtr                          inheritanceTypeName;    // may be null
         std::vector<ClassBodySegmentPtr>    bodySegments;
+
+    private:
+
+        // dast
+        PointerTypeDenoter                  thisTypeDenoter_;       // type denoter for this class declaration
 
 };
 

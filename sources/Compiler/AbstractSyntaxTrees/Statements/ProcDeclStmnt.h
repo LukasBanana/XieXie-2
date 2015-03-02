@@ -23,7 +23,7 @@ class ProcDeclStmnt : public ScopedStmnt
         
         AST_INTERFACE_EXT(ProcDeclStmnt, ScopedStmnt);
 
-        TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
         AttribPrefixPtr         attribPrefix;   // may be null
         ProcSignaturePtr        procSignature;

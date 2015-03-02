@@ -23,7 +23,7 @@ class InitListExpr : public Expr
         
         AST_INTERFACE_EXT(InitListExpr, Expr);
 
-        //TypeDenoter* GetTypeDenoter() const override;
+        //const TypeDenoter* GetTypeDenoter() const override;
 
         std::vector<ExprPtr> exprs;
 

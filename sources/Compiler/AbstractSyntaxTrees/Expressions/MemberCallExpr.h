@@ -23,7 +23,7 @@ class MemberCallExpr : public Expr
         
         AST_INTERFACE_EXT(MemberCallExpr, Expr);
 
-        TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
         ExprPtr     objectExpr; // expression of the object instance, to which the member procedure belongs to.
         ProcCallPtr procCall;
