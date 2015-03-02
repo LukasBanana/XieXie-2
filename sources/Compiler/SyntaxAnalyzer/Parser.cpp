@@ -932,7 +932,7 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TokenPtr& identTkn, bool hasArra
 
     /* Forward decoration */
     for (auto& decl : ast->varDecls)
-        decl->declStmntRef = ast.get();
+        decl->parentRef = ast.get();
 
     return ast;
 }
@@ -956,7 +956,7 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, con
 
     /* Forward decoration */
     for (auto& decl : ast->varDecls)
-        decl->declStmntRef = ast.get();
+        decl->parentRef = ast.get();
 
     return ast;
 }

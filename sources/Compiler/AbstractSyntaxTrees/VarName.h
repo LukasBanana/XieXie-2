@@ -23,15 +23,20 @@ class VarName : public AST
         
         AST_INTERFACE(VarName);
 
+        TypeDenoter* GetTypeDenoter() const override;
+
         //! Returns the full variable name; each identifier is separated by "sep".
         std::string FullName(const std::string& sep = ".") const;
 
+        VarName& GetLast();
+        const VarName& GetLast() const;
+
         std::string     ident;
-        ArrayAccessPtr  arrayAccess;            // may be null
-        VarNamePtr      next;                   // may be null
+        ArrayAccessPtr  arrayAccess;        // may be null
+        VarNamePtr      next;               // may be null
 
         // dast
-        Stmnt*          declStmntRef = nullptr; // reference to the declaration statement
+        AST*            declRef = nullptr;  // reference to the declaration AST node for this (atomic) identifier.
 
 };
 

@@ -21,11 +21,14 @@ namespace ContextAnalyzer
 
 
 //! Common symbol table class with a single scope.
-template <typename OwnerType, typename SymbolType> class SymbolTable
+template <typename Owner, typename Symbol> class SymbolTable
 {
     
     public:
         
+        using OwnerType = Owner;
+        using SymbolType = Symbol;
+
         //! Override symbol callback procedure. Must return true to allow a symbol override.
         using OnOverrideProc = std::function<bool (SymbolType* symbol)>;
 

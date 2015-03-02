@@ -52,10 +52,10 @@ class Decorator : public Visitor
 
         /* --- Decoration --- */
 
-        Stmnt* FetchSymbolFromScope(const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast = nullptr);
-        Stmnt* FetchSymbol(const std::string& ident, const std::string& fullName, const AST* ast = nullptr);
+        StmntSymbolTable::SymbolType* FetchSymbolFromScope(const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast = nullptr);
+        StmntSymbolTable::SymbolType* FetchSymbol(const std::string& ident, const std::string& fullName, const AST* ast = nullptr);
         void VisitVarName(VarName& ast);
-        void DecorateVarName(VarName& ast, Stmnt* symbol, const std::string& fullName);
+        void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName);
         void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
 
         /* --- Symbol table --- */
@@ -66,7 +66,7 @@ class Decorator : public Visitor
         void OpenScope();
         void CloseScope();
 
-        void RegisterSymbol(const std::string& ident, Stmnt* symbol);
+        void RegisterSymbol(const std::string& ident, StmntSymbolTable::SymbolType* symbol);
 
         /* --- States --- */
 

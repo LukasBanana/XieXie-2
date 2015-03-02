@@ -93,12 +93,10 @@ DEF_VISIT_PROC(Decorator, CodeBlock)
     CloseScope();
 }
 
+// exceptional AST node decoration for VarName
 DEF_VISIT_PROC(Decorator, VarName)
 {
     VisitVarName(*ast);
-
-    Visit(ast->arrayAccess);
-    Visit(ast->next);
 }
 
 DEF_VISIT_PROC(Decorator, VarDecl)
@@ -109,7 +107,8 @@ DEF_VISIT_PROC(Decorator, VarDecl)
 
 DEF_VISIT_PROC(Decorator, Param)
 {
-    //if (IsAnalyzeCode())
+    if (IsAnalyzeCode())
+        RegisterSymbol(ast->ident, ast);
 }
 
 DEF_VISIT_PROC(Decorator, Arg)
@@ -407,12 +406,13 @@ DEF_VISIT_PROC(Decorator, PointerTypeDenoter)
 {
     auto symbol = FetchSymbol(ast->declIdent, ast->declIdent, ast);
     if (symbol)
-        ast->declStmntRef = symbol;
+        ast->declRef = symbol;
 }
 
 /* --- Decoration --- */
 
-Stmnt* Decorator::FetchSymbolFromScope(const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast)
+StmntSymbolTable::SymbolType* Decorator::FetchSymbolFromScope(
+    const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast)
 {
     auto symbol = symTab.Fetch(ident);
     if (!symbol)
@@ -420,7 +420,8 @@ Stmnt* Decorator::FetchSymbolFromScope(const std::string& ident, StmntSymbolTabl
     return symbol;
 }
 
-Stmnt* Decorator::FetchSymbol(const std::string& ident, const std::string& fullName, const AST* ast)
+StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
+    const std::string& ident, const std::string& fullName, const AST* ast)
 {
     /* Search in scope */
     auto symbol = symTab_->Fetch(ident);
@@ -450,10 +451,13 @@ void Decorator::VisitVarName(VarName& ast)
     }
 }
 
-void Decorator::DecorateVarName(VarName& ast, Stmnt* symbol, const std::string& fullName)
+void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName)
 {
     /* Decorate AST node */
-    ast.declStmntRef = symbol;
+    ast.declRef = symbol;
+
+    /* Visit array access AST node */
+    Visit(ast.arrayAccess);
 
     /* Decorate sub AST node */
     if (ast.next)
@@ -524,7 +528,7 @@ void Decorator::CloseScope()
     symTab_->CloseScope();
 }
 
-void Decorator::RegisterSymbol(const std::string& ident, Stmnt* symbol)
+void Decorator::RegisterSymbol(const std::string& ident, StmntSymbolTable::SymbolType* symbol)
 {
     try
     {

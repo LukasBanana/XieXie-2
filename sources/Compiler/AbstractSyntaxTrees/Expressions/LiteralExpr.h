@@ -32,6 +32,8 @@ class LiteralExpr : public Expr
 
         AST_INTERFACE_EXT(LiteralExpr, Expr);
 
+        //TypeDenoter* GetTypeDenoter() const override;
+
         std::string value;
         Literals    type = Literals::Bool;
 

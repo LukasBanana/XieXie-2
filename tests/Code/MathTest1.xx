@@ -16,7 +16,7 @@ extern class Math {
 
 extern class Log {
 	
-	static void writeLn(String msg)
+	static void writeLine(String msg)
 	
 }
 
@@ -59,6 +59,8 @@ class Test {
 		return fibonacci(n - 1) + fibonacci(n - 2)
 	}
 	
+	static void fire() {}
+	
 	static void onMouseDown(int button) {
 		if button = 1 {
 			fire()
@@ -69,6 +71,8 @@ class Test {
 	static int main(String[] args) {
 		
 		Vector3[] coords := new Vector3[](100)
+		
+		//coords[0].toString().toString()
 		
 		String str1 := "Hello"
 		String str2 := new String("World")

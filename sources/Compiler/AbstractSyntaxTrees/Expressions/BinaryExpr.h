@@ -45,6 +45,8 @@ class BinaryExpr : public Expr
 
         AST_INTERFACE_EXT(BinaryExpr, Expr);
 
+        //TypeDenoter* GetTypeDenoter() const override;
+
         static Operators GetOperator(const std::string& spell);
         static std::string GetOperatorSpell(const Operators op);
 

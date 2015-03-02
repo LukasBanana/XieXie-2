@@ -113,7 +113,6 @@ class Token
             Visibility,     //!< public, private
             Static,         //!< static
             Init,           //!< init
-            Release,        //!< release
 
             Enum,           //!< enum
             Flags,          //!< flags
@@ -121,7 +120,7 @@ class Token
             New,            //!< new
 
             // Reserved keywords (for later use)
-            Reserved,       //!< abstract, package, alias, pattern, sync, byte, ubyte, short, ushort, uint, long, ulong, double, const
+            Reserved,       //!< abstract, package, alias, pattern, sync, byte, ubyte, short, ushort, uint, long, ulong, double, const, release
 
             // Special tokens
             EndOfFile,

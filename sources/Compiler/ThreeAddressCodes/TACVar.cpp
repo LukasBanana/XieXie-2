@@ -16,7 +16,7 @@ namespace ThreeAddressCodes
 TACVar::IdType TACVar::idCounter_ = 0;
 
 TACVar::TACVar() :
-    id(++TACVar::idCounter_)
+    id{ ++TACVar::idCounter_ }
 {
 }
 

@@ -210,9 +210,6 @@ class AppTest {
 		//bool b2 := (a = b = c) = b1
 		bool b3 := (a = b and b = c) = b1
 		
-		// Constants
-		int const_x := 42
-		
 		// Arrays
 		int[][] arrayList := new int[][](2)
 		

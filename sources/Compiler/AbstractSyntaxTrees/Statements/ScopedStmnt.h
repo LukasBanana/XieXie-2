@@ -21,25 +21,18 @@ namespace AbstractSyntaxTrees
 
 class ScopedStmnt;
 
-using StmntSymbolTable = ContextAnalyzer::SymbolTable<ScopedStmnt, Stmnt>;
+//! Default type for the symbol table for scoped statements.
+using StmntSymbolTable = ContextAnalyzer::SymbolTable<ScopedStmnt, AST>;
 
+/**
+Abstract statement which has a scope (or rather namespace),
+such as procedure or class declaration statements.
+*/
 class ScopedStmnt : public Stmnt
 {
     
     public:
         
-        Stmnt* FetchSymbol(const VarName& varName) const override
-        {
-            auto ast = symTab.Fetch(varName.ident);
-            if (ast)
-            {
-                if (varName.next)
-                    return ast->FetchSymbol(*varName.next);
-                return ast;
-            }
-            return nullptr;
-        }
-
         // dast
         StmntSymbolTable symTab; // symbol table (contains declarations)
 

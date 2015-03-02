@@ -7,17 +7,17 @@ stop
 
 str_lit0: .ascii "Hello, World!"
 
-Object._vtable:
-	.word @Object.Equals
-	.word @Object.ToString
+CObject._vtable:
+	.word @CObject.Pequals,R@CObject
+	.word @CObject.PtoString
 
-String._vtable:
-	.word @Object.Equals
-	.word @Object.ToString
-	.word @String.Size
+CString._vtable:
+	.word @Object.Pequals,R@CObject
+	.word @Object.PtoString
+	.word @CString.Psize
 
 ; int String.Size()
-String.Size:
+CString.Psize:
 	ldw $r0, ($lb) -4 ; r0 := this
 	xor $r2, $r2
 	xor $r3, $r3
@@ -32,13 +32,13 @@ String.Size:
 	push $r3
 	ret (1) 0
 
-; bool Object.Equals(ptr)
-Object.Equals:
+; bool Object.equals(ptr)
+CObject.Pequals,R@CObject:
 	push 0
 	ret (1) 1
 
-; ptr Object.ToString()
-Object.ToString:
+; ptr Object.toString()
+CObject.PtoString:
 	push 0
 	ret (1) 0
 
@@ -46,7 +46,7 @@ Main.Main:
 	lda $r0, @str_lit0
 	push $r0 ; push str.this
 	; r0 := str.Size()
-	lda $r0, @String._vtable
+	lda $r0, @CString._vtable
 	ldw $r0, ($r0) 8
 	call $r0
 	call <PrintInt>

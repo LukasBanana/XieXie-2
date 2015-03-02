@@ -23,7 +23,7 @@ class CodeBlock : public AST
         
         AST_INTERFACE(CodeBlock);
 
-        void RefreshSourceArea();
+        void UpdateSourceArea();
 
         std::vector<StmntPtr> stmnts;
 

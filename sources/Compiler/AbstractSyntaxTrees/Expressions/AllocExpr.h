@@ -23,6 +23,8 @@ class AllocExpr : public Expr
         
         AST_INTERFACE_EXT(AllocExpr, Expr);
 
+        TypeDenoter* GetTypeDenoter() const override;
+
         TypeDenoterPtr      typeDenoter;
         std::vector<ArgPtr> ctorArgs;
 

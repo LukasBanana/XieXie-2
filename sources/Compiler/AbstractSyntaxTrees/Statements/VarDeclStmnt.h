@@ -23,6 +23,8 @@ class VarDeclStmnt : public Stmnt
         
         AST_INTERFACE_EXT(VarDeclStmnt, Stmnt);
 
+        TypeDenoter* GetTypeDenoter() const override;
+
         bool                    isStatic = false;
         TypeDenoterPtr          typeDenoter;
         std::vector<VarDeclPtr> varDecls;

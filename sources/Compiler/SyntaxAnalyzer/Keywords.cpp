@@ -56,7 +56,6 @@ static KeywordMapType GenerateKeywordMap()
         { "private",    Ty::Visibility     },
         { "static",     Ty::Static         },
         { "init",       Ty::Init           },
-        { "release",    Ty::Release        },
 
         { "enum",       Ty::Enum           },
         { "flags",      Ty::Flags          },
@@ -77,6 +76,7 @@ static KeywordMapType GenerateKeywordMap()
         { "ulong",      Ty::Reserved       },
         { "double",     Ty::Reserved       },
         { "const",      Ty::Reserved       },
+        { "release",    Ty::Reserved       },
     };
 }
 

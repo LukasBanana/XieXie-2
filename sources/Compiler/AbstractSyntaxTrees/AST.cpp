@@ -5,15 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "BuiltinTypeDenoter.h"
-#include "PostOperatorStmnt.h"
-#include "ModifyAssignStmnt.h"
-#include "UnaryExpr.h"
-#include "BinaryExpr.h"
-#include "CodeBlock.h"
-#include "Stmnt.h"
-#include "VarName.h"
-#include "ClassBodySegment.h"
+#include "ASTImport.h"
 
 #include <exception>
 #include <initializer_list>
@@ -55,26 +47,115 @@ template <typename T> std::string MapTypeToSpell(
 
 /* --- VarName --- */
 
+TypeDenoter* VarName::GetTypeDenoter() const
+{
+    /* Return type denoter of the last variable name AST node */
+    auto& last = GetLast();
+    return last.declRef != nullptr ? last.declRef->GetTypeDenoter() : nullptr;
+}
+
 std::string VarName::FullName(const std::string& sep) const
 {
-    return (next != nullptr) ? (ident + sep + next->FullName(sep)) : ident;
+    return next != nullptr ? (ident + sep + next->FullName(sep)) : ident;
+}
+
+VarName& VarName::GetLast()
+{
+    return next != nullptr ? next->GetLast() : *this;
+}
+
+const VarName& VarName::GetLast() const
+{
+    return next != nullptr ? next->GetLast() : *this;
+}
+
+
+/* --- VarDecl --- */
+
+TypeDenoter* VarDecl::GetTypeDenoter() const
+{
+    return parentRef != nullptr ? parentRef->GetTypeDenoter() : nullptr;
+}
+
+
+/* --- VarDeclStmnt --- */
+
+TypeDenoter* VarDeclStmnt::GetTypeDenoter() const
+{
+    return typeDenoter.get();
 }
 
 
 /* --- CodeBlock --- */
 
-void CodeBlock::RefreshSourceArea()
+void CodeBlock::UpdateSourceArea()
 {
     if (!stmnts.empty())
     {
         /* Refresh source area of statements first */
         for (auto& ast : stmnts)
-            ast->RefreshSourceArea();
+            ast->UpdateSourceArea();
 
         /* Set source area to the begin and end of the statement list */
         sourceArea.start    = stmnts.front()->sourceArea.start;
         sourceArea.end      = stmnts.back()->sourceArea.end;
     }
+}
+
+
+/* --- ProcSignature --- */
+
+TypeDenoter* ProcSignature::GetTypeDenoter() const
+{
+    return returnTypeDenoter.get();
+}
+
+
+/* --- ProcDeclStmnt --- */
+
+TypeDenoter* ProcDeclStmnt::GetTypeDenoter() const
+{
+    return procSignature->GetTypeDenoter();
+}
+
+
+/* --- ProcCallExpr --- */
+
+TypeDenoter* ProcCallExpr::GetTypeDenoter() const
+{
+    return procCall->GetTypeDenoter();
+}
+
+
+/* --- MemberCallExpr --- */
+
+TypeDenoter* MemberCallExpr::GetTypeDenoter() const
+{
+    return procCall->GetTypeDenoter();
+}
+
+
+/* --- UnaryExpr --- */
+
+TypeDenoter* UnaryExpr::GetTypeDenoter() const
+{
+    return expr->GetTypeDenoter();
+}
+
+
+/* --- AllocExpr --- */
+
+TypeDenoter* AllocExpr::GetTypeDenoter() const
+{
+    return typeDenoter.get();
+}
+
+
+/* --- VarAccessExpr --- */
+
+TypeDenoter* VarAccessExpr::GetTypeDenoter() const
+{
+    return varName->GetLast().GetTypeDenoter();
 }
 
 

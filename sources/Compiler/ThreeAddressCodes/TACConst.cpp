@@ -14,35 +14,35 @@ namespace ThreeAddressCodes
 
 
 TACConst::TACConst(bool boolean) :
-    type_       ( ValueTypes::Boolean        ),
-    boolean_    ( boolean                    ),
-    integral_   ( boolean ? 1 : 0            ),
-    real_       ( boolean ? 1.0f : 0.0f      ),
-    string_     ( boolean ? "true" : "false" )
+    type_       { ValueTypes::Boolean        },
+    boolean_    { boolean                    },
+    integral_   { boolean ? 1 : 0            },
+    real_       { boolean ? 1.0f : 0.0f      },
+    string_     { boolean ? "true" : "false" }
 {
 }
 TACConst::TACConst(int integral) :
-    type_       ( ValueTypes::Integral         ),
-    boolean_    ( integral != 0                ),
-    integral_   ( integral                     ),
-    real_       ( static_cast<float>(integral) ),
-    string_     ( ToStr(integral)              )
+    type_       { ValueTypes::Integral         },
+    boolean_    { integral != 0                },
+    integral_   { integral                     },
+    real_       { static_cast<float>(integral) },
+    string_     { ToStr(integral)              }
 {
 }
 TACConst::TACConst(float real) :
-    type_       ( ValueTypes::Real       ),
-    boolean_    ( real != 0.0f           ),
-    integral_   ( static_cast<int>(real) ),
-    real_       ( real                   ),
-    string_     ( ToStr(real)            )
+    type_       { ValueTypes::Real       },
+    boolean_    { real != 0.0f           },
+    integral_   { static_cast<int>(real) },
+    real_       { real                   },
+    string_     { ToStr(real)            }
 {
 }
 TACConst::TACConst(const std::string& str) :
-    type_       ( ValueTypes::String   ),
-    boolean_    ( str == "true"        ),
-    integral_   ( StrToNum<int>(str)   ),
-    real_       ( StrToNum<float>(str) ),
-    string_     ( str                  )
+    type_       { ValueTypes::String   },
+    boolean_    { str == "true"        },
+    integral_   { StrToNum<int>(str)   },
+    real_       { StrToNum<float>(str) },
+    string_     { str                  }
 {
 }
 

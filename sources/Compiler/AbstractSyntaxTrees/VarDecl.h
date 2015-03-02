@@ -27,11 +27,13 @@ class VarDecl : public Stmnt
         
         AST_INTERFACE_EXT(VarDecl, Stmnt);
 
+        TypeDenoter* GetTypeDenoter() const override;
+
         std::string     ident;
         ExprPtr         initExpr;               // may be null
 
         // dast
-        VarDeclStmnt*   declStmntRef = nullptr; // base declaration statement (this is already decorated inside the parser)
+        VarDeclStmnt*   parentRef = nullptr;    // reference to the AST node's parent declaration statement (this is already decorated inside the parser)
 
 };
 
