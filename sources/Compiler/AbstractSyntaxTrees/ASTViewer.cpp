@@ -9,11 +9,14 @@
 #include "ASTImport.h"
 #include "Log.h"
 #include "StringModifier.h"
+#include "ConsoleManip.h"
 
 
 namespace AbstractSyntaxTrees
 {
 
+
+using namespace Platform::ConsoleManip;
 
 ASTViewer::ASTViewer(Log& log) :
     log_{ log }
@@ -35,8 +38,17 @@ void ASTViewer::ViewProgram(Program& ast, bool showPos)
     Info(info, ast);    \
     SCOPED_INDENT(log_)
 
+#define AST_INFO_COLOR(info, color) \
+    PushColor(color);               \
+    Info(info, ast);                \
+    PopColor();                     \
+    SCOPED_INDENT(log_)
+
 #define AST_VALUE(ident)    Value(#ident, ToStr(ast->ident))
 #define AST_STRING(ident)   String(#ident, ast->ident)
+
+static const Color::ValueType colorStmnt    = Color::Yellow;
+static const Color::ValueType colorExpr     = Color::Red | Color::Intens;
 
 /* --- Common AST nodes --- */
 
@@ -143,25 +155,25 @@ DEF_VISIT_PROC(ASTViewer, SwitchCase)
 
 DEF_VISIT_PROC(ASTViewer, ReturnStmnt)
 {
-    AST_INFO("ReturnStmnt");
+    AST_INFO_COLOR("ReturnStmnt", colorStmnt);
     Visit(ast->expr);
 }
 
 DEF_VISIT_PROC(ASTViewer, CtrlTransferStmnt)
 {
-    AST_INFO("CtrlTransferStmnt");
-    //ast->ctrlTransfer!!!
+    AST_INFO_COLOR("CtrlTransferStmnt", colorStmnt);
+    String("ctrlTransfer", CtrlTransferStmnt::GetTransferSpell(ast->ctrlTransfer));
 }
 
 DEF_VISIT_PROC(ASTViewer, ProcCallStmnt)
 {
-    AST_INFO("ProcCallStmnt");
+    AST_INFO_COLOR("ProcCallStmnt", colorStmnt);
     Visit(ast->procCall);
 }
 
 DEF_VISIT_PROC(ASTViewer, IfStmnt)
 {
-    AST_INFO("IfStmnt");
+    AST_INFO_COLOR("IfStmnt", colorStmnt);
     Visit(ast->condExpr);
     Visit(ast->codeBlock);
     Visit(ast->elseStmnt);
@@ -169,28 +181,28 @@ DEF_VISIT_PROC(ASTViewer, IfStmnt)
 
 DEF_VISIT_PROC(ASTViewer, SwitchStmnt)
 {
-    AST_INFO("SwitchStmnt");
+    AST_INFO_COLOR("SwitchStmnt", colorStmnt);
     Visit(ast->expr);
     Visit(ast->cases);
 }
 
 DEF_VISIT_PROC(ASTViewer, DoWhileStmnt)
 {
-    AST_INFO("DoWhileStmnt");
+    AST_INFO_COLOR("DoWhileStmnt", colorStmnt);
     Visit(ast->codeBlock);
     Visit(ast->condExpr);
 }
 
 DEF_VISIT_PROC(ASTViewer, WhileStmnt)
 {
-    AST_INFO("WhileStmnt");
+    AST_INFO_COLOR("WhileStmnt", colorStmnt);
     Visit(ast->condExpr);
     Visit(ast->codeBlock);
 }
 
 DEF_VISIT_PROC(ASTViewer, ForStmnt)
 {
-    AST_INFO("ForStmnt");
+    AST_INFO_COLOR("ForStmnt", colorStmnt);
     Visit(ast->initStmnt);
     Visit(ast->condExpr);
     Visit(ast->assignStmnt);
@@ -199,7 +211,7 @@ DEF_VISIT_PROC(ASTViewer, ForStmnt)
 
 DEF_VISIT_PROC(ASTViewer, ForRangeStmnt)
 {
-    AST_INFO("ForRangeStmnt");
+    AST_INFO_COLOR("ForRangeStmnt", colorStmnt);
     AST_STRING(varIdent);
     AST_VALUE(rangeStart);
     AST_VALUE(rangeEnd);
@@ -209,7 +221,7 @@ DEF_VISIT_PROC(ASTViewer, ForRangeStmnt)
 
 DEF_VISIT_PROC(ASTViewer, ForEachStmnt)
 {
-    AST_INFO("ForEachStmnt");
+    AST_INFO_COLOR("ForEachStmnt", colorStmnt);
     Visit(ast->varDeclStmnt);
     Visit(ast->listExpr);
     Visit(ast->codeBlock);
@@ -217,13 +229,13 @@ DEF_VISIT_PROC(ASTViewer, ForEachStmnt)
 
 DEF_VISIT_PROC(ASTViewer, ForEverStmnt)
 {
-    AST_INFO("ForEverStmnt");
+    AST_INFO_COLOR("ForEverStmnt", colorStmnt);
     Visit(ast->codeBlock);
 }
 
 DEF_VISIT_PROC(ASTViewer, ClassDeclStmnt)
 {
-    AST_INFO("ClassDeclStmnt");
+    AST_INFO_COLOR("ClassDeclStmnt", colorStmnt);
     Visit(ast->attribPrefix);
     AST_STRING(ident);
     Visit(ast->inheritanceTypeName);
@@ -232,21 +244,21 @@ DEF_VISIT_PROC(ASTViewer, ClassDeclStmnt)
 
 DEF_VISIT_PROC(ASTViewer, VarDeclStmnt)
 {
-    AST_INFO("VarDeclStmnt");
+    AST_INFO_COLOR("VarDeclStmnt", colorStmnt);
     Visit(ast->typeDenoter);
     Visit(ast->varDecls);
 }
 
 DEF_VISIT_PROC(ASTViewer, EnumDeclStmnt)
 {
-    AST_INFO("EnumDeclStmnt");
+    AST_INFO_COLOR("EnumDeclStmnt", colorStmnt);
     AST_STRING(ident);
     Visit(ast->entries);
 }
 
 DEF_VISIT_PROC(ASTViewer, FlagsDeclStmnt)
 {
-    AST_INFO("FlagsDeclStmnt");
+    AST_INFO_COLOR("FlagsDeclStmnt", colorStmnt);
     AST_STRING(ident);
     for (const auto& entry : ast->entries)
         String("entry", entry);
@@ -254,7 +266,7 @@ DEF_VISIT_PROC(ASTViewer, FlagsDeclStmnt)
 
 DEF_VISIT_PROC(ASTViewer, ProcDeclStmnt)
 {
-    AST_INFO("ProcDeclStmnt");
+    AST_INFO_COLOR("ProcDeclStmnt", colorStmnt);
     Visit(ast->attribPrefix);
     Visit(ast->procSignature);
     Visit(ast->codeBlock);
@@ -262,7 +274,7 @@ DEF_VISIT_PROC(ASTViewer, ProcDeclStmnt)
 
 DEF_VISIT_PROC(ASTViewer, InitDeclStmnt)
 {
-    AST_INFO("InitDeclStmnt");
+    AST_INFO_COLOR("InitDeclStmnt", colorStmnt);
     Visit(ast->attribPrefix);
     Visit(ast->params);
     Visit(ast->codeBlock);
@@ -270,14 +282,14 @@ DEF_VISIT_PROC(ASTViewer, InitDeclStmnt)
 
 DEF_VISIT_PROC(ASTViewer, CopyAssignStmnt)
 {
-    AST_INFO("CopyAssignStmnt");
+    AST_INFO_COLOR("CopyAssignStmnt", colorStmnt);
     Visit(ast->varNames);
     Visit(ast->expr);
 }
 
 DEF_VISIT_PROC(ASTViewer, ModifyAssignStmnt)
 {
-    AST_INFO("ModifyAssignStmnt");
+    AST_INFO_COLOR("ModifyAssignStmnt", colorStmnt);
     Visit(ast->varName);
     //ast->modifyOperator!!!
     Visit(ast->expr);
@@ -285,7 +297,7 @@ DEF_VISIT_PROC(ASTViewer, ModifyAssignStmnt)
 
 DEF_VISIT_PROC(ASTViewer, PostOperatorStmnt)
 {
-    AST_INFO("PostOperatorStmnt");
+    AST_INFO_COLOR("PostOperatorStmnt", colorStmnt);
     Visit(ast->varName);
     //ast->postOperator!!!
 }
@@ -294,7 +306,7 @@ DEF_VISIT_PROC(ASTViewer, PostOperatorStmnt)
 
 DEF_VISIT_PROC(ASTViewer, BinaryExpr)
 {
-    AST_INFO("BinaryExpr");
+    AST_INFO_COLOR("BinaryExpr", colorExpr);
     Visit(ast->lhsExpr);
     String("binaryOperator", BinaryExpr::GetOperatorSpell(ast->binaryOperator));
     Visit(ast->rhsExpr);
@@ -302,53 +314,53 @@ DEF_VISIT_PROC(ASTViewer, BinaryExpr)
 
 DEF_VISIT_PROC(ASTViewer, UnaryExpr)
 {
-    AST_INFO("UnaryExpr");
+    AST_INFO_COLOR("UnaryExpr", colorExpr);
     String("unaryOperator", UnaryExpr::GetOperatorSpell(ast->unaryOperator));
     Visit(ast->expr);
 }
 
 DEF_VISIT_PROC(ASTViewer, LiteralExpr)
 {
-    AST_INFO("LiteralExpr");
+    AST_INFO_COLOR("LiteralExpr", colorExpr);
     AST_STRING(value);
 }
 
 DEF_VISIT_PROC(ASTViewer, CastExpr)
 {
-    AST_INFO("CastExpr");
+    AST_INFO_COLOR("CastExpr", colorExpr);
     Visit(ast->typeDenoter);
     Visit(ast->expr);
 }
 
 DEF_VISIT_PROC(ASTViewer, ProcCallExpr)
 {
-    AST_INFO("ProcCallExpr");
+    AST_INFO_COLOR("ProcCallExpr", colorExpr);
     Visit(ast->procCall);
 }
 
 DEF_VISIT_PROC(ASTViewer, MemberCallExpr)
 {
-    AST_INFO("MemberCallExpr");
+    AST_INFO_COLOR("MemberCallExpr", colorExpr);
     Visit(ast->objectExpr);
     Visit(ast->procCall);
 }
 
 DEF_VISIT_PROC(ASTViewer, AllocExpr)
 {
-    AST_INFO("AllocExpr");
+    AST_INFO_COLOR("AllocExpr", colorExpr);
     Visit(ast->typeDenoter);
     Visit(ast->ctorArgs);
 }
 
 DEF_VISIT_PROC(ASTViewer, VarAccessExpr)
 {
-    AST_INFO("VarAccessExpr");
+    AST_INFO_COLOR("VarAccessExpr", colorExpr);
     Visit(ast->varName);
 }
 
 DEF_VISIT_PROC(ASTViewer, InitListExpr)
 {
-    AST_INFO("InitListExpr");
+    AST_INFO_COLOR("InitListExpr", colorExpr);
     Visit(ast->exprs);
 }
 
@@ -384,12 +396,17 @@ void ASTViewer::Info(const std::string& info, const AST* ast)
 
 void ASTViewer::Value(const std::string& ident, const std::string& value)
 {
-    Info(ident + " = " + value);
+    log_.StartLn();
+    log_.Print(ident + " = ");
+    PushColor(Color::Pink);
+    log_.Print(value);
+    PopColor();
+    log_.EndLn();
 }
 
 void ASTViewer::String(const std::string& ident, const std::string& value)
 {
-    Info(ident + " = \"" + value + "\"");
+    Value(ident, "\"" + value + "\"");
 }
 
 #undef AST_INFO

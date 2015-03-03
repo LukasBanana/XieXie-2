@@ -1,0 +1,32 @@
+
+// XieXie 2.0 Code Test 2
+// 03/03/2015
+
+extern class String {}
+
+class CodeTest2 {
+	
+	static void main() {
+		
+		for i : 1 .. 10 {
+			if i = 3 {
+				continue
+			} else if i > 5 {
+				break
+			}
+		}
+		
+		int i // 1st i
+		for int i := 0 ; i < 10 ; i++ { // 2nd i
+			break
+		}
+		for i := 0 ; i < 10 ; i++ { // 1st i
+			break
+		}
+		
+		String s := "test"
+		
+	}
+	
+}
+

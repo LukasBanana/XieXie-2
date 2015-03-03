@@ -222,6 +222,21 @@ BuiltinTypeDenoter::TypeNames BuiltinTypeDenoter::GetTypeName(const std::string&
 }
 
 
+/* --- CtrlTransferStmnt --- */
+
+std::string CtrlTransferStmnt::GetTransferSpell(const Transfers transfer)
+{
+    switch (transfer)
+    {
+        case Transfers::Break:
+            return "break";
+        case Transfers::Continue:
+            return "continue";
+    }
+    return "";
+}
+
+
 /* --- PostOperatorStmnt --- */
 
 PostOperatorStmnt::Operators PostOperatorStmnt::GetOperator(const std::string& spell)

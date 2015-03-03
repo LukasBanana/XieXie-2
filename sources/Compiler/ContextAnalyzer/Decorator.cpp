@@ -254,6 +254,8 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
         case States::RegisterMemberSymbols:
             PushSymTab(*ast);
             {
+                Visit(ast->attribPrefix);
+                Visit(ast->inheritanceTypeName);
                 Visit(ast->bodySegments);
             }
             PopSymTab();
@@ -262,8 +264,6 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
         case States::AnalyzeCode:
             PushSymTab(*ast);
             {
-                Visit(ast->attribPrefix);
-                Visit(ast->inheritanceTypeName);
                 Visit(ast->bodySegments);
             }
             PopSymTab();

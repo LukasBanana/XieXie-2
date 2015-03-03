@@ -41,12 +41,21 @@ file(GLOB FilesCompilerOptimizerDCE				${PROJECT_SOURCE_DIR}/Compiler/Optimizer/
 file(GLOB FilesCompilerSyntaxAnalyzer			${PROJECT_SOURCE_DIR}/Compiler/SyntaxAnalyzer/*.*)
 file(GLOB FilesCompilerTAC						${PROJECT_SOURCE_DIR}/Compiler/ThreeAddressCodes/*.*)
 
+file(GLOB FilesPlatform ${PROJECT_SOURCE_DIR}/Platform/*.*)
+if(WIN32)
+	file(GLOB FilesPlatformDependent ${PROJECT_SOURCE_DIR}/Platform/Win32/*.*)
+else()
+	file(GLOB FilesPlatformDependent ${PROJECT_SOURCE_DIR}/Platform/Null/*.*)
+endif()
+
 set(
 	FilesAll
 	
 	${FilesBaseAll}
 	${FilesCompilerAll}
 	${FilesShellAll}
+	${FilesPlatform}
+	${FilesPlatformDependent}
 )
 
 
@@ -80,6 +89,10 @@ source_group("Compiler\\ThreeAddressCodes" FILES ${FilesCompilerTAC})
 
 source_group("Shell" FILES ${FilesShellAll})
 
+# --- Platform ---
+
+source_group("Platform" FILES ${FilesPlatform} ${FilesPlatformDependent})
+
 # --- Virtual Machine ---
 
 source_group("VirtualMachine" FILES ${FilesVirtualMachineAll})
@@ -93,14 +106,13 @@ include_directories("${PROJECT_SOURCE_DIR}/Compiler")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/Assembler")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Expressions")
-include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Literals")
-include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Objects")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/Statements")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/AbstractSyntaxTrees/TypeDenoters")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/CodeGenerator")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/ContextAnalyzer")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/SyntaxAnalyzer")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/ThreeAddressCodes")
+include_directories("${PROJECT_SOURCE_DIR}/Platform")
 include_directories("${PROJECT_SOURCE_DIR}/Shell")
 
 

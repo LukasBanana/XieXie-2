@@ -29,6 +29,8 @@ class CtrlTransferStmnt : public Stmnt
 
         AST_INTERFACE_EXT(CtrlTransferStmnt, Stmnt);
 
+        static std::string GetTransferSpell(const Transfers transfer);
+
         Transfers ctrlTransfer = Transfers::Break; // "break" or "continue"
 
 };
