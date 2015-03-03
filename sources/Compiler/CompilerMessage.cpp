@@ -21,20 +21,20 @@ CompilerMessage::CompilerMessage(const std::string& message, const Categories& c
 }
 CompilerMessage::CompilerMessage(
     const SourceArea& sourceArea, const std::string& message, const Categories& category) :
-        category_   { category                                                         },
-        sourceArea_ { sourceArea                                                       },
-        message_    { CompilerMessage::ConstructMessage(category, sourceArea, message) }
+        category_   { category   },
+        sourceArea_ { sourceArea },
+        message_    { message    }
 {
 }
 CompilerMessage::CompilerMessage(
     const SourceArea& sourceArea, const std::string& message,
     const std::string& line, const std::string& marker,
     const Categories& category) :
-        category_   { category                                                         },
-        sourceArea_ { sourceArea                                                       },
-        message_    { CompilerMessage::ConstructMessage(category, sourceArea, message) },
-        line_       { line                                                             },
-        marker_     { marker                                                           }
+        category_   { category   },
+        sourceArea_ { sourceArea },
+        message_    { message    },
+        line_       { line       },
+        marker_     { marker     }
 {
     /* Remove new-line character from source line */
     if (line_.size() > 0 && line_.back() == '\n')
@@ -58,6 +58,16 @@ bool CompilerMessage::IsError() const
         category_ == Categories::StateError     ||
         category_ == Categories::FileError      ||
         category_ == Categories::AsmError;
+}
+
+bool CompilerMessage::IsWarning() const
+{
+    return category_ == Categories::Warning;
+}
+
+std::string CompilerMessage::Message() const
+{
+    return CompilerMessage::ConstructMessage(GetCategory(), GetSourceArea(), GetMessage());
 }
 
 std::string CompilerMessage::ConstructMessage(

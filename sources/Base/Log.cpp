@@ -6,7 +6,10 @@
  */
 
 #include "Log.h"
+#include "ConsoleManip.h"
 
+
+using namespace Platform::ConsoleManip;
 
 /*
  * ScopedIndent class
@@ -65,39 +68,83 @@ void Log::Message(const std::string& message)
     PrintLn(message);
 }
 
-void Log::Warning(const std::string& message, bool appendPrefix)
+static void PrintMessageColored(Log& log, const CompilerMessage& message, const Color::ValueType color)
 {
-    if (appendPrefix)
-        Message("warning: " + message);
-    else
-        Message(message);
+    log.StartLn();
+    {
+        PushColor(color);
+        log.Print(message.GetCategoryString(message.GetCategory()));
+        PopColor();
+        log.Print(" (" + message.GetSourceArea().ToString() + ") -- " + message.GetMessage());
+    }
+    log.EndLn();
 }
 
-void Log::Error(const std::string& message, bool appendPrefix)
+void Log::Message(const CompilerMessage& message)
 {
-    if (appendPrefix)
-        Message("error: " + message);
+    if (message.IsError())
+        PrintMessageColored(*this, message, Color::Red | Color::Intens);
+    else if (message.IsWarning())
+        PrintMessageColored(*this, message, Color::Yellow);
     else
-        Message(message);
-}
-
-void Log::FatalError(const std::string& message, bool appendPrefix)
-{
-    if (appendPrefix)
-        Message("error: " + message);
-    else
-        Message(message);
-}
-
-void Log::Success(const std::string& message)
-{
-    Message(message);
+        Message(message.Message());
 }
 
 void Log::Messages(const std::initializer_list<std::string>& messages)
 {
     for (const auto& msg : messages)
         Message(msg);
+}
+
+void Log::Warning(const std::string& message, bool appendPrefix)
+{
+    PushColor(Color::Yellow);
+    {
+        if (appendPrefix)
+            Message("warning: " + message);
+        else
+            Message(message);
+    }
+    PopColor();
+}
+
+void Log::Error(const std::string& message, bool appendPrefix)
+{
+    PushColor(Color::Red | Color::Intens);
+    {
+        if (appendPrefix)
+            Message("error: " + message);
+        else
+            Message(message);
+    }
+    PopColor();
+}
+
+void Log::FatalError(const std::string& message, bool appendPrefix)
+{
+    PushColor(Color::Black, Color::Red | Color::Intens);
+    {
+        if (appendPrefix)
+            Message("error: " + message);
+        else
+            Message(message);
+    }
+    PopColor();
+}
+
+void Log::Success(const std::string& message)
+{
+    PushColor(Color::Green | Color::Intens);
+    {
+        Message(message);
+    }
+    PopColor();
+}
+
+void Log::Blank()
+{
+    StartLn();
+    EndLn();
 }
 
 void Log::IncIndent()

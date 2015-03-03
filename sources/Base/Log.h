@@ -9,6 +9,8 @@
 #define __XX_LOG_H__
 
 
+#include "CompilerMessage.h"
+
 #include <string>
 #include <iostream>
 #include <stack>
@@ -44,19 +46,25 @@ class Log
         void PrintLn(const std::string& text);
 
         void Message(const std::string& message);
+        void Message(const CompilerMessage& message);
+        void Messages(const std::initializer_list<std::string>& messages);
+
         void Warning(const std::string& message, bool appendPrefix = true);
         void Error(const std::string& message, bool appendPrefix = true);
         void FatalError(const std::string& message, bool appendPrefix = true);
         void Success(const std::string& message);
 
-        void Messages(const std::initializer_list<std::string>& messages);
+        void Blank();
 
         void IncIndent();
         void DecIndent();
 
         ScopedIndent Indent();
 
-        std::string indent = "  ";
+        /* === Members === */
+
+        std::string indent  = "  "; //!< Indentation string.
+        bool        verbose = true; //!< Verbose state.
 
     private:
         

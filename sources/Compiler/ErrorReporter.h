@@ -23,8 +23,11 @@ class ErrorReporter
         
         void Add(const CompilerMessage& message);
 
-        //! Prints all messages to console and clears the message list.
-        void Flush(Log& log);
+        /**
+        Prints all messages to console and clears the message list.
+        \param[in] printMetaInfo Specifies whether the number of errors and warnings are to be printed as well.
+        */
+        void Flush(Log& log, bool printMetaInfo = true);
 
         bool HasErrors() const
         {

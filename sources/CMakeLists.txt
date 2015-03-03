@@ -41,6 +41,9 @@ file(GLOB FilesCompilerOptimizerDCE				${PROJECT_SOURCE_DIR}/Compiler/Optimizer/
 file(GLOB FilesCompilerSyntaxAnalyzer			${PROJECT_SOURCE_DIR}/Compiler/SyntaxAnalyzer/*.*)
 file(GLOB FilesCompilerTAC						${PROJECT_SOURCE_DIR}/Compiler/ThreeAddressCodes/*.*)
 
+file(GLOB FilesShell							${PROJECT_SOURCE_DIR}/Shell/*.*)
+file(GLOB FilesShellCommand						${PROJECT_SOURCE_DIR}/Shell/Command/*.*)
+
 file(GLOB FilesPlatform ${PROJECT_SOURCE_DIR}/Platform/*.*)
 if(WIN32)
 	file(GLOB FilesPlatformDependent ${PROJECT_SOURCE_DIR}/Platform/Win32/*.*)
@@ -87,7 +90,8 @@ source_group("Compiler\\ThreeAddressCodes" FILES ${FilesCompilerTAC})
 
 # --- Shell ---
 
-source_group("Shell" FILES ${FilesShellAll})
+source_group("Shell" FILES ${FilesShell})
+source_group("Shell\\Command" FILES ${FilesShellCommand})
 
 # --- Platform ---
 
@@ -114,6 +118,7 @@ include_directories("${PROJECT_SOURCE_DIR}/Compiler/SyntaxAnalyzer")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler/ThreeAddressCodes")
 include_directories("${PROJECT_SOURCE_DIR}/Platform")
 include_directories("${PROJECT_SOURCE_DIR}/Shell")
+include_directories("${PROJECT_SOURCE_DIR}/Shell/Command")
 
 
 # === Executable ===

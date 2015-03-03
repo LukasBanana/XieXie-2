@@ -7,6 +7,7 @@
 
 #include "ErrorReporter.h"
 #include "Log.h"
+#include "StringModifier.h"
 
 
 void ErrorReporter::Add(const CompilerMessage& message)
@@ -16,13 +17,33 @@ void ErrorReporter::Add(const CompilerMessage& message)
         hasErrors_ = true;
 }
 
-void ErrorReporter::Flush(Log& log)
+void ErrorReporter::Flush(Log& log, bool printMetaInfo)
 {
     if (!messages_.empty())
     {
-        for (const auto& msg : messages_)
-            log.Message(msg.Message());
+        if (printMetaInfo)
+        {
+            /* Print meta information */
+            size_t numErrors = 0, numWarnings = 0;
+        
+            for (const auto& msg : messages_)
+            {
+                if (msg.IsError())
+                    ++numErrors;
+                else if (msg.IsWarning())
+                    ++numWarnings;
+            }
 
+            auto info = ToStr(numErrors) + " error(s), " + ToStr(numWarnings) + " warning(s):";
+            log.Message(info);
+            log.Message(std::string(info.size(), '-'));
+        }
+
+        /* Print messages to log */
+        for (const auto& msg : messages_)
+            log.Message(msg);
+
+        /* Reset error-bit state */
         hasErrors_ = false;
         messages_.clear();
     }

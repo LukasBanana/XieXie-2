@@ -1,12 +1,13 @@
 /*
- * Main file
+ * Main.cpp
  * 
- * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "Shell.h"
 
+#include <sstream>
 #include <iostream>
 
 
@@ -15,15 +16,15 @@ int main(int argc, char* argv[])
     /* Execute all program arguments as shell commands */
     if (argc > 1)
     {
-        /* Get argument list */
-        Shell::ArgList args;
+        /* Get argument stream */
+        std::stringstream stream;
 
-        Shell shell;
         for (int i = 1; i < argc; ++i)
-            args.push_back(argv[i]);
+            stream << argv[i] << std::endl;
 
-        /* Execute command line */
-        shell.ExecuteCommandLine(args);
+        /* Execute argument stream */
+        Shell shell;
+        shell.Execute(stream);
     }
     else
         std::cout << "enter \"xxc help\" for the man page" << std::endl;

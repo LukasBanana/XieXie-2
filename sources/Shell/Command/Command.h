@@ -1,32 +1,30 @@
 /*
- * Shell.h
+ * Command.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_SHELL_H__
-#define __XX_SHELL_H__
+#ifndef __XX_SHELL_COMMAND_H__
+#define __XX_SHELL_COMMAND_H__
 
 
-#include "Log.h"
+#include "Command.h"
 #include "StreamParser.h"
-
-#include <istream>
-#include <string>
-#include <vector>
+#include "Log.h"
 
 
-class Shell
+//! Shell command interface.
+class Command
 {
     
     public:
         
-        void Execute(StreamParser parser);
+        virtual ~Command()
+        {
+        }
 
-    private:
-        
-        Log log_;
+        virtual void Execute(StreamParser& input, Log& output) = 0;
 
 };
 

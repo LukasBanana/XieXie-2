@@ -57,6 +57,9 @@ class CompilerMessage : public std::exception
         const char* what() const throw();
 
         bool IsError() const;
+        bool IsWarning() const;
+
+        std::string Message() const;
 
         /* === Static functions === */
 
@@ -69,20 +72,25 @@ class CompilerMessage : public std::exception
 
         /* === Inline functions === */
 
-        Categories Category() const
+        Categories GetCategory() const
         {
             return category_;
         }
 
-        const std::string& Message() const
+        const SyntaxAnalyzer::SourceArea& GetSourceArea() const
+        {
+            return sourceArea_;
+        }
+
+        const std::string& GetMessage() const
         {
             return message_;
         }
-        const std::string& Line() const
+        const std::string& GetLine() const
         {
             return line_;
         }
-        const std::string& Marker() const
+        const std::string& GetMarker() const
         {
             return marker_;
         }
