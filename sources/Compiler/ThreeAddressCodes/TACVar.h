@@ -29,9 +29,11 @@ class TACVar
         //! TAC variable classes.
         enum class VarClasses
         {
-            Global,     //!< Global variable
-            Local,      //!< Local variable.
-            Temporary,  //!< Compiler temporary variable.
+            Global, //!< Global variable
+            Local,  //!< Local variable.
+            Temp,   //!< Compiler temporary variable.
+            ArgIn,  //!< Input argument for a procedure call.
+            ArgOut, //!< Output argument from a procedure call.
         };
 
         TACVar();
@@ -39,10 +41,10 @@ class TACVar
         //! Returns this variable as string representation (for debugging).
         std::string ToString() const;
 
-        VarClasses varClass = VarClasses::Temporary;
-        ValueTypes valueType = ValueTypes::Integral;
+        VarClasses  varClass    = VarClasses::Temp;
+        ValueTypes  valueType   = ValueTypes::Integral;
         
-        IdType id = 0;
+        IdType      id          = 0;
 
     private:
         

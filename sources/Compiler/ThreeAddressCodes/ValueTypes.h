@@ -19,7 +19,9 @@ enum class ValueTypes
     Boolean,    //!< Boolean type: "true" and "false".
     Integral,   //!< Integral type: 42, 9, -4 ...
     Real,       //!< Real type: 3.14, -0.5, 123.456 ...
-    String,     //!< String 
+    Pointer,    //!< Pointer type
+    String,     //!< Pointer type (special case for built-in string)
+    Array,      //!< Pointer type (special case for built-in array)
 };
 
 

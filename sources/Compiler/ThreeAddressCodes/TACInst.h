@@ -1,5 +1,5 @@
 /*
- * Three address code instruction header
+ * TACInst.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -28,13 +28,13 @@ class TACInst
         //! TAC instruction opcodes.
         enum class Types
         {
-            Assign,         //!< x := y; x := const; x := "string";
-            Arithmetic,     //!< x := y + z; x := y - z; x := y * z; ...
-            Relation,       //!< x := y == z; x := y != z; x := y < z; ...
-            Label,          //!< L1:
+            CopyAssign,     //!< x := y; x := const; x := "string";
+            ModifyAssign,   //!< x := y + z; x := y - z; x := y * z; ...
             Jump,           //!< jump to basic block
+            CondJump,       //!< conditional jump to basic block, if y = z, y != z, y < z, ...
             DirectCall,     //!< jump and link
             IndirectCall,   //!< jump register and link
+            CallReturn,     //!< return from call
         };
 
         virtual ~TACInst()

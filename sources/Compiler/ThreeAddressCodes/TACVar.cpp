@@ -32,8 +32,14 @@ std::string TACVar::ToString() const
         case VarClasses::Local:
             str += "@l";
             break;
-        case VarClasses::Temporary:
+        case VarClasses::Temp:
             str += "@t";
+            break;
+        case VarClasses::ArgIn:
+            str += "@i";
+            break;
+        case VarClasses::ArgOut:
+            str += "@o";
             break;
     }
 
