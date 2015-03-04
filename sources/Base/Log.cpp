@@ -75,7 +75,9 @@ static void PrintMessageColored(Log& log, const CompilerMessage& message, const 
         PushColor(color);
         log.Print(message.GetCategoryString(message.GetCategory()));
         PopColor();
-        log.Print(" (" + message.GetSourceArea().ToString() + ") -- " + message.GetMessage());
+        if (message.GetSourceArea().IsValid())
+            log.Print(" (" + message.GetSourceArea().ToString() + ")");
+        log.Print(" -- " + message.GetMessage());
     }
     log.EndLn();
 }

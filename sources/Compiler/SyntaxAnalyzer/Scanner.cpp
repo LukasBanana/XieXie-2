@@ -33,51 +33,16 @@ bool Scanner::ScanSource(const SourceCodePtr& source, ErrorReporter& errorReport
 
 TokenPtr Scanner::Next()
 {
+    /*
+    Scan until a valid token has been found
+    (infinite loop to catch exception, but continue scanning)
+    */
     while (true)
     {
         try
         {
-            /* Ignore white spaces and comments */
-            bool comments = true;
-
-            do
-            {
-                IgnoreWhiteSpaces();
-
-                /* Check for end-of-file */
-                if (Is(0))
-                    return Make(Tokens::EndOfFile);
-                
-                /* Scan commentaries */
-                if (Is('/'))
-                {
-                    auto prevChr = TakeIt();
-
-                    if (Is('/'))
-                        IgnoreCommentLine();
-                    else if (Is('*'))
-                        IgnoreCommentBlock();
-                    else
-                    {
-                        std::string spell;
-                        spell += prevChr;
-
-                        if (Is('='))
-                        {
-                            spell += TakeIt();
-                            return Make(Tokens::ModifyAssignOp, spell);
-                        }
-
-                        return Make(Tokens::DivOp, spell);
-                    }
-                }
-                else
-                    comments = false;
-            }
-            while (comments);
-
-            /* Scan next token */
-            return ScanToken();
+            /* Start scanning process */
+            return Scan();
         }
         catch (const CompilerMessage& err)
         {
@@ -85,7 +50,6 @@ TokenPtr Scanner::Next()
             errorReporter_->Add(err);
         }
     }
-
     return nullptr;
 }
 
@@ -206,6 +170,51 @@ TokenPtr Scanner::Make(const Tokens& type, std::string& spell, const SourceArea&
     if (takeChr)
         spell += TakeIt();
     return std::make_shared<Token>(area, type, std::move(spell));
+}
+
+TokenPtr Scanner::Scan()
+{
+    /* Ignore white spaces and comments */
+    bool comments = true;
+
+    do
+    {
+        IgnoreWhiteSpaces();
+
+        /* Check for end-of-file */
+        if (Is(0))
+            return Make(Tokens::EndOfFile);
+                
+        /* Scan commentaries */
+        if (Is('/'))
+        {
+            auto prevChr = TakeIt();
+
+            if (Is('/'))
+                IgnoreCommentLine();
+            else if (Is('*'))
+                IgnoreCommentBlock();
+            else
+            {
+                std::string spell;
+                spell += prevChr;
+
+                if (Is('='))
+                {
+                    spell += TakeIt();
+                    return Make(Tokens::ModifyAssignOp, spell);
+                }
+
+                return Make(Tokens::DivOp, spell);
+            }
+        }
+        else
+            comments = false;
+    }
+    while (comments);
+
+    /* Scan next token */
+    return ScanToken();
 }
 
 TokenPtr Scanner::ScanToken()
@@ -346,30 +355,31 @@ TokenPtr Scanner::ScanToken()
     if (Is('['))
     {
         spell += TakeIt();
+        
         if (Is('['))
         {
-            /* Push new state */
-            auto state = GetState();
-            state.allowRDParen = true;
-            PushState(state);
-
-            /* Return special case token */
+            /* Push new state and return special case token */
+            allowRDParenStack_.Push(true);
             return Make(Tokens::LDParen, spell, true);
         }
+
+        /* Push new state and return special case token */
+        allowRDParenStack_.Push(false);
         return Make(Tokens::LParen, spell);
     }
 
     if (Is(']'))
     {
         spell += TakeIt();
-        if (GetState().allowRDParen && Is(']'))
-        {
-            /* Pop previous state */
-            PopState();
 
-            /* Return special case token */
+        if (Is(']') && allowRDParenStack_.Top())
+        {
+            /* Pop previous state and return special case token */
+            allowRDParenStack_.Pop();
             return Make(Tokens::RDParen, spell, true);
         }
+
+        allowRDParenStack_.Pop();
         return Make(Tokens::RParen, spell);
     }
 
@@ -726,22 +736,6 @@ bool Scanner::IsEscapeChar() const
         Is( 'b') || Is( 'f') || Is( 'n') ||
         Is( 'r') || Is( 't') || Is( 'v') ||
         Is( 'x') || Is( 'u') || Is( 'U');
-}
-
-Scanner::State Scanner::GetState() const
-{
-    return stateStack_.empty() ? State() : stateStack_.top();
-}
-
-void Scanner::PushState(const State& state)
-{
-    stateStack_.push(state);
-}
-
-void Scanner::PopState()
-{
-    if (!stateStack_.empty())
-        stateStack_.pop();
 }
 
 

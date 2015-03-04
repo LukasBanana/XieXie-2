@@ -51,13 +51,7 @@ const char* CompilerMessage::what() const throw()
 
 bool CompilerMessage::IsError() const
 {
-    return
-        category_ == Categories::SyntaxError    ||
-        category_ == Categories::ContextError   ||
-        category_ == Categories::CodeGenError   ||
-        category_ == Categories::StateError     ||
-        category_ == Categories::FileError      ||
-        category_ == Categories::AsmError;
+    return category_ >= Categories::SyntaxError;
 }
 
 bool CompilerMessage::IsWarning() const
@@ -73,7 +67,11 @@ std::string CompilerMessage::Message() const
 std::string CompilerMessage::ConstructMessage(
     const Categories Category, const SourceArea& sourceArea, const std::string& message)
 {
-    return GetCategoryString(Category) + " (" + sourceArea.ToString() + ") -- " + message;
+    auto msg = GetCategoryString(Category);
+    if (sourceArea.IsValid())
+        msg += " (" + sourceArea.ToString() + ")";
+    msg += " -- " + message;
+    return msg;
 }
 
 std::string CompilerMessage::GetCategoryString(const Categories Category)
@@ -96,6 +94,8 @@ std::string CompilerMessage::GetCategoryString(const Categories Category)
             return "file error";
         case Categories::AsmError:
             return "assembler error";
+        case Categories::InternalError:
+            return "internal error";
     }
     return "";
 }

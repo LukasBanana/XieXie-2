@@ -45,7 +45,7 @@ void SourceArea::IncColumn()
 
 bool SourceArea::IsValid() const
 {
-    return start <= end;
+    return start < end;
 }
 
 void SourceArea::Reset()

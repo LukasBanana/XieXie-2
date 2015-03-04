@@ -15,9 +15,13 @@ extern class Math {
 }
 
 extern class Log {
-	
 	static void writeLine(String msg)
-	
+}
+
+extern class String {
+	init()
+	init(Object rhs)
+	int size()
 }
 
 class Vector3 {
@@ -40,8 +44,8 @@ class Vector3 {
 	
 	String toString() {
 		String s := Test.fibonacci(10).toString()
-		for int i := 0 ; i < { x, y, z }.size() ; i++ {
-			s += i.toString()
+		for int i := 0 ; i < { x, y, z }/*.size()*/ ; i++ {
+			s += i//.toString()
 		}
 		return s
 	}
@@ -60,6 +64,7 @@ class Test {
 	}
 	
 	static void fire() {}
+	//static void fire(int param0) {}
 	
 	static void onMouseDown(int button) {
 		if button = 1 {
@@ -78,7 +83,7 @@ class Test {
 		String str2 := new String("World")
 		Log.writeLine(str1 + ", " + str2)
 		
-		int len := "Test".size()
+		//int len := "Test".size()
 		
 		int n := 10
 		Log.writeLine("Fibonacci(" + n + ") = " + fibonacci(n))

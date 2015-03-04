@@ -40,7 +40,7 @@ class SourceArea
         //! Increases the columns of the start and end position by 1.
         void IncColumn();
 
-        //! Returns ture if this is a valid source position. False if start-position > end-position.
+        //! Returns ture if this is a valid source position. False if start-position >= end-position.
         bool IsValid() const;
 
         //! Reste the start and end positions to (0:0).

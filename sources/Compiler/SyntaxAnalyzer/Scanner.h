@@ -13,6 +13,7 @@
 #include "SourcePosition.h"
 #include "ErrorReporter.h"
 #include "Token.h"
+#include "SafeStack.h"
 
 #include <string>
 #include <functional>
@@ -48,14 +49,6 @@ class Scanner
 
     private:
         
-        /* === Structures === */
-
-        struct State
-        {
-            //! Allows to scan the 'Token::Types::RDParent' token (']]').
-            bool allowRDParen = false;
-        };
-
         /* === Functions === */
 
         using Tokens = Token::Types;
@@ -84,6 +77,7 @@ class Scanner
         TokenPtr Make(const Tokens& type, std::string& spell, bool takeChr = false);
         TokenPtr Make(const Tokens& type, std::string& spell, const SourceArea& area, bool takeChr = false);
 
+        TokenPtr Scan();
         TokenPtr ScanToken();
 
         TokenPtr ScanStringLiteral();
@@ -111,20 +105,13 @@ class Scanner
             return static_cast<unsigned char>(chr_);
         }
 
-        /* --- State management --- */
-
-        State GetState() const;
-
-        void PushState(const State& state);
-        void PopState();
-
         /* === Members === */
 
         SourceCodePtr       source_;
         char                chr_            = 0;
         ErrorReporter*      errorReporter_  = nullptr;
 
-        std::stack<State>   stateStack_;
+        SafeStack<bool>     allowRDParenStack_;
 
 };
 

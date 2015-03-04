@@ -32,6 +32,7 @@ class CompilerMessage : public std::exception
             StateError,
             FileError,
             AsmError,
+            InternalError,
         };
 
         /* === Constructors & destructor === */
@@ -104,13 +105,13 @@ class CompilerMessage : public std::exception
         
         /* === Members === */
 
-        Categories category_;
+        Categories                  category_;
 
-        SyntaxAnalyzer::SourceArea sourceArea_;
+        SyntaxAnalyzer::SourceArea  sourceArea_;
 
-        std::string message_;   //!< Output message.
-        std::string line_;      //!< Optional line where the error has been occured.
-        std::string marker_;    //!< Optional mark to show where the error has been occured.
+        std::string                 message_;       //!< Output message.
+        std::string                 line_;          //!< Optional line where the error has been occured.
+        std::string                 marker_;        //!< Optional mark to show where the error has been occured.
 
 };
 
@@ -143,6 +144,7 @@ using CodeGenError      = CommonCompilerMessage< CompilerMessage::Categories::Co
 using StateError        = CommonCompilerMessage< CompilerMessage::Categories::StateError   >;
 using FileError         = CommonCompilerMessage< CompilerMessage::Categories::FileError    >;
 using AssemblerError    = CommonCompilerMessage< CompilerMessage::Categories::AsmError     >;
+using InternalError     = CommonCompilerMessage< CompilerMessage::Categories::InternalError>;
 
 
 #endif
