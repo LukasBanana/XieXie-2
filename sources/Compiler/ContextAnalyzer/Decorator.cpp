@@ -65,21 +65,39 @@ void Decorator::Error(const std::string& msg, bool breakAnalysis)
 
 /* --- Common AST nodes --- */
 
+/*
+(Phase 1)
+Register all unique class identifiers in global scope.
+
+(Phase 2)
+Analyze signature of all classes (decorate attributes and type inheritance).
+
+(Phase 3)
+In all classes: Register all class member identifiers (procedures, variables, enumerations, flags)
+in the scope of the current class. Identifiers of procedures can be overloaded.
+
+(Phase 4)
+In all classes: In all members of the current class: Analyze the declaration of the current member.
+*/
 DEF_VISIT_PROC(Decorator, Program)
 {
     /* Initialize decoration state */
     program_ = ast;
     PushSymTab(*ast);
 
-    /* (1) register all class symbols */
+    /* (1) Register all class symbols */
     state_ = States::RegisterClassSymbols;
     Visit(ast->classDeclStmnts);
 
-    /* (2) register all class member symbols inside the classes (procedures, variables, enumerations, flags) */
+    /* (1) Analyze class inheritance */
+    state_ = States::AnalyzeClassSignature;
+    Visit(ast->classDeclStmnts);
+
+    /* (2) Register all class member symbols inside the classes (procedures, variables, enumerations, flags) */
     state_ = States::RegisterMemberSymbols;
     Visit(ast->classDeclStmnts);
 
-    /* (3) analyze the actual code */
+    /* (3) Analyze the actual code */
     state_ = States::AnalyzeCode;
     Visit(ast->classDeclStmnts);
 }
@@ -251,11 +269,16 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
             RegisterSymbol(ast->ident, ast);
             break;
 
+        case States::AnalyzeClassSignature:
+            DecorateClassBaseClass(*ast);
+            DecorateClassAttribs(*ast);
+            break;
+
         case States::RegisterMemberSymbols:
             PushSymTab(*ast);
             {
-                Visit(ast->attribPrefix);
-                Visit(ast->inheritanceTypeName);
+                //Visit(ast->attribPrefix);
+                //Visit(ast->inheritanceTypeName);
                 Visit(ast->bodySegments);
             }
             PopSymTab();
@@ -283,11 +306,34 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
 
 DEF_VISIT_PROC(Decorator, EnumDeclStmnt)
 {
-    Visit(ast->entries);
+    switch (state_)
+    {
+        case States::RegisterMemberSymbols:
+            RegisterSymbol(ast->ident, ast);
+            break;
+
+        case States::AnalyzeCode:
+            PushSymTab(*ast);
+            {
+                Visit(ast->entries);
+            }
+            PopSymTab();
+            break;
+    }
 }
 
 DEF_VISIT_PROC(Decorator, FlagsDeclStmnt)
 {
+    switch (state_)
+    {
+        case States::RegisterMemberSymbols:
+            RegisterSymbol(ast->ident, ast);
+            break;
+
+        case States::AnalyzeCode:
+            //Visit(ast->entries);
+            break;
+    }
 }
 
 DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
@@ -411,32 +457,118 @@ DEF_VISIT_PROC(Decorator, PointerTypeDenoter)
 
 /* --- Decoration --- */
 
+void Decorator::DecorateClassBaseClass(ClassDeclStmnt& ast)
+{
+    /* Check if inheritance typename is a valid (intern) class identifier */
+    if (!ast.baseClassIdent.empty())
+    {
+        /* Find base class symbol */
+        auto baseClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope(ast.baseClassIdent, program_->symTab, &ast));
+        if (baseClassDecl)
+        {
+            if (!baseClassDecl->isExtern)
+                ast.baseClassRef = baseClassDecl;
+            else
+                Error("identifier \"" + ast.baseClassIdent + "\" specifies extern class, which can not be used as a base class", &ast);
+        }
+        else
+            Error("identifier \"" + ast.baseClassIdent + "\" does not refer to a class declaration", &ast);
+    }
+}
+
+void Decorator::DecorateClassAttribs(ClassDeclStmnt& ast)
+{
+    /* Valid attribute for classes is 'deprecated' and 'deprecated(string)' */
+    if (ast.attribPrefix)
+    {
+        if (ast.attribPrefix->attribs.size() == 1)
+        {
+            const auto& attrib0 = *ast.attribPrefix->attribs.front();
+
+            if (attrib0.ident == "deprecated")
+                DecorateAttribDeprecated(attrib0, ast.attribs);
+            else
+                Error("unknown attribute \"" + attrib0.ident + "\" for class declaration", &attrib0);
+        }
+        else
+            Error("invalid number of attributes for class declaration; only a single attribute is allowed", &ast);
+    }
+}
+
+void Decorator::DecorateAttribDeprecated(const Attrib& ast, Attrib::Arguments& args)
+{
+    /* Decorate AST with deprecation flag */
+    args.isDeprecated = true;
+
+    if (ast.exprs.size() == 1)
+    {
+        auto expr0 = ast.exprs.front().get();
+        auto strLiteral = AST::Cast<LiteralExpr>(expr0);
+        if (strLiteral && strLiteral->GetType() == LiteralExpr::Literals::String)
+        {
+            /* Decorate AST with deprecation hint string */
+            args.deprecationHint = strLiteral->value;
+        }
+        else
+            Error("invalid argument for attribute \"" + ast.ident + "\"; only a string literal is allowed", expr0);
+    }
+    else if (ast.exprs.size() > 1)
+        Error("invalid number of arguments for attribute \"" + ast.ident + "\"; only a single argument is allowed", &ast);
+}
+
 StmntSymbolTable::SymbolType* Decorator::FetchSymbolFromScope(
     const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast)
 {
     auto symbol = symTab.Fetch(ident);
     if (!symbol)
-        Error("undeclared identifier \"" + ident + "\" (in \"" + fullName + "\")", ast);
+    {
+        if (ident != fullName)
+            Error("undeclared identifier \"" + ident + "\" (in \"" + fullName + "\")", ast);
+        else
+            Error("undeclared identifier \"" + ident + "\"", ast);
+    }
     return symbol;
 }
 
+StmntSymbolTable::SymbolType* Decorator::FetchSymbolFromScope(
+    const std::string& ident, StmntSymbolTable& symTab, const AST* ast)
+{
+    return FetchSymbolFromScope(ident, symTab, ident, ast);
+}
+
+/*
+(Phase 1)
+Search identifier in current scope
+
+(Phase 2)
+Search identifier in class namespace.
+
+(Phase 3)
+Search identifier in global namespace.
+*/
 StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
     const std::string& ident, const std::string& fullName, const AST* ast)
 {
-    /* Search in scope */
+    /* (1) Search in scope */
     auto symbol = symTab_->Fetch(ident);
-    if (!symbol)
+    if (symbol)
+        return symbol;
+    
+    /* (2) Search in class namespace */
+    if (class_)
     {
-        /* Search in class namespace */
-        if (class_)
-            symbol = class_->symTab.Fetch(ident);
-        if (!symbol)
-        {
-            /* Search in global namespace */
-            symbol = FetchSymbolFromScope(ident, program_->symTab, fullName, ast);
-        }
+        symbol = class_->symTab.Fetch(ident);
+        if (symbol)
+            return symbol;
     }
-    return symbol;
+    
+    /* (3) Search in global namespace */
+    return FetchSymbolFromScope(ident, program_->symTab, fullName, ast);
+}
+
+StmntSymbolTable::SymbolType* Decorator::FetchSymbol(const std::string& ident, const AST* ast)
+{
+    return FetchSymbol(ident, ident, ast);
 }
 
 void Decorator::VisitVarName(VarName& ast)

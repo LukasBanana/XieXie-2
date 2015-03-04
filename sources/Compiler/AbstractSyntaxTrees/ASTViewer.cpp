@@ -238,7 +238,7 @@ DEF_VISIT_PROC(ASTViewer, ClassDeclStmnt)
     AST_INFO_COLOR("ClassDeclStmnt", colorStmnt);
     Visit(ast->attribPrefix);
     AST_STRING(ident);
-    Visit(ast->inheritanceTypeName);
+    AST_STRING(baseClassIdent);
     Visit(ast->bodySegments);
 }
 

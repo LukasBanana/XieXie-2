@@ -112,7 +112,7 @@ array_index:		expr;
 
 // CLASSES
 class_decl_stmnt:			attrib_prefix? intern_class_decl_stmnt | ('extern' extern_class_decl_stmnt);
-intern_class_decl_stmnt:	'class' class_name type_inheritance? class_body;
+intern_class_decl_stmnt:	'class' class_name base_class_ident? class_body;
 extern_class_decl_stmnt:	'class' class_name extern_class_body;
 class_body:					'{' class_body_segment_list '}';
 class_body_segment_list:	class_body_segment*;
@@ -121,9 +121,7 @@ class_visibility:			class_visibility_type ':';
 class_visibility_type:		'public' | 'private';
 extern_class_body:			'{' extern_decl_stmnt_list? '}';
 class_name:					IDENT;
-
-type_inheritance:			':' var_name;
-type_multi_inheritance:		':' var_name (',' var_name)*;
+base_class_ident:			':' ident;
 
 // ENUMERATIONS
 enum_decl_stmnt:	'enum' IDENT enum_body;
@@ -133,10 +131,11 @@ enum_entry:			enum_entry_name (':=' expr)?;
 enum_entry_name:	IDENT;
 
 // FLAGS
-flags_decl_stmnt:	'flags' IDENT type_multi_inheritance? flags_body;
-flags_body:			'{' flags_entry_list? '}';
-flags_entry_list:	flags_entry (',' flags_entry)*;
-flags_entry:		IDENT;
+flags_decl_stmnt:			'flags' IDENT base_flags_varname_list? flags_body;
+flags_body:					'{' flags_entry_list? '}';
+flags_entry_list:			flags_entry (',' flags_entry)*;
+flags_entry:				IDENT;
+base_flags_varname_list:	':' var_name (',' var_name)*;
 
 // PROCEDURES
 proc_decl_stmnt:			attrib_prefix? proc_signature code_block;

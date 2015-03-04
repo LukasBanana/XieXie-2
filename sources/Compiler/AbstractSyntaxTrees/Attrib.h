@@ -21,6 +21,13 @@ class Attrib : public AST
     
     public:
         
+        //! Summarized attribute arguments.
+        struct Arguments
+        {
+            bool        isDeprecated = false;
+            std::string deprecationHint;
+        };
+
         AST_INTERFACE(Attrib);
 
         std::string             ident;

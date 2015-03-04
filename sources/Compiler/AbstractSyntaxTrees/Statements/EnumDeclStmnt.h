@@ -9,7 +9,7 @@
 #define __XX_AST_ENUM_DECL_STMNT_H__
 
 
-#include "Stmnt.h"
+#include "ScopedStmnt.h"
 #include "PointerTypeDenoter.h"
 
 
@@ -17,7 +17,7 @@ namespace AbstractSyntaxTrees
 {
 
 
-class EnumDeclStmnt : public Stmnt
+class EnumDeclStmnt : public ScopedStmnt
 {
     
     public:
@@ -29,7 +29,7 @@ class EnumDeclStmnt : public Stmnt
             thisTypeDenoter_.declRef = this;
         }
         EnumDeclStmnt(const SourceArea& area) :
-            Stmnt{ area }
+            ScopedStmnt{ area }
         {
             thisTypeDenoter_.declRef = this;
         }

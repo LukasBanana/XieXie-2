@@ -146,6 +146,13 @@ std::string Parser::AcceptIdent()
     return Accept(Tokens::Ident)->Spell();
 }
 
+// base_class_ident: ':' ident;
+std::string Parser::AcceptBaseClassIdent()
+{
+    Accept(Tokens::Colon);
+    return AcceptIdent();
+}
+
 int Parser::AcceptSignedIntLiteral()
 {
     /* Parse optional negative number */
@@ -238,13 +245,6 @@ VarNamePtr Parser::ParseVarNameSub()
     }
 
     return ast;
-}
-
-// type_inheritance: ':' var_name;
-VarNamePtr Parser::ParseTypeInheritance()
-{
-    Accept(Tokens::Colon);
-    return ParseVarName();
 }
 
 // var_decl: IDENT (':=' expr)?
@@ -887,7 +887,7 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
     ast->ident = AcceptIdent();
 
     if (Is(Tokens::Colon))
-        ast->inheritanceTypeName = ParseTypeInheritance();
+        ast->baseClassIdent = AcceptBaseClassIdent();
     
     Accept(Tokens::LCurly);
     if (!Is(Tokens::RCurly))

@@ -60,6 +60,7 @@ class Parser
 
         TokenPtr AcceptAnyIdent();
         std::string AcceptIdent();
+        std::string AcceptBaseClassIdent();
         int AcceptSignedIntLiteral();
         unsigned int AcceptUnsignedIntLiteral();
 
@@ -70,7 +71,6 @@ class Parser
         CodeBlockPtr            ParseCodeBlock();
         VarNamePtr              ParseVarName(TokenPtr identTkn = nullptr, bool hasArrayAccess = false);
         VarNamePtr              ParseVarNameSub();
-        VarNamePtr              ParseTypeInheritance();
         VarDeclPtr              ParseVarDecl(const TokenPtr& identTkn = nullptr);
         ParamPtr                ParseParam();
         ArgPtr                  ParseArg();

@@ -13,6 +13,7 @@
 #include "SymbolTable.h"
 #include "CompilerMessage.h"
 #include "ScopedStmnt.h"
+#include "Attrib.h"
 
 
 class ErrorReporter;
@@ -38,6 +39,7 @@ class Decorator : public Visitor
         enum class States
         {
             RegisterClassSymbols,
+            AnalyzeClassSignature,
             RegisterMemberSymbols,
             AnalyzeCode,
         };
@@ -52,8 +54,21 @@ class Decorator : public Visitor
 
         /* --- Decoration --- */
 
-        StmntSymbolTable::SymbolType* FetchSymbolFromScope(const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast = nullptr);
+        void DecorateClassBaseClass(ClassDeclStmnt& ast);
+        void DecorateClassAttribs(ClassDeclStmnt& ast);
+
+        void DecorateAttribDeprecated(const Attrib& ast, Attrib::Arguments& args);
+
+        StmntSymbolTable::SymbolType* FetchSymbolFromScope(
+            const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast = nullptr
+        );
+        StmntSymbolTable::SymbolType* FetchSymbolFromScope(
+            const std::string& ident, StmntSymbolTable& symTab, const AST* ast = nullptr
+        );
+
         StmntSymbolTable::SymbolType* FetchSymbol(const std::string& ident, const std::string& fullName, const AST* ast = nullptr);
+        StmntSymbolTable::SymbolType* FetchSymbol(const std::string& ident, const AST* ast = nullptr);
+
         void VisitVarName(VarName& ast);
         void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName);
         void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);

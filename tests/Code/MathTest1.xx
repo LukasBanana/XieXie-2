@@ -54,7 +54,7 @@ class Vector3 {
 	
 }
 
-class Test {
+class Test : Vector3 {
 	
 	static int fibonacci(int n) {
 		if n <= 2 {

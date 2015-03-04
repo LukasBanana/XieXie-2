@@ -26,6 +26,7 @@ using namespace SyntaxAnalyzer;
 
 
 #define AST_INTERFACE_BASE(name)                        \
+    static const Types astType = Types::name;           \
     Types Type() const override                         \
     {                                                   \
         return Types::name;                             \
@@ -143,6 +144,15 @@ class AST
         virtual const TypeDenoter* GetTypeDenoter() const
         {
             return nullptr;
+        }
+
+        /**
+        Casts this AST node to the specified sub class.
+        \return Statically casted pointer to this AST node class or null if the cast failed (static type check).
+        */
+        template <typename T> static T* Cast(AST* ast)
+        {
+            return (ast != nullptr && ast->Type() == T::astType) ? static_cast<T*>(ast) : nullptr;
         }
 
         //! Area in the source code of this AST node.
