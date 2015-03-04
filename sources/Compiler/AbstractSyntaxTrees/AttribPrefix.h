@@ -21,9 +21,19 @@ class AttribPrefix : public AST
     
     public:
         
+        //! Summarized attribute falgs.
+        struct Flags
+        {
+            bool        isDeprecated = false;
+            std::string deprecationHint;
+        };
+
         AST_INTERFACE(AttribPrefix);
 
-        std::vector<AttribPtr> attribs;
+        std::vector<AttribPtr>  attribs;
+
+        // dast
+        Flags                   flags;
 
 };
 

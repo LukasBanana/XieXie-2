@@ -45,7 +45,6 @@ class ClassDeclStmnt : public ScopedStmnt
 
         // dast
         ClassDeclStmnt*                     baseClassRef = nullptr;
-        Attrib::Arguments                   attribs;
 
     private:
 

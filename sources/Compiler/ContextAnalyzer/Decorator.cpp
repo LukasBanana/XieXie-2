@@ -8,13 +8,31 @@
 #include "Decorator.h"
 #include "ErrorReporter.h"
 #include "ASTImport.h"
+#include "StringModifier.h"
 
 #include <algorithm>
+#include <set>
 
+
+using namespace std::placeholders;
 
 namespace ContextAnalyzer
 {
 
+
+/*
+ * Internal functions
+ */
+
+static const std::string& SelectString(const std::string& a, const std::string& b, bool first)
+{
+    return first ? a : b;
+}
+
+
+/*
+ * Decorator class
+ */
 
 bool Decorator::DecorateProgram(Program& program, ErrorReporter& errorReporter)
 {
@@ -481,24 +499,58 @@ void Decorator::DecorateClassAttribs(ClassDeclStmnt& ast)
     /* Valid attribute for classes is 'deprecated' and 'deprecated(string)' */
     if (ast.attribPrefix)
     {
-        if (ast.attribPrefix->attribs.size() == 1)
-        {
-            const auto& attrib0 = *ast.attribPrefix->attribs.front();
-
-            if (attrib0.ident == "deprecated")
-                DecorateAttribDeprecated(attrib0, ast.attribs);
-            else
-                Error("unknown attribute \"" + attrib0.ident + "\" for class declaration", &attrib0);
-        }
-        else
-            Error("invalid number of attributes for class declaration; only a single attribute is allowed", &ast);
+        DecorateAttribPrefix(
+            *ast.attribPrefix, "class declaration",
+            {
+                { "deprecated", std::bind(&Decorator::DecorateAttribDeprecated, this, _1, _2) },
+            }
+        );
     }
 }
 
-void Decorator::DecorateAttribDeprecated(const Attrib& ast, Attrib::Arguments& args)
+void Decorator::DecorateAttribPrefix(
+    AttribPrefix& ast, const std::string& declDesc,
+    const std::map<std::string, std::function<void(const Attrib&, AttribPrefix::Flags&)>>& allowedAttribs)
+{
+    if (ast.attribs.size() <= allowedAttribs.size())
+    {
+        std::set<std::string> attribUsed;
+        for (const auto& attrib : ast.attribs)
+        {
+            const auto& ident = attrib->ident;
+
+            /* Check if attribute is allowed for this declaration */
+            auto it = allowedAttribs.find(ident);
+            if (it != allowedAttribs.end())
+            {
+                /* Check if attribute has already been used */
+                if (attribUsed.find(ident) == attribUsed.end())
+                {
+                    attribUsed.insert(ident);
+                    it->second(*attrib, ast.flags);
+                }
+                else
+                    Error("attribute \"" + ident + "\" already used for " + declDesc, attrib.get());
+            }
+            else
+                Error("unknown attribute \"" + ident + "\" for " + declDesc, attrib.get());
+        }
+    }
+    else
+    {
+        Error(
+            "invalid number of attributes for " + declDesc + "; only " +
+            ToStr(allowedAttribs.size()) + " attribute" +
+            SelectString("s are", " is", allowedAttribs.size() > 1) + " allowed",
+            &ast
+        );
+    }
+}
+
+void Decorator::DecorateAttribDeprecated(const Attrib& ast, AttribPrefix::Flags& attribArgs)
 {
     /* Decorate AST with deprecation flag */
-    args.isDeprecated = true;
+    attribArgs.isDeprecated = true;
 
     if (ast.exprs.size() == 1)
     {
@@ -507,7 +559,7 @@ void Decorator::DecorateAttribDeprecated(const Attrib& ast, Attrib::Arguments& a
         if (strLiteral && strLiteral->GetType() == LiteralExpr::Literals::String)
         {
             /* Decorate AST with deprecation hint string */
-            args.deprecationHint = strLiteral->value;
+            attribArgs.deprecationHint = strLiteral->value;
         }
         else
             Error("invalid argument for attribute \"" + ast.ident + "\"; only a string literal is allowed", expr0);

@@ -13,7 +13,9 @@
 #include "SymbolTable.h"
 #include "CompilerMessage.h"
 #include "ScopedStmnt.h"
-#include "Attrib.h"
+#include "AttribPrefix.h"
+
+#include <functional>
 
 
 class ErrorReporter;
@@ -57,7 +59,11 @@ class Decorator : public Visitor
         void DecorateClassBaseClass(ClassDeclStmnt& ast);
         void DecorateClassAttribs(ClassDeclStmnt& ast);
 
-        void DecorateAttribDeprecated(const Attrib& ast, Attrib::Arguments& args);
+        void DecorateAttribPrefix(
+            AttribPrefix& ast, const std::string& declDesc,
+            const std::map<std::string, std::function<void(const Attrib&, AttribPrefix::Flags&)>>& allowedAttribs
+        );
+        void DecorateAttribDeprecated(const Attrib& ast, AttribPrefix::Flags& attribArgs);
 
         StmntSymbolTable::SymbolType* FetchSymbolFromScope(
             const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast = nullptr
