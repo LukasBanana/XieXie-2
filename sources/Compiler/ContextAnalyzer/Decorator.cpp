@@ -81,6 +81,14 @@ void Decorator::Error(const std::string& msg, bool breakAnalysis)
     Error(msg, nullptr, breakAnalysis);
 }
 
+void Decorator::Warning(const std::string& msg, const AST* ast)
+{
+    if (ast)
+        errorReporter_->Add(CompilerWarning(ast->sourceArea, msg));
+    else
+        errorReporter_->Add(CompilerWarning(msg));
+}
+
 /* --- Common AST nodes --- */
 
 /*
@@ -91,10 +99,13 @@ Register all unique class identifiers in global scope.
 Analyze signature of all classes (decorate attributes and type inheritance).
 
 (Phase 3)
+Verify that the inheritance tree of all classes are free of cycles.
+
+(Phase 4)
 In all classes: Register all class member identifiers (procedures, variables, enumerations, flags)
 in the scope of the current class. Identifiers of procedures can be overloaded.
 
-(Phase 4)
+(Phase 5)
 In all classes: In all members of the current class: Analyze the declaration of the current member.
 */
 DEF_VISIT_PROC(Decorator, Program)
@@ -107,15 +118,19 @@ DEF_VISIT_PROC(Decorator, Program)
     state_ = States::RegisterClassSymbols;
     Visit(ast->classDeclStmnts);
 
-    /* (1) Analyze class inheritance */
+    /* (2) Analyze class signature (attributes and inheritance) */
     state_ = States::AnalyzeClassSignature;
     Visit(ast->classDeclStmnts);
 
-    /* (2) Register all class member symbols inside the classes (procedures, variables, enumerations, flags) */
+    /* (3) Verify class inheritance to be free of cycles */
+    state_ = States::VerifyClassInheritance;
+    Visit(ast->classDeclStmnts);
+
+    /* (4) Register all class member symbols inside the classes (procedures, variables, enumerations, flags) */
     state_ = States::RegisterMemberSymbols;
     Visit(ast->classDeclStmnts);
 
-    /* (3) Analyze the actual code */
+    /* (5) Analyze the actual code */
     state_ = States::AnalyzeCode;
     Visit(ast->classDeclStmnts);
 }
@@ -292,11 +307,13 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
             DecorateClassAttribs(*ast);
             break;
 
+        case States::VerifyClassInheritance:
+            VerifyClassInheritance(*ast);
+            break;
+
         case States::RegisterMemberSymbols:
             PushSymTab(*ast);
             {
-                //Visit(ast->attribPrefix);
-                //Visit(ast->inheritanceTypeName);
                 Visit(ast->bodySegments);
             }
             PopSymTab();
@@ -500,11 +517,45 @@ void Decorator::DecorateClassAttribs(ClassDeclStmnt& ast)
     if (ast.attribPrefix)
     {
         DecorateAttribPrefix(
-            *ast.attribPrefix, "class declaration",
+            *ast.attribPrefix, "class declaration \"" + ast.ident + "\"",
             {
                 { "deprecated", std::bind(&Decorator::DecorateAttribDeprecated, this, _1, _2) },
             }
         );
+    }
+}
+
+void Decorator::VerifyClassInheritance(ClassDeclStmnt& ast)
+{
+    /* Detect cycle in class inheritance tree */
+    ClassDeclStmnt* baseClass = ast.baseClassRef;
+    AttribPrefix::Flags* deprecationFlags = nullptr;
+
+    while (baseClass)
+    {
+        /* Check if base class is deprecated */
+        if (!deprecationFlags && baseClass->attribPrefix && baseClass->attribPrefix->flags.isDeprecated)
+            deprecationFlags = &(baseClass->attribPrefix->flags);
+
+        /* Check if current base class is the reference to this class declaration */
+        if (baseClass == &ast)
+        {
+            /* Cycle detected -> cancel inheritance verification */
+            Error("inheritance cycle detected in class declaration \"" + ast.ident + "\"", &ast);
+            break;
+        }
+
+        /* Go to next upper base class */
+        baseClass = baseClass->baseClassRef;
+    }
+
+    /* Check if any base class is deprecated but this class is not marked as deprecated */
+    if ( deprecationFlags && ( !ast.attribPrefix || !(ast.attribPrefix->flags.isDeprecated) ) )
+    {
+        std::string warnInfo = "class declaration \"" + ast.ident + "\" with deprecated base class";
+        if (!deprecationFlags->deprecationHint.empty())
+            warnInfo += ": " + deprecationFlags->deprecationHint;
+        Warning(warnInfo, &ast);
     }
 }
 

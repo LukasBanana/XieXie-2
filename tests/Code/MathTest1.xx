@@ -54,7 +54,11 @@ class Vector3 {
 	
 }
 
-class Test : Vector3 {
+class BaseClass{}
+class SubClass1:BaseClass{}
+class SubClass2:SubClass1{}
+
+class Test {
 	
 	static int fibonacci(int n) {
 		if n <= 2 {

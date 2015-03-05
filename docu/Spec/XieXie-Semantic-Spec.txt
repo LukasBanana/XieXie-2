@@ -7,10 +7,13 @@ program:
 	Analyze signature of all classes (decorate attributes and type inheritance).
 	
 	(Phase 3)
+	Verify that the inheritance tree of all classes are free of cycles.
+	
+	(Phase 4)
 	In all classes: Register all class member identifiers (procedures, variables, enumerations, flags)
 	in the scope of the current class. Identifiers of procedures can be overloaded.
 	
-	(Phase 4)
+	(Phase 5)
 	In all classes: In all members of the current class: Analyze the declaration of the current member.
 
 

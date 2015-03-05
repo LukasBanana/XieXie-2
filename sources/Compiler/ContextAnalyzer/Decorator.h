@@ -42,6 +42,7 @@ class Decorator : public Visitor
         {
             RegisterClassSymbols,
             AnalyzeClassSignature,
+            VerifyClassInheritance,
             RegisterMemberSymbols,
             AnalyzeCode,
         };
@@ -52,12 +53,15 @@ class Decorator : public Visitor
         void Error(const std::string& msg, const AST* ast, bool breakAnalysis = false);
         void Error(const std::string& msg, bool breakAnalysis = false);
 
+        void Warning(const std::string& msg, const AST* ast = nullptr);
+
         DECL_VISITOR_INTERFACE;
 
         /* --- Decoration --- */
 
         void DecorateClassBaseClass(ClassDeclStmnt& ast);
         void DecorateClassAttribs(ClassDeclStmnt& ast);
+        void VerifyClassInheritance(ClassDeclStmnt& ast);
 
         void DecorateAttribPrefix(
             AttribPrefix& ast, const std::string& declDesc,
