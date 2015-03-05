@@ -1425,7 +1425,7 @@ CastExprPtr Parser::ParseCastExpr(bool parseComplete, const TokenPtr& identTkn)
     if (parseComplete)
         Accept(Tokens::LBracket);
     
-    ast->typeDenoter = ParseTypeDenoter(identTkn);
+    ast->castTypeDenoter = ParseTypeDenoter(identTkn);
     Accept(Tokens::RBracket);
 
     ast->expr = ParseValueExpr();

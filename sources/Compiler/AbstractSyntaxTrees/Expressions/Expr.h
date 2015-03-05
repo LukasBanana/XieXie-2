@@ -19,6 +19,11 @@ namespace AbstractSyntaxTrees
 class Expr : public AST
 {
     
+    public:
+        
+        // dast
+        const TypeDenoter* typeDenoterRef = nullptr;
+
     protected:
         
         Expr() = default;
@@ -26,9 +31,6 @@ class Expr : public AST
             AST{ area }
         {
         }
-
-        // dast
-        TypeDenoterPtr typeDenoter;
 
 };
 

@@ -336,7 +336,7 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
     {
         /* Register symbols of class member variables */
         for (auto& varDecl : ast->varDecls)
-            RegisterVarDeclMember(*varDecl);
+            RegisterVarDecl(*varDecl);
     }
     else if (IsAnalyzeCode())
     {
@@ -347,7 +347,7 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
                 /* Declaration statement for local variables */
                 for (auto& varDecl : ast->varDecls)
                 {
-                    RegisterVarDeclMember(*varDecl);
+                    RegisterVarDecl(*varDecl);
                     DecorateVarDeclLocal(*varDecl);
                 }
                 break;
@@ -463,7 +463,7 @@ DEF_VISIT_PROC(Decorator, LiteralExpr)
 
 DEF_VISIT_PROC(Decorator, CastExpr)
 {
-    Visit(ast->typeDenoter);
+    Visit(ast->castTypeDenoter);
     Visit(ast->expr);
 }
 
@@ -582,7 +582,7 @@ void Decorator::VerifyClassInheritance(ClassDeclStmnt& ast)
     }
 }
 
-void Decorator::RegisterVarDeclMember(VarDecl& ast)
+void Decorator::RegisterVarDecl(VarDecl& ast)
 {
     RegisterSymbol(ast.ident, &ast);
 }
@@ -591,14 +591,19 @@ void Decorator::DecorateVarDeclMember(VarDecl& ast)
 {
     if (ast.initExpr)
     {
-        Visit(ast.initExpr);
-        VerifyConstExpr(*ast.initExpr);
+        DecorateExpr(*ast.initExpr);
+        VerifyExprConst(*ast.initExpr);
+        VerifyExprType(*ast.initExpr);
     }
 }
 
 void Decorator::DecorateVarDeclLocal(VarDecl& ast)
 {
-    Visit(ast.initExpr);
+    if (ast.initExpr)
+    {
+        DecorateExpr(*ast.initExpr);
+        VerifyExprType(*ast.initExpr);
+    }
     //...
 }
 
@@ -660,6 +665,24 @@ void Decorator::DecorateAttribDeprecated(const Attrib& ast, AttribPrefix::Flags&
     }
     else if (ast.exprs.size() > 1)
         Error("invalid number of arguments for attribute \"" + ast.ident + "\"; only a single argument is allowed", &ast);
+}
+
+void Decorator::DecorateExpr(Expr& ast)
+{
+    /* Decorate all expressions, then check type compatibility of sub-expression */
+    Visit(&ast);
+    //ExprValidator
+
+}
+
+bool Decorator::VerifyExprConst(const Expr& expr)
+{
+    return exprConstChecker_.Verify(expr, errorReporter_);
+}
+
+bool Decorator::VerifyExprType(const Expr& expr)
+{
+    return exprTypeChecker_.Verify(expr, errorReporter_);
 }
 
 StmntSymbolTable::SymbolType* Decorator::FetchSymbolFromScope(
@@ -754,11 +777,6 @@ void Decorator::DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const
     auto symbol = FetchSymbolFromScope(ast.ident, symTab, fullName, &ast);
     if (symbol)
         DecorateVarName(ast, symbol, fullName);
-}
-
-bool Decorator::VerifyConstExpr(const Expr& expr)
-{
-    return constExprChecker_.VerifyConstExpr(expr, errorReporter_);
 }
 
 /* --- Symbol table --- */

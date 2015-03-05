@@ -23,6 +23,7 @@ class ProcDeclStmnt : public ScopedStmnt
         
         AST_INTERFACE_EXT(ProcDeclStmnt, ScopedStmnt);
 
+        //! Returns the type of the procedure signature.
         const TypeDenoter* GetTypeDenoter() const override;
 
         AttribPrefixPtr         attribPrefix;   // may be null

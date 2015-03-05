@@ -116,11 +116,37 @@ void LiteralExpr::SetType(const Literals type)
     switch (type_)
     {
         case Literals::Bool:
+        {
+            auto builtinType = std::make_shared<BuiltinTypeDenoter>();
+            builtinType->typeName = BuiltinTypeDenoter::TypeNames::Bool;
+            thisTypeDenoter_ = builtinType;
+        }
+        break;
+
         case Literals::Int:
+        {
+            auto builtinType = std::make_shared<BuiltinTypeDenoter>();
+            builtinType->typeName = BuiltinTypeDenoter::TypeNames::Int;
+            thisTypeDenoter_ = builtinType;
+        }
+        break;
+
         case Literals::Float:
-            thisTypeDenoter_ = std::make_shared<BuiltinTypeDenoter>();
-            break;
+        {
+            auto builtinType = std::make_shared<BuiltinTypeDenoter>();
+            builtinType->typeName = BuiltinTypeDenoter::TypeNames::Float;
+            thisTypeDenoter_ = builtinType;
+        }
+        break;
+
         case Literals::String:
+        {
+            auto pointerType = std::make_shared<PointerTypeDenoter>();
+            pointerType->declIdent = "String";
+            thisTypeDenoter_ = pointerType;
+        }
+        break;
+
         case Literals::Pointer:
             thisTypeDenoter_ = std::make_shared<PointerTypeDenoter>();
             break;
@@ -133,6 +159,14 @@ void LiteralExpr::SetType(const Literals type)
 const TypeDenoter* ProcSignature::GetTypeDenoter() const
 {
     return returnTypeDenoter.get();
+}
+
+
+/* --- ProcCall --- */
+
+const TypeDenoter* ProcCall::GetTypeDenoter() const
+{
+    return declStmntRef != nullptr ? declStmntRef->GetTypeDenoter() : nullptr;
 }
 
 
@@ -168,11 +202,32 @@ const TypeDenoter* UnaryExpr::GetTypeDenoter() const
 }
 
 
+/* --- CastExpr --- */
+
+const TypeDenoter* CastExpr::GetTypeDenoter() const
+{
+    return castTypeDenoter.get();
+}
+
+
 /* --- AllocExpr --- */
 
 const TypeDenoter* AllocExpr::GetTypeDenoter() const
 {
     return typeDenoter.get();
+}
+
+
+/* --- InitListExpr --- */
+
+const TypeDenoter* InitListExpr::GetTypeDenoter() const
+{
+    return exprs.empty() ? nullptr : exprs.front()->GetTypeDenoter();
+}
+
+void InitListExpr::EstablishArrayType(const TypeDenoterPtr& lowerTypeDenoter)
+{
+    thisTypeDenoter_.lowerTypeDenoter = lowerTypeDenoter;
 }
 
 
@@ -339,6 +394,11 @@ BinaryExpr::Operators BinaryExpr::GetOperator(const std::string& spell)
 std::string BinaryExpr::GetOperatorSpell(const Operators op)
 {
     return MapTypeToSpell<Operators>(op, MapBinaryExpr());
+}
+
+const TypeDenoter* BinaryExpr::GetTypeDenoter() const
+{
+    return lhsExpr->GetTypeDenoter();
 }
 
 

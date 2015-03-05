@@ -23,9 +23,9 @@ class CastExpr : public Expr
         
         AST_INTERFACE_EXT(CastExpr, Expr);
 
-        //const TypeDenoter* GetTypeDenoter() const override;
+        const TypeDenoter* GetTypeDenoter() const override;
 
-        TypeDenoterPtr  typeDenoter;
+        TypeDenoterPtr  castTypeDenoter;
         ExprPtr         expr;
 
 };

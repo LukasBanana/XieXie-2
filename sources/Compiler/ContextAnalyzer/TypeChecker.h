@@ -24,8 +24,15 @@ namespace TypeChecker
 
 
 bool VerifyTypeCompatibility(
-    AbstractSyntaxTrees::TypeDenoter& a,
-    AbstractSyntaxTrees::TypeDenoter& b,
+    const AbstractSyntaxTrees::TypeDenoter& a,
+    const AbstractSyntaxTrees::TypeDenoter& b,
+    std::string* errorOut = nullptr
+);
+
+// \todo Not yet implemented!
+bool VerifyTypeCastCompatibility(
+    const AbstractSyntaxTrees::TypeDenoter& destType,
+    const AbstractSyntaxTrees::TypeDenoter& srcType,
     std::string* errorOut = nullptr
 );
 

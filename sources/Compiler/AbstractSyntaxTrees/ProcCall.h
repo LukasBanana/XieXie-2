@@ -23,6 +23,8 @@ class ProcCall : public AST
         
         AST_INTERFACE(ProcCall);
 
+        const TypeDenoter* GetTypeDenoter() const override;
+
         VarNamePtr          procName;
         std::vector<ArgPtr> args;
 

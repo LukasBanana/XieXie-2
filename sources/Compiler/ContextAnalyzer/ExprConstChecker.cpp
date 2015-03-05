@@ -1,11 +1,11 @@
 /*
- * ConstExprChecker.cpp
+ * ExprConstChecker.cpp
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "ConstExprChecker.h"
+#include "ExprConstChecker.h"
 #include "ErrorReporter.h"
 #include "CompilerMessage.h"
 #include "ASTImport.h"
@@ -15,7 +15,7 @@ namespace ContextAnalyzer
 {
 
 
-bool ConstExprChecker::VerifyConstExpr(const Expr& expr, ErrorReporter* errorReporter)
+bool ExprConstChecker::Verify(const Expr& expr, ErrorReporter* errorReporter)
 {
     try
     {
@@ -36,48 +36,48 @@ bool ConstExprChecker::VerifyConstExpr(const Expr& expr, ErrorReporter* errorRep
  * ======= Private: =======
  */
 
-DEF_VISIT_PROC(ConstExprChecker, BinaryExpr)
+DEF_VISIT_PROC(ExprConstChecker, BinaryExpr)
 {
     Visit(ast->lhsExpr);
     Visit(ast->rhsExpr);
 }
 
-DEF_VISIT_PROC(ConstExprChecker, UnaryExpr)
+DEF_VISIT_PROC(ExprConstChecker, UnaryExpr)
 {
     Visit(ast->expr);
 }
 
-DEF_VISIT_PROC(ConstExprChecker, LiteralExpr)
+DEF_VISIT_PROC(ExprConstChecker, LiteralExpr)
 {
     // dummy
 }
 
-DEF_VISIT_PROC(ConstExprChecker, CastExpr)
+DEF_VISIT_PROC(ExprConstChecker, CastExpr)
 {
     throw ast;
 }
 
-DEF_VISIT_PROC(ConstExprChecker, ProcCallExpr)
+DEF_VISIT_PROC(ExprConstChecker, ProcCallExpr)
 {
     throw ast;
 }
 
-DEF_VISIT_PROC(ConstExprChecker, MemberCallExpr)
+DEF_VISIT_PROC(ExprConstChecker, MemberCallExpr)
 {
     throw ast;
 }
 
-DEF_VISIT_PROC(ConstExprChecker, AllocExpr)
+DEF_VISIT_PROC(ExprConstChecker, AllocExpr)
 {
     throw ast;
 }
 
-DEF_VISIT_PROC(ConstExprChecker, VarAccessExpr)
+DEF_VISIT_PROC(ExprConstChecker, VarAccessExpr)
 {
-    Visit(ast->varName);
+    throw ast;
 }
 
-DEF_VISIT_PROC(ConstExprChecker, InitListExpr)
+DEF_VISIT_PROC(ExprConstChecker, InitListExpr)
 {
     Visit(ast->exprs);
 }

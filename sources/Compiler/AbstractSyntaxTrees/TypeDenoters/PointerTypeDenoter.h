@@ -25,7 +25,7 @@ class PointerTypeDenoter : public TypeDenoter
 
         std::string ToString() const override
         {
-            return "pointer of " + declIdent;
+            return "pointer of " + (declIdent.empty() ? "???" : declIdent);
         }
 
         std::string declIdent;

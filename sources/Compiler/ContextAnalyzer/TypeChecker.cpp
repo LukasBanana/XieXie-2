@@ -22,6 +22,10 @@ namespace TypeChecker
 
 using namespace AbstractSyntaxTrees;
 
+/* 
+ * Internal functions
+ */
+
 static std::string TypeComparison(const TypeDenoter& a, const TypeDenoter& b)
 {
     return "<" + a.ToString() + "> and <" + b.ToString() + ">";
@@ -33,39 +37,47 @@ static void AssertTypeEquality(const TypeDenoter& a, const TypeDenoter& b)
         throw std::string(TypeComparison(a, b) + " are incompatible types");
 }
 
-static void VerifyBuiltinTypes(TypeDenoter& a, TypeDenoter& b)
+static void VerifyBuiltinTypes(const TypeDenoter& a, const TypeDenoter& b)
 {
     AssertTypeEquality(a, b);
 
-    auto& subA = static_cast<BuiltinTypeDenoter&>(a);
-    auto& subB = static_cast<BuiltinTypeDenoter&>(b);
+    auto& subA = static_cast<const BuiltinTypeDenoter&>(a);
+    auto& subB = static_cast<const BuiltinTypeDenoter&>(b);
 
     if (subA.typeName != subB.typeName)
         throw std::string("built-in types " + TypeComparison(a, b) + " must be explicity casted");
 }
 
-static void VerifyArrayTypes(TypeDenoter& a, TypeDenoter& b)
+static void VerifyArrayTypes(const TypeDenoter& a, const TypeDenoter& b)
 {
     AssertTypeEquality(a, b);
 
-    auto& subA = static_cast<ArrayTypeDenoter&>(a);
-    auto& subB = static_cast<ArrayTypeDenoter&>(b);
+    auto& subA = static_cast<const ArrayTypeDenoter&>(a);
+    auto& subB = static_cast<const ArrayTypeDenoter&>(b);
+
+    if (!subA.lowerTypeDenoter || !subB.lowerTypeDenoter)
+        throw std::string("invalid lower type denoter in array type denoter");
 
     VerifyTypeCompatibility(*subA.lowerTypeDenoter, *subB.lowerTypeDenoter);
 }
 
-static void VerifyPointerTypes(TypeDenoter& a, TypeDenoter& b)
+static void VerifyPointerTypes(const TypeDenoter& a, const TypeDenoter& b)
 {
     AssertTypeEquality(a, b);
 
-    auto& subA = static_cast<PointerTypeDenoter&>(a);
-    auto& subB = static_cast<PointerTypeDenoter&>(b);
+    auto& subA = static_cast<const PointerTypeDenoter&>(a);
+    auto& subB = static_cast<const PointerTypeDenoter&>(b);
 
     //!TODO! -> check class compatibility ... !!!
     //VerifyClassCompatibility(subA.declIdent, subB.declIdent);
 }
 
-bool VerifyTypeCompatibility(TypeDenoter& a, TypeDenoter& b, std::string* errorOut)
+
+/*
+ * Global functions
+ */
+
+bool VerifyTypeCompatibility(const TypeDenoter& a, const TypeDenoter& b, std::string* errorOut)
 {
     try
     {
@@ -89,6 +101,12 @@ bool VerifyTypeCompatibility(TypeDenoter& a, TypeDenoter& b, std::string* errorO
             *errorOut = err;
     }
     return false;
+}
+
+bool VerifyTypeCastCompatibility(const TypeDenoter& destType, const TypeDenoter& srcType, std::string* errorOut)
+{
+    //...
+    return true;
 }
 
 

@@ -328,7 +328,7 @@ DEF_VISIT_PROC(ASTViewer, LiteralExpr)
 DEF_VISIT_PROC(ASTViewer, CastExpr)
 {
     AST_INFO_COLOR("CastExpr", colorExpr);
-    Visit(ast->typeDenoter);
+    Visit(ast->castTypeDenoter);
     Visit(ast->expr);
 }
 

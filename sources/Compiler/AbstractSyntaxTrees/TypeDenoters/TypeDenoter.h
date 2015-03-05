@@ -33,6 +33,15 @@ class TypeDenoter : public AST
             return false;
         }
 
+        /**
+        Returns the last type denoter in a hierarchy. This may also be this type denoter or null,
+        if there is no distinct last type (missing pointer information for instance).
+        */
+        virtual const TypeDenoter* GetLast() const
+        {
+            return this;
+        }
+
         //! Returns a declarative string for this type.
         virtual std::string ToString() const = 0;
 

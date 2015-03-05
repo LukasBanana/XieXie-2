@@ -14,7 +14,8 @@
 #include "CompilerMessage.h"
 #include "ScopedStmnt.h"
 #include "AttribPrefix.h"
-#include "ConstExprChecker.h"
+#include "ExprConstChecker.h"
+#include "ExprTypeChecker.h"
 
 #include <functional>
 
@@ -64,7 +65,7 @@ class Decorator : public Visitor
         void DecorateClassAttribs(ClassDeclStmnt& ast);
         void VerifyClassInheritance(ClassDeclStmnt& ast);
 
-        void RegisterVarDeclMember(VarDecl& ast);
+        void RegisterVarDecl(VarDecl& ast);
         void DecorateVarDeclMember(VarDecl& ast);
         void DecorateVarDeclLocal(VarDecl& ast);
 
@@ -73,6 +74,10 @@ class Decorator : public Visitor
             const std::map<std::string, std::function<void(const Attrib&, AttribPrefix::Flags&)>>& allowedAttribs
         );
         void DecorateAttribDeprecated(const Attrib& ast, AttribPrefix::Flags& attribArgs);
+
+        void DecorateExpr(Expr& ast);
+        bool VerifyExprConst(const Expr& expr);
+        bool VerifyExprType(const Expr& expr);
 
         StmntSymbolTable::SymbolType* FetchSymbolFromScope(
             const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast = nullptr
@@ -87,8 +92,6 @@ class Decorator : public Visitor
         void VisitVarName(VarName& ast);
         void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName);
         void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
-
-        bool VerifyConstExpr(const Expr& expr);
 
         /* --- Symbol table --- */
 
@@ -114,7 +117,9 @@ class Decorator : public Visitor
         /* === Members === */
 
         ErrorReporter*                  errorReporter_  = nullptr;
-        ConstExprChecker                constExprChecker_;
+
+        ExprConstChecker                exprConstChecker_;
+        ExprTypeChecker                 exprTypeChecker_;
 
         States                          state_          = States::RegisterClassSymbols;
         Program*                        program_        = nullptr;
