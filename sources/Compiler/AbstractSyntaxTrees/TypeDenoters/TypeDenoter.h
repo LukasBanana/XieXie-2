@@ -27,6 +27,12 @@ class TypeDenoter : public AST
             return false;
         }
 
+        //! Returns true if this is a 'null' pointer type. By default false.
+        virtual bool IsNull() const
+        {
+            return false;
+        }
+
         //! Returns true if a variable fo this type can be concatenated with another variable. By default false.
         virtual bool CanBeConcatenated() const
         {
@@ -41,6 +47,9 @@ class TypeDenoter : public AST
         {
             return this;
         }
+
+        //! Creates a 'reference copy' of this type denoter. This is not a copy of the entire AST sub tree.
+        virtual TypeDenoterPtr CopyRef() const = 0;
 
         //! Returns a declarative string for this type.
         virtual std::string ToString() const = 0;

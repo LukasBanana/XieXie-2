@@ -23,9 +23,22 @@ class PointerTypeDenoter : public TypeDenoter
         
         AST_INTERFACE_EXT(PointerTypeDenoter, TypeDenoter);
 
+        bool IsNull() const override
+        {
+            return declIdent.empty(); 
+        }
+
         std::string ToString() const override
         {
             return "pointer of " + (declIdent.empty() ? "???" : declIdent);
+        }
+
+        TypeDenoterPtr CopyRef() const override
+        {
+            auto copy = std::make_shared<PointerTypeDenoter>();
+            copy->declIdent = declIdent;
+            copy->declRef = declRef;
+            return copy;
         }
 
         std::string declIdent;

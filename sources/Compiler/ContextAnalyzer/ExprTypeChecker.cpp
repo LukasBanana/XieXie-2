@@ -12,6 +12,8 @@
 #include "TypeChecker.h"
 #include "TypeDenoter.h"
 
+#include <algorithm>
+
 
 namespace ContextAnalyzer
 {
@@ -63,7 +65,13 @@ DEF_VISIT_PROC(ExprTypeChecker, BinaryExpr)
 
 DEF_VISIT_PROC(ExprTypeChecker, UnaryExpr)
 {
+    /* Visit sub expression */
     Visit(ast->expr);
+
+    /* Check if type can be modified */
+    auto exprType = ast->expr->GetTypeDenoter();
+    if (!exprType->CanBeConcatenated())
+        Error("sub expression can not be modified in unary expression", *ast);
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, LiteralExpr)
@@ -103,59 +111,51 @@ DEF_VISIT_PROC(ExprTypeChecker, ProcCallExpr)
 
 DEF_VISIT_PROC(ExprTypeChecker, MemberCallExpr)
 {
+    // dummy
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, AllocExpr)
 {
+    // dummy
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, VarAccessExpr)
 {
+    // dummy
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, InitListExpr)
 {
-    /* Check if this initializer list expression has a valid type */
-    auto lastType = ast->GetTypeDenoter()->GetLast();
-    if (!lastType)
-    {
-        Error("invalid type for initializer list expression", *ast);
-        return;
-    }
-
     /* Visit all sub expressions */
     for (auto& expr : ast->exprs)
         Visit(expr);
 
-    /* Check if all type are compatible */
+    /* Get non-null pointer type in sub expressions */
+    ast->DeduceTypeDenoter();
+
+    auto typeRef = ast->GetDeducedTypeDenoter();
+    if (!typeRef)
+    {
+        Error("type of initializer list expression could not be deduced", *ast);
+        return;
+    }
+
+    /* Check if all types are compatible */
     if (ast->exprs.size() >= 2)
     {
-        auto itA = ast->exprs.begin();
-        auto itB = itA;
-
-        try
+        for (const auto& expr : ast->exprs)
         {
-            auto typeA = (*itA)->GetTypeDenoter();
-            if (typeA)
+            auto exprType = expr->GetTypeDenoter();
+            if (exprType)
             {
-                for (++itB; itB != ast->exprs.end(); ++itB)
-                {
-                    auto typeB = (*itB)->GetTypeDenoter();
-                    if (typeB)
-                    {
-                        if (!VerifyTypeCompatibility(*typeA, *typeB, *ast))
-                            break;
-                    }
-                    else
-                        throw itB->get();
-                }
+                if (!VerifyTypeCompatibility(*typeRef, *exprType, *ast))
+                    break;
             }
             else
-                throw itA->get();
-        }
-        catch (const AST* subExpr)
-        {
-            Error("invalid sub expression type in initializer list expression", *subExpr);
+            {
+                Error("invalid sub expression type in initializer list expression", *expr);
+                break;
+            }
         }
     }
     else if (ast->exprs.empty())

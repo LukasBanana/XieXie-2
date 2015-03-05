@@ -33,6 +33,13 @@ class ArrayTypeDenoter : public TypeDenoter
             return lowerTypeDenoter != nullptr ? lowerTypeDenoter->GetLast() : nullptr;
         }
 
+        TypeDenoterPtr CopyRef() const override
+        {
+            auto copy = std::make_shared<ArrayTypeDenoter>();
+            copy->lowerTypeDenoter = lowerTypeDenoter;
+            return copy;
+        }
+
         TypeDenoterPtr lowerTypeDenoter;
 
 };

@@ -26,6 +26,9 @@ class InitListExpr : public Expr
 
         const TypeDenoter* GetTypeDenoter() const override;
 
+        void DeduceTypeDenoter();
+        const TypeDenoter* GetDeducedTypeDenoter() const;
+
         //! Establishs the array type of this initializer list expression.
         void EstablishArrayType(const TypeDenoterPtr& lowerTypeDenoter);
 

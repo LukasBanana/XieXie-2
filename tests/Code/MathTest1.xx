@@ -30,7 +30,12 @@ class Vector3 {
 		x,y,z := 0.0
 	}
 	
-	float x, y := { "test", 2 }, z := 2.0
+	float x, y, z := 2.0
+	
+	int[] list1 := { 1, 4, 3 }
+	float[][] list2 := { { 3.0 }, { 2.5 } }
+	String[] list3 := { null, "a", "b" }
+	String[][] list4 := { { null, "test" } }
 	
 	void normalize() {
 		float len := x*x + y*y + z*z
@@ -45,7 +50,7 @@ class Vector3 {
 	}
 	
 	String toString() {
-		String s := Test.fibonacci(10).toString()
+		String s// := Test.fibonacci(10).toString()
 		for int i := 0 ; i < { x, y, z }/*.size()*/ ; i++ {
 			s += i//.toString()
 		}

@@ -68,6 +68,13 @@ class BuiltinTypeDenoter : public TypeDenoter
             return typeName != TypeNames::Bool;
         }
 
+        TypeDenoterPtr CopyRef() const override
+        {
+            auto copy = std::make_shared<BuiltinTypeDenoter>();
+            copy->typeName = typeName;
+            return copy;
+        }
+
         TypeNames typeName = TypeNames::Void; // e.g. "int", "float", "bool"
 
 };

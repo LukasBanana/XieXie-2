@@ -222,7 +222,27 @@ const TypeDenoter* AllocExpr::GetTypeDenoter() const
 
 const TypeDenoter* InitListExpr::GetTypeDenoter() const
 {
-    return exprs.empty() ? nullptr : exprs.front()->GetTypeDenoter();
+    return &thisTypeDenoter_;
+}
+
+void InitListExpr::DeduceTypeDenoter()
+{
+    /* Find non-null pointer type in sub expressions */
+    auto itRef = std::find_if(
+        exprs.begin(), exprs.end(),
+        [](const ExprPtr& expr)
+        {
+            auto exprType = expr->GetTypeDenoter();
+            return exprType != nullptr && !exprType->IsNull();
+        }
+    );
+    if (itRef != exprs.end())
+        thisTypeDenoter_.lowerTypeDenoter = (*itRef)->GetTypeDenoter()->CopyRef();
+}
+
+const TypeDenoter* InitListExpr::GetDeducedTypeDenoter() const
+{
+    return thisTypeDenoter_.lowerTypeDenoter.get();
 }
 
 void InitListExpr::EstablishArrayType(const TypeDenoterPtr& lowerTypeDenoter)

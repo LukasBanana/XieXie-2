@@ -39,8 +39,6 @@ static void AssertTypeEquality(const TypeDenoter& a, const TypeDenoter& b)
 
 static void VerifyBuiltinTypes(const TypeDenoter& a, const TypeDenoter& b)
 {
-    AssertTypeEquality(a, b);
-
     auto& subA = static_cast<const BuiltinTypeDenoter&>(a);
     auto& subB = static_cast<const BuiltinTypeDenoter&>(b);
 
@@ -48,28 +46,26 @@ static void VerifyBuiltinTypes(const TypeDenoter& a, const TypeDenoter& b)
         throw std::string("built-in types " + TypeComparison(a, b) + " must be explicity casted");
 }
 
-static void VerifyArrayTypes(const TypeDenoter& a, const TypeDenoter& b)
+static bool VerifyArrayTypes(const TypeDenoter& a, const TypeDenoter& b, std::string* errorOut)
 {
-    AssertTypeEquality(a, b);
-
     auto& subA = static_cast<const ArrayTypeDenoter&>(a);
     auto& subB = static_cast<const ArrayTypeDenoter&>(b);
 
     if (!subA.lowerTypeDenoter || !subB.lowerTypeDenoter)
         throw std::string("invalid lower type denoter in array type denoter");
 
-    VerifyTypeCompatibility(*subA.lowerTypeDenoter, *subB.lowerTypeDenoter);
+    return VerifyTypeCompatibility(*subA.lowerTypeDenoter, *subB.lowerTypeDenoter, errorOut);
 }
 
-static void VerifyPointerTypes(const TypeDenoter& a, const TypeDenoter& b)
+static bool VerifyPointerTypes(const TypeDenoter& a, const TypeDenoter& b, std::string* errorOut)
 {
-    AssertTypeEquality(a, b);
-
     auto& subA = static_cast<const PointerTypeDenoter&>(a);
     auto& subB = static_cast<const PointerTypeDenoter&>(b);
 
     //!TODO! -> check class compatibility ... !!!
-    //VerifyClassCompatibility(subA.declIdent, subB.declIdent);
+    //VerifyClassCompatibility(subA.declIdent, subB.declIdent, errorOut);
+
+    return true;
 }
 
 
@@ -81,19 +77,18 @@ bool VerifyTypeCompatibility(const TypeDenoter& a, const TypeDenoter& b, std::st
 {
     try
     {
+        AssertTypeEquality(a, b);
+
         switch (a.Type())
         {
             case AST::Types::BuiltinTypeDenoter:
                 VerifyBuiltinTypes(a, b);
-                break;
+                return true;
             case AST::Types::ArrayTypeDenoter:
-                VerifyArrayTypes(a, b);
-                break;
+                return VerifyArrayTypes(a, b, errorOut);
             case AST::Types::PointerTypeDenoter:
-                VerifyPointerTypes(a, b);
-                break;
+                return VerifyPointerTypes(a, b, errorOut);
         }
-        return true;
     }
     catch (const std::string& err)
     {

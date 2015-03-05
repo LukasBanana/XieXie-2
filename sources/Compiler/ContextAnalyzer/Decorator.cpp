@@ -594,6 +594,7 @@ void Decorator::DecorateVarDeclMember(VarDecl& ast)
         DecorateExpr(*ast.initExpr);
         VerifyExprConst(*ast.initExpr);
         VerifyExprType(*ast.initExpr);
+        DecorateVarDeclInitExpr(ast);
     }
 }
 
@@ -603,8 +604,30 @@ void Decorator::DecorateVarDeclLocal(VarDecl& ast)
     {
         DecorateExpr(*ast.initExpr);
         VerifyExprType(*ast.initExpr);
+        DecorateVarDeclInitExpr(ast);
     }
     //...
+}
+
+void Decorator::DecorateVarDeclInitExpr(VarDecl& ast)
+{
+    if (ast.initExpr)
+    {
+        Visit(ast.initExpr);
+
+        /* Check compatibility of expression type and variable declaration type */
+        auto varDeclType = ast.parentRef->GetTypeDenoter();
+        auto exprType = ast.initExpr->GetTypeDenoter();
+
+        if (exprType)
+        {
+            std::string errorOut;
+            if (!TypeChecker::VerifyTypeCompatibility(*varDeclType, *exprType, &errorOut))
+                Error(errorOut, &ast);
+        }
+        else
+            Error("invalid type for initializer expression in variable declaration", &ast);
+    }
 }
 
 void Decorator::DecorateAttribPrefix(
