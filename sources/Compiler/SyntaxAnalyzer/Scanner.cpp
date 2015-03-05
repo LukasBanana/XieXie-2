@@ -425,10 +425,7 @@ TokenPtr Scanner::ScanStringLiteral()
                 TakeIt();
 
                 if (IsEscapeChar())
-                {
-                    spell += '\\';
                     spell += chr_;
-                }
                 else
                 {
                     auto chr = TakeIt();
@@ -449,10 +446,6 @@ TokenPtr Scanner::ScanStringLiteral()
                 break;
             }
 
-            /* Check for new-line character */
-            if (Is('\n'))
-                spell += '\\';
-
             /* Append character to string literal */
             spell += TakeIt();
         }
@@ -463,7 +456,7 @@ TokenPtr Scanner::ScanStringLiteral()
         if (!Is('\"'))
             break;
 
-        spell += "\\n";
+        spell += '\n';
     }
 
     /* Return final string literal token */
@@ -486,7 +479,7 @@ TokenPtr Scanner::ScanVerbatimStringLiteral()
             while (Is('\\'))
             {
                 TakeIt();
-                spell += "\\\\";
+                spell += '\\';
             }
 
             if (Is(0))
@@ -503,13 +496,7 @@ TokenPtr Scanner::ScanVerbatimStringLiteral()
                     area.end = Pos();
                     break;
                 }
-                else
-                    spell += "\\";
             }
-
-            /* Check for new-line character */
-            if (Is('\n'))
-                spell += '\\';
 
             /* Append character to string literal */
             spell += TakeIt();
@@ -521,7 +508,7 @@ TokenPtr Scanner::ScanVerbatimStringLiteral()
         if (!Is('\"'))
             break;
 
-        spell += "\\n";
+        spell += '\n';
     }
 
     /* Return final string literal token */
