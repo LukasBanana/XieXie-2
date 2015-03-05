@@ -30,6 +30,8 @@ class Vector3 {
 		x,y,z := 0.0
 	}
 	
+	float x, y := { 1, 2, 3 }, z := "test" + x
+	
 	void normalize() {
 		float len := x*x + y*y + z*z
 		
@@ -49,8 +51,6 @@ class Vector3 {
 		}
 		return s
 	}
-	
-	float x, y, z
 	
 }
 

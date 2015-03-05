@@ -16,4 +16,13 @@ program:
 	(Phase 5)
 	In all classes: In all members of the current class: Analyze the declaration of the current member.
 
+var_decl_stmnt:
+	(Phase 4)
+	Register symbol for class member variables.
+	
+	(Phase 5)
+	For class member variables: Verify that initializer expression is a constant expression.
+	For local variables: Register symbol for local variables.
+	For all variables: Decorate declaration type, decorate initializer expression,
+	and verify that type of expression is compatible to the declaration type.
 

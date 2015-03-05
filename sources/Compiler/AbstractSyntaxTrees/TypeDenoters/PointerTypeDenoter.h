@@ -23,6 +23,11 @@ class PointerTypeDenoter : public TypeDenoter
         
         AST_INTERFACE_EXT(PointerTypeDenoter, TypeDenoter);
 
+        std::string ToString() const override
+        {
+            return "pointer of " + declIdent;
+        }
+
         std::string declIdent;
 
         // dast

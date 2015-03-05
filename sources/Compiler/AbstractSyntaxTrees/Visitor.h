@@ -32,9 +32,7 @@ namespace AbstractSyntaxTrees
 #define DEF_VISIT_PROC(visitor, name) \
     void visitor::Visit##name(name* ast, void* args)
 
-#define DECL_VISITOR_INTERFACE                  \
-    /* --- Common AST nodes --- */              \
-                                                \
+#define DECL_VISITOR_INTERFACE_COMMON           \
     DECL_VISIT_PROC( Program              );    \
     DECL_VISIT_PROC( CodeBlock            );    \
     DECL_VISIT_PROC( VarName              );    \
@@ -49,9 +47,8 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( ArrayAccess          );    \
     DECL_VISIT_PROC( ProcCall             );    \
     DECL_VISIT_PROC( SwitchCase           );    \
-                                                \
-    /* --- Statements --- */                    \
-                                                \
+
+#define DECL_VISITOR_INTERFACE_STMNTS           \
     DECL_VISIT_PROC( ReturnStmnt          );    \
     DECL_VISIT_PROC( CtrlTransferStmnt    );    \
     DECL_VISIT_PROC( ProcCallStmnt        );    \
@@ -76,9 +73,8 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( CopyAssignStmnt      );    \
     DECL_VISIT_PROC( ModifyAssignStmnt    );    \
     DECL_VISIT_PROC( PostOperatorStmnt    );    \
-                                                \
-    /* --- Expressions --- */                   \
-                                                \
+
+#define DECL_VISITOR_INTERFACE_EXPRS            \
     DECL_VISIT_PROC( BinaryExpr           );    \
     DECL_VISIT_PROC( UnaryExpr            );    \
     DECL_VISIT_PROC( LiteralExpr          );    \
@@ -88,12 +84,17 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( AllocExpr            );    \
     DECL_VISIT_PROC( VarAccessExpr        );    \
     DECL_VISIT_PROC( InitListExpr         );    \
-                                                \
-    /* --- Type denoters --- */                 \
-                                                \
+
+#define DECL_VISITOR_INTERFACE_TDENOTER         \
     DECL_VISIT_PROC( BuiltinTypeDenoter   );    \
     DECL_VISIT_PROC( ArrayTypeDenoter     );    \
-    DECL_VISIT_PROC( PointerTypeDenoter   )
+    DECL_VISIT_PROC( PointerTypeDenoter   );
+
+#define DECL_VISITOR_INTERFACE      \
+    DECL_VISITOR_INTERFACE_COMMON   \
+    DECL_VISITOR_INTERFACE_STMNTS   \
+    DECL_VISITOR_INTERFACE_EXPRS    \
+    DECL_VISITOR_INTERFACE_TDENOTER
 
 /* === Visitor interface === */
 

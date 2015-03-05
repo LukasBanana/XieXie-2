@@ -21,10 +21,20 @@ class TypeDenoter : public AST
     
     public:
 
+        //! Returns true if this is a 'void' type. By default false.
         virtual bool IsVoid() const
         {
             return false;
         }
+
+        //! Returns true if a variable fo this type can be concatenated with another variable. By default false.
+        virtual bool CanBeConcatenated() const
+        {
+            return false;
+        }
+
+        //! Returns a declarative string for this type.
+        virtual std::string ToString() const = 0;
 
     protected:
         

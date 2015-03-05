@@ -9,6 +9,7 @@
 #include "ErrorReporter.h"
 #include "ASTImport.h"
 #include "StringModifier.h"
+#include "TypeChecker.h"
 
 #include <algorithm>
 #include <set>
@@ -331,11 +332,32 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
 
 DEF_VISIT_PROC(Decorator, VarDeclStmnt)
 {
-    if ( ( state_ == States::RegisterMemberSymbols && symTab_->GetOwner().Type() == AST::Types::ClassDeclStmnt ) ||
-         ( IsAnalyzeCode() && symTab_->GetOwner().Type() == AST::Types::ProcDeclStmnt ) )
+    if (IsRegisterMemberSymbols())
+    {
+        /* Register symbols of class member variables */
+        for (auto& varDecl : ast->varDecls)
+            RegisterVarDeclMember(*varDecl);
+    }
+    else if (IsAnalyzeCode())
     {
         Visit(ast->typeDenoter);
-        Visit(ast->varDecls);
+        switch (symTab_->GetOwner().Type())
+        {
+            case AST::Types::ProcDeclStmnt:
+                /* Declaration statement for local variables */
+                for (auto& varDecl : ast->varDecls)
+                {
+                    RegisterVarDeclMember(*varDecl);
+                    DecorateVarDeclLocal(*varDecl);
+                }
+                break;
+
+            case AST::Types::ClassDeclStmnt:
+                /* Declaration statement for member variables */
+                for (auto& varDecl : ast->varDecls)
+                    DecorateVarDeclMember(*varDecl);
+                break;
+        }
     }
 }
 
@@ -552,11 +574,32 @@ void Decorator::VerifyClassInheritance(ClassDeclStmnt& ast)
     /* Check if any base class is deprecated but this class is not marked as deprecated */
     if ( deprecationFlags && ( !ast.attribPrefix || !(ast.attribPrefix->flags.isDeprecated) ) )
     {
+        /* Print warning for usage of deprecated base class */
         std::string warnInfo = "class declaration \"" + ast.ident + "\" with deprecated base class";
         if (!deprecationFlags->deprecationHint.empty())
             warnInfo += ": " + deprecationFlags->deprecationHint;
         Warning(warnInfo, &ast);
     }
+}
+
+void Decorator::RegisterVarDeclMember(VarDecl& ast)
+{
+    RegisterSymbol(ast.ident, &ast);
+}
+
+void Decorator::DecorateVarDeclMember(VarDecl& ast)
+{
+    if (ast.initExpr)
+    {
+        Visit(ast.initExpr);
+        VerifyConstExpr(*ast.initExpr);
+    }
+}
+
+void Decorator::DecorateVarDeclLocal(VarDecl& ast)
+{
+    Visit(ast.initExpr);
+    //...
 }
 
 void Decorator::DecorateAttribPrefix(
@@ -711,6 +754,11 @@ void Decorator::DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const
     auto symbol = FetchSymbolFromScope(ast.ident, symTab, fullName, &ast);
     if (symbol)
         DecorateVarName(ast, symbol, fullName);
+}
+
+bool Decorator::VerifyConstExpr(const Expr& expr)
+{
+    return constExprChecker_.VerifyConstExpr(expr, errorReporter_);
 }
 
 /* --- Symbol table --- */

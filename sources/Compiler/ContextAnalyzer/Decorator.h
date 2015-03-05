@@ -14,6 +14,7 @@
 #include "CompilerMessage.h"
 #include "ScopedStmnt.h"
 #include "AttribPrefix.h"
+#include "ConstExprChecker.h"
 
 #include <functional>
 
@@ -63,6 +64,10 @@ class Decorator : public Visitor
         void DecorateClassAttribs(ClassDeclStmnt& ast);
         void VerifyClassInheritance(ClassDeclStmnt& ast);
 
+        void RegisterVarDeclMember(VarDecl& ast);
+        void DecorateVarDeclMember(VarDecl& ast);
+        void DecorateVarDeclLocal(VarDecl& ast);
+
         void DecorateAttribPrefix(
             AttribPrefix& ast, const std::string& declDesc,
             const std::map<std::string, std::function<void(const Attrib&, AttribPrefix::Flags&)>>& allowedAttribs
@@ -83,6 +88,8 @@ class Decorator : public Visitor
         void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName);
         void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
 
+        bool VerifyConstExpr(const Expr& expr);
+
         /* --- Symbol table --- */
 
         void PushSymTab(ScopedStmnt& ast);
@@ -95,6 +102,10 @@ class Decorator : public Visitor
 
         /* --- States --- */
 
+        inline bool IsRegisterMemberSymbols() const
+        {
+            return state_ == States::RegisterMemberSymbols;
+        }
         inline bool IsAnalyzeCode() const
         {
             return state_ == States::AnalyzeCode;
@@ -103,6 +114,7 @@ class Decorator : public Visitor
         /* === Members === */
 
         ErrorReporter*                  errorReporter_  = nullptr;
+        ConstExprChecker                constExprChecker_;
 
         States                          state_          = States::RegisterClassSymbols;
         Program*                        program_        = nullptr;
