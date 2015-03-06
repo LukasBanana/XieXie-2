@@ -165,7 +165,7 @@ DEF_VISIT_PROC(Decorator, Param)
 
 DEF_VISIT_PROC(Decorator, Arg)
 {
-    Visit(ast->expr);
+    DecorateExpr(*ast->expr);
 }
 
 DEF_VISIT_PROC(Decorator, ProcSignature)
@@ -191,7 +191,7 @@ DEF_VISIT_PROC(Decorator, ClassBodySegment)
 
 DEF_VISIT_PROC(Decorator, ArrayAccess)
 {
-    Visit(ast->indexExpr);
+    DecorateExpr(*ast->indexExpr);
     Visit(ast->next);
     VerifyExprIsIntegral(*ast->indexExpr, "array index expression");
 }
@@ -207,6 +207,9 @@ DEF_VISIT_PROC(Decorator, ProcCall)
         ast->declStmntRef = static_cast<ProcDeclStmnt*>(declRef);
     else
         Error("identifier \"" + ast->procName->FullName() + "\" does not refer to a procedure declaration", ast);
+
+    /* Decorate procedure arguments */
+    DecorateProcArgs(*ast);
 }
 
 DEF_VISIT_PROC(Decorator, SwitchCase)
@@ -639,6 +642,11 @@ void Decorator::VerifyAssignStmntExprTypes(const VarName& varName, const Expr& e
     }
     else
         Error("invalid type of expression in assign statement", &expr);
+}
+
+void Decorator::DecorateProcArgs(ProcCall& ast)
+{
+    //...
 }
 
 void Decorator::DecorateAttribPrefix(

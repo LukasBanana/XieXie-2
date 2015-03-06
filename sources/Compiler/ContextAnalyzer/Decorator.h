@@ -71,6 +71,8 @@ class Decorator : public Visitor
         void VerifyVarDeclInitExpr(VarDecl& ast);
         void VerifyAssignStmntExprTypes(const VarName& varName, const Expr& expr);
 
+        void DecorateProcArgs(ProcCall& ast);
+
         void DecorateAttribPrefix(
             AttribPrefix& ast, const std::string& declDesc,
             const std::map<std::string, std::function<void(const Attrib&, AttribPrefix::Flags&)>>& allowedAttribs

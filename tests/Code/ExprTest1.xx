@@ -35,6 +35,7 @@ class ExprTest1 {
 	int m_a := 2 + 3/2
 	int[] m_b := { 1, 2, 3 }
 	int[][] m_c := { { 3 }, { 2 } }
+	Bar[] m_d
 	
 	static void main() {
 		
@@ -42,13 +43,18 @@ class ExprTest1 {
 		int a := (int)test1(2)
 		int b := test2(0)
 		int c := m_c[2][(int)test1(5)]
-		//int a := 3 + 2 * test1(2)
+		int d := a + -3 // ok, unary expression is valid
+		//int e := a + ---3 // error: "--" is scanned here
+		int e := a + - - -3 // ok, unary expression is valid
+		
+		//var f := a
+		//var g := m_d
 		
 		// Expressions for conditions
 		if (a > m_b[0]) = true {
 			int n
 			for int i := 0 ; i < 10 ; i++ {
-				n += i + (int)ExprTest1.test1(i)
+				n += i + (int)ExprTest1.test1(a > b)
 			}
 		} else if m_c[1][2] - m_b[-3] > 0 {
 			Foo f
@@ -58,6 +64,7 @@ class ExprTest1 {
 			//f := b // error: "Bar" is not a sub class of "Foo"
 			f := fs // ok, "FooSub" is a sub class of "Foo"
 			f := null // ok, null is compatible to all pointers
+			fs := (FooSub)f // ok, dynamic cast
 			
 			//bool b0 := (f = b) // error: "Bar" is not sub class of "Foo"
 			bool b1 := (f = fs) // ok

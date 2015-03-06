@@ -11,6 +11,12 @@
 #include "Program.h"
 #include "SourceFile.h"
 #include "ASTViewer.h"
+#include "CFGViewer.h"
+
+#if 1//!TEST!
+#include "BasicBlock.h"
+#include "TACModifyAssignInst.h"
+#endif
 
 
 void CompileCommand::Execute(StreamParser& input, Log& output)
@@ -66,6 +72,27 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
 
     if (!hasError)
         output.Success("compilation successful");
+
+    #if 1//TEST
+    {
+        using namespace ControlFlowGraph;
+        using namespace ThreeAddressCodes;
+
+        CFGViewer viewer;
+        std::ofstream file("cfg-graph.vg");
+        BasicBlock a, b, c;
+
+        a.AddSucc(b);
+        a.AddSucc(c);
+        b.AddSucc(c);
+
+        for (int i = 0; i < 3; ++i) a.MakeInst<TACModifyAssignInst>();
+        for (int i = 0; i < 2; ++i) b.MakeInst<TACModifyAssignInst>();
+        for (int i = 0; i < 5; ++i) c.MakeInst<TACModifyAssignInst>();
+
+        viewer.DumpGraph(a, file);
+    }
+    #endif
 }
 
 
