@@ -116,13 +116,6 @@ DEF_VISIT_PROC(ASTViewer, Attrib)
     Visit(ast->exprs);
 }
 
-DEF_VISIT_PROC(ASTViewer, EnumEntry)
-{
-    AST_INFO("EnumEntry");
-    AST_STRING(ident);
-    Visit(ast->valueExpr);
-}
-
 DEF_VISIT_PROC(ASTViewer, ClassBodySegment)
 {
     AST_INFO("ClassBodySegment");
@@ -247,21 +240,6 @@ DEF_VISIT_PROC(ASTViewer, VarDeclStmnt)
     AST_INFO_COLOR("VarDeclStmnt", colorStmnt);
     Visit(ast->typeDenoter);
     Visit(ast->varDecls);
-}
-
-DEF_VISIT_PROC(ASTViewer, EnumDeclStmnt)
-{
-    AST_INFO_COLOR("EnumDeclStmnt", colorStmnt);
-    AST_STRING(ident);
-    Visit(ast->entries);
-}
-
-DEF_VISIT_PROC(ASTViewer, FlagsDeclStmnt)
-{
-    AST_INFO_COLOR("FlagsDeclStmnt", colorStmnt);
-    AST_STRING(ident);
-    for (const auto& entry : ast->entries)
-        String("entry", entry);
 }
 
 DEF_VISIT_PROC(ASTViewer, ProcDeclStmnt)

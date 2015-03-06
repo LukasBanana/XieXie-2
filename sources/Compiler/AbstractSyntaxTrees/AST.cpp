@@ -255,7 +255,28 @@ void InitListExpr::EstablishArrayType(const TypeDenoterPtr& lowerTypeDenoter)
 
 const TypeDenoter* VarAccessExpr::GetTypeDenoter() const
 {
-    return varName->GetLast().GetTypeDenoter();
+    const auto& lastIdent = varName->GetLast();
+    auto varType = lastIdent.GetTypeDenoter();
+    
+    /* Reduce type for each array access */
+    auto arrayAccess = lastIdent.arrayAccess.get();
+    while (arrayAccess)
+    {
+        if (varType->Type() == AST::Types::ArrayTypeDenoter)
+        {
+            /* Get next lower type */
+            auto arrayType = static_cast<const ArrayTypeDenoter*>(varType);
+            varType = arrayType->lowerTypeDenoter.get();
+        }
+        else
+        {
+            /* Array access but no further lower type */
+            return nullptr;
+        }
+        arrayAccess = arrayAccess->next.get();
+    }
+
+    return varType;
 }
 
 
@@ -267,23 +288,12 @@ const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const
 }
 
 
-/* --- EnumDeclStmnt --- */
-
-const TypeDenoter* EnumDeclStmnt::GetTypeDenoter() const
-{
-    return &thisTypeDenoter_;
-}
-
-
-/* --- FlagsDeclStmnt --- */
-
-const TypeDenoter* FlagsDeclStmnt::GetTypeDenoter() const
-{
-    return &thisTypeDenoter_;
-}
-
-
 /* --- BuiltinTypeDenoter --- */
+
+BuiltinTypeDenoter::BuiltinTypeDenoter(const TypeNames initTypeName) :
+    typeName{ initTypeName }
+{
+}
 
 BuiltinTypeDenoter::TypeNames BuiltinTypeDenoter::GetTypeName(const std::string& spell)
 {
@@ -418,7 +428,24 @@ std::string BinaryExpr::GetOperatorSpell(const Operators op)
 
 const TypeDenoter* BinaryExpr::GetTypeDenoter() const
 {
-    return lhsExpr->GetTypeDenoter();
+    return HasBooleanOperator() ? (&CommonBoolType) : lhsExpr->GetTypeDenoter();
+}
+
+bool BinaryExpr::HasBooleanOperator() const
+{
+    return
+        binaryOperator == Operators::LogicOr  ||
+        binaryOperator == Operators::LogicAnd ||
+        ( binaryOperator >= Operators::Equal && binaryOperator <= Operators::GreaterEqual );
+}
+
+bool BinaryExpr::HasBoolCompatibleOperator() const
+{
+    return
+        binaryOperator == Operators::LogicOr  ||
+        binaryOperator == Operators::LogicAnd ||
+        binaryOperator == Operators::Equal    ||
+        binaryOperator == Operators::Inequal;
 }
 
 

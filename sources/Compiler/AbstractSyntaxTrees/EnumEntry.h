@@ -8,6 +8,9 @@
 #ifndef __XX_AST_ENUM_ENTRY_H__
 #define __XX_AST_ENUM_ENTRY_H__
 
+// >>> temporarily disabled
+#if 0
+
 
 #include "AST.h"
 
@@ -31,6 +34,8 @@ class EnumEntry : public AST
 
 } // /namespace AbstractSyntaxTrees
 
+
+#endif
 
 #endif
 

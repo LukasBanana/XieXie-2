@@ -79,6 +79,8 @@ class Decorator : public Visitor
         void DecorateExpr(Expr& ast);
         bool VerifyExprConst(const Expr& expr);
         bool VerifyExprType(const Expr& expr);
+        bool VerifyExprIsBoolean(const Expr& expr, const std::string& usageDesc);
+        bool VerifyExprIsIntegral(const Expr& expr, const std::string& usageDesc);
 
         StmntSymbolTable::SymbolType* FetchSymbolFromScope(
             const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast = nullptr
@@ -123,7 +125,9 @@ class Decorator : public Visitor
         ExprTypeChecker                 exprTypeChecker_;
 
         States                          state_          = States::RegisterClassSymbols;
+
         Program*                        program_        = nullptr;
+        ProcDeclStmnt*                  procDeclStmnt_  = nullptr; //!< Reference to the current procedure declaration statement.
 
         StmntSymbolTable*               symTab_         = nullptr; //!< Reference to the current symbol table.
         std::vector<StmntSymbolTable*>  symTabStack_;

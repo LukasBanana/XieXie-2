@@ -41,6 +41,8 @@ extern class Log {
 	
 }
 
+extern class Object {}
+
 class Mouse {
 	
 	public:
@@ -132,17 +134,7 @@ class Vector3 {
 
 class Vehicle {
 	
-	enum Types {
-		__Unspecified__,
-		Car,
-		MotorCycle
-	}
-	
 	String name
-	
-	Types Type() {
-		return Types.__Unspecified__
-	}
 	
 	int NumWheels() {
 		return 0
@@ -169,7 +161,9 @@ class AppTest {
 	
 	int Main(String[] args) {
 		int result := 3
-	
+		
+		int x, y, z
+		
 		// For loops
 		foreach String arg : args {
 			//if x > y > z or ( y = 3 or z = 4 ) {
@@ -202,7 +196,7 @@ class AppTest {
 		}
 		
 		// Boolean expressions
-		int a, b, c
+		int a, b, c, d, e, f, g
 		
 		//bool b0 := a > b > c
 		bool b1 := a > b and b > c

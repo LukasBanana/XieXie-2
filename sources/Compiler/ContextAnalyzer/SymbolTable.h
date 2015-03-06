@@ -111,9 +111,16 @@ template <typename Owner, typename Symbol> class SymbolTable
         */
         SymbolType* Fetch(const std::string& ident) const
         {
+            /* Search identifier in this symbol table */
             auto it = symTable_.find(ident);
             if (it != symTable_.end() && !it->second.empty())
                 return it->second.top().symbol;
+
+            /* Search identifier in the fallback symbol table */
+            if (fallbackSymTab)
+                return fallbackSymTab->Fetch(ident);
+
+            /* No symbol found */
             return nullptr;
         }
 
@@ -128,6 +135,9 @@ template <typename Owner, typename Symbol> class SymbolTable
         {
             return owner_;
         }
+
+        //! Fallback symbol table when an identifier was not found in this symbol table.
+        SymbolTable* fallbackSymTab = nullptr;
 
     private:
         

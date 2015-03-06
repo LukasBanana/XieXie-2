@@ -37,19 +37,32 @@ class ClassDeclStmnt : public ScopedStmnt
 
         const TypeDenoter* GetTypeDenoter() const override;
 
+        //! Binds the base class reference and the fallback symbol table.
+        void BindBaseClassRef(ClassDeclStmnt* classDeclStmnt)
+        {
+            baseClassRef_ = classDeclStmnt;
+            if (baseClassRef_)
+                symTab.fallbackSymTab = &(baseClassRef_->symTab);
+            else
+                symTab.fallbackSymTab = nullptr;
+        }
+        
+        ClassDeclStmnt* GetBaseClassRef() const
+        {
+            return baseClassRef_;
+        }
+
         bool                                isExtern = false;
         AttribPrefixPtr                     attribPrefix;       // may be null
         std::string                         ident;
         std::string                         baseClassIdent;     // may be empty
         std::vector<ClassBodySegmentPtr>    bodySegments;
 
-        // dast
-        ClassDeclStmnt*                     baseClassRef = nullptr;
-
     private:
 
         // dast
         PointerTypeDenoter                  thisTypeDenoter_;   // type denoter for this class declaration
+        ClassDeclStmnt*                     baseClassRef_ = nullptr;
 
 };
 

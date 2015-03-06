@@ -35,7 +35,6 @@ DECL_SHR_PTR( Arg                  );
 DECL_SHR_PTR( ProcSignature        );
 DECL_SHR_PTR( AttribPrefix         );
 DECL_SHR_PTR( Attrib               );
-DECL_SHR_PTR( EnumEntry            );
 DECL_SHR_PTR( ClassBodySegment     );
 DECL_SHR_PTR( ArrayAccess          );
 DECL_SHR_PTR( ProcCall             );
@@ -59,8 +58,6 @@ DECL_SHR_PTR( ForEverStmnt         );
 
 DECL_SHR_PTR( ClassDeclStmnt       );
 DECL_SHR_PTR( VarDeclStmnt         );
-DECL_SHR_PTR( EnumDeclStmnt        );
-DECL_SHR_PTR( FlagsDeclStmnt       );
 DECL_SHR_PTR( ProcDeclStmnt        );
 DECL_SHR_PTR( InitDeclStmnt        );
 

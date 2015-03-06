@@ -23,6 +23,11 @@ class ArrayTypeDenoter : public TypeDenoter
         
         AST_INTERFACE_EXT(ArrayTypeDenoter, TypeDenoter);
 
+        bool IsArray() const override
+        {
+            return true;
+        }
+
         std::string ToString() const override
         {
             return "array of " + (lowerTypeDenoter != nullptr ? lowerTypeDenoter->ToString() : "???");

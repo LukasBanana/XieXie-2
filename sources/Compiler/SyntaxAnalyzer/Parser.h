@@ -77,7 +77,7 @@ class Parser
         ProcSignaturePtr        ParseProcSignature(const TypeDenoterPtr& typeDenoter = nullptr, const TokenPtr& identTkn = nullptr, bool isStatic = false);
         AttribPrefixPtr         ParseAttribPrefix();
         AttribPtr               ParseAttrib();
-        EnumEntryPtr            ParseEnumEntry();
+        //EnumEntryPtr            ParseEnumEntry();
         ClassBodySegmentPtr     ParseClassBodySegment();
         ArrayAccessPtr          ParseArrayAccess(bool hasArrayAccess = false);
         ProcCallPtr             ParseProcCall(const VarNamePtr& varName = nullptr);
@@ -116,8 +116,8 @@ class Parser
         ClassDeclStmntPtr       ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         VarDeclStmntPtr         ParseVarDeclStmnt(const TokenPtr& identTkn = nullptr, bool hasArrayType = false);
         VarDeclStmntPtr         ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
-        EnumDeclStmntPtr        ParseEnumDeclStmnt();
-        FlagsDeclStmntPtr       ParseFlagsDeclStmnt();
+        //EnumDeclStmntPtr        ParseEnumDeclStmnt();
+        //FlagsDeclStmntPtr       ParseFlagsDeclStmnt();
         ProcDeclStmntPtr        ParseProcDeclStmnt(bool isExtern = false, AttribPrefixPtr attribPrefix = nullptr);
         ProcDeclStmntPtr        ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
         InitDeclStmntPtr        ParseInitDeclStmnt(bool isExtern = false);
@@ -200,7 +200,7 @@ class Parser
         std::vector<ArgPtr>                 ParseArgList();
         std::vector<ParamPtr>               ParseParamList();
         std::vector<AttribPtr>              ParseAttribList();
-        std::vector<EnumEntryPtr>           ParseEnumEntryList();
+        //std::vector<EnumEntryPtr>           ParseEnumEntryList();
         std::vector<std::string>            ParseIdentList(const Tokens separatorToken = Tokens::Comma);
 
         /* --- Base functions --- */

@@ -20,7 +20,6 @@
 #include "ProcSignature.h"
 #include "AttribPrefix.h"
 #include "Attrib.h"
-#include "EnumEntry.h"
 #include "ClassBodySegment.h"
 #include "ArrayAccess.h"
 #include "ProcCall.h"
@@ -45,8 +44,6 @@
 
 #include "ClassDeclStmnt.h"
 #include "VarDeclStmnt.h"
-#include "EnumDeclStmnt.h"
-#include "FlagsDeclStmnt.h"
 #include "ProcDeclStmnt.h"
 #include "InitDeclStmnt.h"
 

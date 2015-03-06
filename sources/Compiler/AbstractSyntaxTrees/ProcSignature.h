@@ -26,7 +26,7 @@ class ProcSignature : public AST
         const TypeDenoter* GetTypeDenoter() const override;
 
         bool                    isStatic = false;
-        TypeDenoterPtr          returnTypeDenoter;          // may be null (for "void" type)
+        TypeDenoterPtr          returnTypeDenoter;
         std::string             ident;
         std::vector<ParamPtr>   params;
 

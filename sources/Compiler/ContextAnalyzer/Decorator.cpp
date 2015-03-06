@@ -184,11 +184,6 @@ DEF_VISIT_PROC(Decorator, Attrib)
     Visit(ast->exprs);
 }
 
-DEF_VISIT_PROC(Decorator, EnumEntry)
-{
-    Visit(ast->valueExpr);
-}
-
 DEF_VISIT_PROC(Decorator, ClassBodySegment)
 {
     Visit(ast->declStmnts);
@@ -198,12 +193,20 @@ DEF_VISIT_PROC(Decorator, ArrayAccess)
 {
     Visit(ast->indexExpr);
     Visit(ast->next);
+    VerifyExprIsIntegral(*ast->indexExpr, "array index expression");
 }
 
 DEF_VISIT_PROC(Decorator, ProcCall)
 {
     Visit(ast->procName);
     Visit(ast->args);
+
+    /* Decorate procedure call with procedure declaration reference */
+    auto declRef = ast->procName->GetLast().declRef;
+    if (declRef && declRef->Type() == AST::Types::ProcDeclStmnt)
+        ast->declStmntRef = static_cast<ProcDeclStmnt*>(declRef);
+    else
+        Error("identifier \"" + ast->procName->FullName() + "\" does not refer to a procedure declaration", ast);
 }
 
 DEF_VISIT_PROC(Decorator, SwitchCase)
@@ -234,7 +237,11 @@ DEF_VISIT_PROC(Decorator, ProcCallStmnt)
 
 DEF_VISIT_PROC(Decorator, IfStmnt)
 {
-    Visit(ast->condExpr);
+    if (ast->condExpr)
+    {
+        DecorateExpr(*ast->condExpr);
+        VerifyExprIsBoolean(*ast->condExpr, "if-statement");
+    }
     Visit(ast->codeBlock);
     Visit(ast->elseStmnt);
 }
@@ -248,12 +255,20 @@ DEF_VISIT_PROC(Decorator, SwitchStmnt)
 DEF_VISIT_PROC(Decorator, DoWhileStmnt)
 {
     Visit(ast->codeBlock);
-    Visit(ast->condExpr);
+    if (ast->condExpr)
+    {
+        DecorateExpr(*ast->condExpr);
+        VerifyExprIsBoolean(*ast->condExpr, "do-while-statement");
+    }
 }
 
 DEF_VISIT_PROC(Decorator, WhileStmnt)
 {
-    Visit(ast->condExpr);
+    if (ast->condExpr)
+    {
+        DecorateExpr(*ast->condExpr);
+        VerifyExprIsBoolean(*ast->condExpr, "while-statement");
+    }
     Visit(ast->codeBlock);
 }
 
@@ -262,7 +277,11 @@ DEF_VISIT_PROC(Decorator, ForStmnt)
     OpenScope();
     {
         Visit(ast->initStmnt);
-        Visit(ast->condExpr);
+        if (ast->condExpr)
+        {
+            DecorateExpr(*ast->condExpr);
+            VerifyExprIsBoolean(*ast->condExpr, "for-statement");
+        }
         Visit(ast->assignStmnt);
         Visit(ast->codeBlock);
     }
@@ -361,40 +380,10 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
     }
 }
 
-DEF_VISIT_PROC(Decorator, EnumDeclStmnt)
-{
-    switch (state_)
-    {
-        case States::RegisterMemberSymbols:
-            RegisterSymbol(ast->ident, ast);
-            break;
-
-        case States::AnalyzeCode:
-            PushSymTab(*ast);
-            {
-                Visit(ast->entries);
-            }
-            PopSymTab();
-            break;
-    }
-}
-
-DEF_VISIT_PROC(Decorator, FlagsDeclStmnt)
-{
-    switch (state_)
-    {
-        case States::RegisterMemberSymbols:
-            RegisterSymbol(ast->ident, ast);
-            break;
-
-        case States::AnalyzeCode:
-            //Visit(ast->entries);
-            break;
-    }
-}
-
 DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
 {
+    procDeclStmnt_ = ast;
+
     switch (state_)
     {
         case States::RegisterMemberSymbols:
@@ -411,6 +400,8 @@ DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
             PopSymTab();
             break;
     }
+
+    procDeclStmnt_ = nullptr;
 }
 
 DEF_VISIT_PROC(Decorator, InitDeclStmnt)
@@ -430,13 +421,13 @@ DEF_VISIT_PROC(Decorator, InitDeclStmnt)
 DEF_VISIT_PROC(Decorator, CopyAssignStmnt)
 {
     Visit(ast->varNames);
-    Visit(ast->expr);
+    DecorateExpr(*ast->expr);
 }
 
 DEF_VISIT_PROC(Decorator, ModifyAssignStmnt)
 {
     Visit(ast->varName);
-    Visit(ast->expr);
+    DecorateExpr(*ast->expr);
 }
 
 DEF_VISIT_PROC(Decorator, PostOperatorStmnt)
@@ -524,7 +515,7 @@ void Decorator::DecorateClassBaseClass(ClassDeclStmnt& ast)
         if (baseClassDecl)
         {
             if (!baseClassDecl->isExtern)
-                ast.baseClassRef = baseClassDecl;
+                ast.BindBaseClassRef(baseClassDecl);
             else
                 Error("identifier \"" + ast.baseClassIdent + "\" specifies extern class, which can not be used as a base class", &ast);
         }
@@ -550,7 +541,7 @@ void Decorator::DecorateClassAttribs(ClassDeclStmnt& ast)
 void Decorator::VerifyClassInheritance(ClassDeclStmnt& ast)
 {
     /* Detect cycle in class inheritance tree */
-    ClassDeclStmnt* baseClass = ast.baseClassRef;
+    ClassDeclStmnt* baseClass = ast.GetBaseClassRef();
     AttribPrefix::Flags* deprecationFlags = nullptr;
 
     while (baseClass)
@@ -568,7 +559,7 @@ void Decorator::VerifyClassInheritance(ClassDeclStmnt& ast)
         }
 
         /* Go to next upper base class */
-        baseClass = baseClass->baseClassRef;
+        baseClass = baseClass->GetBaseClassRef();
     }
 
     /* Check if any base class is deprecated but this class is not marked as deprecated */
@@ -593,7 +584,6 @@ void Decorator::DecorateVarDeclMember(VarDecl& ast)
     {
         DecorateExpr(*ast.initExpr);
         VerifyExprConst(*ast.initExpr);
-        VerifyExprType(*ast.initExpr);
         DecorateVarDeclInitExpr(ast);
     }
 }
@@ -603,7 +593,6 @@ void Decorator::DecorateVarDeclLocal(VarDecl& ast)
     if (ast.initExpr)
     {
         DecorateExpr(*ast.initExpr);
-        VerifyExprType(*ast.initExpr);
         DecorateVarDeclInitExpr(ast);
     }
     //...
@@ -613,8 +602,6 @@ void Decorator::DecorateVarDeclInitExpr(VarDecl& ast)
 {
     if (ast.initExpr)
     {
-        Visit(ast.initExpr);
-
         /* Check compatibility of expression type and variable declaration type */
         auto varDeclType = ast.parentRef->GetTypeDenoter();
         auto exprType = ast.initExpr->GetTypeDenoter();
@@ -694,8 +681,7 @@ void Decorator::DecorateExpr(Expr& ast)
 {
     /* Decorate all expressions, then check type compatibility of sub-expression */
     Visit(&ast);
-    //ExprValidator
-
+    VerifyExprType(ast);
 }
 
 bool Decorator::VerifyExprConst(const Expr& expr)
@@ -706,6 +692,38 @@ bool Decorator::VerifyExprConst(const Expr& expr)
 bool Decorator::VerifyExprType(const Expr& expr)
 {
     return exprTypeChecker_.Verify(expr, errorReporter_);
+}
+
+bool Decorator::VerifyExprIsBoolean(const Expr& expr, const std::string& usageDesc)
+{
+    /* Check if index expression is an integral type */
+    auto exprType = expr.GetTypeDenoter();
+    if (exprType)
+    {
+        if (exprType->IsBoolean())
+            return true;
+        else
+            Error(usageDesc + " must have boolean type", &expr);
+    }
+    else
+        Error("invalid type for " + usageDesc, &expr);
+    return false;
+}
+
+bool Decorator::VerifyExprIsIntegral(const Expr& expr, const std::string& usageDesc)
+{
+    /* Check if index expression is an integral type */
+    auto exprType = expr.GetTypeDenoter();
+    if (exprType)
+    {
+        if (exprType->IsIntegral())
+            return true;
+        else
+            Error(usageDesc + " must have integral type", &expr);
+    }
+    else
+        Error("invalid type for " + usageDesc, &expr);
+    return false;
 }
 
 StmntSymbolTable::SymbolType* Decorator::FetchSymbolFromScope(
@@ -730,23 +748,72 @@ StmntSymbolTable::SymbolType* Decorator::FetchSymbolFromScope(
 
 /*
 (Phase 1)
-Search identifier in current scope
+Check for "this" identifier
+(only allowed inside non-static member procedure declaration).
 
 (Phase 2)
-Search identifier in class namespace.
+Check for "super" identifier
+(only allowed inside non-static member procedure declaration).
 
 (Phase 3)
+Search identifier in current scope.
+
+(Phase 4)
+Search identifier in class namespace.
+
+(Phase 5)
 Search identifier in global namespace.
 */
 StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
     const std::string& ident, const std::string& fullName, const AST* ast)
 {
-    /* (1) Search in scope */
+    /* (1) Check for "this" identifier */
+    try
+    {
+        if (ident == "this")
+        {
+            /* Search only in class namespace */
+            if (class_)
+            {
+                if (procDeclStmnt_ && procDeclStmnt_->procSignature->isStatic)
+                    throw std::string("can not use 'this' in static procedure declaration");
+                return class_;
+            }
+            else
+                throw std::string("can not use 'this' outside class namespace");
+        }
+
+        /* (2) Check tor "super" identifier */
+        if (ident == "super")
+        {
+            /* Search only in upper class namespace */
+            if (class_)
+            {
+                if (class_->GetBaseClassRef())
+                {
+                    if (procDeclStmnt_ && procDeclStmnt_->procSignature->isStatic)
+                        throw std::string("can not use 'super' in static procedure declaration");
+                    return class_->GetBaseClassRef();
+                }
+                else
+                    throw std::string("can not use 'super' without base class");
+            }
+            else
+                throw std::string("can not use 'super' outside class namespace");
+        }
+    }
+    catch (const std::string& err)
+    {
+        Error(err, ast);
+        return nullptr;
+    }
+
+    /* (3) Search in scope */
     auto symbol = symTab_->Fetch(ident);
     if (symbol)
         return symbol;
     
-    /* (2) Search in class namespace */
+    /* (4) Search in class namespace */
     if (class_)
     {
         symbol = class_->symTab.Fetch(ident);
@@ -754,7 +821,7 @@ StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
             return symbol;
     }
     
-    /* (3) Search in global namespace */
+    /* (5) Search in global namespace */
     return FetchSymbolFromScope(ident, program_->symTab, fullName, ast);
 }
 
@@ -781,7 +848,14 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
     ast.declRef = symbol;
 
     /* Visit array access AST node */
-    Visit(ast.arrayAccess);
+    if (ast.arrayAccess)
+    {
+        Visit(ast.arrayAccess);
+
+        /* Check if identifier refers to an array */
+        if (!symbol || !symbol->GetTypeDenoter() || !symbol->GetTypeDenoter()->IsArray())
+            Error("illegal array access to non-array type \"" + ast.ident + "\"", &ast);
+    }
 
     /* Decorate sub AST node */
     if (ast.next)

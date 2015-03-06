@@ -51,16 +51,18 @@ DEF_VISIT_PROC(ExprTypeChecker, BinaryExpr)
     auto lhsType = ast->lhsExpr->GetTypeDenoter();
     auto rhsType = ast->rhsExpr->GetTypeDenoter();
 
-    if (!lhsType || !rhsType)
-        Error("invalid sub expression types in binary expression", *ast);
-
-    /* Check type compatibility */
-    if (VerifyTypeCompatibility(*lhsType, *rhsType, *ast))
+    if (lhsType && rhsType)
     {
-        /* Check if types can be concatenated */
-        if (!lhsType->CanBeConcatenated() || !rhsType->CanBeConcatenated())
-            Error("sub expressions can not be concatenated in binary expression", *ast);
+        /* Check type compatibility */
+        if (VerifyTypeCompatibility(*lhsType, *rhsType, *ast))
+        {
+            /* Verfiy binary operation */
+            if ( !ast->HasBoolCompatibleOperator() && ( !lhsType->CanBeConcatenated() || !rhsType->CanBeConcatenated() ) )
+                Error("illegal operation in binary expression", *ast);
+        }
     }
+    else
+        Error("invalid sub expression types in binary expression", *ast);
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, UnaryExpr)
@@ -105,8 +107,6 @@ DEF_VISIT_PROC(ExprTypeChecker, ProcCallExpr)
     auto returnType = ast->procCall->GetTypeDenoter();
     if (!returnType)
         Error("invalid procedure call return type", *ast);
-
-    //...
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, MemberCallExpr)

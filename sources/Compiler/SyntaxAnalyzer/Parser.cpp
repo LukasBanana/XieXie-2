@@ -365,6 +365,9 @@ AttribPtr Parser::ParseAttrib()
     return ast;
 }
 
+// >>> temporariliy disabled
+#if 0
+
 // enum_entry: IDENT (':=' expr)?;
 EnumEntryPtr Parser::ParseEnumEntry()
 {
@@ -380,6 +383,8 @@ EnumEntryPtr Parser::ParseEnumEntry()
 
     return ast;
 }
+
+#endif
 
 // class_body_segment: class_visibility? decl_stmnt_list?;
 // class_visibility: class_visibility_type ':';
@@ -484,7 +489,8 @@ StmntPtr Parser::ParseStmnt()
     return ParseVarNameStmnt();
 }
 
-// decl_stmnt: var_decl_stmnt | class_decl_stmnt | enum_decl_stmnt | flags_decl_stmnt | proc_decl_stmnt | init_decl_stmnt;
+// decl_stmnt: var_decl_stmnt | class_decl_stmnt | proc_decl_stmnt | init_decl_stmnt;
+// ( | enum_decl_stmnt | flags_decl_stmnt)
 StmntPtr Parser::ParseDeclStmnt()
 {
     switch (TknType())
@@ -492,10 +498,10 @@ StmntPtr Parser::ParseDeclStmnt()
         case Tokens::Extern:
         case Tokens::Class:
             return ParseClassDeclStmnt();
-        case Tokens::Enum:
+        /*case Tokens::Enum:
             return ParseEnumDeclStmnt();
         case Tokens::Flags:
-            return ParseFlagsDeclStmnt();
+            return ParseFlagsDeclStmnt();*/
         case Tokens::Init:
             return ParseInitDeclStmnt();
         case Tokens::LDParen:
@@ -504,7 +510,8 @@ StmntPtr Parser::ParseDeclStmnt()
     return ParseVarDeclOrProcDeclStmnt();
 }
 
-// extern_decl_stmnt: extern_class_decl_stmnt | extern_proc_decl_stmnt | extern_init_decl_stmnt | enum_decl_stmnt | flags_decl_stmnt;
+// extern_decl_stmnt: extern_class_decl_stmnt | extern_proc_decl_stmnt | extern_init_decl_stmnt;
+// ( | enum_decl_stmnt | flags_decl_stmnt)
 StmntPtr Parser::ParseExternDeclStmnt()
 {
     switch (TknType())
@@ -513,10 +520,10 @@ StmntPtr Parser::ParseExternDeclStmnt()
             return ParseExternClassDeclStmnt();
         case Tokens::Init:
             return ParseInitDeclStmnt(true);
-        case Tokens::Enum:
+        /*case Tokens::Enum:
             return ParseEnumDeclStmnt();
         case Tokens::Flags:
-            return ParseFlagsDeclStmnt();
+            return ParseFlagsDeclStmnt();*/
     }
     return ParseProcDeclStmnt(true);
 }
@@ -961,6 +968,9 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, con
     return ast;
 }
 
+// >>> temporariliy disabled
+#if 0
+
 // enum_decl_stmnt: 'enum' IDENT enum_body;
 // enum_body: '{' enum_entry_list? '}';
 EnumDeclStmntPtr Parser::ParseEnumDeclStmnt()
@@ -1001,6 +1011,8 @@ FlagsDeclStmntPtr Parser::ParseFlagsDeclStmnt()
 
     return ast;
 }
+
+#endif
 
 // proc_decl_stmnt: attrib_prefix? proc_signature code_block;
 // extern_proc_decl_stmnt: attrib_prefix? proc_signature;
@@ -1638,10 +1650,11 @@ std::vector<AttribPtr> Parser::ParseAttribList()
     return ParseSeparatedList<AttribPtr>(std::bind(&Parser::ParseAttrib, this), Tokens::Comma);
 }
 
-std::vector<EnumEntryPtr> Parser::ParseEnumEntryList()
+// >>> temporariliy disabled
+/*std::vector<EnumEntryPtr> Parser::ParseEnumEntryList()
 {
     return ParseSeparatedList<EnumEntryPtr>(std::bind(&Parser::ParseEnumEntry, this), Tokens::Comma);
-}
+}*/
 
 std::vector<std::string> Parser::ParseIdentList(const Tokens separatorToken)
 {

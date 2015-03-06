@@ -47,6 +47,9 @@ class BinaryExpr : public Expr
 
         const TypeDenoter* GetTypeDenoter() const override;
 
+        bool HasBooleanOperator() const;
+        bool HasBoolCompatibleOperator() const;
+
         static Operators GetOperator(const std::string& spell);
         static std::string GetOperatorSpell(const Operators op);
 

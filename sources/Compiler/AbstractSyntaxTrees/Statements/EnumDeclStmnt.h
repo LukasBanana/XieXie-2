@@ -8,6 +8,9 @@
 #ifndef __XX_AST_ENUM_DECL_STMNT_H__
 #define __XX_AST_ENUM_DECL_STMNT_H__
 
+// >>> temporarily disabled
+#if 0
+
 
 #include "ScopedStmnt.h"
 #include "PointerTypeDenoter.h"
@@ -49,6 +52,8 @@ class EnumDeclStmnt : public ScopedStmnt
 
 } // /namespace AbstractSyntaxTrees
 
+
+#endif
 
 #endif
 

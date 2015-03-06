@@ -8,6 +8,9 @@
 #ifndef __XX_AST_FLAGS_DECL_STMNT_H__
 #define __XX_AST_FLAGS_DECL_STMNT_H__
 
+// >>> temporarily disabled
+#if 0
+
 
 #include "ScopedStmnt.h"
 #include "PointerTypeDenoter.h"
@@ -50,6 +53,8 @@ class FlagsDeclStmnt : public ScopedStmnt
 
 } // /namespace AbstractSyntaxTrees
 
+
+#endif
 
 #endif
 

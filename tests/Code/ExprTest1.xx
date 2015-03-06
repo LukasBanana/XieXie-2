@@ -1,0 +1,55 @@
+
+// Expression Test 1
+// 06/03/2015
+
+class Vector2 {
+	float x,y
+}
+
+class Vector3 : Vector2 {
+	
+	init(float xx, float yy, float zz) {
+		super.x := xx
+		y := yy
+		this.z := this.x
+	}
+	
+	float z
+	
+}
+
+class ExprTest1 {
+	
+	static float test1(float x) {
+		return x*x
+	}
+	
+	static int test2(int x) {
+		return x*x
+	}
+	
+	int m_a := 2 + 3/2
+	int[] m_b := { 1, 2, 3 }
+	int[][] m_c := { { 3 }, { 2 } }
+	
+	static void main() {
+		
+		// Expressions for initialization
+		int a := (int)test1(2)
+		int b := test2(0)
+		int c := m_c[2][(int)test1(5)]
+		//int a := 3 + 2 * test1(2)
+		
+		// Expressions for conditions
+		if (a > m_b[0]) = true {
+			int n
+			for int i := 0 ; i < 10 ; i++ {
+				n += i + (int)ExprTest1.test1(i)
+			}
+		} else if m_c[1][2] - m_b[-3] > 0 {
+			
+		}
+		
+	}
+	
+}

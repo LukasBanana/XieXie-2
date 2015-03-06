@@ -42,7 +42,6 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( ProcSignature        );    \
     DECL_VISIT_PROC( AttribPrefix         );    \
     DECL_VISIT_PROC( Attrib               );    \
-    DECL_VISIT_PROC( EnumEntry            );    \
     DECL_VISIT_PROC( ClassBodySegment     );    \
     DECL_VISIT_PROC( ArrayAccess          );    \
     DECL_VISIT_PROC( ProcCall             );    \
@@ -65,8 +64,6 @@ namespace AbstractSyntaxTrees
                                                 \
     DECL_VISIT_PROC( ClassDeclStmnt       );    \
     DECL_VISIT_PROC( VarDeclStmnt         );    \
-    DECL_VISIT_PROC( EnumDeclStmnt        );    \
-    DECL_VISIT_PROC( FlagsDeclStmnt       );    \
     DECL_VISIT_PROC( ProcDeclStmnt        );    \
     DECL_VISIT_PROC( InitDeclStmnt        );    \
                                                 \
@@ -118,7 +115,6 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( ProcSignature        );
         DEF_ABSTRACT_VISIT_PROC( AttribPrefix         );
         DEF_ABSTRACT_VISIT_PROC( Attrib               );
-        DEF_ABSTRACT_VISIT_PROC( EnumEntry            );
         DEF_ABSTRACT_VISIT_PROC( ClassBodySegment     );
         DEF_ABSTRACT_VISIT_PROC( ArrayAccess          );
         DEF_ABSTRACT_VISIT_PROC( ProcCall             );
@@ -142,8 +138,6 @@ class Visitor
 
         DEF_ABSTRACT_VISIT_PROC( ClassDeclStmnt       );
         DEF_ABSTRACT_VISIT_PROC( VarDeclStmnt         );
-        DEF_ABSTRACT_VISIT_PROC( EnumDeclStmnt        );
-        DEF_ABSTRACT_VISIT_PROC( FlagsDeclStmnt       );
         DEF_ABSTRACT_VISIT_PROC( ProcDeclStmnt        );
         DEF_ABSTRACT_VISIT_PROC( InitDeclStmnt        );
 

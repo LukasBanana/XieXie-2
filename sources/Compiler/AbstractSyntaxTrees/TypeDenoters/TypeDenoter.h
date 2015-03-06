@@ -26,13 +26,26 @@ class TypeDenoter : public AST
         {
             return false;
         }
-
         //! Returns true if this is a 'null' pointer type. By default false.
         virtual bool IsNull() const
         {
             return false;
         }
-
+        //! Returns ture if this is an array type. By default fasle.
+        virtual bool IsArray() const
+        {
+            return false;
+        }
+        //! Returns true if this is an integral type. By default false.
+        virtual bool IsIntegral() const
+        {
+            return false;
+        }
+        //! Returns true if this is a boolean type. By default false.
+        virtual bool IsBoolean() const
+        {
+            return false;
+        }
         //! Returns true if a variable fo this type can be concatenated with another variable. By default false.
         virtual bool CanBeConcatenated() const
         {

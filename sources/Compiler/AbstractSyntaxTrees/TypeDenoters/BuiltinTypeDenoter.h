@@ -21,8 +21,6 @@ class BuiltinTypeDenoter : public TypeDenoter
     
     public:
         
-        AST_INTERFACE_EXT(BuiltinTypeDenoter, TypeDenoter);
-
         enum class TypeNames
         {
             Void,
@@ -38,6 +36,10 @@ class BuiltinTypeDenoter : public TypeDenoter
             Float,
             //Double,
         };
+
+        AST_INTERFACE_EXT(BuiltinTypeDenoter, TypeDenoter);
+
+        BuiltinTypeDenoter(const TypeNames initTypeName);
 
         //! Returns the type name for the specified type spelling.
         static TypeNames GetTypeName(const std::string& spell);
@@ -62,7 +64,14 @@ class BuiltinTypeDenoter : public TypeDenoter
         {
             return typeName == TypeNames::Void;
         }
-
+        bool IsIntegral() const override
+        {
+            return typeName == TypeNames::Int;
+        }
+        bool IsBoolean() const override
+        {
+            return typeName == TypeNames::Bool;
+        }
         bool CanBeConcatenated() const override
         {
             return typeName != TypeNames::Bool;
@@ -78,6 +87,12 @@ class BuiltinTypeDenoter : public TypeDenoter
         TypeNames typeName = TypeNames::Void; // e.g. "int", "float", "bool"
 
 };
+
+
+static const BuiltinTypeDenoter CommonVoidType(BuiltinTypeDenoter::TypeNames::Void);
+static const BuiltinTypeDenoter CommonBoolType(BuiltinTypeDenoter::TypeNames::Bool);
+static const BuiltinTypeDenoter CommonIntType(BuiltinTypeDenoter::TypeNames::Int);
+static const BuiltinTypeDenoter CommonFloatType(BuiltinTypeDenoter::TypeNames::Float);
 
 
 } // /namespace AbstractSyntaxTrees
