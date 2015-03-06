@@ -23,6 +23,8 @@ class Param : public AST
         
         AST_INTERFACE(Param);
 
+        const TypeDenoter* GetTypeDenoter() const override;
+
         TypeDenoterPtr  typeDenoter;
         std::string     ident;
         ExprPtr         defaultArgExpr; // may be null

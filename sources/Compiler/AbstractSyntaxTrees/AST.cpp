@@ -218,6 +218,14 @@ const TypeDenoter* AllocExpr::GetTypeDenoter() const
 }
 
 
+/* --- Param --- */
+
+const TypeDenoter* Param::GetTypeDenoter() const
+{
+    return typeDenoter.get();
+}
+
+
 /* --- InitListExpr --- */
 
 const TypeDenoter* InitListExpr::GetTypeDenoter() const
@@ -285,6 +293,44 @@ const TypeDenoter* VarAccessExpr::GetTypeDenoter() const
 const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const
 {
     return &thisTypeDenoter_;
+}
+
+void ClassDeclStmnt::BindBaseClassRef(ClassDeclStmnt* classDeclStmnt)
+{
+    baseClassRef_ = classDeclStmnt;
+    if (baseClassRef_)
+        symTab.fallbackSymTab = &(baseClassRef_->symTab);
+    else
+        symTab.fallbackSymTab = nullptr;
+}
+
+ClassDeclStmnt* ClassDeclStmnt::GetBaseClassRef() const
+{
+    return baseClassRef_;
+}
+
+bool ClassDeclStmnt::IsSuperClassOf(const ClassDeclStmnt& classDeclStmnt) const
+{
+    return classDeclStmnt.IsSubClassOf(*this);
+}
+
+bool ClassDeclStmnt::IsSubClassOf(const ClassDeclStmnt& classDeclStmnt) const
+{
+    /* Check for cycles */
+    if (&classDeclStmnt == this)
+        return false;
+
+    if (baseClassRef_)
+    {
+        /* Check if specified class is the direct base of this class */
+        if (baseClassRef_ == &classDeclStmnt)
+            return true;
+
+        /* Continue search in direct base class */
+        return baseClassRef_->IsSubClassOf(classDeclStmnt);
+    }
+
+    return false;
 }
 
 

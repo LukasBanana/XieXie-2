@@ -18,6 +18,10 @@ class Vector3 : Vector2 {
 	
 }
 
+class Foo {}
+class FooSub : Foo {}
+class Bar {}
+
 class ExprTest1 {
 	
 	static float test1(float x) {
@@ -47,7 +51,16 @@ class ExprTest1 {
 				n += i + (int)ExprTest1.test1(i)
 			}
 		} else if m_c[1][2] - m_b[-3] > 0 {
+			Foo f
+			FooSub fs
+			Bar b
 			
+			//f := b // error: "Bar" is not a sub class of "Foo"
+			f := fs // ok, "FooSub" is a sub class of "Foo"
+			f := null // ok, null is compatible to all pointers
+			
+			//bool b0 := (f = b) // error: "Bar" is not sub class of "Foo"
+			bool b1 := (f = fs) // ok
 		}
 		
 	}

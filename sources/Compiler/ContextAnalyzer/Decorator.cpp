@@ -422,12 +422,15 @@ DEF_VISIT_PROC(Decorator, CopyAssignStmnt)
 {
     Visit(ast->varNames);
     DecorateExpr(*ast->expr);
+    for (auto& varName : ast->varNames)
+        VerifyAssignStmntExprTypes(*varName, *ast->expr);
 }
 
 DEF_VISIT_PROC(Decorator, ModifyAssignStmnt)
 {
     Visit(ast->varName);
     DecorateExpr(*ast->expr);
+    VerifyAssignStmntExprTypes(*ast->varName, *ast->expr);
 }
 
 DEF_VISIT_PROC(Decorator, PostOperatorStmnt)
@@ -584,7 +587,7 @@ void Decorator::DecorateVarDeclMember(VarDecl& ast)
     {
         DecorateExpr(*ast.initExpr);
         VerifyExprConst(*ast.initExpr);
-        DecorateVarDeclInitExpr(ast);
+        VerifyVarDeclInitExpr(ast);
     }
 }
 
@@ -593,12 +596,12 @@ void Decorator::DecorateVarDeclLocal(VarDecl& ast)
     if (ast.initExpr)
     {
         DecorateExpr(*ast.initExpr);
-        DecorateVarDeclInitExpr(ast);
+        VerifyVarDeclInitExpr(ast);
     }
     //...
 }
 
-void Decorator::DecorateVarDeclInitExpr(VarDecl& ast)
+void Decorator::VerifyVarDeclInitExpr(VarDecl& ast)
 {
     if (ast.initExpr)
     {
@@ -613,8 +616,29 @@ void Decorator::DecorateVarDeclInitExpr(VarDecl& ast)
                 Error(errorOut, &ast);
         }
         else
-            Error("invalid type for initializer expression in variable declaration", &ast);
+            Error("invalid type of initializer expression in variable declaration", &ast);
     }
+}
+
+void Decorator::VerifyAssignStmntExprTypes(const VarName& varName, const Expr& expr)
+{
+    /* Check compatibility of expression type and variable declaration type */
+    auto varNameType = varName.GetLast().GetTypeDenoter();
+    auto exprType = expr.GetTypeDenoter();
+
+    if (exprType)
+    {
+        if (varNameType)
+        {
+            std::string errorOut;
+            if (!TypeChecker::VerifyTypeCompatibility(*varNameType, *exprType, &errorOut))
+                Error(errorOut, &varName);
+        }
+        else
+            Error("invalid type of identifier \"" + varName.FullName() + "\" in assign statement", &varName);
+    }
+    else
+        Error("invalid type of expression in assign statement", &expr);
 }
 
 void Decorator::DecorateAttribPrefix(
@@ -706,7 +730,7 @@ bool Decorator::VerifyExprIsBoolean(const Expr& expr, const std::string& usageDe
             Error(usageDesc + " must have boolean type", &expr);
     }
     else
-        Error("invalid type for " + usageDesc, &expr);
+        Error("invalid type of expression in " + usageDesc, &expr);
     return false;
 }
 
@@ -722,7 +746,7 @@ bool Decorator::VerifyExprIsIntegral(const Expr& expr, const std::string& usageD
             Error(usageDesc + " must have integral type", &expr);
     }
     else
-        Error("invalid type for " + usageDesc, &expr);
+        Error("invalid type of expression in " + usageDesc, &expr);
     return false;
 }
 

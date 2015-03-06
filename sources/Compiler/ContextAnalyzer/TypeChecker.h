@@ -24,8 +24,8 @@ namespace TypeChecker
 
 
 bool VerifyTypeCompatibility(
-    const AbstractSyntaxTrees::TypeDenoter& a,
-    const AbstractSyntaxTrees::TypeDenoter& b,
+    const AbstractSyntaxTrees::TypeDenoter& lhs,
+    const AbstractSyntaxTrees::TypeDenoter& rhs,
     std::string* errorOut = nullptr
 );
 

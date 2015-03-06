@@ -38,19 +38,11 @@ class ClassDeclStmnt : public ScopedStmnt
         const TypeDenoter* GetTypeDenoter() const override;
 
         //! Binds the base class reference and the fallback symbol table.
-        void BindBaseClassRef(ClassDeclStmnt* classDeclStmnt)
-        {
-            baseClassRef_ = classDeclStmnt;
-            if (baseClassRef_)
-                symTab.fallbackSymTab = &(baseClassRef_->symTab);
-            else
-                symTab.fallbackSymTab = nullptr;
-        }
-        
-        ClassDeclStmnt* GetBaseClassRef() const
-        {
-            return baseClassRef_;
-        }
+        void BindBaseClassRef(ClassDeclStmnt* classDeclStmnt);
+        ClassDeclStmnt* GetBaseClassRef() const;
+
+        bool IsSuperClassOf(const ClassDeclStmnt& classDeclStmnt) const;
+        bool IsSubClassOf(const ClassDeclStmnt& classDeclStmnt) const;
 
         bool                                isExtern = false;
         AttribPrefixPtr                     attribPrefix;       // may be null
