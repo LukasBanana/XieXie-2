@@ -44,6 +44,30 @@ void CFGViewer::WriteLine(const std::string& line)
     *stream_ << line << std::endl;
 }
 
+void CFGViewer::DefineBlock(const BasicBlock& block)
+{
+    /* Check if block has already been traversed (for defining) */
+    auto it = blockIDs_.find(&block);
+    if (it != blockIDs_.end())
+        return;
+
+    /* Build label string for this block node */
+    auto id = ++idCounter_;
+    blockIDs_[&block].id = id;
+
+    std::string instrList;
+    for (const auto& inst : block.insts)
+        instrList += inst->ToString() + "\\n";
+
+    /* Write graph node for this block */
+    auto blockLabel = "bb" + ToStr(id);
+    WriteLine(blockLabel + " [label=\"<" + blockLabel + ">\\n" + instrList + "\"];");
+
+    /* Travers sucessors */
+    for (const auto& succ : block.GetSucc())
+        DefineBlock(*succ);
+}
+
 void CFGViewer::LinkBlock(const BasicBlock& block)
 {
     /* Check if block has already been traversed (for linking) */
@@ -76,28 +100,6 @@ void CFGViewer::LinkBlock(const BasicBlock& block)
         for (const auto& succ : block.GetSucc())
             LinkBlock(*succ);
     }
-}
-
-void CFGViewer::DefineBlock(const BasicBlock& block)
-{
-    /* Check if block has already been traversed (for defining) */
-    auto it = blockIDs_.find(&block);
-    if (it != blockIDs_.end())
-        return;
-
-    /* Write graph node for this block */
-    auto id = ++idCounter_;
-    blockIDs_[&block].id = id;
-
-    std::string instrList;
-    for (const auto& inst : block.insts)
-        instrList += inst->ToString() + "\\n";
-
-    WriteLine("bb" + ToStr(id) + " [label=\"" + instrList + "\"];");
-
-    /* Travers sucessors */
-    for (const auto& succ : block.GetSucc())
-        DefineBlock(*succ);
 }
 
 std::string CFGViewer::GetBlockID(const BasicBlock& block) const
