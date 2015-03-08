@@ -22,6 +22,8 @@ extern class String {
 	init()
 	init(Object rhs)
 	int size()
+	void resize(int size)
+	String add(String rhs)
 }
 
 class Vector3 {
@@ -51,8 +53,9 @@ class Vector3 {
 	
 	String toString() {
 		String s// := Test.fibonacci(10).toString()
-		for int i := 0 ; i < { x, y, z }/*.size()*/ ; i++ {
-			s += i//.toString()
+		//for int i := 0 ; i < { x, y, z }.size() ; i++ {
+		for int i := 0 ; i < s.size() ; i++ {
+			s.resize(s.size() + i)//.toString()
 		}
 		return s
 	}
@@ -69,7 +72,7 @@ class Test {
 		if n <= 2 {
 			return 1
 		}
-		return fibonacci(n - 1) + fibonacci(n - 2)
+		return Test.fibonacci(n - 1) + Test.fibonacci(n - 2)
 	}
 	
 	static void fire() {}
@@ -77,7 +80,7 @@ class Test {
 	
 	static void onMouseDown(int button) {
 		if button = 1 {
-			fire()
+			Test.fire()
 			return
 		}
 	}
@@ -90,12 +93,14 @@ class Test {
 		
 		String str1 := "Hello"
 		String str2 := new String("World")
-		Log.writeLine(str1 + ", " + str2)
+		Log.writeLine(str1.add(", ").add(str2))
 		
 		//int len := "Test".size()
 		
 		int n := 10
-		Log.writeLine("Fibonacci(" + n + ") = " + fibonacci(n))
+		Log.writeLine(
+			new String("Fibonacci(").add(n).add(") = ").add(Test.fibonacci(n))
+		)
 		
 		return 0
 		

@@ -380,6 +380,7 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
         switch (symTab_->GetOwner().Type())
         {
             case AST::Types::ProcDeclStmnt:
+            case AST::Types::InitDeclStmnt:
                 /* Declaration statement for local variables */
                 for (auto& varDecl : ast->varDecls)
                 {
@@ -827,7 +828,7 @@ StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
             /* Search only in class namespace */
             if (class_)
             {
-                if (procDeclStmnt_ && procDeclStmnt_->procSignature->isStatic)
+                if (IsProcStatic())
                     throw std::string("can not use 'this' in static procedure declaration");
                 return class_;
             }
@@ -843,7 +844,7 @@ StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
             {
                 if (class_->GetBaseClassRef())
                 {
-                    if (procDeclStmnt_ && procDeclStmnt_->procSignature->isStatic)
+                    if (IsProcStatic())
                         throw std::string("can not use 'super' in static procedure declaration");
                     return class_->GetBaseClassRef();
                 }
@@ -865,8 +866,8 @@ StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
     if (symbol)
         return symbol;
     
-    /* (4) Search in class namespace */
-    if (class_)
+    /* (4) Search in class namespace (if current procedure is not static) */
+    if (class_ && !IsProcStatic())
     {
         symbol = class_->symTab.Fetch(ident);
         if (symbol)
@@ -890,17 +891,18 @@ void Decorator::VisitVarName(VarName& ast)
     if (symbol)
     {
         /* Decorate AST node */
-        DecorateVarName(ast, symbol, fullName, false);
+        DecorateVarName(ast, symbol, fullName);
     }
 }
 
-void Decorator::DecorateVarName(
-    VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName, bool requireStaticMembers)
+void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName)
 {
     /* Decorate AST node */
     ast.declRef = symbol;
 
     /* Check if symbol is a static or non-static member */
+    auto requireStaticMembers = IsScopeStatic();
+
     switch (symbol->Type())
     {
         case AST::Types::ProcDeclStmnt:
@@ -939,6 +941,7 @@ void Decorator::DecorateVarName(
     {
         /* Check if symbol refers to a class declaration */
         auto ownerIsClass = (symbol->Type() == AST::Types::ClassDeclStmnt);
+        auto isObjectIdent = (ast.ident == "this" || ast.ident == "super");
 
         /* Check if symbol refers to a variable */
         if (symbol->Type() == AST::Types::VarDecl)
@@ -958,20 +961,24 @@ void Decorator::DecorateVarName(
         }
 
         /* Decorate next variable identifier with next namespace */
-        auto scopedStmnt = dynamic_cast<ScopedStmnt*>(symbol);
-        if (scopedStmnt)
-            DecorateVarNameSub(*ast.next, scopedStmnt->symTab, fullName, ownerIsClass);
-        else
-            Error("undeclared namespace \"" + ast.ident + "\" (in \"" + fullName + "\")", &ast);
+        PushScopeStatic(ownerIsClass && !isObjectIdent);
+        {
+            auto scopedStmnt = dynamic_cast<ScopedStmnt*>(symbol);
+            if (scopedStmnt)
+                DecorateVarNameSub(*ast.next, scopedStmnt->symTab, fullName);
+            else
+                Error("undeclared namespace \"" + ast.ident + "\" (in \"" + fullName + "\")", &ast);
+        }
+        PopScopeStatic();
     }
 }
 
-void Decorator::DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName, bool ownerIsClass)
+void Decorator::DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName)
 {
     /* Search in current scope */
     auto symbol = FetchSymbolFromScope(ast.ident, symTab, fullName, &ast);
     if (symbol)
-        DecorateVarName(ast, symbol, fullName, ownerIsClass);
+        DecorateVarName(ast, symbol, fullName);
 }
 
 /* --- Symbol table --- */
@@ -1043,6 +1050,28 @@ void Decorator::RegisterSymbol(const std::string& ident, StmntSymbolTable::Symbo
     {
         Error(err.what(), symbol);
     }
+}
+
+/* --- States --- */
+
+void Decorator::PushScopeStatic(bool isStatic)
+{
+    scopeStaticStack_.Push(isStatic);
+}
+
+void Decorator::PopScopeStatic()
+{
+    scopeStaticStack_.Pop();
+}
+
+bool Decorator::IsScopeStatic() const
+{
+    return scopeStaticStack_.Empty() ? false : scopeStaticStack_.Top();
+}
+
+bool Decorator::IsProcStatic() const
+{
+    return procDeclStmnt_ != nullptr && procDeclStmnt_->procSignature->isStatic;
 }
 
 

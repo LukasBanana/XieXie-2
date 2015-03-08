@@ -24,7 +24,7 @@ template <typename T> class SafeStack
         
         void Push(const T& value)
         {
-            container_.push(std::forward<T>(value));
+            container_.push(value);
         }
         void Push(T&& value)
         {
@@ -60,7 +60,7 @@ template <typename T> class SafeStack
 
     private:
         
-        void AssertNotEmpty(const char* procName)
+        void AssertNotEmpty(const char* procName) const
         {
             if (container_.empty())
                 throw InternalError("invalid access to empty stack (" + ToStr(procName) + ")");

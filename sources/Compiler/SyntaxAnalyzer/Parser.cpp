@@ -1260,24 +1260,27 @@ ExprPtr Parser::ParseValueExpr(const TokenPtr& identTkn)
 // primary_value_expr : literal_expr | var_access_expr | alloc_expr | bracket_expr | cast_expr | call_expr | unary_expr | init_list_expr;
 ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn)
 {
-    switch (TknType())
+    if (!identTkn)
     {
-        case Tokens::BoolLiteral:
-        case Tokens::IntLiteral:
-        case Tokens::FloatLiteral:
-        case Tokens::StringLiteral:
-        case Tokens::PointerLiteral:
-            return ParseLiteralExpr();
-        case Tokens::New:
-            return ParseAllocExpr();
-        case Tokens::LBracket:
-            return ParseBracketOrCastExpr();
-        case Tokens::Not:
-        case Tokens::BitwiseNotOp:
-        case Tokens::SubOp:
-            return ParseUnaryExpr();
-        case Tokens::LCurly:
-            return ParseInitListExpr();
+        switch (TknType())
+        {
+            case Tokens::BoolLiteral:
+            case Tokens::IntLiteral:
+            case Tokens::FloatLiteral:
+            case Tokens::StringLiteral:
+            case Tokens::PointerLiteral:
+                return ParseLiteralExpr();
+            case Tokens::New:
+                return ParseAllocExpr();
+            case Tokens::LBracket:
+                return ParseBracketOrCastExpr();
+            case Tokens::Not:
+            case Tokens::BitwiseNotOp:
+            case Tokens::SubOp:
+                return ParseUnaryExpr();
+            case Tokens::LCurly:
+                return ParseInitListExpr();
+        }
     }
     return ParseVarAccessOrProcCallExpr(identTkn);
 }

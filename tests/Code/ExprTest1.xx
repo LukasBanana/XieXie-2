@@ -24,20 +24,7 @@ class Bar {}
 
 class ExprTest1 {
 	
-	static float test1(float x) {
-		return x*x
-	}
-	
-	static int test2(int x) {
-		return x*x
-	}
-	
-	int m_a := 2 + 3/2
-	int[] m_b := { 1, 2, 3 }
-	int[][] m_c := { { 3 }, { 2 } }
-	Bar[] m_d
-	
-	static void main() {
+	init() {
 		
 		// Expressions for initialization
 		int a := (int)test1(2)
@@ -54,7 +41,7 @@ class ExprTest1 {
 		if (a > m_b[0]) = true {
 			int n
 			for int i := 0 ; i < 10 ; i++ {
-				n += i + (int)ExprTest1.test1(a > b)
+				n += i + (int)test1(a > b)
 			}
 		} else if m_c[1][2] - m_b[-3] > 0 {
 			Foo f
@@ -70,6 +57,23 @@ class ExprTest1 {
 			bool b1 := (f = fs) // ok
 		}
 		
+	}
+	
+	float test1(float x) {
+		return x*x
+	}
+	
+	int test2(int x) {
+		return x*x
+	}
+	
+	int m_a := 2 + 3/2
+	int[] m_b := { 1, 2, 3 }
+	int[][] m_c := { { 3 }, { 2 } }
+	Bar[] m_d
+	
+	static void main() {
+		ExprTest1 instance := new ExprTest1()
 	}
 	
 }

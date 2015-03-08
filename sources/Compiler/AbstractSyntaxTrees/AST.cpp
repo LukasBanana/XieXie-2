@@ -266,22 +266,25 @@ const TypeDenoter* VarAccessExpr::GetTypeDenoter() const
     const auto& lastIdent = varName->GetLast();
     auto varType = lastIdent.GetTypeDenoter();
     
-    /* Reduce type for each array access */
-    auto arrayAccess = lastIdent.arrayAccess.get();
-    while (arrayAccess)
+    if (varType)
     {
-        if (varType->Type() == AST::Types::ArrayTypeDenoter)
+        /* Reduce type for each array access */
+        auto arrayAccess = lastIdent.arrayAccess.get();
+        while (arrayAccess)
         {
-            /* Get next lower type */
-            auto arrayType = static_cast<const ArrayTypeDenoter*>(varType);
-            varType = arrayType->lowerTypeDenoter.get();
+            if (varType->Type() == AST::Types::ArrayTypeDenoter)
+            {
+                /* Get next lower type */
+                auto arrayType = static_cast<const ArrayTypeDenoter*>(varType);
+                varType = arrayType->lowerTypeDenoter.get();
+            }
+            else
+            {
+                /* Array access but no further lower type */
+                return nullptr;
+            }
+            arrayAccess = arrayAccess->next.get();
         }
-        else
-        {
-            /* Array access but no further lower type */
-            return nullptr;
-        }
-        arrayAccess = arrayAccess->next.get();
     }
 
     return varType;

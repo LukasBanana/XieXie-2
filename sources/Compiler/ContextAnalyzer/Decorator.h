@@ -10,6 +10,7 @@
 
 
 #include "Visitor.h"
+#include "SafeStack.h"
 #include "SymbolTable.h"
 #include "CompilerMessage.h"
 #include "ScopedStmnt.h"
@@ -97,8 +98,8 @@ class Decorator : public Visitor
         StmntSymbolTable::SymbolType* FetchSymbol(const std::string& ident, const AST* ast = nullptr);
 
         void VisitVarName(VarName& ast);
-        void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName, bool requireStaticMembers);
-        void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName, bool ownerIsClass);
+        void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName);
+        void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
 
         /* --- Symbol table --- */
 
@@ -112,6 +113,12 @@ class Decorator : public Visitor
         void RegisterSymbol(const std::string& ident, StmntSymbolTable::SymbolType* symbol);
 
         /* --- States --- */
+
+        void PushScopeStatic(bool isStatic);
+        void PopScopeStatic();
+        bool IsScopeStatic() const;
+
+        bool IsProcStatic() const;
 
         inline bool IsRegisterMemberSymbols() const
         {
@@ -133,12 +140,14 @@ class Decorator : public Visitor
         States                          state_          = States::RegisterClassSymbols;
 
         Program*                        program_        = nullptr;
-        ProcDeclStmnt*                  procDeclStmnt_  = nullptr; //!< Reference to the current procedure declaration statement.
+        ProcDeclStmnt*                  procDeclStmnt_  = nullptr;  //!< Reference to the current procedure declaration statement.
 
-        StmntSymbolTable*               symTab_         = nullptr; //!< Reference to the current symbol table.
+        StmntSymbolTable*               symTab_         = nullptr;  //!< Reference to the current symbol table.
         std::vector<StmntSymbolTable*>  symTabStack_;
 
-        ClassDeclStmnt*                 class_          = nullptr; //!< Reference to the current class declaration.
+        SafeStack<bool>                 scopeStaticStack_;          //!< Stack with information if the current scope is static or non-static.
+
+        ClassDeclStmnt*                 class_          = nullptr;  //!< Reference to the current class declaration.
 
 };
 
