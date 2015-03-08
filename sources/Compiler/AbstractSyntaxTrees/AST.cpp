@@ -178,6 +178,14 @@ const TypeDenoter* ProcDeclStmnt::GetTypeDenoter() const
 }
 
 
+/* --- ForRangeStmnt --- */
+
+const TypeDenoter* ForRangeStmnt::GetTypeDenoter() const
+{
+    return &CommonTypeConstInt;
+}
+
+
 /* --- ProcCallExpr --- */
 
 const TypeDenoter* ProcCallExpr::GetTypeDenoter() const
@@ -339,8 +347,9 @@ bool ClassDeclStmnt::IsSubClassOf(const ClassDeclStmnt& classDeclStmnt) const
 
 /* --- BuiltinTypeDenoter --- */
 
-BuiltinTypeDenoter::BuiltinTypeDenoter(const TypeNames initTypeName) :
-    typeName{ initTypeName }
+BuiltinTypeDenoter::BuiltinTypeDenoter(const TypeNames initTypeName, bool isConst) :
+    typeName{ initTypeName },
+    isConst { isConst      }
 {
 }
 
@@ -353,6 +362,30 @@ BuiltinTypeDenoter::TypeNames BuiltinTypeDenoter::GetTypeName(const std::string&
     if (spell == "float")
         return TypeNames::Float;
     return TypeNames::Void;
+}
+
+TypeDenoterPtr BuiltinTypeDenoter::CopyRef() const
+{
+    auto copy = std::make_shared<BuiltinTypeDenoter>();
+    copy->typeName  = typeName;
+    copy->isConst   = isConst;
+    return copy;
+}
+
+std::string BuiltinTypeDenoter::ToString() const
+{
+    switch (typeName)
+    {
+        case TypeNames::Void:
+            return "void";
+        case TypeNames::Bool:
+            return "bool";
+        case TypeNames::Int:
+            return "int";
+        case TypeNames::Float:
+            return "float";
+    }
+    return "<unknown>";
 }
 
 
@@ -477,7 +510,7 @@ std::string BinaryExpr::GetOperatorSpell(const Operators op)
 
 const TypeDenoter* BinaryExpr::GetTypeDenoter() const
 {
-    return HasBooleanOperator() ? (&CommonBoolType) : lhsExpr->GetTypeDenoter();
+    return HasBooleanOperator() ? (&CommonTypeBool) : lhsExpr->GetTypeDenoter();
 }
 
 bool BinaryExpr::HasBooleanOperator() const

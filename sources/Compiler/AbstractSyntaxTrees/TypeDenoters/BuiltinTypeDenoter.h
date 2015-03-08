@@ -39,26 +39,13 @@ class BuiltinTypeDenoter : public TypeDenoter
 
         AST_INTERFACE_EXT(BuiltinTypeDenoter, TypeDenoter);
 
-        BuiltinTypeDenoter(const TypeNames initTypeName);
+        BuiltinTypeDenoter(const TypeNames initTypeName, bool isConst = false);
 
         //! Returns the type name for the specified type spelling.
         static TypeNames GetTypeName(const std::string& spell);
 
-        std::string ToString() const override
-        {
-            switch (typeName)
-            {
-                case TypeNames::Void:
-                    return "void";
-                case TypeNames::Bool:
-                    return "bool";
-                case TypeNames::Int:
-                    return "int";
-                case TypeNames::Float:
-                    return "float";
-            }
-            return "<unknown>";
-        }
+        TypeDenoterPtr CopyRef() const override;
+        std::string ToString() const override;
 
         bool IsVoid() const override
         {
@@ -76,23 +63,22 @@ class BuiltinTypeDenoter : public TypeDenoter
         {
             return typeName != TypeNames::Bool;
         }
-
-        TypeDenoterPtr CopyRef() const override
+        bool IsConst() const override
         {
-            auto copy = std::make_shared<BuiltinTypeDenoter>();
-            copy->typeName = typeName;
-            return copy;
+            return isConst;
         }
 
-        TypeNames typeName = TypeNames::Void; // e.g. "int", "float", "bool"
+        TypeNames   typeName    = TypeNames::Void;  // e.g. "int", "float", "bool"
+        bool        isConst     = false;            // is constant or mutable?
 
 };
 
 
-static const BuiltinTypeDenoter CommonVoidType(BuiltinTypeDenoter::TypeNames::Void);
-static const BuiltinTypeDenoter CommonBoolType(BuiltinTypeDenoter::TypeNames::Bool);
-static const BuiltinTypeDenoter CommonIntType(BuiltinTypeDenoter::TypeNames::Int);
-static const BuiltinTypeDenoter CommonFloatType(BuiltinTypeDenoter::TypeNames::Float);
+static const BuiltinTypeDenoter CommonTypeVoid(BuiltinTypeDenoter::TypeNames::Void);
+static const BuiltinTypeDenoter CommonTypeBool(BuiltinTypeDenoter::TypeNames::Bool);
+static const BuiltinTypeDenoter CommonTypeInt(BuiltinTypeDenoter::TypeNames::Int);
+static const BuiltinTypeDenoter CommonTypeConstInt(BuiltinTypeDenoter::TypeNames::Int, true);
+static const BuiltinTypeDenoter CommonTypeFloat(BuiltinTypeDenoter::TypeNames::Float);
 
 
 } // /namespace AbstractSyntaxTrees

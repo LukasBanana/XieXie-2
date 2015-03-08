@@ -5,39 +5,39 @@
 extern class String {
 	
 	init()
-	init(String other)
+	init(String rhs)
 	
-	String Left(int len)
-	String Right(int len)
-	String SubString(int pos, int len)
+	String left(int len)
+	String right(int len)
+	String subString(int pos, int len)
 	
-	int Get(int pos)
-	void Set(int pos, int character)
+	int get(int pos)
+	void set(int pos, int char)
 	
-	int Size()
+	int size()
 	
-	String Append(String other)
+	String add(String other)
 	
-	String LCase()
-	String UCase()
+	String lcase()
+	String ucase()
 	
 }
 
 extern class Timer {
 	
 	[[deprecated("Use \"foo bar\" instead")]]
-	static float ElapsedTime()
+	static float elapsedTime()
 	
-	static float CurrentTime()
+	static float currentTime()
 	
-	static String Date()
+	static String date()
 	
 }
 
 extern class Log {
 	
-	static void Write(String text)
-	static void WriteLine(String text)
+	static void write(String s)
+	static void writeLine(String s)
 	
 }
 
@@ -59,11 +59,11 @@ class Mouse {
 		} := null
 		*/
 		
-		static Mouse GetInstance() {
-			if instance = null {
-				instance := new Mouse()
+		static Mouse getInstance() {
+			if Mouse.instance = null {
+				Mouse.instance := new Mouse()
 			}
-			return instance
+			return Mouse.instance
 		}
 		
 	private:
@@ -76,17 +76,17 @@ class Mouse {
 
 extern class Math {
 	
-	static float Sqrt(float x)
+	static float sqrt(float x)
 	
-	static float Sin(float x)
-	static float Cos(float x)
-	static float Tan(float x)
+	static float sin(float x)
+	static float cos(float x)
+	static float tan(float x)
 	
-	static float ASin(float x)
-	static float ACos(float x)
-	static float ATan(float x)
+	static float asin(float x)
+	static float acos(float x)
+	static float atan(float x)
 	
-	static float Random()
+	static float random()
 	
 }
 
@@ -100,12 +100,12 @@ class Vector3 {
 		this.z := z
 	}
 	
-	float Length() {
-		return Math.Sqrt(x*x + y*y + z*z)
+	float length() {
+		return Math.sqrt(x*x + y*y + z*z)
 	}
 	
-	Vector3 Normalize() {
-		float invLength := 1.0 / Length()
+	Vector3 normalize() {
+		float invLength := 1.0 / length()
 		
 		x *= invLength
 		y *= invLength
@@ -114,17 +114,17 @@ class Vector3 {
 		return this
 	}
 	
-	Vector3 Add(Vector3 other) {
-		x += other.x
-		y += other.y
-		z += other.z
+	Vector3 add(Vector3 rhs) {
+		x += rhs.x
+		y += rhs.y
+		z += rhs.z
 		return this
 	}
 	
-	Vector3 Sub(Vector3 other) {
-		x -= other.x
-		y -= other.y
-		z -= other.z
+	Vector3 sub(Vector3 rhs) {
+		x -= rhs.x
+		y -= rhs.y
+		z -= rhs.z
 		return this
 	}
 	
@@ -133,25 +133,12 @@ class Vector3 {
 }
 
 class Vehicle {
-	
 	String name
-	
-	int NumWheels() {
-		return 0
-	}
-	
+	int numWheels() { return 0 }
 }
-
 class Car : Vehicle {
-	
-	Types Type() {
-		return Types.Car
-	}
-	
-	int NumWheels() {
-		return 4
-	}
-	
+	init() { name := "Car" }
+	int NumWheels() { return 4 }
 }
 
 class AppTest {
@@ -168,31 +155,31 @@ class AppTest {
 		foreach String arg : args {
 			//if x > y > z or ( y = 3 or z = 4 ) {
 			if x > y and y > z or ( y = 3 or z = 4 ) {
-				Log.Write("A")
-			} else if arg.Size() > 10 {
-				Log.Write("B")
+				Log.write("A")
+			} else if arg.size() > 10 {
+				Log.write("B")
 			} else {
-				Log.Write("C")
+				Log.write("C")
 			}
 		}
 		
 		foreach int i : { 1, 2, 3, 4, 5 } {
-			Log.Write(i + ", ")
+			//Log.write(i + ", ")
 		}
 		
 		foreach int[] list : { { 1, 2, 3 }, { -4, 2 }, { 9, 8, 0, 0, 1 } } {
-			Log.WriteLine("New List: ")
+			Log.writeLine("New List: ")
 			foreach int i : list {
-				Log.Write(i + ", ")
+				//Log.write(i + ", ")
 			}
 		}
 
 		for int i := 0 ; i < num ; i++ {
-			Log.WriteLine("Hello, World")
+			Log.writeLine("Hello, World")
 		}
 		
 		for i : 10 .. 1 -> 2 {
-			Log.WriteLine("Hello, World")
+			Log.writeLine("Hello, World")
 		}
 		
 		// Boolean expressions
@@ -202,6 +189,7 @@ class AppTest {
 		bool b1 := a > b and b > c
 		
 		//bool b2 := (a = b = c) = b1
+		bool b2 := (a = b = true) = b1
 		bool b3 := (a = b and b = c) = b1
 		
 		// Arrays
@@ -219,30 +207,30 @@ class AppTest {
 		String s := new String()
 		
 		// Objects
-		Mouse mouse := Mouse.GetInstance()
+		Mouse mouse := Mouse.getInstance()
 		
 		Vector3[] vertices := new Vector3[](100)
 		
 		foreach Vector3 vert : vertices {
-			vert.x := Math.Random()
+			vert.x := Math.random()
 		}
 		
 		// Switch/case
 		switch a {
 			case 25, 42, 9:
-				Log.WriteLine("1st case")
+				Log.writeLine("1st case")
 				
 			case -6:
-				Log.WriteLine("2nd case")
+				Log.writeLine("2nd case")
 			
 			default:
-				Log.WriteLine("default case")
+				Log.writeLine("default case")
 		}
 		
 		// Expressions
 		a := (int)3.5
 		b := (a + (int)2.6) * (int)(float)a*a
-		Object s2 := (Object)"test".test()
+		//Object s2 := (Object)"test".test()
 		a := a - b - c * d - e + f - g
 
 		return result

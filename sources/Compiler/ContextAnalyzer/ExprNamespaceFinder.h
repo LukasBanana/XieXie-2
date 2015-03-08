@@ -20,7 +20,7 @@ namespace ContextAnalyzer
 using namespace AbstractSyntaxTrees;
 
 //! Finds the (class) namespace of an expression.
-class ExprNamespaceFinder final : public Visitor
+class ExprNamespaceFinder final : private Visitor
 {
     
     public:

@@ -6,10 +6,11 @@
  */
 
 #include "CommandFactory.h"
+#include "SourceFile.h"
 #include "Parser.h"
 #include "Decorator.h"
+#include "GraphGenerator.h"
 #include "Program.h"
-#include "SourceFile.h"
 #include "ASTViewer.h"
 #include "CFGViewer.h"
 
@@ -24,6 +25,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     ErrorReporter errorReporter;
     bool hasError = false;
     bool showAST = false;
+    bool showCFG = false;
 
     /* Parse program */
     AbstractSyntaxTrees::Program program;
@@ -43,10 +45,21 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             hasError = true;
     }
 
-    if (input.Get() == "-show-ast")
+    /* Parse options */
+    while (true)
     {
-        input.Accept();
-        showAST = true;
+        if (input.Get() == "-show-ast" && !showAST)
+        {
+            input.Accept();
+            showAST = true;
+        }
+        else if (input.Get() == "-show-cfg" && !showCFG)
+        {
+            input.Accept();
+            showCFG = true;
+        }
+        else
+            break;
     }
 
     /* Decorate program */
@@ -65,6 +78,31 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     {
         AbstractSyntaxTrees::ASTViewer viewer(output);
         viewer.ViewProgram(program);
+    }
+
+    /* Transform to CFG */
+    if (!hasError)
+    {
+        if (output.verbose)
+            output.Message("AST to CFG conversion ...");
+
+        ControlFlowGraph::GraphGenerator converter;
+        auto classTrees = converter.GenerateCFG(program);
+
+        /* Show flow graph */
+        if (showCFG)
+        {
+            ControlFlowGraph::CFGViewer viewer;
+
+            size_t i = 0;
+            for (const auto& tree : classTrees)
+            {
+                std::string path = "classtree." + ToStr(++i);
+                if (output.verbose)
+                    output.Message("dump CFG class tree \"" + path + "\"");
+                viewer.ViewGraph(*tree, path);
+            }
+        }
     }
 
     /* Print out errors */

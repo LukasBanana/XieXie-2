@@ -21,7 +21,7 @@ namespace ContextAnalyzer
 using namespace AbstractSyntaxTrees;
 
 //! This class checks if an expression is a constant expression.
-class ExprTypeChecker final : public Visitor
+class ExprTypeChecker final : private Visitor
 {
     
     public:

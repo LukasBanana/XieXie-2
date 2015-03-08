@@ -17,6 +17,8 @@ namespace SyntaxAnalyzer
 
 using namespace std::placeholders;
 
+static const std::string defaultForRangeIdent = "__xx__idx";
+
 bool Parser::ParseSource(Program& program, const SourceCodePtr& source, ErrorReporter& errorReporter)
 {
     try
@@ -754,6 +756,12 @@ StmntPtr Parser::ParseForOrForRangeStmnt()
         return ParseForStmnt(false, ident);
     }
 
+    if (Is(Tokens::IntLiteral) || Is(Tokens::SubOp))
+    {
+        /* parse range-based for-loop */
+        return ParseForRangeStmnt(false);
+    }
+
     /* Parse regular for-loop */
     return ParseForStmnt(false);
 }
@@ -784,7 +792,7 @@ ForStmntPtr Parser::ParseForStmnt(bool parseComplete, const TokenPtr& identTkn)
     return ast;
 }
 
-// for_range_stmnt: 'for' IDENT ':' INT_LITERAL '..' INT_LITERAL ('->' INT_LITERAL)? code_block;
+// for_range_stmnt: 'for' (IDENT ':')? INT_LITERAL '..' INT_LITERAL ('->' INT_LITERAL)? code_block;
 ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& identTkn)
 {
     auto ast = Make<ForRangeStmnt>();
@@ -794,11 +802,20 @@ ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& 
         Accept(Tokens::For);
 
     if (identTkn)
+    {
         ast->varIdent = identTkn->Spell();
+        Accept(Tokens::Colon);
+    }
     else
-        ast->varIdent = AcceptIdent();
-
-    Accept(Tokens::Colon);
+    {
+        if (Is(Tokens::Ident))
+        {
+            ast->varIdent = AcceptIdent();
+            Accept(Tokens::Colon);
+        }
+        else
+            ast->varIdent = defaultForRangeIdent;
+    }
 
     /* Parse range literals */
     ast->rangeStart = AcceptSignedIntLiteral();

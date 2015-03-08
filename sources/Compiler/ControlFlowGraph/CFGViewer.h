@@ -10,6 +10,7 @@
 
 
 #include "BasicBlock.h"
+#include "ClassTree.h"
 
 #include <iostream>
 #include <string>
@@ -30,8 +31,12 @@ class CFGViewer
     
     public:
         
-        void DumpGraph(
+        void ViewGraph(
             const BasicBlock& entryPoint, std::ostream& stream,
+            const std::string& fontName = "courier new", const int fontSize = 10
+        );
+        void ViewGraph(
+            const ClassTree& classTree, const std::string& path,
             const std::string& fontName = "courier new", const int fontSize = 10
         );
 

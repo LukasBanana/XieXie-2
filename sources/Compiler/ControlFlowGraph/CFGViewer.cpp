@@ -10,13 +10,14 @@
 
 #include <exception>
 #include <algorithm>
+#include <fstream>
 
 
 namespace ControlFlowGraph
 {
 
 
-void CFGViewer::DumpGraph(
+void CFGViewer::ViewGraph(
     const BasicBlock& entryPoint, std::ostream& stream,
     const std::string& fontName, const int fontSize)
 {
@@ -32,6 +33,17 @@ void CFGViewer::DumpGraph(
     WriteLine("}");
 
     blockIDs_.clear();
+}
+
+void CFGViewer::ViewGraph(
+    const ClassTree& classTree, const std::string& path,
+    const std::string& fontName, const int fontSize)
+{
+    for (const auto& block : classTree.GetRootBasicBlocks())
+    {
+        std::ofstream file(path + "." + block.first + ".vg");
+        ViewGraph(*block.second, file, fontName, fontSize);
+    }
 }
 
 

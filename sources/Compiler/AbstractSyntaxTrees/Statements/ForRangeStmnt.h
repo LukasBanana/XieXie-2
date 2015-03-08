@@ -23,6 +23,8 @@ class ForRangeStmnt : public Stmnt
         
         AST_INTERFACE_EXT(ForRangeStmnt, Stmnt);
 
+        const TypeDenoter* GetTypeDenoter() const override;
+
         std::string     varIdent;
         int             rangeStart  = 0;
         int             rangeEnd    = 0;

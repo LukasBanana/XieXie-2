@@ -31,13 +31,11 @@ namespace ContextAnalyzer
 using namespace AbstractSyntaxTrees;
 
 //! AST decorator class.
-class Decorator : public Visitor
+class Decorator final : private Visitor
 {
     
     public:
         
-        Decorator() = default;
-
         bool DecorateProgram(Program& program, ErrorReporter& errorReporter);
 
     private:
@@ -100,6 +98,7 @@ class Decorator : public Visitor
         void VisitVarName(VarName& ast);
         void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName);
         void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
+        void VerifyVarNameMutable(VarName& ast);
 
         /* --- Symbol table --- */
 

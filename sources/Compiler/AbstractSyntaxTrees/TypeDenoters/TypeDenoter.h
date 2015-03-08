@@ -52,6 +52,11 @@ class TypeDenoter : public AST
         {
             return false;
         }
+        //! Returns true if this is a constant type. By default false.
+        virtual bool IsConst() const
+        {
+            return false;
+        }
 
         /**
         Returns the last type denoter in a hierarchy. This may also be this type denoter or null,

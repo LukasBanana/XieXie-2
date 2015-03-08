@@ -160,7 +160,11 @@ DEF_VISIT_PROC(Decorator, VarDecl)
 DEF_VISIT_PROC(Decorator, Param)
 {
     if (IsAnalyzeCode())
+    {
+        Visit(ast->typeDenoter);
         RegisterSymbol(ast->ident, ast);
+        Visit(ast->defaultArgExpr);
+    }
 }
 
 DEF_VISIT_PROC(Decorator, Arg)
@@ -440,20 +444,27 @@ DEF_VISIT_PROC(Decorator, CopyAssignStmnt)
 {
     Visit(ast->varNames);
     DecorateExpr(*ast->expr);
+
     for (auto& varName : ast->varNames)
+    {
         VerifyAssignStmntExprTypes(*varName, *ast->expr);
+        VerifyVarNameMutable(*varName);
+    }
 }
 
 DEF_VISIT_PROC(Decorator, ModifyAssignStmnt)
 {
     Visit(ast->varName);
     DecorateExpr(*ast->expr);
+
     VerifyAssignStmntExprTypes(*ast->varName, *ast->expr);
+    VerifyVarNameMutable(*ast->varName);
 }
 
 DEF_VISIT_PROC(Decorator, PostOperatorStmnt)
 {
     Visit(ast->varName);
+    VerifyVarNameMutable(*ast->varName);
 }
 
 /* --- Expressions --- */
@@ -647,7 +658,8 @@ void Decorator::VerifyVarDeclInitExpr(VarDecl& ast)
 void Decorator::VerifyAssignStmntExprTypes(const VarName& varName, const Expr& expr)
 {
     /* Check compatibility of expression type and variable declaration type */
-    auto varNameType = varName.GetLast().GetTypeDenoter();
+    const auto& lastVarName = varName.GetLast();
+    auto varNameType = lastVarName.GetTypeDenoter()->GetLast(lastVarName.arrayAccess.get());
     auto exprType = expr.GetTypeDenoter();
 
     if (exprType)
@@ -940,24 +952,51 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
     if (ast.next)
     {
         /* Check if symbol refers to a class declaration */
-        auto ownerIsClass = (symbol->Type() == AST::Types::ClassDeclStmnt);
+        bool ownerIsClass = false;
         auto isObjectIdent = (ast.ident == "this" || ast.ident == "super");
 
         /* Check if symbol refers to a variable */
-        if (symbol->Type() == AST::Types::VarDecl)
+        switch (symbol->Type())
         {
-            /* Check if variable type refers to a class declaration */
-            auto varDecl = static_cast<VarDecl*>(symbol);
-            auto varType = varDecl->GetTypeDenoter()->GetLast(ast.arrayAccess.get());
-
-            if (varType && varType->Type() == AST::Types::PointerTypeDenoter)
+            case AST::Types::ClassDeclStmnt:
             {
-                /* Set symbol to class namespace */
-                auto varPointerType = static_cast<const PointerTypeDenoter*>(varType);
-                symbol = varPointerType->declRef;
+                ownerIsClass = true;
             }
-            else
-                Error("identifier \"" + ast.ident + "\" does not refer to a class namespace", &ast);
+            break;
+
+            case AST::Types::VarDecl:
+            {
+                /* Check if variable type refers to a class declaration */
+                auto varDecl = static_cast<VarDecl*>(symbol);
+                auto varType = varDecl->GetTypeDenoter()->GetLast(ast.arrayAccess.get());
+
+                if (varType && varType->Type() == AST::Types::PointerTypeDenoter)
+                {
+                    /* Set symbol to class namespace */
+                    auto pointerType = static_cast<const PointerTypeDenoter*>(varType);
+                    symbol = pointerType->declRef;
+                }
+                else
+                    Error("identifier \"" + ast.ident + "\" does not refer to a class namespace", &ast);
+            }
+            break;
+
+            case AST::Types::Param:
+            {
+                /* Check if parameter type refers to a class declaration */
+                auto param = static_cast<Param*>(symbol);
+                auto paramType = param->GetTypeDenoter()->GetLast(ast.arrayAccess.get());
+
+                if (paramType && paramType->Type() == AST::Types::PointerTypeDenoter)
+                {
+                    /* Set symbol to class namespace */
+                    auto pointerType = static_cast<const PointerTypeDenoter*>(paramType);
+                    symbol = pointerType->declRef;
+                }
+                else
+                    Error("parameter \"" + ast.ident + "\" does not refer to a class namespace", &ast);
+            }
+            break;
         }
 
         /* Decorate next variable identifier with next namespace */
@@ -979,6 +1018,14 @@ void Decorator::DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const
     auto symbol = FetchSymbolFromScope(ast.ident, symTab, fullName, &ast);
     if (symbol)
         DecorateVarName(ast, symbol, fullName);
+}
+
+void Decorator::VerifyVarNameMutable(VarName& ast)
+{
+    /* Check if variable is constant */
+    auto varType = ast.GetLast().GetTypeDenoter();
+    if (varType && varType->IsConst())
+        Error("variable \"" + ast.FullName() + "\" is not mutable");
 }
 
 /* --- Symbol table --- */

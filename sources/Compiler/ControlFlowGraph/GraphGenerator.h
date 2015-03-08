@@ -24,7 +24,7 @@ namespace ControlFlowGraph
 using namespace AbstractSyntaxTrees;
 
 //! Generates an control flow graph (CFG) from the specified abstract syntax tree (AST).
-class GraphGenerator final : public Visitor
+class GraphGenerator final : private Visitor
 {
     
     public:
