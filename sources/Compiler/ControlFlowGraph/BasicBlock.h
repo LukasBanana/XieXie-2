@@ -37,6 +37,8 @@ class BasicBlock
 
         //! Adds the specified successor to this basic block.
         void AddSucc(BasicBlock& block);
+        //! Inserts the specified successor into this basic block.
+        void InsertSucc(BasicBlock& block, BasicBlock& blockToReplace);
         //! Removes the specified successor from this basic block.
         void RemoveSucc(BasicBlock& block);
 

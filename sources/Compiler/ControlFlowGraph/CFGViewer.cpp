@@ -25,7 +25,7 @@ void CFGViewer::ViewGraph(
     idCounter_  = 0;
 
     WriteLine("digraph G {");
-    WriteLine("node [shape=\"box\", fontname=\"" + fontName + "\", fontsize=\"" + ToStr(fontSize) + "\"]");
+    WriteLine("node [shape=\"box\", fontname=\"" + fontName + "\", fontsize=\"" + ToStr(fontSize) + "\"];");
 
     DefineBlock(entryPoint);
     LinkBlock(entryPoint);
@@ -94,19 +94,11 @@ void CFGViewer::LinkBlock(const BasicBlock& block)
     if (!block.GetSucc().empty())
     {
         /* Link to successors */
+        auto blockID = GetBlockID(block);
+
         std::string succList;
         for (const auto& succ : block.GetSucc())
-            succList += GetBlockID(*succ) + ", ";
-
-        /* Remove last ", " entry */
-        if (!succList.empty())
-        {
-            succList.pop_back();
-            succList.pop_back();
-        }
-
-        /* Write graph links for this block */
-        WriteLine(GetBlockID(block) + " -> { " + succList + " };");
+            WriteLine(blockID + ":s -> " + GetBlockID(*succ) + ":n;");
 
         /* Travers sucessors */
         for (const auto& succ : block.GetSucc())

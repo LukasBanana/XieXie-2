@@ -75,6 +75,7 @@ class GraphGenerator final : private Visitor
         TACVar TempVar();
         TACVar LocalVar(const AST* ast);
         TACVar LocalVar(const AST& ast);
+        TACVar LocalVarFromVarName(const VarName& ast);
 
         /* === Members === */
 

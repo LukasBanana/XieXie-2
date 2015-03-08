@@ -20,6 +20,11 @@ class Test {
 		
 		for i : 1 .. 10 {
 			a += i
+			b,c := 2
+			
+			for j : 1 .. 3 {
+				d++
+			}
 		}
 		
 	}

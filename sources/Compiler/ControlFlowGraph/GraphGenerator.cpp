@@ -154,6 +154,17 @@ DEF_VISIT_PROC(GraphGenerator, ForStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
 {
+    /* Create new basic block */
+    auto bb = CT()->CreateBasicBlock();
+    In()->InsertSucc(*bb, *Out());
+    
+    bb->AddSucc(*bb);
+
+    PushBB(bb, Out());
+    {
+        Visit(ast->codeBlock);
+    }
+    PopBB();
 }
 
 DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
@@ -197,6 +208,25 @@ DEF_VISIT_PROC(GraphGenerator, InitDeclStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
 {
+    /* Visit expression */
+    Visit(ast->expr);
+
+    auto src = Var();
+    PopVar();
+
+    for (auto& varName : ast->varNames)
+    {
+        /* Get variable identifier */
+        auto& lastName = varName->GetLast();
+        auto var = LocalVarFromVarName(lastName);
+        auto isFloat = IsVarFloat(lastName);
+
+        /* Make instruction */
+        auto inst = In()->MakeInst<TACCopyInst>();
+
+        inst->dest  = var;
+        inst->src   = src;
+    }
 }
 
 static OpCodes OperatorToOpCode(const ModifyAssignStmnt::Operators op, bool isFloat)
@@ -242,7 +272,7 @@ DEF_VISIT_PROC(GraphGenerator, ModifyAssignStmnt)
 
     /* Get variable identifier */
     auto& varName = ast->varName->GetLast();
-    auto var = LocalVar(varName);
+    auto var = LocalVarFromVarName(varName);
     auto isFloat = IsVarFloat(varName);
 
     /* Make instruction */
@@ -258,7 +288,7 @@ DEF_VISIT_PROC(GraphGenerator, PostOperatorStmnt)
 {
     /* Get variable identifier */
     auto& varName = ast->varName->GetLast();
-    auto var = LocalVar(varName);
+    auto var = LocalVarFromVarName(varName);
     auto isFloat = IsVarFloat(varName);
 
     /* Make instruction */
@@ -432,7 +462,7 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 
 DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
 {
-    PushVar(LocalVar(ast->varName->GetLast().declRef));
+    PushVar(LocalVarFromVarName(*ast->varName));
 }
 
 DEF_VISIT_PROC(GraphGenerator, InitListExpr)
@@ -517,6 +547,11 @@ TACVar GraphGenerator::LocalVar(const AST* ast)
 TACVar GraphGenerator::LocalVar(const AST& ast)
 {
     return LocalVar(&ast);
+}
+
+TACVar GraphGenerator::LocalVarFromVarName(const VarName& ast)
+{
+    return LocalVar(ast.GetLast().declRef);
 }
 
 
