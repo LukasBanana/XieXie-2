@@ -35,8 +35,6 @@ class BasicBlock
             return instRef;
         }
 
-        std::vector<std::unique_ptr<ThreeAddressCodes::TACInst>> insts; //!< TAB instructions.
-
         //! Adds the specified successor to this basic block.
         void AddSucc(BasicBlock& block);
         //! Removes the specified successor from this basic block.
@@ -50,6 +48,8 @@ class BasicBlock
         {
             return succ;
         }
+
+        std::vector<std::unique_ptr<ThreeAddressCodes::TACInst>> insts; //!< TAB instructions.
 
     private:
         
