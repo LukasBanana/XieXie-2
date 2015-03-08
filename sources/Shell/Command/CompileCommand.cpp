@@ -78,6 +78,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     /* Transform to CFG */
     if (!hasError)
     {
+        if (showCFG){//!!!!!!
         if (output.verbose)
             output.Message("AST to CFG conversion ...");
 
@@ -98,6 +99,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
                 viewer.ViewGraph(*tree, path);
             }
         }
+        }//!!!!!!!!
     }
 
     /* Print out errors */

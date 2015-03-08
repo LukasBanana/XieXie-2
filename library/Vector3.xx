@@ -1,0 +1,57 @@
+/*
+ * Vector3.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/**
+Vector3 class with components: x, y, z.
+\author Lukas Hermanns
+*/
+class Vector3 {
+	
+	init() {
+		x,y,z := 0.0
+	}
+	init(float xx, float yy, float zz) {
+		x := xx
+		y := yy
+		z := zz
+	}
+	
+	Vector3 add(Vector3 rhs) {
+		return new Vector3(x + rhs.x, y + rhs.y, z + rhs.z)
+	}
+	
+	Vector3 sub(Vector3 rhs) {
+		return new Vector3(x - rhs.x, y - rhs.y, z - rhs.z)
+	}
+	
+	//! Computes the squared length of this vector.
+	float lengthSq() {
+		return Vector3.dot(this, this)
+	}
+	
+	//! Computes the length of this vector.
+	float length() {
+		return Math.sqrt(lengthSq())
+	}
+	
+	//! Computes the scalar product for lhs and rhs.
+	static float dot(Vector3 lhs, Vector3 rhs) {
+		return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z
+	}
+	
+	//! Computes the cross product for lhs and rhs.
+	static Vector3 cross(Vector3 lhs, Vector3 rhs) {
+		return new Vector3(
+			lhs.y*rhs.z - rhs.y*lhs.z,
+			rhs.x*lhs.z - lhs.x*rhs.z,
+			lhs.x*rhs.y - rhs.x*lhs.y
+		)
+	}
+	
+	float x, y, z
+	
+}

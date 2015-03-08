@@ -1,0 +1,52 @@
+/*
+ * MathAprx.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/**
+Math approximated function library class.
+\author Lukas Hermanns
+*/
+class MathAprx {
+	
+	static float sin(float x) {
+		float pi := Math.pi()
+		
+		/* Always wrap input angle to [-PI .. PI] */
+		if x < -pi {
+			x := Math.fmod(x - pi, pi*2.0) + pi
+		} else if x > pi {
+			x := Math.fmod(x + pi, pi*2.0) - pi
+		}
+		
+		/* Compute sine */
+		float y
+		
+		if x < 0.0 {
+			y := 1.27323954 * x + 0.405284735 * x*x
+			
+			if y < 0.0 {
+				y := 0.225 * (y*(-y) - y) + y
+			} else {
+				y := 0.225 * (y*y - y) + y
+			}
+		} else {
+			y := 1.27323954 * x - 0.405284735 * x*x
+			
+			if y < 0.0 {
+				y := 0.225 * (y*(-y) - y) + y
+			} else {
+				y := 0.225 * (y*y - y) + y
+			}
+		}
+		
+		return y
+	}
+	
+	static float cos(float x) {
+		return MathAprx.sin(x + Math.pi()*0.5)
+	}
+	
+}

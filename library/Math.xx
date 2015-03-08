@@ -1,0 +1,34 @@
+/*
+ * Math.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/**
+Math function library class.
+\author Lukas Hermanns
+*/
+class Math {
+	
+	//! Returns the math constant PI (~3.14).
+	static float pi() {
+		return 3.14159265359
+	}
+	
+	//! Returns the square of 'x'.
+	static float sq(float x) {
+		return x*x
+	}
+	
+	//! \todo Not yet implemented!
+	static float sqrt(float x) {
+		return x
+	}
+	
+	//! \todo Not yet implemented!
+	static float fmod(float x) {
+		return x
+	}
+	
+}
