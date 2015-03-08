@@ -1,11 +1,11 @@
 /*
- * TACModifyAssignInst.cpp
+ * TACCopyInst.cpp
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "TACModifyAssignInst.h"
+#include "TACCopyInst.h"
 #include "StringModifier.h"
 
 
@@ -13,15 +13,14 @@ namespace ThreeAddressCodes
 {
 
 
-TACInst::Types TACModifyAssignInst::Type() const
+TACInst::Types TACCopyInst::Type() const
 {
-    return Types::ModifyAssign;
+    return Types::Copy;
 }
 
-std::string TACModifyAssignInst::ToString() const
+std::string TACCopyInst::ToString() const
 {
-    //!TEST!
-    return "r1 := r2 + r3";
+    return dest.ToString() + " := " + src.ToString();
 }
 
 

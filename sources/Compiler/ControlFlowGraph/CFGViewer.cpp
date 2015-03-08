@@ -69,7 +69,7 @@ void CFGViewer::DefineBlock(const BasicBlock& block)
 
     std::string instrList;
     for (const auto& inst : block.insts)
-        instrList += inst->ToString() + "\\n";
+        instrList += inst->ToString() + "\\l";
 
     /* Write graph node for this block */
     auto blockLabel = "bb" + ToStr(id);

@@ -25,16 +25,54 @@ class TACInst
     
     public:
         
-        //! TAC instruction opcodes.
+        //! TAC instruction class types.
         enum class Types
         {
-            CopyAssign,     //!< x := y; x := const; x := "string";
-            ModifyAssign,   //!< x := y + z; x := y - z; x := y * z; ...
+            Copy,           //!< x := y; x := const; x := "string";
+            Modify,         //!< x := y + z; x := y - z; x := y * z; ...
             Jump,           //!< jump to basic block
             CondJump,       //!< conditional jump to basic block, if y = z, y != z, y < z, ...
             DirectCall,     //!< jump and link
             IndirectCall,   //!< jump register and link
             CallReturn,     //!< return from call
+        };
+
+        //! TAC instruction opcodes.
+        enum class OpCodes
+        {
+            NOP,
+
+            NOT,
+            AND,
+            OR,
+            XOR,
+
+            ADD,
+            SUB,
+            MUL,
+            DIV,
+            MOD,
+            SLL,
+            SLR,
+            
+            FADD,
+            FSUB,
+            FMUL,
+            FDIV,
+            
+            CMPE,
+            CMPNE,
+            CMPL,
+            CMPLE,
+            CMPG,
+            CMPGE,
+
+            FCMPE,
+            FCMPNE,
+            FCMPL,
+            FCMPLE,
+            FCMPG,
+            FCMPGE,
         };
 
         virtual ~TACInst()
@@ -46,6 +84,8 @@ class TACInst
 
         //! Returns this TAC instruction as string representation (for debugging).
         virtual std::string ToString() const = 0;
+
+        OpCodes opcode = OpCodes::NOP;
 
     protected:
 

@@ -12,15 +12,18 @@
 #include "Visitor.h"
 #include "ClassTree.h"
 #include "BasicBlock.h"
+#include "SafeStack.h"
+#include "TACVar.h"
+#include "TACVarManager.h"
 
 #include <vector>
-#include <stack>
 
 
 namespace ControlFlowGraph
 {
 
 
+using namespace ThreeAddressCodes;
 using namespace AbstractSyntaxTrees;
 
 //! Generates an control flow graph (CFG) from the specified abstract syntax tree (AST).
@@ -33,6 +36,14 @@ class GraphGenerator final : private Visitor
 
     private:
         
+        using IDType = TACVar::IDType;
+
+        struct BlockReference
+        {
+            BasicBlock* in;
+            BasicBlock* out;
+        };
+
         /* === Functions === */
 
         DECL_VISITOR_INTERFACE;
@@ -41,13 +52,37 @@ class GraphGenerator final : private Visitor
 
         void CreateClassTree();
 
+        void PushBB(BasicBlock* in, BasicBlock* out);
+        void PopBB();
+
+        //! Returns the current in-going basic block.
+        BasicBlock* In() const;
+        //! Returns the current out-going basic block.
+        BasicBlock* Out() const;
+
+        inline ClassTree* CT() const
+        {
+            return classTree_;
+        }
+
+        /* --- Variables --- */
+
+        void PushVar(const TACVar& var);
+        TACVar PopVar();
+        void PopVar(size_t num);
+        TACVar Var();
+
+        TACVar TempVar();
+        TACVar LocalVar(const AST* ast);
+
         /* === Members === */
 
         std::vector<std::unique_ptr<ClassTree>> programClassTrees_;
-        ClassTree*                              classTree_  = nullptr;  //!< Reference to the current class tree.
+        ClassTree*                              classTree_          = nullptr;  //!< Reference to the current class tree.
 
-        std::stack<BasicBlock*>                 basicBlockStack_;
-        BasicBlock*                             basicBlock_ = nullptr;  //!< Reference to the current basic block.
+        SafeStack<BlockReference>               basicBlockStack_;
+
+        TACVarManager                           varMngr_;
 
 };
 

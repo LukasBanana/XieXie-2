@@ -13,37 +13,43 @@ namespace ThreeAddressCodes
 {
 
 
-TACVar::IdType TACVar::idCounter_ = 0;
-
-TACVar::TACVar() :
-    id{ ++TACVar::idCounter_ }
+TACVar::TACVar(IDType id, const Types type) :
+    id  { id   },
+    type{ type }
+{
+}
+TACVar::TACVar(const std::string& value) :
+    type    { Types::Literal },
+    value   { value          }
+{
+}
+TACVar::TACVar(const char* value) :
+    type    { Types::Literal },
+    value   { value          }
 {
 }
 
 std::string TACVar::ToString() const
 {
-    std::string str = ToStr(id);
+    std::string idStr = ToStr(id);
 
-    switch (varClass)
+    switch (type)
     {
-        case VarClasses::Global:
-            str += "@g";
-            break;
-        case VarClasses::Local:
-            str += "@l";
-            break;
-        case VarClasses::Temp:
-            str += "@t";
-            break;
-        case VarClasses::ArgIn:
-            str += "@i";
-            break;
-        case VarClasses::ArgOut:
-            str += "@o";
-            break;
+        case Types::Literal:
+            return value;
+        case Types::Global:
+            return "g" + idStr;
+        case Types::Local:
+            return "l" + idStr;
+        case Types::Temp:
+            return "t" + idStr;
+        case Types::ArgIn:
+            return "i" + idStr;
+        case Types::ArgOut:
+            return "o" + idStr;
     }
 
-    return str;
+    return idStr;
 }
 
 

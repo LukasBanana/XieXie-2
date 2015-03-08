@@ -1,0 +1,17 @@
+
+// CFG Test 1
+// 08/03/2015
+
+class Test {
+	
+	void main() {
+		
+		int a := 1
+		int b := 2
+		int c := (a + b) * 4
+		int d := 2 * c + (3 - 5) * -2
+		
+	}
+	
+}
+

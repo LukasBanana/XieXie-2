@@ -7,6 +7,9 @@
 
 #include "GraphGenerator.h"
 #include "ASTImport.h"
+#include "TACModifyInst.h"
+#include "TACCopyInst.h"
+#include "CodeGenerators/XASM/XASMNameMangling.h"
 
 
 namespace ControlFlowGraph
@@ -44,6 +47,19 @@ DEF_VISIT_PROC(GraphGenerator, VarName)
 
 DEF_VISIT_PROC(GraphGenerator, VarDecl)
 {
+    if (ast->initExpr)
+    {
+        Visit(ast->initExpr);
+        auto var = Var();
+
+        /* Make instruction */
+        auto inst = In()->MakeInst<TACCopyInst>();
+
+        inst->src   = var;
+        inst->dest  = LocalVar(ast);
+
+        PopVar();
+    }
 }
 
 DEF_VISIT_PROC(GraphGenerator, Param)
@@ -139,10 +155,21 @@ DEF_VISIT_PROC(GraphGenerator, ClassDeclStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, VarDeclStmnt)
 {
+    Visit(ast->varDecls);
 }
 
 DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 {
+    auto procIdent = CodeGenerator::XASM::NameMangling::GenerateLabel(*ast->procSignature);
+    
+    auto in = CT()->CreateRootBasicBlock(procIdent);
+    auto out = CT()->CreateBasicBlock();
+
+    PushBB(in, out);
+    {
+        Visit(ast->codeBlock);
+    }
+    PopBB();
 }
 
 DEF_VISIT_PROC(GraphGenerator, InitDeclStmnt)
@@ -163,16 +190,121 @@ DEF_VISIT_PROC(GraphGenerator, PostOperatorStmnt)
 
 /* --- Expressions --- */
 
+static TACInst::OpCodes OperatorToOpCode(const BinaryExpr::Operators op, bool isFloat)
+{
+    using Ty = BinaryExpr::Operators;
+    using OpCodes = TACInst::OpCodes;
+
+    switch (op)
+    {
+        
+        case Ty::LogicOr:
+            return OpCodes::OR;
+        case Ty::LogicAnd:
+            return OpCodes::AND;
+        case Ty::BitwiseOr:
+            return OpCodes::OR;
+        case Ty::BitwiseXOr:
+            return OpCodes::XOR;
+        case Ty::BitwiseAnd:
+            return OpCodes::AND;
+
+        case Ty::Equal:
+            return isFloat ? OpCodes::FCMPE : OpCodes::CMPE;
+        case Ty::Inequal:
+            return isFloat ? OpCodes::FCMPNE : OpCodes::CMPNE;
+        case Ty::Less:
+            return isFloat ? OpCodes::FCMPL : OpCodes::CMPL;
+        case Ty::LessEqual:
+            return isFloat ? OpCodes::FCMPLE : OpCodes::CMPLE;
+        case Ty::Greater:
+            return isFloat ? OpCodes::FCMPG : OpCodes::CMPG;
+        case Ty::GreaterEqual:
+            return isFloat ? OpCodes::FCMPGE : OpCodes::CMPGE;
+
+        case Ty::Add:
+            return isFloat ? OpCodes::FADD : OpCodes::ADD;
+        case Ty::Sub:
+            return isFloat ? OpCodes::FSUB : OpCodes::SUB;
+        case Ty::Mul:
+            return isFloat ? OpCodes::FMUL : OpCodes::MUL;
+        case Ty::Div:
+            return isFloat ? OpCodes::FDIV : OpCodes::DIV;
+
+        case Ty::Mod:
+            return OpCodes::MOD;
+        case Ty::LShift:
+            return OpCodes::SLL;
+        case Ty::RShift:
+            return OpCodes::SLR;
+    }
+
+    return TACInst::OpCodes::NOP;
+}
+
 DEF_VISIT_PROC(GraphGenerator, BinaryExpr)
 {
+    Visit(ast->lhsExpr);
+    auto srcLhs = Var();
+
+    Visit(ast->rhsExpr);
+    auto srcRhs = Var();
+
+    /* Make instruction */
+    auto inst = In()->MakeInst<TACModifyInst>();
+    
+    inst->dest      = TempVar();
+    inst->srcLhs    = srcLhs;
+    inst->srcRhs    = srcRhs;
+    inst->opcode    = OperatorToOpCode(ast->binaryOperator, false);//!!!
+
+    PopVar(2);
+    PushVar(inst->dest);
+}
+
+static TACInst::OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isFloat)
+{
+    using Ty = UnaryExpr::Operators;
+    using OpCodes = TACInst::OpCodes;
+
+    switch (op)
+    {
+        case Ty::LogicNot:
+        case Ty::BitwiseNot:
+            return OpCodes::NOT;
+        case Ty::Negate:
+            return isFloat ? OpCodes::FSUB : OpCodes::SUB;
+    }
+
+    return TACInst::OpCodes::NOP;
 }
 
 DEF_VISIT_PROC(GraphGenerator, UnaryExpr)
 {
+    Visit(ast->expr);
+    auto src = Var();
+
+    /* Make instruction */
+    auto inst = In()->MakeInst<TACModifyInst>();
+    
+    inst->dest      = TempVar();
+    inst->srcLhs    = TACVar("0");
+    inst->srcRhs    = src;
+    inst->opcode    = OperatorToOpCode(ast->unaryOperator, false);//!!!
+
+    PopVar();
+    PushVar(inst->dest);
 }
 
 DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
 {
+    /* Make instruction */
+    auto inst = In()->MakeInst<TACCopyInst>();
+
+    inst->dest  = TempVar();
+    inst->src   = ast->value;
+
+    PushVar(inst->dest);
 }
 
 DEF_VISIT_PROC(GraphGenerator, CastExpr)
@@ -193,6 +325,7 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 
 DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
 {
+    PushVar(LocalVar(ast->varName->GetLast().declRef));
 }
 
 DEF_VISIT_PROC(GraphGenerator, InitListExpr)
@@ -219,6 +352,59 @@ void GraphGenerator::CreateClassTree()
 {
     programClassTrees_.emplace_back(std::make_unique<ClassTree>());
     classTree_ = programClassTrees_.back().get();
+}
+
+void GraphGenerator::PushBB(BasicBlock* in, BasicBlock* out)
+{
+    basicBlockStack_.Push({ in, out });
+}
+
+void GraphGenerator::PopBB()
+{
+    basicBlockStack_.Pop();
+}
+
+BasicBlock* GraphGenerator::In() const
+{
+    return basicBlockStack_.Empty() ? nullptr : basicBlockStack_.Top().in;
+}
+
+BasicBlock* GraphGenerator::Out() const
+{
+    return basicBlockStack_.Empty() ? nullptr : basicBlockStack_.Top().out;
+}
+
+/* --- Variables --- */
+
+void GraphGenerator::PushVar(const TACVar& var)
+{
+    varMngr_.PushVar(var);
+}
+
+TACVar GraphGenerator::PopVar()
+{
+    return varMngr_.PopVar();
+}
+
+void GraphGenerator::PopVar(size_t num)
+{
+    while (num-- > 0)
+        PopVar();
+}
+
+TACVar GraphGenerator::Var()
+{
+    return varMngr_.Var();
+}
+
+TACVar GraphGenerator::TempVar()
+{
+    return varMngr_.TempVar();
+}
+
+TACVar GraphGenerator::LocalVar(const AST* ast)
+{
+    return ast != nullptr ? varMngr_.LocalVar(*ast) : TACVar();
 }
 
 

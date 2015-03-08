@@ -24,31 +24,31 @@ class TACVar
     
     public:
         
-        typedef unsigned int IdType;
+        using IDType = unsigned int;
+        static const IDType invalidID = 0;
 
         //! TAC variable classes.
-        enum class VarClasses
+        enum class Types
         {
-            Global, //!< Global variable
-            Local,  //!< Local variable.
-            Temp,   //!< Compiler temporary variable.
-            ArgIn,  //!< Input argument for a procedure call.
-            ArgOut, //!< Output argument from a procedure call.
+            Literal,    //!< Literal constant.
+            Global,     //!< Global variable
+            Local,      //!< Local variable.
+            Temp,       //!< Compiler temporary variable.
+            ArgIn,      //!< Input argument for a procedure call.
+            ArgOut,     //!< Output argument from a procedure call.
         };
 
-        TACVar();
+        TACVar() = default;
+        TACVar(IDType id, const Types type = Types::Temp);
+        TACVar(const std::string& value);
+        TACVar(const char* value);
 
         //! Returns this variable as string representation (for debugging).
         std::string ToString() const;
 
-        VarClasses  varClass    = VarClasses::Temp;
-        ValueTypes  valueType   = ValueTypes::Integral;
-        
-        IdType      id          = 0;
-
-    private:
-        
-        static IdType idCounter_;
+        IDType      id      = TACVar::invalidID;
+        Types       type    = Types::Temp;
+        std::string value;
 
 };
 
