@@ -890,14 +890,39 @@ void Decorator::VisitVarName(VarName& ast)
     if (symbol)
     {
         /* Decorate AST node */
-        DecorateVarName(ast, symbol, fullName);
+        DecorateVarName(ast, symbol, fullName, false);
     }
 }
 
-void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName)
+void Decorator::DecorateVarName(
+    VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName, bool requireStaticMembers)
 {
     /* Decorate AST node */
     ast.declRef = symbol;
+
+    /* Check if symbol is a static or non-static member */
+    switch (symbol->Type())
+    {
+        case AST::Types::ProcDeclStmnt:
+        {
+            auto procDecl = static_cast<ProcDeclStmnt*>(symbol);
+            if (!procDecl->procSignature->isStatic && requireStaticMembers)
+                Error("procedure \"" + procDecl->procSignature->ident + "\" is not declared as 'static'", &ast);
+            else if (procDecl->procSignature->isStatic && !requireStaticMembers)
+                Error("procedure \"" + procDecl->procSignature->ident + "\" is declared as 'static'", &ast);
+        }
+        break;
+
+        case AST::Types::VarDecl:
+        {
+            auto varDecl = static_cast<VarDecl*>(symbol);
+            if (!varDecl->parentRef->isStatic && requireStaticMembers)
+                Error("variable \"" + varDecl->ident + "\" is not declared as 'static'", &ast);
+            else if (varDecl->parentRef->isStatic && !requireStaticMembers)
+                Error("variable \"" + varDecl->ident + "\" is declared as 'static'", &ast);
+        }
+        break;
+    }
 
     /* Visit array access AST node */
     if (ast.arrayAccess)
@@ -912,12 +937,16 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
     /* Decorate sub AST node */
     if (ast.next)
     {
-        /* Check if current symbol refers to a variable */
+        /* Check if symbol refers to a class declaration */
+        auto ownerIsClass = (symbol->Type() == AST::Types::ClassDeclStmnt);
+
+        /* Check if symbol refers to a variable */
         if (symbol->Type() == AST::Types::VarDecl)
         {
             /* Check if variable type refers to a class declaration */
             auto varDecl = static_cast<VarDecl*>(symbol);
-            auto varType = varDecl->GetTypeDenoter()->GetLast();
+            auto varType = varDecl->GetTypeDenoter()->GetLast(ast.arrayAccess.get());
+
             if (varType && varType->Type() == AST::Types::PointerTypeDenoter)
             {
                 /* Set symbol to class namespace */
@@ -931,18 +960,18 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
         /* Decorate next variable identifier with next namespace */
         auto scopedStmnt = dynamic_cast<ScopedStmnt*>(symbol);
         if (scopedStmnt)
-            DecorateVarNameSub(*ast.next, scopedStmnt->symTab, fullName);
+            DecorateVarNameSub(*ast.next, scopedStmnt->symTab, fullName, ownerIsClass);
         else
             Error("undeclared namespace \"" + ast.ident + "\" (in \"" + fullName + "\")", &ast);
     }
 }
 
-void Decorator::DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName)
+void Decorator::DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName, bool ownerIsClass)
 {
     /* Search in current scope */
     auto symbol = FetchSymbolFromScope(ast.ident, symTab, fullName, &ast);
     if (symbol)
-        DecorateVarName(ast, symbol, fullName);
+        DecorateVarName(ast, symbol, fullName, ownerIsClass);
 }
 
 /* --- Symbol table --- */

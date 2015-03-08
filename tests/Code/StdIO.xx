@@ -30,17 +30,24 @@ class StandardInputStream : InputStream {
 
 class System {
 	init() {
-		out := new StandardInputStream()
-		in := new StandardOutputStream()
+		//out := new StandardInputStream()
+		//in := new StandardOutputStream()
+		m_out := new StandardOutputStream()
 	}
 	static OutputStream out
 	static InputStream in
+	OutputStream m_out
 }
 
 class Main {
 	static void main() {
 		
-		System.out.writeLine("Hello, World!")
+		System sys
+		
+		System.out.writeLine("ok")			// ok, 'System' is a class and 'out' is static
+		//System.m_out.writeLine("error")	// error, 'System' is a class and 'm_out' is non-static
+		sys.m_out.writeLine("ok")			// ok, 'sys' is a variable and 'm_out' is non-static
+		//sys.out.writeLine("error")		// error, 'sys' is a variable and 'out' is static
 		
 		int x := System.in.readLine().toString().toString().size()
 		
@@ -52,9 +59,9 @@ class Main {
 		String[] sl := { "a", "b", "c" }
 		int len := sl[0].size()
 		
-		for int i := 0 ; i < sl.size() ; i++ {
+		for int i := 0 ; i < sl[0].size() ; i++ {
 			//len += "test".size()
-			len += ((InputStream)System.in).readLine().size()
+			len += ((InputStream)System.in).readLine().add(sl[i]).size()
 		}
 		
 	}

@@ -37,6 +37,10 @@ class ArrayTypeDenoter : public TypeDenoter
         {
             return lowerTypeDenoter != nullptr ? lowerTypeDenoter->GetLast() : nullptr;
         }
+        const TypeDenoter* GetLast(const ArrayAccess* arrayAccess) const override
+        {
+            return arrayAccess == nullptr ? this : lowerTypeDenoter->GetLast(arrayAccess->next.get());
+        }
 
         TypeDenoterPtr CopyRef() const override
         {

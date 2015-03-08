@@ -97,8 +97,8 @@ class Decorator : public Visitor
         StmntSymbolTable::SymbolType* FetchSymbol(const std::string& ident, const AST* ast = nullptr);
 
         void VisitVarName(VarName& ast);
-        void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName);
-        void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
+        void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName, bool requireStaticMembers);
+        void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName, bool ownerIsClass);
 
         /* --- Symbol table --- */
 

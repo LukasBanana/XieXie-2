@@ -10,6 +10,7 @@
 
 
 #include "AST.h"
+#include "ArrayAccess.h"
 
 
 namespace AbstractSyntaxTrees
@@ -59,6 +60,16 @@ class TypeDenoter : public AST
         virtual const TypeDenoter* GetLast() const
         {
             return this;
+        }
+        /**
+        Returns the last type denoter in a hierarchy in combination with the specified array access.
+        THis may also be this type denoter, if 'arrayAccess' is null. If there is no distinct last type
+        (missing pointer information for instance), the return value is null.
+        If there are too many array accesses, the return value is null, too.
+        */
+        virtual const TypeDenoter* GetLast(const ArrayAccess* arrayAccess) const
+        {
+            return arrayAccess == nullptr ? this : nullptr;
         }
 
         //! Creates a 'reference copy' of this type denoter. This is not a copy of the entire AST sub tree.
