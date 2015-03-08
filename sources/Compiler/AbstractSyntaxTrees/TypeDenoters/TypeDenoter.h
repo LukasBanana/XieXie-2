@@ -42,6 +42,11 @@ class TypeDenoter : public AST
         {
             return false;
         }
+        //! Returns true if this is a floating-point type. By default false.
+        virtual bool IsFloat() const
+        {
+            return false;
+        }
         //! Returns true if this is a boolean type. By default false.
         virtual bool IsBoolean() const
         {

@@ -13,6 +13,11 @@ namespace ThreeAddressCodes
 {
 
 
+TACCopyInst::TACCopyInst()
+{
+    opcode = OpCodes::MOV;
+}
+
 TACInst::Types TACCopyInst::Type() const
 {
     return Types::Copy;
@@ -20,7 +25,7 @@ TACInst::Types TACCopyInst::Type() const
 
 std::string TACCopyInst::ToString() const
 {
-    return dest.ToString() + " := " + src.ToString();
+    return OpCodePrefix() + " | " + dest.ToString() + " := " + src.ToString();
 }
 
 

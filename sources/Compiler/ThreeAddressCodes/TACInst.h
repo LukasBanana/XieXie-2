@@ -42,6 +42,7 @@ class TACInst
         {
             NOP,
 
+            MOV,
             NOT,
             AND,
             OR,
@@ -73,6 +74,9 @@ class TACInst
             FCMPLE,
             FCMPG,
             FCMPGE,
+
+            FTI,
+            ITF,
         };
 
         virtual ~TACInst()
@@ -84,6 +88,15 @@ class TACInst
 
         //! Returns this TAC instruction as string representation (for debugging).
         virtual std::string ToString() const = 0;
+
+        //! Returns a string for the specified op-code.
+        static std::string OpCodeToString(const OpCodes opcode);
+        /**
+        Returns a string for the op-code of this instruction,
+        plus a space offset to give all op-code strings a unique length.
+        \see OpCodeToString
+        */
+        std::string OpCodePrefix() const;
 
         OpCodes opcode = OpCodes::NOP;
 

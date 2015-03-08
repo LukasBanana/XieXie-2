@@ -21,7 +21,6 @@ TACInst::Types TACModifyInst::Type() const
 std::string TACModifyInst::ToString() const
 {
     std::string op = "???";
-    bool isFloat = false;
 
     switch (opcode)
     {
@@ -36,15 +35,19 @@ std::string TACModifyInst::ToString() const
             break;
 
         case OpCodes::ADD:
+        case OpCodes::FADD:
             op = "+";
             break;
         case OpCodes::SUB:
+        case OpCodes::FSUB:
             op = "-";
             break;
         case OpCodes::MUL:
+        case OpCodes::FMUL:
             op = "*";
             break;
         case OpCodes::DIV:
+        case OpCodes::FDIV:
             op = "/";
             break;
         case OpCodes::MOD:
@@ -57,75 +60,34 @@ std::string TACModifyInst::ToString() const
             op = ">>";
             break;
 
-        case OpCodes::FADD:
-            op = "+";
-            isFloat = true;
-            break;
-        case OpCodes::FSUB:
-            op = "-";
-            isFloat = true;
-            break;
-        case OpCodes::FMUL:
-            op = "*";
-            isFloat = true;
-            break;
-        case OpCodes::FDIV:
-            op = "/";
-            isFloat = true;
-            break;
-
         case OpCodes::CMPE:
+        case OpCodes::FCMPE:
             op = "=";
             break;
         case OpCodes::CMPNE:
+        case OpCodes::FCMPNE:
             op = "!=";
             break;
         case OpCodes::CMPL:
+        case OpCodes::FCMPL:
             op = "<";
             break;
         case OpCodes::CMPLE:
+        case OpCodes::FCMPLE:
             op = "<=";
             break;
         case OpCodes::CMPG:
+        case OpCodes::FCMPG:
             op = ">";
             break;
         case OpCodes::CMPGE:
-            op = ">=";
-            break;
-
-        case OpCodes::FCMPE:
-            op = "=";
-            isFloat = true;
-            break;
-        case OpCodes::FCMPNE:
-            op = "!=";
-            isFloat = true;
-            break;
-        case OpCodes::FCMPL:
-            op = "<";
-            isFloat = true;
-            break;
-        case OpCodes::FCMPLE:
-            op = "<=";
-            isFloat = true;
-            break;
-        case OpCodes::FCMPG:
-            op = ">";
-            isFloat = true;
-            break;
         case OpCodes::FCMPGE:
             op = ">=";
-            isFloat = true;
             break;
     }
 
     /* Return final instruction debug string */
-    auto str = dest.ToString() + " := " + srcLhs.ToString() + " " + op + " " + srcRhs.ToString();
-
-    if (isFloat)
-        str += " <flt>";
-
-    return str;
+    return OpCodePrefix() + " | " + dest.ToString() + " := " + srcLhs.ToString() + " " + op + " " + srcRhs.ToString();
 }
 
 

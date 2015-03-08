@@ -55,6 +55,10 @@ class BuiltinTypeDenoter : public TypeDenoter
         {
             return typeName == TypeNames::Int;
         }
+        bool IsFloat() const override
+        {
+            return typeName == TypeNames::Float;
+        }
         bool IsBoolean() const override
         {
             return typeName == TypeNames::Bool;

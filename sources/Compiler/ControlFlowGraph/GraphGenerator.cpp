@@ -16,6 +16,23 @@ namespace ControlFlowGraph
 {
 
 
+using OpCodes = TACInst::OpCodes;
+
+/*
+ * Internal functions
+ */
+
+static bool IsVarFloat(const VarName& ast)
+{
+    auto varType = ast.GetTypeDenoter();
+    return (varType != nullptr ? varType->IsFloat() : false);
+}
+
+
+/*
+ * GraphGenerator class
+ */
+
 std::vector<std::unique_ptr<ClassTree>> GraphGenerator::GenerateCFG(const Program& program)
 {
     /* Cast program AST node to non-const; we don't modify the AST here at all! */
@@ -165,6 +182,8 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     auto in = CT()->CreateRootBasicBlock(procIdent);
     auto out = CT()->CreateBasicBlock();
 
+    in->AddSucc(*out);
+
     PushBB(in, out);
     {
         Visit(ast->codeBlock);
@@ -180,24 +199,89 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
 {
 }
 
+static OpCodes OperatorToOpCode(const ModifyAssignStmnt::Operators op, bool isFloat)
+{
+    using Ty = ModifyAssignStmnt::Operators;
+
+    switch (op)
+    {
+        case Ty::Add:
+            return isFloat ? OpCodes::FADD : OpCodes::ADD;
+        case Ty::Sub:
+            return isFloat ? OpCodes::FSUB : OpCodes::SUB;
+        case Ty::Mul:
+            return isFloat ? OpCodes::FMUL : OpCodes::MUL;
+        case Ty::Div:
+            return isFloat ? OpCodes::FDIV : OpCodes::DIV;
+
+        case Ty::Mod:
+            return OpCodes::MOD;
+        case Ty::LShift:
+            return OpCodes::SLL;
+        case Ty::RShift:
+            return OpCodes::SLR;
+
+        case Ty::Or:
+            return OpCodes::OR;
+        case Ty::And:
+            return OpCodes::AND;
+        case Ty::XOr:
+            return OpCodes::XOR;
+    }
+
+    return OpCodes::NOP;
+}
+
 DEF_VISIT_PROC(GraphGenerator, ModifyAssignStmnt)
 {
+    /* Visit expression */
+    Visit(ast->expr);
+
+    auto src = Var();
+    PopVar();
+
+    /* Get variable identifier */
+    auto& varName = ast->varName->GetLast();
+    auto var = LocalVar(varName);
+    auto isFloat = IsVarFloat(varName);
+
+    /* Make instruction */
+    auto inst = In()->MakeInst<TACModifyInst>();
+
+    inst->opcode    = OperatorToOpCode(ast->modifyOperator, isFloat);
+    inst->dest      = var;
+    inst->srcLhs    = var;
+    inst->srcRhs    = src;
 }
 
 DEF_VISIT_PROC(GraphGenerator, PostOperatorStmnt)
 {
+    /* Get variable identifier */
+    auto& varName = ast->varName->GetLast();
+    auto var = LocalVar(varName);
+    auto isFloat = IsVarFloat(varName);
+
+    /* Make instruction */
+    auto inst = In()->MakeInst<TACModifyInst>();
+
+    if (ast->postOperator == PostOperatorStmnt::Operators::Inc)
+        inst->opcode = (isFloat ? OpCodes::FADD : OpCodes::ADD);
+    else
+        inst->opcode = (isFloat ? OpCodes::FSUB : OpCodes::SUB);
+
+    inst->dest      = var;
+    inst->srcLhs    = var;
+    inst->srcRhs    = TACVar("1");
 }
 
 /* --- Expressions --- */
 
-static TACInst::OpCodes OperatorToOpCode(const BinaryExpr::Operators op, bool isFloat)
+static OpCodes OperatorToOpCode(const BinaryExpr::Operators op, bool isFloat)
 {
     using Ty = BinaryExpr::Operators;
-    using OpCodes = TACInst::OpCodes;
 
     switch (op)
     {
-        
         case Ty::LogicOr:
             return OpCodes::OR;
         case Ty::LogicAnd:
@@ -239,7 +323,7 @@ static TACInst::OpCodes OperatorToOpCode(const BinaryExpr::Operators op, bool is
             return OpCodes::SLR;
     }
 
-    return TACInst::OpCodes::NOP;
+    return OpCodes::NOP;
 }
 
 DEF_VISIT_PROC(GraphGenerator, BinaryExpr)
@@ -251,21 +335,21 @@ DEF_VISIT_PROC(GraphGenerator, BinaryExpr)
     auto srcRhs = Var();
 
     /* Make instruction */
+    auto isFloat = ast->GetTypeDenoter()->IsFloat();
     auto inst = In()->MakeInst<TACModifyInst>();
     
     inst->dest      = TempVar();
     inst->srcLhs    = srcLhs;
     inst->srcRhs    = srcRhs;
-    inst->opcode    = OperatorToOpCode(ast->binaryOperator, false);//!!!
+    inst->opcode    = OperatorToOpCode(ast->binaryOperator, isFloat);
 
     PopVar(2);
     PushVar(inst->dest);
 }
 
-static TACInst::OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isFloat)
+static OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isFloat)
 {
     using Ty = UnaryExpr::Operators;
-    using OpCodes = TACInst::OpCodes;
 
     switch (op)
     {
@@ -276,7 +360,7 @@ static TACInst::OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isF
             return isFloat ? OpCodes::FSUB : OpCodes::SUB;
     }
 
-    return TACInst::OpCodes::NOP;
+    return OpCodes::NOP;
 }
 
 DEF_VISIT_PROC(GraphGenerator, UnaryExpr)
@@ -285,12 +369,13 @@ DEF_VISIT_PROC(GraphGenerator, UnaryExpr)
     auto src = Var();
 
     /* Make instruction */
+    auto isFloat = ast->GetTypeDenoter()->IsFloat();
     auto inst = In()->MakeInst<TACModifyInst>();
     
     inst->dest      = TempVar();
     inst->srcLhs    = TACVar("0");
     inst->srcRhs    = src;
-    inst->opcode    = OperatorToOpCode(ast->unaryOperator, false);//!!!
+    inst->opcode    = OperatorToOpCode(ast->unaryOperator, isFloat);
 
     PopVar();
     PushVar(inst->dest);
@@ -301,14 +386,36 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
     /* Make instruction */
     auto inst = In()->MakeInst<TACCopyInst>();
 
-    inst->dest  = TempVar();
-    inst->src   = ast->value;
+    inst->dest      = TempVar();
+    inst->src       = ast->value;
 
     PushVar(inst->dest);
 }
 
 DEF_VISIT_PROC(GraphGenerator, CastExpr)
 {
+    Visit(ast->expr);
+    auto src = Var();
+
+    /* Make instruction */
+    auto isDestFloat = ast->GetTypeDenoter()->IsFloat();
+    auto isSrcFloat = ast->expr->GetTypeDenoter()->IsFloat();
+
+    if (isDestFloat != isSrcFloat)
+    {
+        auto inst = In()->MakeInst<TACCopyInst>();
+
+        inst->dest  = TempVar();
+        inst->src   = src;
+
+        if (isSrcFloat)
+            inst->opcode = OpCodes::FTI;
+        else
+            inst->opcode = OpCodes::ITF;
+
+        PopVar();
+        PushVar(inst->dest);
+    }
 }
 
 DEF_VISIT_PROC(GraphGenerator, ProcCallExpr)
@@ -405,6 +512,11 @@ TACVar GraphGenerator::TempVar()
 TACVar GraphGenerator::LocalVar(const AST* ast)
 {
     return ast != nullptr ? varMngr_.LocalVar(*ast) : TACVar();
+}
+
+TACVar GraphGenerator::LocalVar(const AST& ast)
+{
+    return LocalVar(&ast);
 }
 
 

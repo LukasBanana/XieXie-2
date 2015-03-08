@@ -11,6 +11,17 @@ class Test {
 		int c := (a + b) * 4
 		int d := 2 * c + (3 - 5) * -2
 		
+		float e := 3.5
+		float f := e*2.0 + (float)c * -0.5
+		
+		f++
+		a--
+		a += 5
+		
+		for i : 1 .. 10 {
+			a += i
+		}
+		
 	}
 	
 }
