@@ -198,7 +198,21 @@ DEF_VISIT_PROC(Decorator, ArrayAccess)
 
 DEF_VISIT_PROC(Decorator, ProcCall)
 {
-    Visit(ast->procName);
+    /* Decorate procedure name */
+    if (args)
+    {
+        /* Temporary scope change for member call expressions */
+        auto symTab = reinterpret_cast<StmntSymbolTable*>(args);
+        PushSymTab(*symTab, true);
+        {
+            Visit(ast->procName);
+        }
+        PopSymTab();
+    }
+    else
+        Visit(ast->procName);
+
+    /* Decoreate procedure call arguments */
     Visit(ast->args);
 
     /* Decorate procedure call with procedure declaration reference */
@@ -472,7 +486,13 @@ DEF_VISIT_PROC(Decorator, ProcCallExpr)
 DEF_VISIT_PROC(Decorator, MemberCallExpr)
 {
     Visit(ast->objectExpr);
-    Visit(ast->procCall);
+
+    /* Find namespace of sub-expression */
+    auto symTab = exprNamespaceFinder_.FindNamespace(*ast->objectExpr);
+    if (symTab)
+        Visit(ast->procCall, reinterpret_cast<void*>(symTab));
+    else
+        Error("invalid namespace in member-call sub-expression", ast->objectExpr.get());
 }
 
 DEF_VISIT_PROC(Decorator, AllocExpr)
@@ -892,6 +912,23 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
     /* Decorate sub AST node */
     if (ast.next)
     {
+        /* Check if current symbol refers to a variable */
+        if (symbol->Type() == AST::Types::VarDecl)
+        {
+            /* Check if variable type refers to a class declaration */
+            auto varDecl = static_cast<VarDecl*>(symbol);
+            auto varType = varDecl->GetTypeDenoter()->GetLast();
+            if (varType && varType->Type() == AST::Types::PointerTypeDenoter)
+            {
+                /* Set symbol to class namespace */
+                auto varPointerType = static_cast<const PointerTypeDenoter*>(varType);
+                symbol = varPointerType->declRef;
+            }
+            else
+                Error("identifier \"" + ast.ident + "\" does not refer to a class namespace", &ast);
+        }
+
+        /* Decorate next variable identifier with next namespace */
         auto scopedStmnt = dynamic_cast<ScopedStmnt*>(symbol);
         if (scopedStmnt)
             DecorateVarNameSub(*ast.next, scopedStmnt->symTab, fullName);
@@ -910,11 +947,19 @@ void Decorator::DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const
 
 /* --- Symbol table --- */
 
-void Decorator::PushSymTab(ScopedStmnt& ast)
+void Decorator::PushSymTab(StmntSymbolTable& symTab, bool outsideClass)
 {
     /* Push symbol table */
-    symTab_ = &(ast.symTab);
+    symTab_ = &symTab;
     symTabStack_.push_back(symTab_);
+
+    if (outsideClass)
+        class_ = nullptr;
+}
+
+void Decorator::PushSymTab(ScopedStmnt& ast)
+{
+    PushSymTab(ast.symTab);
 
     /* Update reference to inner class */
     if (ast.Type() == AST::Types::ClassDeclStmnt)
@@ -938,9 +983,10 @@ void Decorator::PopSymTab()
             /* Update reference to inner class */
             for (auto it = symTabStack_.rbegin(); it != symTabStack_.rend(); ++it)
             {
-                if ((*it)->GetOwner().Type() == AST::Types::ClassDeclStmnt)
+                auto& owner = (*it)->GetOwner();
+                if (owner.Type() == AST::Types::ClassDeclStmnt)
                 {
-                    class_ = dynamic_cast<ClassDeclStmnt*>(&((*it)->GetOwner()));
+                    class_ = static_cast<ClassDeclStmnt*>(&owner);
                     break;
                 }
             }

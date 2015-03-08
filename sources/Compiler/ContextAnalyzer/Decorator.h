@@ -16,6 +16,7 @@
 #include "AttribPrefix.h"
 #include "ExprConstChecker.h"
 #include "ExprTypeChecker.h"
+#include "ExprNamespaceFinder.h"
 
 #include <functional>
 
@@ -101,6 +102,7 @@ class Decorator : public Visitor
 
         /* --- Symbol table --- */
 
+        void PushSymTab(StmntSymbolTable& symTab, bool outsideClass = false);
         void PushSymTab(ScopedStmnt& ast);
         void PopSymTab();
 
@@ -126,6 +128,7 @@ class Decorator : public Visitor
 
         ExprConstChecker                exprConstChecker_;
         ExprTypeChecker                 exprTypeChecker_;
+        ExprNamespaceFinder             exprNamespaceFinder_;
 
         States                          state_          = States::RegisterClassSymbols;
 

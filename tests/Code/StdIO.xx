@@ -1,0 +1,61 @@
+
+// Std I/O Test 1
+// 07/03/2015
+
+extern class String {
+	int size()
+	String toString()
+	String add(String rhs)
+}
+
+class OutputStream {
+	void write(String s) {}
+	void writeLine(String s) {}
+}
+
+class InputStream {
+	String read() { return "" }
+	String readLine() { return "" }
+}
+
+class StandardOutputStream : OutputStream {
+	void write(String s) {}
+	void writeLine(String s) {}
+}
+
+class StandardInputStream : InputStream {
+	String read() { return "" }
+	String readLine() { return "" }
+}
+
+class System {
+	init() {
+		out := new StandardInputStream()
+		in := new StandardOutputStream()
+	}
+	static OutputStream out
+	static InputStream in
+}
+
+class Main {
+	static void main() {
+		
+		System.out.writeLine("Hello, World!")
+		
+		int x := System.in.readLine().toString().toString().size()
+		
+		String s1 := "hello"
+		String s2 := " "
+		String s3 := "world"
+		String s4 := s1.add(s2).add(s3)
+		
+		String[] sl := { "a", "b", "c" }
+		int len := sl[0].size()
+		
+		for int i := 0 ; i < sl.size() ; i++ {
+			//len += "test".size()
+			len += ((InputStream)System.in).readLine().size()
+		}
+		
+	}
+}

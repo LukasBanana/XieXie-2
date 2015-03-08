@@ -111,7 +111,7 @@ DEF_VISIT_PROC(ExprTypeChecker, ProcCallExpr)
 
 DEF_VISIT_PROC(ExprTypeChecker, MemberCallExpr)
 {
-    // dummy
+    Visit(ast->objectExpr);
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, AllocExpr)

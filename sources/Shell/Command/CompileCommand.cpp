@@ -73,7 +73,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     if (!hasError)
         output.Success("compilation successful");
 
-    #if 1//TEST
+    #if 0//TEST
     {
         using namespace ControlFlowGraph;
         using namespace ThreeAddressCodes;
