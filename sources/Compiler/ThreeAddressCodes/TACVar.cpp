@@ -13,6 +13,10 @@ namespace ThreeAddressCodes
 {
 
 
+/*
+ * TACVar class
+ */
+
 TACVar::TACVar(IDType id, const Types type) :
     id  { id   },
     type{ type }
@@ -50,6 +54,45 @@ std::string TACVar::ToString() const
     }
 
     return idStr;
+}
+
+bool TACVar::IsConst() const
+{
+    return type == Types::Literal;
+}
+
+int TACVar::Int() const
+{
+    return StrToNum<int>(value);
+}
+
+float TACVar::Float() const
+{
+    return StrToNum<float>(value);
+}
+
+
+/* 
+ * Global operators
+ */
+
+bool operator == (const TACVar& lhs, const TACVar& rhs)
+{
+    return
+        lhs.id    == rhs.id   &&
+        lhs.type  == rhs.type &&
+        lhs.value == rhs.value;
+}
+
+bool operator < (const TACVar& lhs, const TACVar& rhs)
+{
+    if (lhs.id < rhs.id) return true;
+    if (lhs.id > rhs.id) return false;
+
+    if (lhs.type < rhs.type) return true;
+    if (lhs.type > rhs.type) return false;
+
+    return lhs.value < rhs.value;
 }
 
 

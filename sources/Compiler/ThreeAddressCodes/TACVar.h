@@ -46,11 +46,23 @@ class TACVar
         //! Returns this variable as string representation (for debugging).
         std::string ToString() const;
 
+        //! Returns true if this variable is a constant literal.
+        bool IsConst() const;
+
+        //! Returns the value as integer.
+        int Int() const;
+        //! Returns the value as floating-point.
+        float Float() const;
+
         IDType      id      = TACVar::invalidID;
         Types       type    = Types::Temp;
         std::string value;
 
 };
+
+
+bool operator == (const TACVar& lhs, const TACVar& rhs);
+bool operator < (const TACVar& lhs, const TACVar& rhs);
 
 
 } // /namespace ThreeAddressCodes

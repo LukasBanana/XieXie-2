@@ -20,6 +20,7 @@ namespace ThreeAddressCodes
 {
 
 
+//! Variable manager to generate unique TAC variable identifiers.
 class TACVarManager
 {
     

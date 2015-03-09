@@ -6,6 +6,7 @@
  */
 
 #include "TACInst.h"
+#include "TACVar.h"
 
 
 namespace ThreeAddressCodes

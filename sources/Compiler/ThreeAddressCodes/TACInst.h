@@ -16,6 +16,8 @@ namespace ThreeAddressCodes
 {
 
 
+class TACVar;
+
 /**
 TAC (Three Address Code) instruction base class.
 This is a further IR (Intermediate Representation) of the entire program.
@@ -89,6 +91,17 @@ class TACInst
         //! Returns this TAC instruction as string representation (for debugging).
         virtual std::string ToString() const = 0;
 
+        //! Returns true if this instruction writes the specified variable.
+        virtual bool WritesVar(const TACVar& var) const
+        {
+            return false;
+        }
+        //! Returns true if this instruction reads the specified variable.
+        virtual bool ReadsVar(const TACVar& var) const
+        {
+            return false;
+        }
+
         //! Returns a string for the specified op-code.
         static std::string OpCodeToString(const OpCodes opcode);
         /**
@@ -103,6 +116,10 @@ class TACInst
     protected:
 
         TACInst() = default;
+        TACInst(const OpCodes opcode) :
+            opcode{ opcode }
+        {
+        }
 
 };
 

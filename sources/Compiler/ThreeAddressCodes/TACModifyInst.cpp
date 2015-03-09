@@ -90,6 +90,16 @@ std::string TACModifyInst::ToString() const
     return OpCodePrefix() + " | " + dest.ToString() + " := " + srcLhs.ToString() + " " + op + " " + srcRhs.ToString();
 }
 
+bool TACModifyInst::WritesVar(const TACVar& var) const
+{
+    return dest == var;
+}
+
+bool TACModifyInst::ReadsVar(const TACVar& var) const
+{
+    return srcLhs == var || srcRhs == var;
+}
+
 
 } // /namespace ThreeAddressCodes
 

@@ -13,14 +13,17 @@
 #include "Program.h"
 #include "ASTViewer.h"
 #include "CFGViewer.h"
+#include "Optimizer.h"
 
 
 void CompileCommand::Execute(StreamParser& input, Log& output)
 {
     ErrorReporter errorReporter;
-    bool hasError = false;
-    bool showAST = false;
-    bool showCFG = false;
+
+    bool hasError   = false;
+    bool showAST    = false;
+    bool showCFG    = false;
+    bool optimize   = false;
 
     /* Parse program */
     AbstractSyntaxTrees::Program program;
@@ -53,6 +56,11 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             input.Accept();
             showCFG = true;
         }
+        else if (input.Get() == "-O" && !optimize)
+        {
+            input.Accept();
+            optimize = true;
+        }
         else
             break;
     }
@@ -75,15 +83,26 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
         viewer.ViewProgram(program);
     }
 
-    /* Transform to CFG */
     if (!hasError)
     {
-        if (showCFG){//!!!!!!
+        #if 1//!!!
+        if (showCFG){
+        #endif
+
+        /* Transform to CFG */
         if (output.verbose)
             output.Message("AST to CFG conversion ...");
 
         ControlFlowGraph::GraphGenerator converter;
         auto classTrees = converter.GenerateCFG(program);
+
+        /* Optimize */
+        if (optimize)
+        {
+            if (output.verbose)
+                output.Message("optimize CFG ...");
+            Optimization::Optimizer::OptimizeProgram(classTrees);
+        }
 
         /* Show flow graph */
         if (showCFG)
@@ -99,7 +118,10 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
                 viewer.ViewGraph(*tree, path);
             }
         }
-        }//!!!!!!!!
+
+        #if 1//!!!!!
+        }
+        #endif
     }
 
     /* Print out errors */
