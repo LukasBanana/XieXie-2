@@ -1,27 +1,26 @@
 /*
- * ConstantPropagation.h
+ * VariableClean.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_CONSTANT_PROPAGATION_H__
-#define __XX_CONSTANT_PROPAGATION_H__
+#ifndef __XX_VARIABLE_CLEAN_H__
+#define __XX_VARIABLE_CLEAN_H__
 
 
 #include "Optimizer.h"
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
 
-#include <map>
-#include <string>
+#include <set>
 
 
 namespace Optimization
 {
 
 
-class ConstantPropagation : public Optimizer
+class VariableClean : public Optimizer
 {
     
     public:
@@ -34,12 +33,14 @@ class ConstantPropagation : public Optimizer
         void TransformCopyInst(std::unique_ptr<TACInst>& inst);
         void TransformModifyInst(std::unique_ptr<TACInst>& inst);
 
-        std::unique_ptr<TACCopyInst> ConstantFolding(const TACModifyInst& inst);
+        void ReadVar(const TACVar& var);
+        void WriteVar(const TACVar& var);
 
-        void FetchConst(TACVar& var);
-        void PropagateConst(const TACVar& dest, const TACVar& src);
+        bool IsVarUsed(const TACVar& var) const;
+        bool VarNotWritten(const TACVar& var);
 
-        std::map<TACVar, std::string> vars_;
+        std::set<TACVar> vars_;             //!< Variables which are used for reading.
+        std::set<TACVar> varsLastWrite_;    //!< Variables which have already been written in the last stage.
 
 };
 

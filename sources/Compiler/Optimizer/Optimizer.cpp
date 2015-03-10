@@ -7,6 +7,7 @@
 
 #include "Optimizer.h"
 #include "ConstantPropagation.h"
+#include "VariableClean.h"
 
 
 namespace Optimization
@@ -22,6 +23,9 @@ void Optimizer::OptimizeProgram(std::vector<std::unique_ptr<ClassTree>>& classTr
         {
             ConstantPropagation cp;
             cp.Transform(*bb);
+
+            VariableClean vc;
+            vc.Transform(*bb);
         }
     }
 }

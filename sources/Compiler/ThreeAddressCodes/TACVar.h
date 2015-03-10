@@ -48,6 +48,8 @@ class TACVar
 
         //! Returns true if this variable is a constant literal.
         bool IsConst() const;
+        //! Returns ture if this is a temporary variable.
+        bool IsTemp() const;
 
         //! Returns the value as integer.
         int Int() const;

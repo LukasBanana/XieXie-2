@@ -24,16 +24,6 @@ void ConstantPropagation::Transform(BasicBlock& basicBlock)
  * ======= Private: =======
  */
 
-void ConstantPropagation::TransformGlobal(BasicBlock& basicBlock)
-{
-    //todo
-}
-
-void ConstantPropagation::TransformLocal(BasicBlock& basicBlock)
-{
-    //todo
-}
-
 void ConstantPropagation::TransformInst(std::unique_ptr<TACInst>& inst)
 {
     switch (inst->Type())

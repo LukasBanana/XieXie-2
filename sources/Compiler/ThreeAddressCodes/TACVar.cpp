@@ -61,6 +61,11 @@ bool TACVar::IsConst() const
     return type == Types::Literal;
 }
 
+bool TACVar::IsTemp() const
+{
+    return type == Types::Temp;
+}
+
 int TACVar::Int() const
 {
     return StrToNum<int>(value);
