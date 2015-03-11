@@ -42,7 +42,7 @@ class System {
 class Main {
 	static void main() {
 		
-		System sys
+		System sys := new System()
 		
 		System.out.writeLine("ok")			// ok, 'System' is a class and 'out' is static
 		//System.m_out.writeLine("error")	// error, 'System' is a class and 'm_out' is non-static

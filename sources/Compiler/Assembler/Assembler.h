@@ -13,6 +13,7 @@
 #include "Compiler/SyntaxAnalyzer/SourceArea.h"
 #include "ErrorReporter.h"
 
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <memory>
@@ -46,7 +47,8 @@ class Assembler
         
         Assembler(Log& log);
 
-        bool AssembleFile(const std::string& inFilename, const std::string& outFilename);
+        bool Assemble(std::istream& inStream, const std::string& outFilename);
+        bool Assemble(const std::string& inFilename, const std::string& outFilename);
 
     private:
         
@@ -155,7 +157,7 @@ class Assembler
 
         /* ------- Scanner ------- */
 
-        void ReadNextLine(std::ifstream& inFile);
+        void ReadNextLine(std::istream& inFile);
 
         char NextChar();
         char Take(char chr);

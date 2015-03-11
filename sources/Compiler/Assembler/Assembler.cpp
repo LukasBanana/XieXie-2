@@ -28,17 +28,8 @@ Assembler::Assembler(Log& log) :
     EstablishMnemonicTable();
 }
 
-bool Assembler::AssembleFile(const std::string& inFilename, const std::string& outFilename)
+bool Assembler::Assemble(std::istream& inStream, const std::string& outFilename)
 {
-    /* Read and parse input file */
-    std::ifstream inFile(inFilename, std::ios_base::in);
-
-    if (!inFile.good())
-    {
-        log_.Error("reading file \"" + inFilename + "\" failed");
-        return false;
-    }
-
     /* Initialize parsing */
     line_.clear();
     lineIt_ = line_.end();
@@ -48,7 +39,7 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
     /* Read first line */
     try
     {
-        ReadNextLine(inFile);
+        ReadNextLine(inStream);
     }
     catch (const CompilerMessage& err)
     {
@@ -56,12 +47,12 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
     }
 
     /* Read entire input file */
-    while (!inFile.eof())
+    while (!inStream.eof())
     {
         try
         {
             /* Read and parse next line */
-            ReadNextLine(inFile);
+            ReadNextLine(inStream);
             ParseLine();
 
             /* Check if line is finished */
@@ -101,6 +92,21 @@ bool Assembler::AssembleFile(const std::string& inFilename, const std::string& o
 
     /* Write byte code to file */
     return CreateByteCode(outFilename);
+}
+
+bool Assembler::Assemble(const std::string& inFilename, const std::string& outFilename)
+{
+    /* Read and parse input file */
+    std::ifstream inFile(inFilename, std::ios_base::in);
+
+    if (!inFile.good())
+    {
+        log_.Error("reading file \"" + inFilename + "\" failed");
+        return false;
+    }
+
+    /* Assemble file stream */
+    return Assemble(inFile, outFilename);
 }
 
 
@@ -185,7 +191,7 @@ void Assembler::ErrorUnexpectedToken(const std::string& hint)
 
 /* ------- Scanner ------- */
 
-void Assembler::ReadNextLine(std::ifstream& inFile)
+void Assembler::ReadNextLine(std::istream& inFile)
 {
     /* Read next line from source file */
     std::getline(inFile, line_);

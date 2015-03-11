@@ -1,0 +1,23 @@
+
+; XASM Test 3
+; 11/03/2015
+
+call	main
+stop
+
+str0:	.ascii " -- This is a simple XASM test!"
+
+main:
+lda		$r0, @str0
+xor		$r1, $r1
+mov		$r2, 10
+.loop:
+push	$r1
+call	<PrintInt>
+push	$r0
+call	<PrintLn>
+inc		$r1
+cmp		$r1, $r2
+jl		.loop
+
+ret		(0) 0
