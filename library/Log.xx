@@ -1,0 +1,52 @@
+/*
+ * Log.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+class Log {
+	
+public:
+	
+	static void write(String s) {
+		Intrinsics.print(s.ptr())
+	}
+	
+	static void writeLine(String s) {
+		Intrinsics.printLn(s.ptr())
+	}
+	
+	static void message(String s) {
+		writeLine(indentState.add(s))
+	}
+	
+	static void error(String s) {
+		message("error: ".add(s).add("!"))
+	}
+	
+	static void warning(String s) {
+		message("warning: ".add(s).add("!"))
+	}
+	
+	static void incIndent() {
+		indentStack.push(new Integer(indent.size()))
+		indentState.add(indent)
+	}
+	
+	static void decIndent() {
+		if not indentStack.empty() {
+			Integer len := (Integer)indentStack.top()
+			indentState.resize(indentState.size() - len.value)
+			indentStack.pop()
+		}
+	}
+	
+	static String indent
+	
+private:
+	
+	static String indentState
+	static Stack indentStack
+	
+}

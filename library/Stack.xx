@@ -1,0 +1,41 @@
+/*
+ * Stack.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+class Stack {
+
+public:
+	
+	//! Pushes object 'o' onto the stack.
+	void push(Object o) {
+		container.resize(container.size() + 1)
+		container[container.size() - 1] = o
+	}
+	
+	//! Returns the top most object on the stack.
+	Object top() {
+		if container.empty() {
+			return null
+		} else {
+			return container[container.size() - 1]
+		}
+	}
+	
+	//! Pops the top most object from the stack.
+	void pop() {
+		container.resize(container.size() - 1)
+	}
+	
+	//! Returns true if the stack is empty.
+	bool empty() {
+		return container.empty()
+	}
+	
+private:
+	
+	Object[] container
+	
+}

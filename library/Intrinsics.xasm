@@ -1,0 +1,11 @@
+
+; Intrinsics XASM
+; 10/03/2015
+
+CIntrinsics.Psin,F:
+	call <Sin>
+	ret (0) 0
+
+CIntrinsics.PcopyMem.I:
+	call <CopyMem>
+	ret (0) 0
