@@ -619,7 +619,7 @@ TokenPtr Scanner::ScanNumber()
     const auto startChr = TakeIt();
     spell += startChr;
 
-    /* Check for hex, octal or binary number */
+    /* Check for hex, octal, or binary number */
     if (startChr == '0')
     {
         switch (chr_)
@@ -636,7 +636,7 @@ TokenPtr Scanner::ScanNumber()
         }
     }
 
-    /* Parse integer or floating-point number */
+    /* Scan integer or floating-point number */
     auto type = Tokens::IntLiteral;
 
     ScanDecimalLiteral(spell);

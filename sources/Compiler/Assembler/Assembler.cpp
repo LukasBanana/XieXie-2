@@ -220,14 +220,14 @@ char Assembler::NextChar()
 
 char Assembler::Take(char chr)
 {
-    if (chr_ != chr)
+    if (!Is(chr))
         ErrorUnexpectedChar("expected '" + ToStr(chr) + "')");
     return TakeIt();
 }
 
 char Assembler::Take(char chr, const std::string& hint)
 {
-    if (chr_ != chr)
+    if (!Is(chr))
         ErrorUnexpectedChar(hint);
     return TakeIt();
 }
@@ -252,13 +252,6 @@ Assembler::Token Assembler::MakeToken(const Token::Types type, bool takeIt)
 static bool IsDigit(char chr)
 {
     return chr >= '0' && chr <= '9';
-}
-
-static bool IsHexChar(char chr)
-{
-    return
-        ( chr >= 'a' && chr <= 'f' ) ||
-        ( chr >= 'A' && chr <= 'F' );
 }
 
 static bool IsIdentChar(char chr)
@@ -290,11 +283,11 @@ Assembler::Token Assembler::NextToken()
     }
 
     /* Check if end-of-line or commentary has reached */
-    if (chr_ == 0 || chr_ == ';')
+    if (Is(0) || Is(';'))
         return Token();
 
     /* Scan token */
-    if (chr_ == '\"')
+    if (Is('\"'))
         return std::move(ScanStringLiteral());
 
     /* Scan identifier */
@@ -302,15 +295,15 @@ Assembler::Token Assembler::NextToken()
         return std::move(ScanIdentifier());
 
     /* Scan number */
-    if (IsDigit(chr_) || chr_ == '-')
+    if (IsDigit(chr_) || Is('-'))
         return std::move(ScanNumber());
 
     /* Scan register */
-    if (chr_ == '$')
+    if (Is('$'))
         return std::move(ScanRegister());
 
     /* Scan intrinsic */
-    if (chr_ == '<')
+    if (Is('<'))
         return std::move(ScanIntrinsic());
 
     /* Scan punctuation */
@@ -340,7 +333,7 @@ Assembler::Token Assembler::ScanStringLiteral()
     while (true)
     {
         /* Check for escape character */
-        while (chr_ == '\\')
+        while (Is('\\'))
         {
             TakeIt();
 
@@ -348,7 +341,6 @@ Assembler::Token Assembler::ScanStringLiteral()
             {
                 case '\\':
                 case '\"':
-                    spell += '\\';
                     spell += chr_;
                     break;
                 case 't':
@@ -358,18 +350,18 @@ Assembler::Token Assembler::ScanStringLiteral()
                     spell += '\n';
                     break;
                 default:
-                    Error("invalid escape character in string literal '" + ToStr(chr_) + "' (only '\\\\', '\\\"', '\\t' and '\\n' are allowed)");
+                    Error("invalid escape character in string literal '" + ToStr(chr_) + "' (only '\\\\', '\\\"', '\\t', and '\\n' are allowed)");
                     break;
             }
 
             TakeIt();
         }
 
-        if (chr_ == 0)
+        if (Is(0))
             Error("unexpected end of string literal");
         
         /* Check for closing '\"' character */
-        if (chr_ == '\"')
+        if (Is('\"'))
             break;
 
         /* Append character to string literal */
@@ -430,13 +422,16 @@ Assembler::Token Assembler::ScanIntrinsic()
     return std::move(Token(Token::Types::Intrinsic, spell));
 }
 
-//! TODO -> scan hex-, oct- and binary literals!!!
 Assembler::Token Assembler::ScanNumber()
 {
     std::string spell;
+    bool isNegative = false;
 
-    if (chr_ == '-')
+    if (Is('-'))
+    {
         spell += TakeIt();
+        isNegative = true;
+    }
 
     if (!IsDigit(chr_))
         ErrorUnexpectedChar("expected digit");
@@ -445,12 +440,17 @@ Assembler::Token Assembler::ScanNumber()
     const auto startChr = TakeIt();
     spell += startChr;
 
+    /* Check for hex, octal, or binary number */
+    if ( startChr == '0' && ( Is('x') || Is('b') || Is('b') ) )
+        Error("only decimal literals are allowed in assembler");
+
+    /* Scan integer or floating-point number */
     Token::Types type = Token::Types::IntLiteral;
 
-    while (IsDigit(chr_) || chr_ == '.')
+    while (IsDigit(chr_) || Is('.'))
     {
         /* Check for floating-pointer number */
-        if (chr_ == '.')
+        if (Is('.'))
         {
             switch (type)
             {
@@ -510,6 +510,9 @@ Assembler::Token Assembler::ScanRegister()
         case 'p':
             spell += TakeIt();
             spell += Take('c');
+            break;
+        default:
+            Error("invalid register prefix '" + ToStr(chr_) + "'");
             break;
     }
 

@@ -164,6 +164,11 @@ class Assembler
         char Take(char chr, const std::string& hint);
         char TakeIt();
 
+        inline bool Is(char chr) const
+        {
+            return chr_ == chr;
+        }
+
         Token MakeToken(const Token::Types type, bool takeIt = false);
 
         Token NextToken();

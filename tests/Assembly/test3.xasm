@@ -5,7 +5,7 @@
 call	main
 stop
 
-str0:	.ascii " -- This is a simple XASM test!"
+str0:	.ascii " -- This is a simple \"XASM\" test!"
 
 main:
 lda		$r0, @str0
