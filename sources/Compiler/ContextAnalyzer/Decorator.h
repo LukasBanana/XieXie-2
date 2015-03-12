@@ -70,6 +70,7 @@ class Decorator final : private Visitor
         void DecorateVarDeclLocal(VarDecl& ast);
         void VerifyVarDeclInitExpr(VarDecl& ast);
         void VerifyAssignStmntExprTypes(const VarName& varName, const Expr& expr);
+        const TypeDenoter* DeduceTypeFromVarDecls(const std::vector<VarDeclPtr>& varDecls);
 
         void DecorateProcArgs(ProcCall& ast);
 

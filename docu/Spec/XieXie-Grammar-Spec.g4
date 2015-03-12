@@ -101,7 +101,7 @@ attrib_arg:			expr;
 var_name:			(OBJECT_IDENT | var_name_sub) ('.' var_name_sub)?;
 var_name_sub:		IDENT array_access? ('.' var_name_sub)?;
 
-var_decl_stmnt:		type_denoter var_decl_list;
+var_decl_stmnt:		(type_denoter | auto_type_denoter) var_decl_list;
 var_decl_list:		var_decl (',' var_decl)*;
 var_decl:			IDENT var_init?
 var_init:			':=' expr;
@@ -214,6 +214,9 @@ return_type_denoter		: VOID_TYPE_DENOTER
 array_type_denoter:		type_denoter '[]';
 
 pointer_type_denoter:	IDENT;
+
+auto_type_denoter		: 'var'
+						| 'const';
 
 VOID_TYPE_DENOTER:		'void';
 BOOL_TYPE_DENOTER:		'bool';

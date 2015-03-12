@@ -390,7 +390,6 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
     }
     else if (IsAnalyzeCode())
     {
-        Visit(ast->typeDenoter);
         switch (symTab_->GetOwner().Type())
         {
             case AST::Types::ProcDeclStmnt:
@@ -409,6 +408,29 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
                     DecorateVarDeclMember(*varDecl);
                 break;
         }
+
+        /* Decorate variable type */
+        if (ast->typeDenoter->IsAutoType())
+        {
+            auto deducedType = DeduceTypeFromVarDecls(ast->varDecls);
+            if (deducedType)
+            {
+                auto isConst = ast->typeDenoter->IsConst();
+                ast->typeDenoter = deducedType->CopyRef();
+                ast->typeDenoter->SetConst(isConst);
+
+                if (isConst && !ast->typeDenoter->IsConst())
+                    Error("type denoter can not be constant", ast);
+            }
+            else
+                Error("can not deduce automatic type", ast);
+        }
+        else
+            Visit(ast->typeDenoter);
+
+        /* Verify variable declaration init expression */
+        for (auto& varDecl : ast->varDecls)
+            VerifyVarDeclInitExpr(*varDecl);
     }
 }
 
@@ -660,18 +682,13 @@ void Decorator::DecorateVarDeclMember(VarDecl& ast)
     {
         DecorateExpr(*ast.initExpr);
         VerifyExprConst(*ast.initExpr);
-        VerifyVarDeclInitExpr(ast);
     }
 }
 
 void Decorator::DecorateVarDeclLocal(VarDecl& ast)
 {
     if (ast.initExpr)
-    {
         DecorateExpr(*ast.initExpr);
-        VerifyVarDeclInitExpr(ast);
-    }
-    //...
 }
 
 void Decorator::VerifyVarDeclInitExpr(VarDecl& ast)
@@ -713,6 +730,16 @@ void Decorator::VerifyAssignStmntExprTypes(const VarName& varName, const Expr& e
     }
     else
         Error("invalid type of expression in assign statement", &expr);
+}
+
+const TypeDenoter* Decorator::DeduceTypeFromVarDecls(const std::vector<VarDeclPtr>& varDecls)
+{
+    for (auto& varDecl : varDecls)
+    {
+        if (varDecl->initExpr)
+            return varDecl->initExpr->GetTypeDenoter();
+    }
+    return nullptr;
 }
 
 void Decorator::DecorateProcArgs(ProcCall& ast)

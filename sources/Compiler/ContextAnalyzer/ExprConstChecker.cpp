@@ -74,7 +74,9 @@ DEF_VISIT_PROC(ExprConstChecker, AllocExpr)
 
 DEF_VISIT_PROC(ExprConstChecker, VarAccessExpr)
 {
-    throw ast;
+    auto varType = ast->GetTypeDenoter();
+    if (!varType || !varType->IsConst())
+        throw ast;
 }
 
 DEF_VISIT_PROC(ExprConstChecker, InitListExpr)

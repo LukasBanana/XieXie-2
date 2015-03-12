@@ -9,6 +9,7 @@
 #include "ASTImport.h"
 #include "StringModifier.h"
 #include "SourceFile.h"
+#include "BuiltinTypeDenoter.h"
 
 
 namespace SyntaxAnalyzer
@@ -487,6 +488,9 @@ StmntPtr Parser::ParseStmnt()
         case Tokens::Continue:
         case Tokens::Return:
             return ParseCtrlTransferStmnt();
+        case Tokens::Var:
+        case Tokens::Const:
+            return ParseVarDeclStmnt();
     }
     return ParseVarNameStmnt();
 }
@@ -508,6 +512,9 @@ StmntPtr Parser::ParseDeclStmnt()
             return ParseInitDeclStmnt();
         case Tokens::LDParen:
             return ParseClassDeclOrProcDeclStmnt();
+        case Tokens::Var:
+        case Tokens::Const:
+            return ParseVarDeclStmnt();
     }
     return ParseVarDeclOrProcDeclStmnt();
 }
@@ -591,6 +598,13 @@ StmntPtr Parser::ParseVarDeclOrProcDeclStmnt()
     {
         AcceptIt();
         isStatic = true;
+    }
+
+    /* Check for automatic type */
+    if (Is(Tokens::Var) || Is(Tokens::Const))
+    {
+        /* Parse variable declaration */
+        return ParseVarDeclStmnt(nullptr, false, isStatic);
     }
 
     /* Check for procedure declaration */
@@ -948,12 +962,28 @@ ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attri
     return ast;
 }
 
-// var_decl_stmnt: type_denoter var_decl_list;
-VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TokenPtr& identTkn, bool hasArrayType)
+// var_decl_stmnt: (type_denoter | auto_type_denoter) var_decl_list;
+VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TokenPtr& identTkn, bool hasArrayType, bool isStatic)
 {
     auto ast = Make<VarDeclStmnt>();
 
-    ast->typeDenoter = ParseTypeDenoter(identTkn, hasArrayType);
+    ast->isStatic = isStatic;
+
+    if (Is(Tokens::Var))
+    {
+        AcceptIt();
+        ast->typeDenoter = Make<BuiltinTypeDenoter>(BuiltinTypeDenoter::TypeNames::AutoType);
+    }
+    else if (Is(Tokens::Const))
+    {
+        AcceptIt();
+        auto builtinType = Make<BuiltinTypeDenoter>(BuiltinTypeDenoter::TypeNames::AutoType);
+        builtinType->isConst = true;
+        ast->typeDenoter = builtinType;
+    }
+    else
+        ast->typeDenoter = ParseTypeDenoter(identTkn, hasArrayType);
+
     ast->varDecls = ParseVarDeclList(Tokens::Comma);
 
     /* Forward decoration */

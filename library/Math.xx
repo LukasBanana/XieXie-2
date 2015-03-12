@@ -11,10 +11,11 @@ Math function library class.
 */
 class Math {
 	
-	//! Returns the math constant PI (~3.14).
-	static float pi() {
-		return 3.14159265359
-	}
+	//! Math constant PI (~3.14).
+	static const pi := 3.14159265358979
+	
+	//! Math constant E (~2.71).
+	static const e := 2.71828182845905
 	
 	//! Returns the square of 'x'.
 	static float sq(float x) {

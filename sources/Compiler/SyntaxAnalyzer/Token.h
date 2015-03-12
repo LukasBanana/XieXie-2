@@ -47,6 +47,8 @@ class Token
             // Type denoters
             BuiltinType,    //!< bool, int, float
             Void,           //!< void
+            Var,            //!< var
+            Const,          //!< const
 
             // Operators
             BitwiseOrOp,    //!< |

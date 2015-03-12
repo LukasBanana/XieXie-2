@@ -382,6 +382,13 @@ BuiltinTypeDenoter::BuiltinTypeDenoter(const TypeNames initTypeName, bool isCons
 {
 }
 
+BuiltinTypeDenoter::BuiltinTypeDenoter(const SourceArea& area, const TypeNames initTypeName, bool isConst) :
+    TypeDenoter { area         },
+    typeName    { initTypeName },
+    isConst     { isConst      }
+{
+}
+
 BuiltinTypeDenoter::TypeNames BuiltinTypeDenoter::GetTypeName(const std::string& spell)
 {
     if (spell == "bool")

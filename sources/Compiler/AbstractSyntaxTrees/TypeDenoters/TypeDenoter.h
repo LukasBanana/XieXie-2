@@ -22,6 +22,11 @@ class TypeDenoter : public AST
     
     public:
 
+        //! Returns true if this is an automatic type. By default false.
+        virtual bool IsAutoType() const
+        {
+            return false;
+        }
         //! Returns true if this is a 'void' type. By default false.
         virtual bool IsVoid() const
         {
@@ -61,6 +66,12 @@ class TypeDenoter : public AST
         virtual bool IsConst() const
         {
             return false;
+        }
+
+        //! Sets this type denoter to constant.
+        virtual void SetConst(bool isConst)
+        {
+            // dummy
         }
 
         /**

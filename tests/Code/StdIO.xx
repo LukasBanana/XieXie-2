@@ -34,6 +34,15 @@ class System {
 }
 
 class Main {
+	
+	var v0 := 6
+	
+	static const c0 := 3, c1
+	const c2 := 0.5
+	const c3 := Main.c0 > Main.c1
+	
+	bool b0 := c3
+	
 	static void main() {
 		
 		System sys := new System()
@@ -44,6 +53,12 @@ class Main {
 		//sys.out.writeLine("error")		// error, 'sys' is a variable and 'out' is static
 		
 		int x := System.in.readLine().toString().toString().size()
+		
+		const pi := 3 + 2						// automatic type deduction for constants (only for int, float, and bool)
+		const cb := x > pi
+		
+		var a := "test", b := { 1 }.toString()	// automatic type deduction
+		int c := a.size()
 		
 		String s1 := "hello"
 		String s2 := " "
@@ -70,4 +85,5 @@ class Main {
 		}
 		
 	}
+	
 }

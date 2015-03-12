@@ -24,10 +24,12 @@ static KeywordMapType GenerateKeywordMap()
         { "this",       Ty::ObjectIdent    },
         { "super",      Ty::ObjectIdent    },
 
-        { "void",       Ty::Void           },
         { "bool",       Ty::BuiltinType    },
         { "int",        Ty::BuiltinType    },
         { "float",      Ty::BuiltinType    },
+        { "void",       Ty::Void           },
+        { "var",        Ty::Var            },
+        { "const",      Ty::Const          },
 
         { "or",         Ty::Or             },
         { "and",        Ty::And            },
@@ -75,7 +77,6 @@ static KeywordMapType GenerateKeywordMap()
         { "long",       Ty::Reserved       },
         { "ulong",      Ty::Reserved       },
         { "double",     Ty::Reserved       },
-        { "const",      Ty::Reserved       },
         { "release",    Ty::Reserved       },
     };
 }

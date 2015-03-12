@@ -23,7 +23,8 @@ class BuiltinTypeDenoter : public TypeDenoter
         
         enum class TypeNames
         {
-            Void,
+            AutoType,   //!< Invalid variable type; actual type must be automatically deduced.
+            Void,       //!< Procedure only return type.
             Bool,
             //Byte,
             //UByte,
@@ -40,6 +41,7 @@ class BuiltinTypeDenoter : public TypeDenoter
         AST_INTERFACE_EXT(BuiltinTypeDenoter, TypeDenoter);
 
         BuiltinTypeDenoter(const TypeNames initTypeName, bool isConst = false);
+        BuiltinTypeDenoter(const SourceArea& area, const TypeNames initTypeName, bool isConst = false);
 
         //! Returns the type name for the specified type spelling.
         static TypeNames GetTypeName(const std::string& spell);
@@ -47,6 +49,10 @@ class BuiltinTypeDenoter : public TypeDenoter
         TypeDenoterPtr CopyRef() const override;
         std::string ToString() const override;
 
+        bool IsAutoType() const override
+        {
+            return typeName == TypeNames::AutoType;
+        }
         bool IsVoid() const override
         {
             return typeName == TypeNames::Void;
@@ -70,6 +76,11 @@ class BuiltinTypeDenoter : public TypeDenoter
         bool IsConst() const override
         {
             return isConst;
+        }
+
+        void SetConst(bool isConst) override
+        {
+            this->isConst = isConst;
         }
 
         TypeNames   typeName    = TypeNames::Void;  // e.g. "int", "float", "bool"
