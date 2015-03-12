@@ -49,7 +49,7 @@ DEF_VISIT_PROC(ExprNamespaceFinder, UnaryExpr)
 
 DEF_VISIT_PROC(ExprNamespaceFinder, LiteralExpr)
 {
-    //throw CommonNamespaceString->symTab
+    Visit(ast->typeDenoter);
 }
 
 DEF_VISIT_PROC(ExprNamespaceFinder, CastExpr)
@@ -85,21 +85,26 @@ DEF_VISIT_PROC(ExprNamespaceFinder, VarAccessExpr)
 
 DEF_VISIT_PROC(ExprNamespaceFinder, InitListExpr)
 {
-    //throw CommonNamespaceArray->symTab
+    Visit(&ast->typeDenoter);
 }
 
 /* --- Type denoters --- */
 
+static void ThrowSymbolTable(AST* declRef)
+{
+    auto declStmntRef = dynamic_cast<ScopedStmnt*>(declRef);
+    if (declStmntRef)
+        throw &(declStmntRef->symTab);
+}
+
 DEF_VISIT_PROC(ExprNamespaceFinder, ArrayTypeDenoter)
 {
-    Visit(ast->lowerTypeDenoter);
+    ThrowSymbolTable(ast->declRef);
 }
 
 DEF_VISIT_PROC(ExprNamespaceFinder, PointerTypeDenoter)
 {
-    auto declStmntRef = dynamic_cast<ScopedStmnt*>(ast->declRef);
-    if (declStmntRef)
-        throw &(declStmntRef->symTab);
+    ThrowSymbolTable(ast->declRef);
 }
 
 

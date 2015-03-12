@@ -22,7 +22,7 @@ class Expr : public AST
     public:
         
         // dast
-        const TypeDenoter* typeDenoterRef = nullptr;
+        //const TypeDenoter* typeDenoterRef = nullptr;
 
     protected:
         

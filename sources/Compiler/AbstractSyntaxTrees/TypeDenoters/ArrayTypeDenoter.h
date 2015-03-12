@@ -49,7 +49,10 @@ class ArrayTypeDenoter : public TypeDenoter
             return copy;
         }
 
-        TypeDenoterPtr lowerTypeDenoter;
+        TypeDenoterPtr  lowerTypeDenoter;
+
+        // dast
+        AST*            declRef = nullptr; // reference to the "Array" class declaration statement
 
 };
 

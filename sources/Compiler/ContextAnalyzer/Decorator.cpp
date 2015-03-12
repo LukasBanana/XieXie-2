@@ -324,7 +324,7 @@ DEF_VISIT_PROC(Decorator, ForEachStmnt)
     OpenScope();
     {
         Visit(ast->varDeclStmnt);
-        Visit(ast->listExpr);
+        DecorateExpr(*ast->listExpr);
         Visit(ast->codeBlock);
     }
     CloseScope();
@@ -482,6 +482,7 @@ DEF_VISIT_PROC(Decorator, UnaryExpr)
 
 DEF_VISIT_PROC(Decorator, LiteralExpr)
 {
+    Visit(ast->typeDenoter);
 }
 
 DEF_VISIT_PROC(Decorator, CastExpr)
@@ -520,6 +521,7 @@ DEF_VISIT_PROC(Decorator, VarAccessExpr)
 
 DEF_VISIT_PROC(Decorator, InitListExpr)
 {
+    Visit(&(ast->typeDenoter));
     Visit(ast->exprs);
 }
 
@@ -532,11 +534,17 @@ DEF_VISIT_PROC(Decorator, BuiltinTypeDenoter)
 DEF_VISIT_PROC(Decorator, ArrayTypeDenoter)
 {
     Visit(ast->lowerTypeDenoter);
+
+    /* Decorate type denoter with "Array" class */
+    auto symbol = FetchSymbol("Array", ast);
+    if (symbol)
+        ast->declRef = symbol;
 }
 
 DEF_VISIT_PROC(Decorator, PointerTypeDenoter)
 {
-    auto symbol = FetchSymbol(ast->declIdent, ast->declIdent, ast);
+    /* Decorate pointer type with declaration identifier */
+    auto symbol = FetchSymbol(ast->declIdent, ast);
     if (symbol)
         ast->declRef = symbol;
 }

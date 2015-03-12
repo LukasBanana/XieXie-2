@@ -43,12 +43,12 @@ class LiteralExpr : public Expr
             return type_;
         }
 
+        TypeDenoterPtr  typeDenoter;
         std::string     value;
 
     private:
         
         Literals        type_ = Literals::Bool;
-        TypeDenoterPtr  thisTypeDenoter_; // type denoter for this literal expression
 
 };
 

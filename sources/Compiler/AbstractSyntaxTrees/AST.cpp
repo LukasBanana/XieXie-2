@@ -107,7 +107,7 @@ void CodeBlock::UpdateSourceArea()
 
 const TypeDenoter* LiteralExpr::GetTypeDenoter() const
 {
-    return thisTypeDenoter_.get();
+    return typeDenoter.get();
 }
 
 void LiteralExpr::SetType(const Literals type)
@@ -119,7 +119,7 @@ void LiteralExpr::SetType(const Literals type)
         {
             auto builtinType = std::make_shared<BuiltinTypeDenoter>();
             builtinType->typeName = BuiltinTypeDenoter::TypeNames::Bool;
-            thisTypeDenoter_ = builtinType;
+            typeDenoter = builtinType;
         }
         break;
 
@@ -127,7 +127,7 @@ void LiteralExpr::SetType(const Literals type)
         {
             auto builtinType = std::make_shared<BuiltinTypeDenoter>();
             builtinType->typeName = BuiltinTypeDenoter::TypeNames::Int;
-            thisTypeDenoter_ = builtinType;
+            typeDenoter = builtinType;
         }
         break;
 
@@ -135,7 +135,7 @@ void LiteralExpr::SetType(const Literals type)
         {
             auto builtinType = std::make_shared<BuiltinTypeDenoter>();
             builtinType->typeName = BuiltinTypeDenoter::TypeNames::Float;
-            thisTypeDenoter_ = builtinType;
+            typeDenoter = builtinType;
         }
         break;
 
@@ -143,12 +143,12 @@ void LiteralExpr::SetType(const Literals type)
         {
             auto pointerType = std::make_shared<PointerTypeDenoter>();
             pointerType->declIdent = "String";
-            thisTypeDenoter_ = pointerType;
+            typeDenoter = pointerType;
         }
         break;
 
         case Literals::Pointer:
-            thisTypeDenoter_ = std::make_shared<PointerTypeDenoter>();
+            typeDenoter = std::make_shared<PointerTypeDenoter>();
             break;
     }
 }
@@ -238,7 +238,7 @@ const TypeDenoter* Param::GetTypeDenoter() const
 
 const TypeDenoter* InitListExpr::GetTypeDenoter() const
 {
-    return &thisTypeDenoter_;
+    return &typeDenoter;
 }
 
 void InitListExpr::DeduceTypeDenoter()
@@ -253,17 +253,17 @@ void InitListExpr::DeduceTypeDenoter()
         }
     );
     if (itRef != exprs.end())
-        thisTypeDenoter_.lowerTypeDenoter = (*itRef)->GetTypeDenoter()->CopyRef();
+        typeDenoter.lowerTypeDenoter = (*itRef)->GetTypeDenoter()->CopyRef();
 }
 
 const TypeDenoter* InitListExpr::GetDeducedTypeDenoter() const
 {
-    return thisTypeDenoter_.lowerTypeDenoter.get();
+    return typeDenoter.lowerTypeDenoter.get();
 }
 
 void InitListExpr::EstablishArrayType(const TypeDenoterPtr& lowerTypeDenoter)
 {
-    thisTypeDenoter_.lowerTypeDenoter = lowerTypeDenoter;
+    typeDenoter.lowerTypeDenoter = lowerTypeDenoter;
 }
 
 

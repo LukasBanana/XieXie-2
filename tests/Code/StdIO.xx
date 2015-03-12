@@ -2,10 +2,23 @@
 // Std I/O Test 1
 // 07/03/2015
 
+extern class Object {
+	String toString()
+}
+
 extern class String {
 	int size()
 	String toString()
 	String add(String rhs)
+}
+
+extern class Array {
+	int size()
+	void resize(int s)
+	String toString()
+	void add(Object o)
+	void remove(Object o)
+	bool contains(Object o)
 }
 
 class OutputStream {
@@ -60,9 +73,12 @@ class Main {
 		int len := sl[0].size()
 		
 		for int i := 0 ; i < sl[0].size() ; i++ {
-			//len += "test".size()
+			len += "test".size()
 			len += ((InputStream)System.in).readLine().add(sl[i]).size()
 		}
+		
+		int num := { "foo", { "bar" }.toString() }.size()
+		num := ((Array){ "test" }).size()
 		
 	}
 }

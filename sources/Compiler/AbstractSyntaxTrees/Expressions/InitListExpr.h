@@ -32,11 +32,8 @@ class InitListExpr : public Expr
         //! Establishs the array type of this initializer list expression.
         void EstablishArrayType(const TypeDenoterPtr& lowerTypeDenoter);
 
-        std::vector<ExprPtr> exprs;
-
-    private:
-        
-        ArrayTypeDenoter thisTypeDenoter_; // type denoter for this initializer list expression
+        ArrayTypeDenoter        typeDenoter;
+        std::vector<ExprPtr>    exprs;
 
 };
 
