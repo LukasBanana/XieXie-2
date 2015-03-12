@@ -82,8 +82,13 @@ class Decorator final : private Visitor
         void DecorateExpr(Expr& ast);
         bool VerifyExprConst(const Expr& expr);
         bool VerifyExprType(const Expr& expr);
+        bool VerifyExprIsFromType(
+            const Expr& expr, const std::string& typeDesc, const std::string& usageDesc,
+            const std::function<bool(const TypeDenoter& typeDenoter)>& verifier
+        );
         bool VerifyExprIsBoolean(const Expr& expr, const std::string& usageDesc);
         bool VerifyExprIsIntegral(const Expr& expr, const std::string& usageDesc);
+        bool VerifyExprIsArray(const Expr& expr, const std::string& usageDesc);
 
         StmntSymbolTable::SymbolType* FetchSymbolFromScope(
             const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast = nullptr
@@ -99,6 +104,7 @@ class Decorator final : private Visitor
         void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName);
         void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
         void VerifyVarNameMutable(VarName& ast);
+        void DeduceNamespaceFromTypeDenoter(const TypeDenoter* varType, StmntSymbolTable::SymbolType*& symbol, const VarName& ast);
 
         /* --- Symbol table --- */
 

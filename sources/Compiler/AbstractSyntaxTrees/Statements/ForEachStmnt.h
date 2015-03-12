@@ -23,7 +23,9 @@ class ForEachStmnt : public Stmnt
         
         AST_INTERFACE_EXT(ForEachStmnt, Stmnt);
 
-        VarDeclStmntPtr varDeclStmnt;
+        const TypeDenoter* GetTypeDenoter() const override;
+
+        std::string     varIdent;
         ExprPtr         listExpr;
         CodeBlockPtr    codeBlock;
 

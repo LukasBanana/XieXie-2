@@ -834,14 +834,13 @@ ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& 
     return ast;
 }
 
-// for_each_stmnt: 'foreach' for_each_init ':' expr code_block;
-// for_each_init: var_decl_stmnt;
+// for_each_stmnt: 'foreach' IDENT ':' expr code_block;
 ForEachStmntPtr Parser::ParseForEachStmnt()
 {
     auto ast = Make<ForEachStmnt>();
 
     Accept(Tokens::ForEach);
-    ast->varDeclStmnt = ParseVarDeclStmnt();
+    ast->varIdent = AcceptIdent();
     Accept(Tokens::Colon);
     ast->listExpr = ParseExpr();
     ast->codeBlock = ParseCodeBlock();

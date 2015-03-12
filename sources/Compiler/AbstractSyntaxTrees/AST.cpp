@@ -186,6 +186,21 @@ const TypeDenoter* ForRangeStmnt::GetTypeDenoter() const
 }
 
 
+/* --- ForEachStmnt --- */
+
+const TypeDenoter* ForEachStmnt::GetTypeDenoter() const
+{
+    /* Return lower type of array */
+    auto listType = listExpr->GetTypeDenoter();
+    if (listType && listType->Type() == AST::Types::ArrayTypeDenoter)
+    {
+        auto arrayType = static_cast<const ArrayTypeDenoter*>(listType);
+        return arrayType->lowerTypeDenoter.get();
+    }
+    return nullptr;
+}
+
+
 /* --- ProcCallExpr --- */
 
 const TypeDenoter* ProcCallExpr::GetTypeDenoter() const

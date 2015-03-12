@@ -215,7 +215,7 @@ DEF_VISIT_PROC(ASTViewer, ForRangeStmnt)
 DEF_VISIT_PROC(ASTViewer, ForEachStmnt)
 {
     AST_INFO_COLOR("ForEachStmnt", colorStmnt);
-    Visit(ast->varDeclStmnt);
+    AST_STRING(varIdent);
     Visit(ast->listExpr);
     Visit(ast->codeBlock);
 }

@@ -2,25 +2,6 @@
 // Std I/O Test 1
 // 07/03/2015
 
-extern class Object {
-	String toString()
-}
-
-extern class String {
-	int size()
-	String toString()
-	String add(String rhs)
-}
-
-extern class Array {
-	int size()
-	void resize(int s)
-	String toString()
-	void add(Object o)
-	void remove(Object o)
-	bool contains(Object o)
-}
-
 class OutputStream {
 	void write(String s) {}
 	void writeLine(String s) {}
@@ -79,6 +60,14 @@ class Main {
 		
 		int num := { 5, { "bar" }.toString().size() }.size()
 		num := ((Array){ "test" }).size()
+		
+		num := sl[0].size()	// sl[0] = String	-> String.size()
+		num := sl.size()	// sl = String[]	-> Array.size()
+		
+		foreach arg : sl {
+			int j := arg.size()
+			String s := (String)arg.copy()
+		}
 		
 	}
 }

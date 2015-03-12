@@ -332,8 +332,9 @@ DEF_VISIT_PROC(Decorator, ForEachStmnt)
 {
     OpenScope();
     {
-        Visit(ast->varDeclStmnt);
+        RegisterSymbol(ast->varIdent, ast);
         DecorateExpr(*ast->listExpr);
+        VerifyExprIsArray(*ast->listExpr, "for-each statement");
         Visit(ast->codeBlock);
     }
     CloseScope();
@@ -552,10 +553,13 @@ DEF_VISIT_PROC(Decorator, ArrayTypeDenoter)
 
 DEF_VISIT_PROC(Decorator, PointerTypeDenoter)
 {
-    /* Decorate pointer type with declaration identifier */
-    auto symbol = FetchSymbol(ast->declIdent, ast);
-    if (symbol)
-        ast->declRef = symbol;
+    if (!ast->declIdent.empty())
+    {
+        /* Decorate pointer type with declaration identifier */
+        auto symbol = FetchSymbol(ast->declIdent, ast);
+        if (symbol)
+            ast->declRef = symbol;
+    }
 }
 
 /* --- Decoration --- */
@@ -793,36 +797,45 @@ bool Decorator::VerifyExprType(const Expr& expr)
     return exprTypeChecker_.Verify(expr, errorReporter_);
 }
 
-bool Decorator::VerifyExprIsBoolean(const Expr& expr, const std::string& usageDesc)
+bool Decorator::VerifyExprIsFromType(
+    const Expr& expr, const std::string& typeDesc, const std::string& usageDesc,
+    const std::function<bool(const TypeDenoter& typeDenoter)>& verifier)
 {
-    /* Check if index expression is an integral type */
     auto exprType = expr.GetTypeDenoter();
     if (exprType)
     {
-        if (exprType->IsBoolean())
+        if (verifier(*exprType))
             return true;
         else
-            Error(usageDesc + " must have boolean type", &expr);
+            Error(usageDesc + " must have " + typeDesc + " type", &expr);
     }
     else
         Error("invalid type of expression in " + usageDesc, &expr);
     return false;
 }
 
+bool Decorator::VerifyExprIsBoolean(const Expr& expr, const std::string& usageDesc)
+{
+    return VerifyExprIsFromType(
+        expr, "boolean", usageDesc,
+        [](const TypeDenoter& typeDenoter){ return typeDenoter.IsBoolean(); }
+    );
+}
+
 bool Decorator::VerifyExprIsIntegral(const Expr& expr, const std::string& usageDesc)
 {
-    /* Check if index expression is an integral type */
-    auto exprType = expr.GetTypeDenoter();
-    if (exprType)
-    {
-        if (exprType->IsIntegral())
-            return true;
-        else
-            Error(usageDesc + " must have integral type", &expr);
-    }
-    else
-        Error("invalid type of expression in " + usageDesc, &expr);
-    return false;
+    return VerifyExprIsFromType(
+        expr, "integral", usageDesc,
+        [](const TypeDenoter& typeDenoter){ return typeDenoter.IsIntegral(); }
+    );
+}
+
+bool Decorator::VerifyExprIsArray(const Expr& expr, const std::string& usageDesc)
+{
+    return VerifyExprIsFromType(
+        expr, "array", usageDesc,
+        [](const TypeDenoter& typeDenoter){ return typeDenoter.IsArray(); }
+    );
 }
 
 StmntSymbolTable::SymbolType* Decorator::FetchSymbolFromScope(
@@ -941,6 +954,40 @@ void Decorator::VisitVarName(VarName& ast)
     }
 }
 
+void Decorator::DeduceNamespaceFromTypeDenoter(const TypeDenoter* varType, StmntSymbolTable::SymbolType*& symbol, const VarName& ast)
+{
+    if (varType)
+    {
+        switch (varType->Type())
+        {
+            case AST::Types::PointerTypeDenoter:
+            {
+                /* Set symbol to class namespace */
+                auto pointerType = static_cast<const PointerTypeDenoter*>(varType);
+                symbol = pointerType->declRef;
+            }
+            break;
+
+            case AST::Types::ArrayTypeDenoter:
+            {
+                /* Set symbol to "Array" class namespace */
+                auto arrayType = static_cast<const ArrayTypeDenoter*>(varType);
+                symbol = arrayType->declRef;
+            }
+            break;
+
+            default:
+            {
+                varType = false;
+            }
+            break;
+        }
+    }
+
+    if (!varType)
+        Error("identifier \"" + ast.ident + "\" does not refer to a class namespace", &ast);
+}
+
 void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName)
 {
     /* Decorate AST node */
@@ -1004,14 +1051,7 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
                 auto varDecl = static_cast<VarDecl*>(symbol);
                 auto varType = varDecl->GetTypeDenoter()->GetLast(ast.arrayAccess.get());
 
-                if (varType && varType->Type() == AST::Types::PointerTypeDenoter)
-                {
-                    /* Set symbol to class namespace */
-                    auto pointerType = static_cast<const PointerTypeDenoter*>(varType);
-                    symbol = pointerType->declRef;
-                }
-                else
-                    Error("identifier \"" + ast.ident + "\" does not refer to a class namespace", &ast);
+                DeduceNamespaceFromTypeDenoter(varType, symbol, ast);
             }
             break;
 
@@ -1029,6 +1069,16 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
                 }
                 else
                     Error("parameter \"" + ast.ident + "\" does not refer to a class namespace", &ast);
+            }
+            break;
+
+            case AST::Types::ForEachStmnt:
+            {
+                /* Deduce variable namespace of for-each statement */
+                auto forStmnt = static_cast<ForEachStmnt*>(symbol);
+                auto varType = forStmnt->GetTypeDenoter();
+
+                DeduceNamespaceFromTypeDenoter(varType, symbol, ast);
             }
             break;
         }

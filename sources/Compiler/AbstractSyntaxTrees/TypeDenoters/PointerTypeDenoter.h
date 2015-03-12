@@ -41,7 +41,7 @@ class PointerTypeDenoter : public TypeDenoter
             return copy;
         }
 
-        std::string declIdent;
+        std::string declIdent;          // may be empty (for null pointer literal)
 
         // dast
         AST*        declRef = nullptr; // reference to the declaration AST node (may be null -> for null pointer literal)
