@@ -1088,14 +1088,7 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
                 auto param = static_cast<Param*>(symbol);
                 auto paramType = param->GetTypeDenoter()->GetLast(ast.arrayAccess.get());
 
-                if (paramType && paramType->Type() == AST::Types::PointerTypeDenoter)
-                {
-                    /* Set symbol to class namespace */
-                    auto pointerType = static_cast<const PointerTypeDenoter*>(paramType);
-                    symbol = pointerType->declRef;
-                }
-                else
-                    Error("parameter \"" + ast.ident + "\" does not refer to a class namespace", &ast);
+                DeduceNamespaceFromTypeDenoter(paramType, symbol, ast);
             }
             break;
 

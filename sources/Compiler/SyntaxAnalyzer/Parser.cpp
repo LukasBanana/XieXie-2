@@ -541,7 +541,7 @@ StmntPtr Parser::ParseExternDeclStmnt()
 StmntPtr Parser::ParseVarNameStmnt(TokenPtr identTkn)
 {
     /* Check for built-in type denoter */
-    if (Is(Tokens::BuiltinType))
+    if (Is(Tokens::BuiltinType) || Is(Tokens::Var) || Is(Tokens::Const))
         return ParseVarDeclStmnt();
 
     /* Parse variable name for both pointer type denoter and assign statement */

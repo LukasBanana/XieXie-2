@@ -45,7 +45,8 @@ class ArrayTypeDenoter : public TypeDenoter
         TypeDenoterPtr CopyRef() const override
         {
             auto copy = std::make_shared<ArrayTypeDenoter>();
-            copy->lowerTypeDenoter = lowerTypeDenoter;
+            copy->lowerTypeDenoter  = lowerTypeDenoter;
+            copy->declRef           = declRef;
             return copy;
         }
 

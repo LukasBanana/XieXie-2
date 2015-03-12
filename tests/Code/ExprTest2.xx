@@ -4,9 +4,23 @@
 
 class Main {
 	
-	void test1() {
+	static void main(String[] args) {
 		
-		
+		foreach a : args {
+			
+			var len := a.size()
+			
+			var x := 0
+			
+			for var i := 0 ; i < len ; i++ {
+				x += args[i].size()
+			}
+			
+			var s0 := args
+			var s1 := s0[0]
+			x := s0.size()
+			
+		}
 		
 	}
 	
