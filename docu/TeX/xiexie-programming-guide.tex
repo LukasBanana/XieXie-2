@@ -1,13 +1,21 @@
+%----------------------------------------------------------------------------------------
+%	XieXie Programming Guide TeX File
+%----------------------------------------------------------------------------------------
+
 \documentclass{report}
-\title{Xi\`eXi\`e Programming Guide}
-\author{Lukas Hermanns}
-\date{March 2015}
+
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES
+%----------------------------------------------------------------------------------------
 
 \usepackage{listings}
 \usepackage{color}
 \usepackage{pxfonts}
 \usepackage{geometry}
 \usepackage[T1]{fontenc}
+\usepackage[ngerman]{hyperref}
+%\usepackage{amsmath}
 
 \geometry{
 	a4paper,
@@ -15,7 +23,12 @@
 	bottom=20mm
 }
 
-\begin{document}
+\hypersetup{
+	colorlinks = true, % Colors links instead of ugly boxes
+	urlcolor = blue, % Color of external hyperlinks
+	linkcolor = blue, % Color of internal links
+	citecolor = blue % Color of citations
+}
 
 \definecolor{brightBlueColor}{rgb}{0.5, 0.5, 1.0}
 \definecolor{darkBlueColor}{rgb}{0.0, 0.0, 0.5}
@@ -33,15 +46,28 @@
 
 \lstset{
 	morekeywords = {
-		var, super, foreach, forever, init, release, and, or, not, null
+		var, super, foreach, forever, init, release, and, or, not, null,
+		import
 	}
 }
 
 \newcommand{\xiexie}{\textsc{Xi\`eXi\`e} }
 \newcommand{\xxlang}{\xiexie programming language }
-\newcommand{\cpp}{\textsc{C++}}
-\newcommand{\java}{\textsc{Java}}
-\newcommand{\python}{\textsc{Python}}
+\newcommand{\cpp}{\textsc{C++ }}
+\newcommand{\cppx}{\textsc{C++11 }}
+\newcommand{\java}{\textsc{Java }}
+\newcommand{\python}{\textsc{Python }}
+
+
+%----------------------------------------------------------------------------------------
+%	DOCUMENT INFORMATION
+%----------------------------------------------------------------------------------------
+
+\title{Xi\`eXi\`e Programming Guide}
+\author{Lukas Hermanns}
+\date{March 2015}
+
+\begin{document}
 
 \maketitle
 
@@ -59,7 +85,7 @@ By now I have over 12 years of experience in computer programming, started at th
 I have been writing programs in Basic languages such as \textsc{QBasic}, \textsc{PureBasic}, and \textsc{Blitz3D};
 in high level languages such as \textsc{C}, \textsc{C++}, \textsc{C\#}, \textsc{Objective-C}, and \textsc{Java};
 but also in scripting languages such as \textsc{JavaScript} and \textsc{Python}.
-I'm actually a preferred programmer in C++ (meanwhile C++11), low level stuff, and graphics programming
+I'm actually a preferred programmer in C++ (meanwhile \cppx), low level stuff, and graphics programming
 with shading languages such as GLSL and HLSL.
 
 However, the \xxlang is intended to be simple and not tuned for performance.
@@ -86,10 +112,12 @@ The design of the \xxlang is overall influenced by \java, \cpp, and \python.
 
 
 %----------------------------------------------------------------------------------------
-%	COMMENTARIES
+%	BASICS
 %----------------------------------------------------------------------------------------
 
-\section{Commentaries}
+\section{Basics}
+
+\subsection{Commentaries}
 
 Commentaries are a fundamental part of programming languages and they are nearly identical to those
 in \java:
@@ -110,6 +138,108 @@ Outer comment
 */
 \end{lstlisting}
 
+\subsection{Identifiers}
+
+Identifiers (for variables, classes, etc.) must only contain alpha-numeric characters and the underscore.
+They must also begin with a letter or an underscore. But there is a small exception: they must not begin with
+\texttt{\_\_xx\_\_}, because all identifiers with this prefix are reserved for internal use of the compiler. \\ \\
+Valid identifiers are:
+\begin{itemize}
+	\item \texttt{\_name\_}
+	\item \texttt{FooBar}
+	\item \texttt{number\_of\_wheels}
+	\item \texttt{Customer01}
+	\item \dots
+\end{itemize}
+Invalid identifiers are:
+\begin{itemize}
+	\item \texttt{na\"{i}ve}
+	\item \texttt{Foo.Bar}
+	\item \texttt{number-of-wheels}
+	\item \texttt{3over2}
+	\item \dots
+\end{itemize}
+
+\subsection{Literals}
+
+These are the kinds of literals:
+\begin{itemize}
+	\item Boolean Literal: \texttt{true}, \texttt{false}
+	\item Integer Literal (Binary): e.g. \texttt{0b11001}, \texttt{0b0000}
+	\item Integer Literal (Octal): e.g. \texttt{0o24}, \texttt{0o01234567}
+	\item Integer Literal (Decimal): e.g. \texttt{3}, \texttt{12}, \texttt{999}, \texttt{1234567890}
+	\item Integer Literal (Hexa-Decimal): e.g. \texttt{0xff}, \texttt{0x00}, \texttt{0xaB29}
+	\item Float Literal: e.g. \texttt{0.0}, \texttt{3.5}, \texttt{12.482}
+	\item String Literal: e.g. \texttt{"Foo Bar"}, \texttt{"Hello, World"}, \texttt{"\textbackslash n\textbackslash t"},
+		\texttt{"1st fragment" "2nd fragment}
+	\item Verbatim String Literal: e.g. \texttt{@"\textbackslash home\textbackslash test"}, \texttt{@"a ""b"" c"}
+\end{itemize}
+
+
+%----------------------------------------------------------------------------------------
+%	OPERATORS
+%----------------------------------------------------------------------------------------
+
+\section{Operators}
+
+The most operators as in \java or \cpp are also available in \xiexie:
+\begin{lstlisting}
+/* Arithmetic Operators */
+a + b   // Addition
+a - b   // Substration
+a * b   // Multiplication
+a / b   // Division
+a % b   // Modulo
+a << b  // Left Shift
+a >> b  // Right Shift
+-a      // Negate
+
+/* Bitwise Operators */
+a & b   // Bitwise AND
+a | b   // Bitwise OR
+a ^ b   // Bitwise XOR
+~a      // Bitwise NOT
+
+/* Boolean Operators */
+not a   // Logic NOT
+a and b // Logic AND
+a or b  // Logic OR
+
+/* Relation Operators */
+a = b   // Equality
+a != b  // Inequality
+a < b   // Less
+a <= b  // Less Or Equal
+a > b   // Greater
+a >= b  // Greater Or Equal
+\end{lstlisting}
+As the interested reader may have noticed, the \textit{equality operator} is different to that in the most languages.
+This is because the \textit{copy assignment} operators is \texttt{:=} and not \texttt{=}.
+\begin{lstlisting}
+x := 5       // ok, set x to 5
+a, b, c := 4 // ok, set a, b, and c to 4
+a := b := 3  // error, b := 3 is not an expression
+\end{lstlisting}
+In the above example \texttt{a := b := 3} is invalid, because on the right hand side of the first \texttt{:=} must be
+an expression. But per definition in \xiexie \texttt{b := 3} is not an expression, but a statement!
+The variable list assignment (\texttt{a, b, c := \dots}) is a comfort functionality, which is only supported for the
+copy assignment.
+
+The modify-assign operators are available as well:
+\begin{lstlisting}
+a += b
+a -= b
+a *= b
+a /= b
+a %= b
+a <<= b
+a >>= b
+a &= b
+a |= b
+a ^= b
+\end{lstlisting}
+However, they are also not allowed inside another expression.
+
 
 %----------------------------------------------------------------------------------------
 %	TYPE DENOTERS
@@ -120,32 +250,137 @@ Outer comment
 \subsection{Built-in Types}
 
 There are only the following three built-in data types:
-
 \begin{lstlisting}
 bool  // Boolean type; can be `true' or `false'
 int   // 32-bit signed integral type
 float // 32-bit floating-point type
 \end{lstlisting}
 
-\subsection{Built-in Types}
+\subsection{Objects}
+
+Types for class objects (more about classes in chapter \ref{ch:classes}) are written as follows:
+\begin{lstlisting}
+// Empty string
+String s
+
+// List of strings
+String s1 := "Hello, World", s2 := "Foo", s3 := "Bar"
+\end{lstlisting}
+
+\subsection{Arrays}
+
+The only generic way for lists are the built-in arrays:
+\begin{lstlisting}
+// Declare array objects with initializer lists
+int[] intArray := { 1, 2, 3 }
+float[][] floatArrayArray := { { 0.0, 1.5 }, { 3.5, 1.23 } }
+String[] stringArray := { "a", "b", "c" }
+
+// Access array elements
+String s1 := stringArray[0]
+String s2 := stringArray[intArray[0]]
+float[] floatArray := floatArrayArray[1]
+\end{lstlisting}
+
+\subsection{Automatic Type Deduction}
+
+Whereas automatic type deduction in \cppx is a very complex language feature, in \xiexie it can be summarized in this section.
+There are two keywords for automatic type deduction: \texttt{var} and \texttt{const}. As the name implies
+\texttt{var} denotes a variable type and \texttt{const} denotes a constant type. The latter type is the only way
+to define constants in \xiexie. Here are a few examples:
+\begin{lstlisting}
+var i  := 1     // i is from type 'int'
+var f  := 3.5   // f is from type 'float'
+var s  := "."   // s is from type 'pointer of String'
+var a  := { 5 } // a is from type 'array of int'
+var aa := {     // aa is from type 'array of array of String'
+  { "test" },
+  { "a", "b" }
+}
+
+const ci := 5       // ci is a constnat int with value 5
+const cj := ci*2    // cj is a constant int with value 10
+const cf := 3.14    // cf is a constant float
+const cb := ci > cj // cb is a constant bool with value 'false'
+\end{lstlisting}
 
 
+%----------------------------------------------------------------------------------------
+%	CLASSES
+%----------------------------------------------------------------------------------------
 
+\chapter{Classes}
+\label{ch:classes}
 
+A \xiexie program can only contain of class declarations. And classes can only be defined in the global scope.
+That means everything procedure must be defined inside a class and inner classes are currently not supported.
+A simple example program could look like this:
+\begin{lstlisting}
+// XieXie Hello World Program
+import System
+class HelloWorld {
+    [[entry]]
+    static void main() {
+        System.out.writeLine("Hello, World!")
+    }
+}
+\end{lstlisting}
+This merely writes the line ``\texttt{Hello, World!}'' to the standard output. Let's take a closer look at each line.
 
+Line 2 imports the \texttt{System} class from the standard \xiexie library:
+\begin{lstlisting}
+import System
+\end{lstlisting}
+This can also be omitted if the respective class file (here ``System.xx'') is added to the compilation process.
 
+Line 3 declares the class \texttt{HelloWorld} which implicitly inherits from the base class \texttt{Object},
+like it is done in \java:
+\begin{lstlisting}
+class HelloWorld { /* ... */ }
+\end{lstlisting}
+To inherit from other classes, just write a colon and the identifier of the base class:
+\begin{lstlisting}
+class SubClass : BaseClass { /* ... */ }
+\end{lstlisting}
+There is no multiple inheritance like in \cpp or interfaces like in \java!
 
+The next two lines declare the procedure \texttt{main}. In line 4, in \textit{attribute} is defined
+for this procedure. This makes the procedure to the main \textbf{entry point}:
+\begin{lstlisting}
+[[entry]]
+static void main() { /* ... */ }
+\end{lstlisting}
+There are several attributes for class-, procedure-, or variable declarations. Currently only two attributes are supported:
+\begin{lstlisting}
+// class A is marked as 'deprecated'
+[[deprecated]]
+class A {}
 
+// class B is marked as 'deprecated' with a hint
+[[deprecated("hint...")]]
+class B {}
 
+// procedure M1 is marked as the main entry point
+[[entry]]
+static void M1() {}
 
+// procedure M2 with return type is marked as an
+// alternative entry point named "entryAlt1"
+[[entry("entryAlt1")]]
+static int M2() { return 0 }
 
+// procedure M3 with arguments 'args' is marked as
+// an alternative entry point named "entryAlt2"
+[[entry("entryAlt2")]]
+static void M3(String[] args) {}
+\end{lstlisting}
 
-
-
-
-
-
-
+The last line of code prints the message to the standard output:
+\begin{lstlisting}
+System.out.writeLine("Hello, World!")
+\end{lstlisting}
+\texttt{System} is a class from the standard \xiexie library, \texttt{out} is a \textit{static} member
+from the type 'OutputStream', and \texttt{writeLine} is a function which takes a string as input.
 
 
 
