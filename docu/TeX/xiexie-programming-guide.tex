@@ -15,7 +15,7 @@
 \usepackage{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[ngerman]{hyperref}
-%\usepackage{amsmath}
+\usepackage{xspace}
 
 \geometry{
 	a4paper,
@@ -51,21 +51,23 @@
 	}
 }
 
-\newcommand{\xiexie}{\textsc{Xi\`eXi\`e} }
-\newcommand{\xxlang}{\xiexie programming language }
-\newcommand{\cpp}{\textsc{C++ }}
-\newcommand{\cppx}{\textsc{C++11 }}
-\newcommand{\java}{\textsc{Java }}
-\newcommand{\python}{\textsc{Python }}
+\def\xiexie{\textsc{Xi\`eXie}\xspace}
+\def\xxlang{\xiexie programming language\xspace}
+\def\cpp{\textsc{C++}\xspace}
+\def\cppx{\textsc{C++11}\xspace}
+\def\java{\textsc{Java}\xspace}
+\def\python{\textsc{Python}\xspace}
+\def\xxc{\texttt{xxc}\xspace}
+\def\xvm{\texttt{xvm}\xspace}
 
 
 %----------------------------------------------------------------------------------------
 %	DOCUMENT INFORMATION
 %----------------------------------------------------------------------------------------
 
-\title{Xi\`eXi\`e Programming Guide}
-\author{Lukas Hermanns}
-\date{March 2015}
+\title{\xiexie Programming Guide}
+\author{Lukas \textsc{Hermanns}}
+\date{\today}
 
 \begin{document}
 
@@ -99,9 +101,11 @@ general purposes.
 
 \chapter{Introduction}
 
+First of all, ``xi\`exie'' is the chinese word for ``thanks'' or ``thank you''
+(see \href{http://dictionary.hantrainerpro.com/chinese-english/translation-xiexie_thankyou.htm}{hantrainerpro.com})
+and is pronounced for instance ``Sh-eh sh-eh''.
+
 The design of the \xxlang is overall influenced by \java, \cpp, and \python.
-
-
 
 
 %----------------------------------------------------------------------------------------
@@ -109,6 +113,8 @@ The design of the \xxlang is overall influenced by \java, \cpp, and \python.
 %----------------------------------------------------------------------------------------
 
 \chapter{Syntax}
+
+The we start out with the syntax.
 
 
 %----------------------------------------------------------------------------------------
@@ -313,8 +319,17 @@ const cb := ci > cj // cb is a constant bool with value 'false'
 \label{ch:classes}
 
 A \xiexie program can only contain of class declarations. And classes can only be defined in the global scope.
-That means everything procedure must be defined inside a class and inner classes are currently not supported.
-A simple example program could look like this:
+That means every procedure must be defined inside a class and inner classes are currently not supported.
+
+
+%----------------------------------------------------------------------------------------
+%	GETTING STARTED
+%----------------------------------------------------------------------------------------
+
+\section{Getting Started}
+
+To get started, take a look at the following example program which prints the classical phrase ``Hello, World!''
+onto the standard output:
 \begin{lstlisting}
 // XieXie Hello World Program
 import System
@@ -383,10 +398,49 @@ System.out.writeLine("Hello, World!")
 from the type 'OutputStream', and \texttt{writeLine} is a function which takes a string as input.
 
 
+%----------------------------------------------------------------------------------------
+%	COMPILER
+%----------------------------------------------------------------------------------------
+
+\chapter{Compiler}
 
 
+%----------------------------------------------------------------------------------------
+%	COMMAND LINE TOOL
+%----------------------------------------------------------------------------------------
+
+\section{Command Line Tool}
+
+The compiler can be used as command line tool. The appropriate program is named \xxc.
+Enter \texttt{xxc help} in a command line to see the manual pages.
+
+In contrast to most other command line tools, the commands for \xxc don't have the `-' prefix.
+Instead the command options use this prefix. Here is an example:
+\begin{lstlisting}
+xxc compile -f FILE1 -f FILE2 -O
+\end{lstlisting}
+The above command line uses the \texttt{compile} command with the flags `-f' and `-O'.
 
 
+%----------------------------------------------------------------------------------------
+%	VIRTUAL MACHINE
+%----------------------------------------------------------------------------------------
+
+\chapter{Virtual Machine}
+
+The \textsc{\xiexie Virtual Machine} (XVM) is a separated program (named \xvm), written in pure C99.
+
+
+%----------------------------------------------------------------------------------------
+%	EXECUTING PROGRAMS
+%----------------------------------------------------------------------------------------
+
+\section{Executing Programs}
+
+To execute (or run) a virtual program, just enter the filename of an \texttt{*.xbc} file into the \xvm:
+\begin{lstlisting}
+xvm HelloWorld.xbc
+\end{lstlisting}
 
 
 
