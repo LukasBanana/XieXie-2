@@ -344,6 +344,20 @@ bool ClassDeclStmnt::IsSubClassOf(const ClassDeclStmnt& classDeclStmnt) const
     return false;
 }
 
+std::string ClassDeclStmnt::HierarchyString(const std::string& separator) const
+{
+    if (baseClassRef_)
+        return ident + separator + baseClassRef_->HierarchyString(separator, this);
+    return ident;
+}
+
+std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const
+{
+    if (rootClass != this && baseClassRef_)
+        return ident + separator + baseClassRef_->HierarchyString(separator, rootClass);
+    return ident;
+}
+
 
 /* --- BuiltinTypeDenoter --- */
 

@@ -77,7 +77,7 @@ class Main {
 			len += ((InputStream)System.in).readLine().add(sl[i]).size()
 		}
 		
-		int num := { "foo", { "bar" }.toString() }.size()
+		int num := { 5, { "bar" }.toString().size() }.size()
 		num := ((Array){ "test" }).size()
 		
 	}

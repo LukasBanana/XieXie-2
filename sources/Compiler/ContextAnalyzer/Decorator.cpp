@@ -22,6 +22,15 @@ namespace ContextAnalyzer
 
 
 /*
+ * Internal members
+ */
+
+static const std::string rootBaseClassIdent = "Object";
+static const std::string stringClassIdent   = "String";
+static const std::string arrayClassIdent    = "Array";
+
+
+/*
  * Internal functions
  */
 
@@ -536,7 +545,7 @@ DEF_VISIT_PROC(Decorator, ArrayTypeDenoter)
     Visit(ast->lowerTypeDenoter);
 
     /* Decorate type denoter with "Array" class */
-    auto symbol = FetchSymbol("Array", ast);
+    auto symbol = FetchSymbol(arrayClassIdent, ast);
     if (symbol)
         ast->declRef = symbol;
 }
@@ -553,20 +562,33 @@ DEF_VISIT_PROC(Decorator, PointerTypeDenoter)
 
 void Decorator::DecorateClassBaseClass(ClassDeclStmnt& ast)
 {
+    /* The root base class is always the "Object" class */
+    if (ast.ident == rootBaseClassIdent)
+    {
+        if (!ast.baseClassIdent.empty())
+        {
+            Error("class \"" + ast.ident + "\" must not have a base class", &ast);
+            return;
+        }
+    }
+    else if (ast.baseClassIdent.empty())
+        ast.baseClassIdent = rootBaseClassIdent;
+
     /* Check if inheritance typename is a valid (intern) class identifier */
     if (!ast.baseClassIdent.empty())
     {
-        /* Find base class symbol */
-        auto baseClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope(ast.baseClassIdent, program_->symTab, &ast));
-        if (baseClassDecl)
+        /* Check if base class has the same identifier as this class */
+        if (ast.ident != ast.baseClassIdent)
         {
-            if (!baseClassDecl->isExtern)
+            /* Find base class symbol */
+            auto baseClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope(ast.baseClassIdent, program_->symTab, &ast));
+            if (baseClassDecl)
                 ast.BindBaseClassRef(baseClassDecl);
             else
-                Error("identifier \"" + ast.baseClassIdent + "\" specifies extern class, which can not be used as a base class", &ast);
+                Error("identifier \"" + ast.baseClassIdent + "\" does not refer to a class declaration", &ast);
         }
         else
-            Error("identifier \"" + ast.baseClassIdent + "\" does not refer to a class declaration", &ast);
+            Error("class \"" + ast.ident + "\" can not be the base class of itself", &ast);
     }
 }
 
@@ -599,8 +621,12 @@ void Decorator::VerifyClassInheritance(ClassDeclStmnt& ast)
         /* Check if current base class is the reference to this class declaration */
         if (baseClass == &ast)
         {
-            /* Cycle detected -> cancel inheritance verification */
-            Error("inheritance cycle detected in class declaration \"" + ast.ident + "\"", &ast);
+            /* Unbind base class reference and cancel inheritance verification */
+            Error(
+                "inheritance cycle detected in class declaration \"" +
+                ast.ident + "\" (" + ast.HierarchyString() + ")", &ast
+            );
+            ast.BindBaseClassRef(nullptr);
             break;
         }
 

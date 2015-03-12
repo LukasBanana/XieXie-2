@@ -900,7 +900,7 @@ ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
     return ParseInternClassDeclStmnt(attribPrefix);
 }
 
-// intern_class_decl_stmnt: 'class' class_name type_inheritance? class_body;
+// intern_class_decl_stmnt: 'class' class_name base_class_ident? class_body;
 ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>();
@@ -921,7 +921,7 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
     return ast;
 }
 
-// extern_class_decl_stmnt: 'class' class_name extern_class_body;
+// extern_class_decl_stmnt: 'class' class_name base_class_ident? extern_class_body;
 ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>();
@@ -932,6 +932,9 @@ ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attri
 
     ast->ident = AcceptIdent();
 
+    if (Is(Tokens::Colon))
+        ast->baseClassIdent = AcceptBaseClassIdent();
+    
     Accept(Tokens::LCurly);
     if (!Is(Tokens::RCurly))
     {

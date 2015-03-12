@@ -44,6 +44,8 @@ class ClassDeclStmnt : public ScopedStmnt
         bool IsSuperClassOf(const ClassDeclStmnt& classDeclStmnt) const;
         bool IsSubClassOf(const ClassDeclStmnt& classDeclStmnt) const;
 
+        std::string HierarchyString(const std::string& separator = " -> ") const;
+
         bool                                isExtern = false;
         AttribPrefixPtr                     attribPrefix;       // may be null
         std::string                         ident;
@@ -51,6 +53,8 @@ class ClassDeclStmnt : public ScopedStmnt
         std::vector<ClassBodySegmentPtr>    bodySegments;
 
     private:
+        
+        std::string HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const;
 
         // dast
         PointerTypeDenoter                  thisTypeDenoter_;   // type denoter for this class declaration

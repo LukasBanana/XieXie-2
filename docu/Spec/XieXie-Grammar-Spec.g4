@@ -113,7 +113,7 @@ array_index:		expr;
 // CLASSES
 class_decl_stmnt:			attrib_prefix? intern_class_decl_stmnt | ('extern' extern_class_decl_stmnt);
 intern_class_decl_stmnt:	'class' class_name base_class_ident? class_body;
-extern_class_decl_stmnt:	'class' class_name extern_class_body;
+extern_class_decl_stmnt:	'class' class_name base_class_ident? extern_class_body;
 class_body:					'{' class_body_segment_list '}';
 class_body_segment_list:	class_body_segment*;
 class_body_segment:			class_visibility? decl_stmnt_list?;
