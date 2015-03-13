@@ -127,6 +127,9 @@ void Scanner::IgnoreCommentLine()
 
 void Scanner::IgnoreCommentBlock()
 {
+    Take('*');
+    size_t blockCounter = 1;
+
     while (true)
     {
         if (Is(0))
@@ -139,11 +142,23 @@ void Scanner::IgnoreCommentBlock()
             if (Is('/'))
             {
                 TakeIt();
-                return;
+                --blockCounter;
+                if (blockCounter == 0)
+                    return;
             }
         }
-
-        TakeIt();
+        /* Scan nested comment block */
+        else if (Is('/'))
+        {
+            TakeIt();
+            if (Is('*'))
+            {
+                TakeIt();
+                ++blockCounter;
+            }
+        }
+        else
+            TakeIt();
     }
 }
 
