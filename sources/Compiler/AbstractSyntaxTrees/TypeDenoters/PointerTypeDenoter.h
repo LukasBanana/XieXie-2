@@ -30,7 +30,7 @@ class PointerTypeDenoter : public TypeDenoter
 
         std::string ToString() const override
         {
-            return "pointer of " + (declIdent.empty() ? "???" : declIdent);
+            return !declIdent.empty() ? declIdent : "???";
         }
 
         TypeDenoterPtr CopyRef() const override

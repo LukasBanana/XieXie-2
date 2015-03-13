@@ -27,9 +27,14 @@ using namespace AbstractSyntaxTrees;
  * Internal functions
  */
 
+static std::string TypeName(const TypeDenoter& type)
+{
+    return "(" + type.ToString() + ")";
+}
+
 static std::string TypeComparison(const TypeDenoter& lhs, const TypeDenoter& rhs)
 {
-    return "<" + lhs.ToString() + "> and <" + rhs.ToString() + ">";
+    return TypeName(lhs) + " and " + TypeName(rhs);
 }
 
 static void AssertTypeEquality(const TypeDenoter& lhs, const TypeDenoter& rhs)

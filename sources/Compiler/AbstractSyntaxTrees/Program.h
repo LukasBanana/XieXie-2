@@ -24,7 +24,8 @@ class Program : public ScopedStmnt
         
         AST_INTERFACE_EXT(Program, ScopedStmnt);
 
-        std::vector<StmntPtr> classDeclStmnts;
+        std::vector<std::string>    importFilenames;
+        std::vector<StmntPtr>       classDeclStmnts;
 
 };
 

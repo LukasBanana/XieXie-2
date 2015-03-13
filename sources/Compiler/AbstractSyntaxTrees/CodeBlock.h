@@ -23,7 +23,7 @@ class CodeBlock : public AST
         
         AST_INTERFACE(CodeBlock);
 
-        void UpdateSourceArea();
+        void UpdateSourceArea() override;
 
         std::vector<StmntPtr> stmnts;
 

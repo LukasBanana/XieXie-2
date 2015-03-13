@@ -31,7 +31,7 @@ bool Parser::ParseSource(Program& program, const SourceCodePtr& source, ErrorRep
         AcceptIt();
 
         /* Parse program */
-        ParseProgram(program.classDeclStmnts);
+        ParseProgram(program);
     }
     catch (const std::exception&)
     {
@@ -52,7 +52,7 @@ ProgramPtr Parser::ParseSource(const std::string& filename, ErrorReporter& error
 
         /* Parse program */
         auto program = Make<Program>();
-        ParseProgram(program->classDeclStmnts);
+        ParseProgram(*program);
 
         return errorReporter_->HasErrors() ? nullptr : program;
     }
@@ -103,7 +103,7 @@ void Parser::ErrorUnexpected(const std::string& hint, bool breakParsing)
 
 void Parser::ErrorInternal(const std::string& msg)
 {
-    errorReporter_->Add(StateError(msg));
+    errorReporter_->Add(InternalError(msg));
     throw std::exception();
 }
 
@@ -156,6 +156,25 @@ std::string Parser::AcceptBaseClassIdent()
     return AcceptIdent();
 }
 
+// import_stmnt: 'import' (STRING_LITERAL | IDENT);
+std::string Parser::AcceptImport()
+{
+    Accept(Tokens::Import);
+
+    switch (TknType())
+    {
+        case Tokens::StringLiteral:
+            return AcceptIt()->Spell();
+        case Tokens::Ident:
+            return AcceptIt()->Spell() + ".xx";
+        default:
+            ErrorUnexpected("expected string literal or identifier for import statement");
+            break;
+    }
+
+    return "";
+}
+
 int Parser::AcceptSignedIntLiteral()
 {
     /* Parse optional negative number */
@@ -181,10 +200,19 @@ unsigned int Parser::AcceptUnsignedIntLiteral()
 
 /* --- Common AST nodes --- */
 
-void Parser::ParseProgram(std::vector<StmntPtr>& classDeclStmnts)
+void Parser::ParseProgram(Program& ast)
 {
     while (!Is(Tokens::EndOfFile))
-        classDeclStmnts.push_back(ParseClassDeclStmnt());
+    {
+        if (Is(Tokens::Import))
+            ast.importFilenames.push_back(AcceptImport());
+        else
+        {
+            auto declStmnt = ParseClassDeclStmnt();
+            declStmnt->UpdateSourceArea();
+            ast.classDeclStmnts.push_back(declStmnt);
+        }
+    }
 }
 
 // code_block: '{' stmnt_list? '}';
@@ -919,9 +947,11 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
     auto ast = Make<ClassDeclStmnt>();
 
     ast->attribPrefix = attribPrefix;
-    Accept(Tokens::Class);
+    ast->sourceArea.start = Accept(Tokens::Class)->Area().start;
 
-    ast->ident = AcceptIdent();
+    auto identTkn = Accept(Tokens::Ident);
+    ast->ident = identTkn->Spell();
+    ast->sourceArea.end = identTkn->Area().end;
 
     if (Is(Tokens::Colon))
         ast->baseClassIdent = AcceptBaseClassIdent();

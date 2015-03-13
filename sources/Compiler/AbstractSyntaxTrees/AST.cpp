@@ -316,9 +316,27 @@ const TypeDenoter* VarAccessExpr::GetTypeDenoter() const
 
 /* --- ClassDeclStmnt --- */
 
+ClassDeclStmnt::ClassDeclStmnt()
+{
+    thisTypeDenoter_.declRef = this;
+}
+ClassDeclStmnt::ClassDeclStmnt(const SourceArea& area) :
+    ScopedStmnt{ area }
+{
+    thisTypeDenoter_.declRef = this;
+}
+
 const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const
 {
     return &thisTypeDenoter_;
+}
+
+void ClassDeclStmnt::UpdateSourceArea()
+{
+    if (attribPrefix)
+        attribPrefix->UpdateSourceArea();
+    for (auto& segment : bodySegments)
+        segment->UpdateSourceArea();
 }
 
 void ClassDeclStmnt::BindBaseClassRef(ClassDeclStmnt* classDeclStmnt)

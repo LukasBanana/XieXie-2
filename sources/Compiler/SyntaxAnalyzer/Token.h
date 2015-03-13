@@ -121,6 +121,8 @@ class Token
 
             New,            //!< new
 
+            Import,         //!< import
+
             // Reserved keywords (for later use)
             Reserved,       //!< abstract, package, alias, pattern, sync, byte, ubyte, short, ushort, uint, long, ulong, double, const, release
 

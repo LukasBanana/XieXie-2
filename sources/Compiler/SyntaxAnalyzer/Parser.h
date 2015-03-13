@@ -59,14 +59,17 @@ class Parser
         TokenPtr AcceptIt();
 
         TokenPtr AcceptAnyIdent();
+        
         std::string AcceptIdent();
         std::string AcceptBaseClassIdent();
+        std::string AcceptImport();
+
         int AcceptSignedIntLiteral();
         unsigned int AcceptUnsignedIntLiteral();
 
         /* --- Common AST nodes --- */
 
-        void                    ParseProgram(std::vector<StmntPtr>& classDeclStmnts);
+        void                    ParseProgram(Program& ast);
 
         CodeBlockPtr            ParseCodeBlock();
         VarNamePtr              ParseVarName(TokenPtr identTkn = nullptr, bool hasArrayAccess = false);

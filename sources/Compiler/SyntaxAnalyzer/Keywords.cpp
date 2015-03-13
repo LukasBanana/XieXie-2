@@ -64,6 +64,8 @@ static KeywordMapType GenerateKeywordMap()
 
         { "new",        Ty::New            },
 
+        { "import",     Ty::Import         },
+
         { "abstract",   Ty::Reserved       },
         { "package",    Ty::Reserved       },
         { "alias",      Ty::Reserved       },

@@ -6,7 +6,7 @@ grammar XieXie;
 
 //options { language = Cpp; }
 
-program: class_decl_stmnt_list? EOF;
+program: global_stmnt_list? EOF;
 
 code_block:	'{' stmnt_list? '}';
 
@@ -14,12 +14,15 @@ code_block:	'{' stmnt_list? '}';
 stmnt_list:				stmnt+;
 decl_stmnt_list: 		decl_stmnt+;
 extern_decl_stmnt_list:	extern_decl_stmnt+;
-class_decl_stmnt_list:	class_decl_stmnt+;
+global_stmnt_list:		global_stmnt+;
 
 stmnt	: var_name_stmnt
 		| branch_stmnt
 		| loop_stmnt
 		| ctrl_transfer_stmnt;
+
+global_stmnt	: class_decl_stmnt
+				| import_stmnt;
 
 var_name_stmnt	: var_decl_stmnt
 				| assign_stmnt
@@ -109,6 +112,9 @@ var_init:			':=' expr;
 // ARRAYS
 array_access:		'[' array_index ']' array_access?;
 array_index:		expr;
+
+// IMPORTS
+import_stmnt:	'import' (STRING_LITERAL | IDENT);
 
 // CLASSES
 class_decl_stmnt:			attrib_prefix? intern_class_decl_stmnt | ('extern' extern_class_decl_stmnt);

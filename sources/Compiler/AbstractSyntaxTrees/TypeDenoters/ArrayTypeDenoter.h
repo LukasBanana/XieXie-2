@@ -30,7 +30,7 @@ class ArrayTypeDenoter : public TypeDenoter
 
         std::string ToString() const override
         {
-            return "array of " + (lowerTypeDenoter != nullptr ? lowerTypeDenoter->ToString() : "???");
+            return (lowerTypeDenoter != nullptr ? lowerTypeDenoter->ToString() : "???") + "[]";
         }
 
         const TypeDenoter* GetLast() const override

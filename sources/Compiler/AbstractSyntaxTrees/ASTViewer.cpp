@@ -347,7 +347,7 @@ DEF_VISIT_PROC(ASTViewer, InitListExpr)
 DEF_VISIT_PROC(ASTViewer, BuiltinTypeDenoter)
 {
     AST_INFO("BuiltinTypeDenoter");
-    //ast->typeName!!!
+    String("typeName", ast->ToString());
 }
 
 DEF_VISIT_PROC(ASTViewer, ArrayTypeDenoter)

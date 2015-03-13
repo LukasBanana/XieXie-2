@@ -25,17 +25,12 @@ class ClassDeclStmnt : public ScopedStmnt
         
         AST_INTERFACE_BASE(ClassDeclStmnt);
 
-        ClassDeclStmnt()
-        {
-            thisTypeDenoter_.declRef = this;
-        }
-        ClassDeclStmnt(const SourceArea& area) :
-            ScopedStmnt{ area }
-        {
-            thisTypeDenoter_.declRef = this;
-        }
+        ClassDeclStmnt();
+        ClassDeclStmnt(const SourceArea& area);
 
         const TypeDenoter* GetTypeDenoter() const override;
+
+        void UpdateSourceArea() override;
 
         //! Binds the base class reference and the fallback symbol table.
         void BindBaseClassRef(ClassDeclStmnt* classDeclStmnt);

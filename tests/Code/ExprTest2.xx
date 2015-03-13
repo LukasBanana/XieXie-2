@@ -2,12 +2,31 @@
 // Expression Test 2
 // 12/03/2015
 
+import System
+
 class Main {
 	
 	static void main(String[] args) {
+		Main.test1(args)
+		Main.test2()
+	}
+	
+	// Loops & arrays
+	static void test1(String[] args) {
+		
+		//System.out.writeLine("test")
+		
+		var aa := new String[][](10)
+		
+		for i : 0 .. 9 {
+			foreach s : aa[i] {
+				String s2 := s
+			}
+		}
 		
 		foreach a : args {
 			
+			String s := a
 			var len := a.size()
 			
 			var x := 0
@@ -21,6 +40,34 @@ class Main {
 			x := s0.size()
 			
 		}
+		
+	}
+	
+	// Automatic type deduction
+	static void test2(int x, float y) {
+		
+		/*int t := {{ "" }}
+		t := { 1,2,3 }
+		t := { 1.0 }
+		t := ""
+		t := { null }
+		t := null*/
+		
+		const	z := 1					// z is int
+		
+		var		a := z					// a is int
+		var		b := x					// b is int
+		var		c := (a+b)*2 + (int)y	// c is int
+		
+		var		d := { a, b, c }		// d is int[]
+		var		e := { d, d }			// e is int[][]
+		var		f := e.size()			// f is int
+		
+		var		g := e[0]				// g is int[]
+		var		h := g[0]				// h is int
+		
+		int		i := h					// ok, i and h are both int
+	//	float	j := h					// error, j is float but h is int
 		
 	}
 	
