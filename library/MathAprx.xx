@@ -5,6 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
+import Math
+
 /**
 Math approximated function library class.
 \author Lukas Hermanns
@@ -12,7 +14,7 @@ Math approximated function library class.
 class MathAprx {
 	
 	static float sin(float x) {
-		float pi := Math.pi()
+		const pi := Math.pi
 		
 		/* Always wrap input angle to [-PI .. PI] */
 		if x < -pi {
@@ -46,7 +48,7 @@ class MathAprx {
 	}
 	
 	static float cos(float x) {
-		return MathAprx.sin(x + Math.pi()*0.5)
+		return MathAprx.sin(x + Math.pi*0.5)
 	}
 	
 }

@@ -1,0 +1,18 @@
+/*
+ * IOStream.xx
+ * 
+ * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+// Output stream interface
+class OutputStream {
+	void write(String s) {}
+	void writeLine(String s) {}
+}
+
+// Input stream interface
+class InputStream {
+	String read() { return  }
+	String readLine() { return  }
+}

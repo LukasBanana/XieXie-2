@@ -5,6 +5,10 @@
  * See "LICENSE.txt" for license information.
  */
 
+extern class Intrinsics {
+	
+}
+
 extern class Object {
 	Object copy()
 	String toString()

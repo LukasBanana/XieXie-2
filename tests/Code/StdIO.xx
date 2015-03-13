@@ -2,6 +2,8 @@
 // Std I/O Test 1
 // 07/03/2015
 
+//import System
+
 class OutputStream {
 	void write(String s) {}
 	void writeLine(String s) {}
