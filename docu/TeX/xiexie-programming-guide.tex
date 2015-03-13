@@ -103,7 +103,7 @@ general purposes.
 
 First of all, ``xi\`exie'' is the chinese word for ``thanks'' or ``thank you''
 (see \href{http://dictionary.hantrainerpro.com/chinese-english/translation-xiexie_thankyou.htm}{hantrainerpro.com})
-and is pronounced for instance ``Sh-eh sh-eh''. To make a long story short, 
+and is roughly pronounced ``Sh-eh sh-eh''.
 
 The design of the \xxlang is overall influenced by \java, \cpp, and \python.
 
@@ -130,7 +130,7 @@ Some years, before I started with the development of this compiler, I already ha
 The first idea I had in mind, was to call it ``C+=2'' or ``C++++'' because it should be a more comfortable and easier
 \cpp variant. But this name looked and sounded strange. Another idea was to call it ``C power of C''
 (in mathematical notation $C^C$). But that still was not what I was looking for.
-Then I remembered me to the Chinese word ``Xi\`exie'' which means ``Thanks'' in English and it sounded a little
+Then I remembered me to the Chinese word ``Xi\`exie'' which means ``Thanks'' in English and it sounds a little
 similar to ``CC'' which could be seen as a shortcut for $C^C$. That's the \xiexie compiler's story about its name.
 
 Or to make a long story short: I saw this word on a napkin in a Chinese restaurant and thought to my self: That's it! :-)
@@ -341,16 +341,17 @@ float[] floatArray := floatArrayArray[1]
 
 \subsection{Automatic Type Deduction}
 
-Whereas automatic type deduction in \cppx is a very complex language feature, in \xiexie it can be summarized in this section.
+Whereas automatic type deduction in \cppx is a very extensive language feature,
+in \xiexie it can be summarized in this section.
 There are two keywords for automatic type deduction: \texttt{var} and \texttt{const}. As the name implies
 \texttt{var} denotes a variable type and \texttt{const} denotes a constant type. The latter type is the only way
 to define constants in \xiexie. Here are a few examples:
 \begin{lstlisting}
-var i  := 1     // i is from type 'int'
-var f  := 3.5   // f is from type 'float'
-var s  := "."   // s is from type 'pointer of String'
-var a  := { 5 } // a is from type 'array of int'
-var aa := {     // aa is from type 'array of array of String'
+var   i  := 1       // i is from type 'int'
+var   f  := 3.5     // f is from type 'float'
+var   s  := "."     // s is from type 'String'
+var   a  := { 5 }   // a is from type 'array of int'
+var   aa := {       // aa is from type 'array of array of String'
   { "test" },
   { "a", "b" }
 }
@@ -419,7 +420,7 @@ never begin with '[['. They may end with ']]' this is not important for the pars
 \chapter{Classes}
 \label{ch:classes}
 
-A \xiexie program can only contain of class declarations. And classes can only be defined in the global scope.
+A \xiexie program can only consist of imports and class declarations. And classes can only be defined in the global scope.
 That means every procedure must be defined inside a class and inner classes are currently not supported.
 
 
@@ -522,6 +523,44 @@ System.out.writeLine("Hello, World!")
 \end{lstlisting}
 \texttt{System} is a class from the standard \xiexie library, \texttt{out} is a \textit{static} member
 from the type 'OutputStream', and \texttt{writeLine} is a function which takes a string as input.
+
+
+%----------------------------------------------------------------------------------------
+%	DECLARATION RULES FOR CLASSES
+%----------------------------------------------------------------------------------------
+
+\section{Declaration Rules for Classes}
+
+In \xiexie there is no need for \textit{forward declarations}. Everything can be declared in the respective scope
+and is accessible throughout the entire program (except private scope). This is why the following code is valid:
+\begin{lstlisting}
+// First declare sub class
+class SubClass : BaseClass { /* ... */ }
+
+// Then declare base class
+class BaseClass { /* ... */ }
+\end{lstlisting}
+The same applies for procedure declarations:
+\begin{lstlisting}
+class B {
+    static void procB1() {
+        A.procA()  // no forward declaration required ...
+        B.procB2() // ... same here
+    }
+    static void procB2() { /* ... */ }
+}
+class A {
+    static void procA() { /* ... */ }
+}
+\end{lstlisting}
+This works because the \textit{context analyzer} of the compiler works in several phases:
+\begin{enumerate}
+	\item Class symbols are registered in global scope.
+	\item Class signatures are analyzed (attributes and base class).
+	\item Class inheritance is verified (check for cycles).
+	\item Class member symbols are registred in respective class scope (procedures, variables, etc.).
+	\item Procedure code is analyzed.
+\end{enumerate}
 
 
 %----------------------------------------------------------------------------------------
