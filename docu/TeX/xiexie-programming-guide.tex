@@ -109,6 +109,34 @@ The design of the \xxlang is overall influenced by \java, \cpp, and \python.
 
 
 %----------------------------------------------------------------------------------------
+%	WHAT IS XIEXIE?
+%----------------------------------------------------------------------------------------
+
+\section{What is \xiexie?}
+
+The \xiexie programming language is a high-level, object-oriented, scripting language with compiler and virtual machine.
+The \xiexie compiler (XXC) translates the \xiexie code (XX) to a virtual assembler (XASM), then assembles it to
+\xiexie byte code (XBC), which can then be interpreted by the \xiexie virtual machine (XVM).
+
+
+%----------------------------------------------------------------------------------------
+%	WHY IS IT CALLED XIEXIE?
+%----------------------------------------------------------------------------------------
+
+\section{Why is it called ``\xiexie''?}
+
+Some years, before I started with the development of this compiler, I already had some ideas about a name for it
+--- at this time the compiler was intended to be a cross compiler, i.e. to compile the \xiexie code to \cpp.
+The first idea I had in mind, was to call it ``C+=2'' or ``C++++'' because it should be a more comfortable and easier
+\cpp variant. But this name looked and sounded strange. Another idea was to call it ``C power of C''
+(in mathematical notation $C^C$). But that still was not what I was looking for.
+Then I remembered me to the Chinese word ``Xi\`exie'' which means ``Thanks'' in English and it sounded a little
+similar to ``CC'' which could be seen as a shortcut for $C^C$. That's the \xiexie compiler's story about its name.
+
+Or to make a long story short: I saw this word on a napkin in a Chinese restaurant and thought to my self: That's it! :-)
+
+
+%----------------------------------------------------------------------------------------
 %	MOTIVATION
 %----------------------------------------------------------------------------------------
 
@@ -129,23 +157,6 @@ Now \xiexie is aimed to be used for small scripting purposes, with a gentle lear
 The great thing about its interpreter is, that it is very tiny and can easily be integrated into
 existing \textsc{C} or \cpp code. This virtual machine only consists of a single code file (written in \textsc{C99})
 and can simply be included into any \textsc{C99} compliant project.
-
-
-%----------------------------------------------------------------------------------------
-%	WHY IS IT CALLED XIEXIE?
-%----------------------------------------------------------------------------------------
-
-\section{Why is it called ``\xiexie''?}
-
-Some years, before I started with the development of this compiler, I already had some ideas about a name for it
---- at this time the compiler was intended to be a cross compiler, i.e. to compile the \xiexie code to \cpp.
-The first idea I had in mind, was to call it ``C+=2'' or ``C++++'' because it should be a more comfortable and easier
-\cpp variant. But this name looked and sounded strange. Another idea was to call it ``C power of C''
-(in mathematical notation $C^C$). But that still was not what I was looking for.
-Then I remembered me to the Chinese word ``Xi\`exie'' which means ``Thanks'' in English and it sounded a little
-similar to ``CC'' which could be seen as a shortcut for $C^C$. That's the \xiexie compiler's story about its name.
-
-Or to make a long story short: I saw this word on a napkin in a Chinese restaurant and thought to my self: That's it! :-)
 
 
 %----------------------------------------------------------------------------------------
@@ -349,6 +360,56 @@ const cj := ci*2    // cj is a constant int with value 10
 const cf := 3.14    // cf is a constant float
 const cb := ci > cj // cb is a constant bool with value 'false'
 \end{lstlisting}
+
+
+%----------------------------------------------------------------------------------------
+%	STATEMENTS AND EXPRESSIONS
+%----------------------------------------------------------------------------------------
+
+\section{Statements and Expressions}
+
+Unlike \cpp and \java, there are no semicolons in \xiexie to terminate statements.
+Only the regular \texttt{for}-statement has two semicolons, to separate the initializer statement,
+the conidition expression, and the increment statement. This means the compiler
+(or rather the \textit{parser}, which reads the source code) always knows when a statement or expression is complete.
+But it also means that you --- the programmer --- can do weird things with this syntax. Consider the following code sample:
+\begin{lstlisting}
+int a:=3
+-4
+,b:=-
+5+2 int c
+\end{lstlisting}
+This is valid \xiexie code and it contains only two statements!
+If we write it in a more common convention, it may look like this:
+\begin{lstlisting}
+int a := 3-4,
+    b := -5+2
+int c
+\end{lstlisting}
+Hence, the readability of your code is up to you and your programming style :-). The only language I've worked with,
+which forces you to better readability it \python. Actually a great principle, but with \xiexie you have complete freedom.
+
+The absence of statement terminators is the reason for the \textit{double paren} syntax of attributes:
+\begin{lstlisting}
+[[attribute]]
+\end{lstlisting}
+To understand why this is the case, let's assume attributes are written with a single paren and consider
+the following class declaration:
+\begin{lstlisting}
+class Widget {
+    const c := 0 // Initialize member constant 'c' with 0
+    int   v := c // Initialize member variable 'v' with constant 'c'
+    [entry]      // Mark next procedure as the main entry point with attribute 'entry'
+    static void main() {}
+}
+\end{lstlisting}
+Now this doesn't seem very complex. But the parser runs into trouble when reading \texttt{[entry]}.
+This is because the parser reads it as follows:
+\begin{lstlisting}
+int v := c[entry]
+\end{lstlisting}
+But \texttt{c} is not an array. This is why attributes are written with a double paren, because array accesses
+never begin with '[['. They may end with ']]' this is not important for the parser.
 
 
 %----------------------------------------------------------------------------------------
