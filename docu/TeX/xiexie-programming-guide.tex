@@ -73,8 +73,6 @@
 
 \maketitle
 
-\tableofcontents
-
 
 %----------------------------------------------------------------------------------------
 %	ABOUT THE AUTHOR
@@ -94,6 +92,8 @@ However, the \xxlang is intended to be simple and not tuned for performance.
 It was originally designed to be used for scripting in video games, but can also be used for
 general purposes.
 
+\tableofcontents
+
 
 %----------------------------------------------------------------------------------------
 %	INTRODUCTION
@@ -103,9 +103,49 @@ general purposes.
 
 First of all, ``xi\`exie'' is the chinese word for ``thanks'' or ``thank you''
 (see \href{http://dictionary.hantrainerpro.com/chinese-english/translation-xiexie_thankyou.htm}{hantrainerpro.com})
-and is pronounced for instance ``Sh-eh sh-eh''.
+and is pronounced for instance ``Sh-eh sh-eh''. To make a long story short, 
 
 The design of the \xxlang is overall influenced by \java, \cpp, and \python.
+
+
+%----------------------------------------------------------------------------------------
+%	MOTIVATION
+%----------------------------------------------------------------------------------------
+
+\section{Motivation}
+
+There are many great programming languages out there. Some produce faster code than others, but for that others
+are simpler and have a better learning curve. Using a new language doesn't mean to give up a previous one,
+because every language has its own domain. For example, the performance of interpreted languages such as \python
+is totally sufficient for many applications. We don't need maximal performance for a script which does some
+socket connection or text processing for instance.
+But I would not write the compiler and interpreter for \python in a scripted language.
+There are also many ways to combine several languages: an interpreter could be used for scripting in video games
+for instance. But the game engine is written in \cpp.
+This is how it is done in \textsc{Unity3D} (see \href{http://www.unity3d.com/}{www.unity3d.com}).
+They use \textsc{Mono} as compiler and interpreter framework for \textsc{C\#}. But the engine itself is written in \cpp.
+
+Now \xiexie is aimed to be used for small scripting purposes, with a gentle learning curve.
+The great thing about its interpreter is, that it is very tiny and can easily be integrated into
+existing \textsc{C} or \cpp code. This virtual machine only consists of a single code file (written in \textsc{C99})
+and can simply be included into any \textsc{C99} compliant project.
+
+
+%----------------------------------------------------------------------------------------
+%	WHY IS IT CALLED XIEXIE?
+%----------------------------------------------------------------------------------------
+
+\section{Why is it called ``\xiexie''?}
+
+Some years, before I started with the development of this compiler, I already had some ideas about a name for it
+--- at this time the compiler was intended to be a cross compiler, i.e. to compile the \xiexie code to \cpp.
+The first idea I had in mind, was to call it ``C+=2'' or ``C++++'' because it should be a more comfortable and easier
+\cpp variant. But this name looked and sounded strange. Another idea was to call it ``C power of C''
+(in mathematical notation $C^C$). But that still was not what I was looking for.
+Then I remembered me to the Chinese word ``Xi\`exie'' which means ``Thanks'' in English and it sounded a little
+similar to ``CC'' which could be seen as a shortcut for $C^C$. That's the \xiexie compiler's story about its name.
+
+Or to make a long story short: I saw this word on a napkin in a Chinese restaurant and thought to my self: That's it! :-)
 
 
 %----------------------------------------------------------------------------------------
@@ -342,11 +382,36 @@ class HelloWorld {
 \end{lstlisting}
 This merely writes the line ``\texttt{Hello, World!}'' to the standard output. Let's take a closer look at each line.
 
-Line 2 imports the \texttt{System} class from the standard \xiexie library:
+Line 2 imports the ``System.xx'' file from the \xiexie standard library:
 \begin{lstlisting}
-import System
+import System      // either this ...
+import "System.xx" // ... or this
 \end{lstlisting}
-This can also be omitted if the respective class file (here ``System.xx'') is added to the compilation process.
+If the imported file is in another directory, the string version of \texttt{import} is the only choice.
+This can also be omitted if the file is added to the compilation process.
+The files for the classes \texttt{Object}, \texttt{String}, \texttt{Array}, and \texttt{Intrinsics}
+are always implicitly imported, because they are `internal' classes the compiler knows generally.
+Note that verbatim strings are allowed wherever string literals are allowed, i.e. the following example is valid \xiexie code:
+\begin{lstlisting}
+import "C:\\Program Files\\Test1.xx" // either this ...
+import @"C:\Program Files\Test1.xx"  // ... or this
+\end{lstlisting}
+The \texttt{import} keyword is different to that in \java and also different to the \texttt{\#include} directive in \cpp.
+Although it takes a filename as parameter (like \cpp's \texttt{\#include}), it does not \textit{include} the file in place.
+Whenever an \texttt{import} is read by the \textit{parser}, the filename is added to the set of import files.
+After all source files have been read, which were passed as input to the compiler, all import files will be read next.
+This will be repeated until no new files are added to the set.
+Consider this is a \textit{set} of files, i.e. several \texttt{import} commands may occur with the same filename,
+but it will be read only once. This is why the above sample is valid \xiexie code. It also means that recursive imports
+are allowed as well:
+\begin{lstlisting}
+// File1.xx
+import "File2.xx"
+\end{lstlisting}
+\begin{lstlisting}
+// File2.xx
+import "File1.xx"
+\end{lstlisting}
 
 Line 3 declares the class \texttt{HelloWorld} which implicitly inherits from the base class \texttt{Object},
 like it is done in \java:
@@ -373,21 +438,21 @@ class A {}
 
 // class B is marked as 'deprecated' with a hint
 [[deprecated("hint...")]]
-class B {}
-
-// procedure M1 is marked as the main entry point
-[[entry]]
-static void M1() {}
-
-// procedure M2 with return type is marked as an
-// alternative entry point named "entryAlt1"
-[[entry("entryAlt1")]]
-static int M2() { return 0 }
-
-// procedure M3 with arguments 'args' is marked as
-// an alternative entry point named "entryAlt2"
-[[entry("entryAlt2")]]
-static void M3(String[] args) {}
+class B {
+    // procedure M1 is marked as the main entry point
+    [[entry]]
+    static void M1() {}
+    
+    // procedure M2 with return type is marked as an
+    // alternative entry point named "entryAlt1"
+    [[entry("entryAlt1")]]
+    static int M2() { return 0 }
+    
+    // procedure M3 with arguments 'args' is marked as
+    // an alternative entry point named "entryAlt2"
+    [[entry("entryAlt2")]]
+    static void M3(String[] args) {}
+}
 \end{lstlisting}
 
 The last line of code prints the message to the standard output:
