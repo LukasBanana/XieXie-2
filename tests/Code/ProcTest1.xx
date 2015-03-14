@@ -8,14 +8,35 @@ class Base {
 		return { x, y, z }
 	}
 	
-	int f(int x) {
-		return 0
+	float f(int x) {
+		return 0.0
+	}
+	
+	float f(float x) {
+		return x/2.0
 	}
 	
 	float[] g(float x) {
 		return { x }
 	}
 	
+}
+
+class Widget {
+    /*int f() {
+        return 1
+    }*/
+    int f(int x := 0) {
+        return x*2
+    }
+    float f(float x := 0.0) {
+        return x*3.0
+    }
+    void caller() {
+        int   a := f(2)    // a is 1
+        int   b := f(1)   // b is 2
+        float c := f(2.0) // c is 6.0
+    }
 }
 
 class ProcTest : Base {
@@ -29,12 +50,8 @@ class ProcTest : Base {
 	int f(int x) {
 		return x*x
 	}
-	float f(float x) {
+	float[] f(float x) {
 		return x*x
-	}
-	
-	int f(int x, int y, int z) {
-		return { 0 }
 	}
 	
 	static String f(int x, int y) {
@@ -44,9 +61,9 @@ class ProcTest : Base {
 	void test1(int p) {
 		
 		int		a := f(2)
-		float	b := ProcTest.f(2.0)
-		String	c := f(1, 2)
-		int 	d := this.f(0, 1, 2)
+		float[]	b := ProcTest.f(2.0)
+		float[]	c := this.f(2.5)
+		String	d := f(1, 2)
 		int[] 	e := super.f(0, 1, 2)
 		float[] f := g(0.0)
 		

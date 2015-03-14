@@ -15,8 +15,11 @@
 \usepackage{pxfonts}
 \usepackage{geometry}
 \usepackage[T1]{fontenc}
+\usepackage[ngerman, english]{babel}
 \usepackage[ngerman]{hyperref}
 \usepackage{xspace}
+\usepackage{longtable}
+\usepackage{multirow}
 
 \geometry{
 	a4paper,
@@ -33,6 +36,10 @@
 
 \definecolor{brightBlueColor}{rgb}{0.5, 0.5, 1.0}
 \definecolor{darkBlueColor}{rgb}{0.0, 0.0, 0.5}
+\definecolor{weakGreen}{rgb}{0.1, 0.9, 0.1}
+\definecolor{weakYellow}{rgb}{0.8, 0.8, 0.1}
+\definecolor{weakOrange}{rgb}{0.8, 0.5, 0.1}
+\definecolor{weakRed}{rgb}{0.9, 0.1, 0.1}
 
 \lstset{
 	language = C++,
@@ -60,13 +67,17 @@
 \def\python{\textsc{Python}\xspace}
 \def\xxc{\texttt{xxc}\xspace}
 \def\xvm{\texttt{xvm}\xspace}
+\def\done{\textcolor{weakGreen}{done}}
+\def\almdone{\textcolor{weakYellow}{almost done}}
+\def\incompl{\textcolor{weakOrange}{incomplete}}
+\def\notimpl{\textcolor{weakRed}{not yet implemented}}
 
 
 %----------------------------------------------------------------------------------------
 %	DOCUMENT INFORMATION
 %----------------------------------------------------------------------------------------
 
-\title{\xiexie Programming Guide}
+\title{\xiexie Programming Guide \\ {\normalsize Version 2.0 Alpha}}
 \author{Lukas \textsc{Hermanns}}
 \date{\today}
 
@@ -89,13 +100,70 @@ but also in scripting languages such as \textsc{JavaScript} and \textsc{Python}.
 I'm actually a preferred programmer in C++ (meanwhile \cppx), low level stuff, and graphics programming
 with shading languages such as GLSL and HLSL.
 
-However, the \xxlang is intended to be simple and not tuned for performance.
+The \xxlang is intended to be simple and not tuned for performance.
 It was originally designed to be used for scripting in video games, but can also be used for
 general purposes.
 
 If you like, you can follow me on \href{https://twitter.com/LukasBanana}{Twitter},
 \href{https://www.youtube.com/user/SoftPixel}{YouTube}, \href{https://github.com/LukasBanana}{GitHub},
 or \href{https://bitbucket.org/LukasBanana}{Bitbucket}.
+
+%----------------------------------------------------------------------------------------
+%	TODO LIST
+%----------------------------------------------------------------------------------------
+
+\chapter*{ToDo List}
+
+The compiler, and partially the virtual machine, are not yet completed. Some rules and explanations in this report
+may change over time. Here is a rough ToDo-list:
+
+\begin{center}
+\begin{tabular}[ht]{ | p{0.65 \textwidth} | p{0.25 \textwidth} | }
+	\hline
+	\multicolumn{2}{|c|}{\textsc{Parser}} \\
+	\hline
+	Implementation of parser against grammar specification & \almdone \\
+	\hline
+	Member procedure calls as statements & \notimpl \\
+	\hline
+	Post fix array access & \notimpl \\
+	\hline
+	Destructor & \notimpl \\
+	\hline
+	Named Parameters & \done \\
+	
+	\hline \hline
+	\multicolumn{2}{|c|}{\textsc{Context Analyzer}} \\
+	\hline
+	Expression Type Check & \done \\
+	\hline
+	Cast Type Check & \incompl \\
+	\hline
+	Automatic Type Deduction & \done \\
+	\hline
+	Procedure Overloading & \done \\
+	\hline
+	Procedure Overriding & \done \\
+	\hline
+	Named Parameters & \notimpl \\
+	\hline
+	Static and Non-Static Procedure Behavior & \incompl \\
+	\hline
+	Class and Procedure Attributes & \notimpl \\
+	
+	\hline \hline
+	\multicolumn{2}{|c|}{\textsc{Code Generator}} \\
+	\hline
+	CFG and TAC generation from DAST & \notimpl \\
+	
+	\hline \hline
+	\multicolumn{2}{|c|}{\textsc{XASM Backend}} \\
+	\hline
+	Final code generation for XASM & \notimpl \\
+	\hline
+\end{tabular}
+\end{center}
+
 
 \tableofcontents
 
@@ -170,7 +238,7 @@ and can simply be included into any \textsc{C99} compliant project.
 
 \chapter{Syntax}
 
-The we start out with the syntax.
+We start out with the syntax.
 
 
 %----------------------------------------------------------------------------------------
@@ -678,6 +746,99 @@ This works because the \textit{context analyzer} of the compiler works in severa
 
 
 %----------------------------------------------------------------------------------------
+%	PROCEDURES
+%----------------------------------------------------------------------------------------
+
+\section{Procedures}
+
+In \xiexie we talk about \textit{procedures} (somethings called \textit{methods}),
+because in the strict sense \textit{functions} have no side effects.
+Functions have only input parameters which are calculated to a result. But in \xiexie every procedure can have side effects,
+meaning that they can modify the program state (with static variables for instance).
+
+\subsection{Procedure Signature}
+
+A \textit{procedure signature} is the extended identification of a procedure beyond its identifier string.
+The signature consists of the identifier string, its parameter list, and the procedure's return type.
+However, the return type is never used for identification.
+
+\subsection{Procedure Overloading}
+
+\xiexie supports overloading of procedures. This means the same identifier can be used several times
+for procedures inside a class declaration (including its inheritance hierarchy).
+This requires that the following rules are satisfied:
+\begin{quote}
+	All procedures with the same identifier inside a class declaration can be distinguished by their
+	parameter count or parameter types.
+\end{quote}
+Here is an example of procedure overloading.
+\begin{lstlisting}
+class Widget {
+    int f() {
+        return 1
+    }
+    int f(int x) {
+        return x*2
+    }
+    float f(float x) {
+        return x*3.0
+    }
+    void caller() {
+        int   a := f()    // a is 1
+        int   b := f(1)   // b is 2
+        float c := f(2.0) // c is 6.0
+    }
+}
+\end{lstlisting}
+When overloading procedures, try to avoid ambiguities with default arguments. Adding default arguments
+to all parameters of all overloaded procedures is allowed, but procedure calls may be ambiguous for the compiler:
+\begin{lstlisting}
+class Widget {
+    int f() { /* ... */ }
+    int f(int x := 0) { /* ... */ }
+    float f(float x := 0.0) { /* ... */ }
+    
+    void caller() {
+        int   a := f()    // error, could be f(), f(int x := 0), or f(float x := 0.0)
+        int   b := f(1)   // ok, argument is from type 'int'
+        float c := f(2.0) // ok, argument is from type 'float'
+    }
+}
+\end{lstlisting}
+
+\subsection{Procedure Overriding}
+
+\xiexie supports overriding of procedures. This means the same procedure signature can be used inside a class and its
+base class. The procedure calls of overloaded and overridden procedures require that the following rules are satisfied:
+\begin{quote}
+	If a procedure with identifier $P$ is declared inside a class $C$, a procedure with the same identifier is declared
+	in its base class $B$ but with another signature, and another procedure inside class $C$ calls the procedure $P$
+	from class $B$, then the identifier \texttt{super} must be specified in front of the call.
+\end{quote}
+To better understand this awkward definition, take a look at this example:
+\begin{lstlisting}
+class B {
+    int f(int x, int y) {
+        return 1
+    }
+    int g() {
+        return 2
+    }
+}
+class S : B {
+    int f(int x) {
+        return 3
+    }
+    void caller() {
+        int a := f(0)          // equivalent to 'this.f(0)'
+        int b := super.f(0, 0) // 'super' is required, due to overloaded procedure 'f'
+        int c := g()           // no need for 'super', because 'g' is not overloaded
+    }
+}
+\end{lstlisting}
+
+
+%----------------------------------------------------------------------------------------
 %	COMPILER
 %----------------------------------------------------------------------------------------
 
@@ -723,7 +884,18 @@ xvm HelloWorld.xbc
 
 
 
-
 \end{document}
+
+
+
+
+
+
+
+
+
+
+
+
 
 

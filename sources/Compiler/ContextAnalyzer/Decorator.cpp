@@ -1127,11 +1127,15 @@ void Decorator::VerifyVarNameMutable(VarName& ast)
         Error("variable \"" + ast.FullName() + "\" is not mutable");
 }
 
+/*
+Registers the specified procedure (with its signature) in the current (and only in the current) class scope.
+If the signature is similar to another procedure signature in this class scope, the registration fails.
+*/
 void Decorator::RegisterProcSymbol(ProcDeclStmnt& ast)
 {
     ProcOverloadSwitch* overloadSwitch = &(ast.overloadSwitch);
 
-    /* Check if procedure identifier is already registerd in current scope */
+    /* Check if procedure identifier is already registerd in current (and only in current) class scope */
     const auto& ident = ast.procSignature->ident;
     auto symbol = symTab_->Fetch(ident, false);
 
@@ -1169,6 +1173,11 @@ void Decorator::RegisterProcSymbol(ProcDeclStmnt& ast)
     overloadSwitch->procDeclRefs.push_back(&ast);
 }
 
+/*
+Decorates the procedure call with the reference to the procedure declaration, which is suitable for the call arguments.
+If the same procedure identifier is used in a base class and a sub class, the sub class procedure must overload the base class procedure.
+Otherwise the procedure of the base class can only identified with 'super.' inside a sub class procedure body.
+*/
 void Decorator::DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch)
 {
     const auto& procDeclRefs = overloadSwitch.procDeclRefs;
