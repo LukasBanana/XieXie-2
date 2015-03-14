@@ -86,7 +86,7 @@ return_stmnt:	'return' expr?;
 
 // LOOP STATEMENTS
 for_stmnt:			'for' var_name_stmnt? ';' expr? ';' assign_stmnt? code_block;
-for_range_stmnt:	'for' (IDENT ':')? for_range '..' for_range ('->' INT_LITERAL)? code_block;
+for_range_stmnt:	'for' (INT_LITERAL | IDENT ':' for_range '..' for_range ('->' INT_LITERAL)?) code_block;
 for_each_stmnt:		'foreach' IDENT ':' expr code_block;
 for_ever_stmnt:		'forever' code_block;
 for_range:			NEGATION? INT_LITERAL;
