@@ -126,6 +126,7 @@ class Decorator final : private Visitor
         void PopScopeStatic();
         bool IsScopeStatic() const;
 
+        //! Returns true if the current procedure declaration statement is static.
         bool IsProcStatic() const;
 
         inline bool IsRegisterMemberSymbols() const

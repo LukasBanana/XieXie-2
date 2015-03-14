@@ -264,6 +264,14 @@ const TypeDenoter* AllocExpr::GetTypeDenoter() const
 }
 
 
+/* --- Arg --- */
+
+const TypeDenoter* Arg::GetTypeDenoter() const
+{
+    return expr->GetTypeDenoter();
+}
+
+
 /* --- Param --- */
 
 const TypeDenoter* Param::GetTypeDenoter() const

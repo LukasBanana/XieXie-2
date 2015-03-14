@@ -1172,9 +1172,59 @@ void Decorator::DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overlo
 {
     const auto& procDeclRefs = overloadSwitch.procDeclRefs;
 
-    //...
+    /* Find suitable procedure declaration */
+    auto procDecls = overloadSwitch.procDeclRefs;
+    const auto& args = ast.args;
 
-    ast.declStmntRef = procDeclRefs.front();
+    size_t argIndex = 0;
+
+    for (auto n = args.size(); argIndex < n; ++argIndex)
+    {
+        /* Get argument and its type denoter */
+        const auto& arg = args[argIndex];
+
+        auto argType = arg->GetTypeDenoter();
+        if (!argType)
+            continue;
+        
+        /* Compare argument type with current parameter of all potential procedures */
+        for (auto it = procDecls.begin(); it != procDecls.end();)
+        {
+            const auto& params = ((*it)->procSignature)->params;
+
+            if (argIndex < params.size())
+            {
+                if (!TypeChecker::VerifyTypeCompatibility(*params[argIndex]->typeDenoter, *argType))
+                    it = procDecls.erase(it);
+                else
+                    ++it;
+            }
+            else
+                it = procDecls.erase(it);
+        }
+    }
+
+    /* Check if enough arguments were passed */
+    for (auto it = procDecls.begin(); it != procDecls.end();)
+    {
+        const auto& params = ((*it)->procSignature)->params;
+        
+        if (argIndex < params.size() && !(params[argIndex]->defaultArgExpr))
+            it = procDecls.erase(it);
+        else
+            ++it;
+    }
+
+    /* Check if unique procedure call has found */
+    if (procDecls.empty())
+        Error("no suitable signature found for procedure call", &ast);
+    else if (procDecls.size() > 1)
+        Error("procedure call is ambiguous (deduced " + ToStr(procDecls.size()) + " suitable procedure signatures)", &ast);
+    else
+    {
+        /* Decorate procedure call with reference to final procedure delcaration statement */
+        ast.declStmntRef = procDecls.front();
+    }
 }
 
 /* --- Symbol table --- */

@@ -17,14 +17,15 @@ class ProcTest {
 		return x*x
 	}
 	
-	static int f(int x, int y) {
-		return x+y
+	static String f(int x, int y) {
+		return null
 	}
 	
 	void test1(int p) {
 		
 		int		a := f(2)
-		float	b := f(2.0)
+		float	b := ProcTest.f(2.0)
+		String	c := f(1, 2)
 		
 	//	int		a := f(p*2) + ProcTest.f(p+3)
 	//	float	b := f((float)p*4.0)
