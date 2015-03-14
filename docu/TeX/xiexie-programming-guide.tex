@@ -236,17 +236,17 @@ These are the kinds of literals:
 		\texttt{"1st fragment"\textvisiblespace"2nd fragment}
 	\item Verbatim String Literal: e.g. \texttt{@"\textbackslash home\textbackslash test"}, \texttt{@"a ""b"" c"}
 \end{itemize}
-Integer and float literals may optionally contain the single quotation mark as digit separator.
+Integer and float literals may optionally contain the single quotation mark as digit separator, for better readability.
 If it's used, all separators must satisfy the following rules:
 \begin{enumerate}
 	\item For decimal literals, the separators must be \textbf{three steps apart} from each other, beginning at the dot. \\
-		Example: 12'345, 3.141'592'654, or -27'836.283'74.
+		Example: \texttt{12'345}, \texttt{3.141'592'654}, or \texttt{-27'836.283'74}.
 	\item For non-decimal literals, the separators must be \textbf{four steps apart} from each other, beginning at the dot. \\
-		Example: 0xff0'214b, 0b100'1101'1011, 0o1234'5670
+		Example: \texttt{0xff0'214b}, \texttt{0b100'1101'1011}, \texttt{0o1234'5670}
 	\item A separator must not appear at the beginning or the end of the literal. \\
-		Counterexample: '123'456'.
+		Counterexample: \texttt{'123'456'}.
 	\item No valid separator must be omitted. \\
-		Counterexample: 1234'567'890.
+		Counterexample: \texttt{1234'567'890}.
 \end{enumerate}
 
 
