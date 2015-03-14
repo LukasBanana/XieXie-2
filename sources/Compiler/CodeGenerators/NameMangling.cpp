@@ -1,11 +1,11 @@
 /*
- * XASMNameMangling.cpp
+ * NameMangling.cpp
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "XASMNameMangling.h"
+#include "NameMangling.h"
 #include "Param.h"
 #include "ProcSignature.h"
 #include "BuiltinTypeDenoter.h"
@@ -18,9 +18,6 @@
 using namespace AbstractSyntaxTrees;
 
 namespace CodeGenerator
-{
-
-namespace XASM
 {
 
 namespace NameMangling
@@ -43,7 +40,7 @@ static std::string GenerateTypeLabel(const BuiltinTypeDenoter& typeDenoter)
         case Ty::Float:
             return "F";
     }
-    throw std::string("invalid basic type for built-in type denoter");
+    throw std::string("invalid type denoter");
 }
 
 static std::string GenerateTypeLabel(const ArrayTypeDenoter& typeDenoter)
@@ -87,14 +84,14 @@ static std::string GenerateSubLabel(const Param& param, size_t index)
     }
 }
 
-std::string GenerateLabel(const ProcSignature& signature)
+std::string UniqueLabel(const ProcSignature& procSignature)
 {
     std::string label;
 
-    label += "P" + signature.ident;
+    label += "P" + procSignature.ident;
 
     size_t i = 0;
-    for (const auto& param : signature.params)
+    for (const auto& param : procSignature.params)
     {
         label += ',';
         label += GenerateSubLabel(*param, i++);
@@ -105,8 +102,6 @@ std::string GenerateLabel(const ProcSignature& signature)
 
 
 } // /namespace NameMangling
-
-} // /namespace XASM
 
 } // /namespace CodeGenerator
 
