@@ -9,6 +9,7 @@
 %	PACKAGES
 %----------------------------------------------------------------------------------------
 
+\usepackage{amsmath}
 \usepackage{listings}
 \usepackage{color}
 \usepackage{pxfonts}
@@ -92,6 +93,10 @@ However, the \xxlang is intended to be simple and not tuned for performance.
 It was originally designed to be used for scripting in video games, but can also be used for
 general purposes.
 
+If you like, you can follow me on \href{https://twitter.com/LukasBanana}{Twitter},
+\href{https://www.youtube.com/user/SoftPixel}{YouTube}, \href{https://github.com/LukasBanana}{GitHub},
+or \href{https://bitbucket.org/LukasBanana}{Bitbucket}.
+
 \tableofcontents
 
 
@@ -142,7 +147,7 @@ Or to make a long story short: I saw this word on a napkin in a Chinese restaura
 
 \section{Motivation}
 
-There are many great programming languages out there. Some produce faster code than others, but for that others
+There are many great programming languages out there. Some produce faster code than others, but some
 are simpler and have a better learning curve. Using a new language doesn't mean to give up a previous one,
 because every language has its own domain. For example, the performance of interpreted languages such as \python
 is totally sufficient for many applications. We don't need maximal performance for a script which does some
@@ -228,9 +233,21 @@ These are the kinds of literals:
 	\item Integer Literal (Hexa-Decimal): e.g. \texttt{0xff}, \texttt{0x00}, \texttt{0xaB29}
 	\item Float Literal: e.g. \texttt{0.0}, \texttt{3.5}, \texttt{12.482}
 	\item String Literal: e.g. \texttt{"Foo Bar"}, \texttt{"Hello, World"}, \texttt{"\textbackslash n\textbackslash t"},
-		\texttt{"1st fragment" "2nd fragment}
+		\texttt{"1st fragment"\textvisiblespace"2nd fragment}
 	\item Verbatim String Literal: e.g. \texttt{@"\textbackslash home\textbackslash test"}, \texttt{@"a ""b"" c"}
 \end{itemize}
+Integer and float literals may optionally contain the single quotation mark as digit separator.
+If it's used, all separators must satisfy the following rules:
+\begin{enumerate}
+	\item For decimal literals, the separators must be \textbf{three steps apart} from each other, beginning at the dot. \\
+		Example: 12'345, 3.141'592'654, or -27'836.283'74.
+	\item For non-decimal literals, the separators must be \textbf{four steps apart} from each other, beginning at the dot. \\
+		Example: 0xff0'214b, 0b100'1101'1011, 0o1234'5670
+	\item A separator must not appear at the beginning or the end of the literal. \\
+		Counterexample: '123'456'.
+	\item No valid separator must be omitted. \\
+		Counterexample: 1234'567'890.
+\end{enumerate}
 
 
 %----------------------------------------------------------------------------------------
@@ -388,7 +405,8 @@ int a := 3-4,
 int c
 \end{lstlisting}
 Hence, the readability of your code is up to you and your programming style :-). The only language I've worked with,
-which forces you to better readability it \python. Actually a great principle, but with \xiexie you have complete freedom.
+which forces you to practice better readability is \python.
+Actually a great principle, but with \xiexie you have complete freedom.
 
 The absence of statement terminators is the reason for the \textit{double paren} syntax of attributes:
 \begin{lstlisting}
@@ -410,7 +428,103 @@ This is because the parser reads it as follows:
 int v := c[entry]
 \end{lstlisting}
 But \texttt{c} is not an array. This is why attributes are written with a double paren, because array accesses
-never begin with '[['. They may end with ']]' this is not important for the parser.
+never begin with '[['. They may end with ']]', but this is not important for the parser.
+
+\subsection{Loop Statements}
+
+It follows several examples of loop statements.
+
+\subsubsection{\texttt{for} Loop}
+
+\begin{lstlisting}
+// This regular for loop iterates 'i' from 0 to 9 (similar to Java)
+for int i := 0 ; i < 10 ; i++ {
+    // Infinite loop (also similar to Java)
+    for ;; {
+        if i >= 0 {
+            // Break infinite loop
+            break
+        }
+    }
+    
+    // Inner iteration variable 'j' is implicit initialized to 0.0
+    float j
+    for ; j < 3.5 ; {
+        j += 0.5
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Ranged Based \texttt{for} Loop}
+
+\begin{lstlisting}
+// Print numbers 0, 1, 2, 3, and 4
+for i : 0 .. 4 {
+    // Print value of 'i' (this 'i' is not mutable!)
+    print(i)
+}
+
+// Print numbers 10, 7, 4, 1, -2, -5, and -8
+for i : 10 .. -10 -> 3 {
+    print(i)
+}
+
+// Do something 10 times (with invisible index variable)
+for 10 {
+    doSomething()
+}
+\end{lstlisting}
+
+\subsubsection{\texttt{foreach} Loop}
+
+\begin{lstlisting}
+// Iterate over array with elements 1, 2, and 3
+foreach i : { 1, 2, 3 } {
+    print(i)
+}
+
+// Iterate over a 'superList' from type (array of array of strings)
+String[][] superList
+foreach list : superList {
+    // Iterate over all elements in the current sub list
+    foreach str : list {
+        // Do something with this string
+        print(str)
+    }
+}
+\end{lstlisting}
+
+\subsubsection{\texttt{forever} Loop}
+
+\begin{lstlisting}
+// Infinite loop
+forever {
+    // Condition to break the loop
+    if magicFunction() {
+        // Break infinite loop
+        break
+    }
+}
+\end{lstlisting}
+
+\subsubsection{\texttt{while} Loop}
+
+\begin{lstlisting}
+// Regular while loop
+while magicFunction() {
+    doSomething()
+}
+\end{lstlisting}
+
+\subsubsection{\texttt{do}/\texttt{while} Loop}
+
+\begin{lstlisting}
+// Regular do-while loop
+do {
+    doSomething()
+} while magicFunction()
+\end{lstlisting}
+
 
 
 %----------------------------------------------------------------------------------------
@@ -452,7 +566,7 @@ import "System.xx" // ... or this
 If the imported file is in another directory, the string version of \texttt{import} is the only choice.
 This can also be omitted if the file is added to the compilation process.
 The files for the classes \texttt{Object}, \texttt{String}, \texttt{Array}, and \texttt{Intrinsics}
-are always implicitly imported, because they are `internal' classes the compiler knows generally.
+are always implicit imported, because they are `internal' classes the compiler knows generally.
 Note that verbatim strings are allowed wherever string literals are allowed, i.e. the following example is valid \xiexie code:
 \begin{lstlisting}
 import "C:\\Program Files\\Test1.xx" // either this ...
@@ -475,7 +589,7 @@ import "File2.xx"
 import "File1.xx"
 \end{lstlisting}
 
-Line 3 declares the class \texttt{HelloWorld} which implicitly inherits from the base class \texttt{Object},
+Line 3 declares the class \texttt{HelloWorld} which implicit inherits from the base class \texttt{Object},
 like it is done in \java:
 \begin{lstlisting}
 class HelloWorld { /* ... */ }
