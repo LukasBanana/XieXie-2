@@ -25,6 +25,12 @@ class ProcSignature : public AST
 
         const TypeDenoter* GetTypeDenoter() const override;
 
+        /**
+        Returns true if the two procedure signatures are too similar, to be used as overloaded procedures.
+        This ignores the return type and only compares the identifier and parameter types.
+        */
+        static bool AreSimilar(const ProcSignature& lhs, const ProcSignature& rhs);
+
         bool                    isStatic = false;
         TypeDenoterPtr          returnTypeDenoter;
         std::string             ident;

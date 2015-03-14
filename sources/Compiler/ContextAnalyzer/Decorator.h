@@ -18,6 +18,7 @@
 #include "ExprConstChecker.h"
 #include "ExprTypeChecker.h"
 #include "ExprNamespaceFinder.h"
+#include "ProcOverloadSwitch.h"
 
 #include <functional>
 
@@ -72,8 +73,6 @@ class Decorator final : private Visitor
         void VerifyAssignStmntExprTypes(const VarName& varName, const Expr& expr);
         const TypeDenoter* DeduceTypeFromVarDecls(const std::vector<VarDeclPtr>& varDecls);
 
-        void DecorateProcArgs(ProcCall& ast);
-
         void DecorateAttribPrefix(
             AttribPrefix& ast, const std::string& declDesc,
             const std::map<std::string, std::function<void(const Attrib&, AttribPrefix::Flags&)>>& allowedAttribs
@@ -106,6 +105,9 @@ class Decorator final : private Visitor
         void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
         void VerifyVarNameMutable(VarName& ast);
         void DeduceNamespaceFromTypeDenoter(const TypeDenoter* varType, StmntSymbolTable::SymbolType*& symbol, const VarName& ast);
+
+        void RegisterProcSymbol(ProcDeclStmnt& ast);
+        void DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch);
 
         /* --- Symbol table --- */
 

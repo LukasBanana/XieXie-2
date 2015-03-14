@@ -10,6 +10,7 @@
 
 
 #include "ScopedStmnt.h"
+#include "ProcOverloadSwitch.h"
 
 
 namespace AbstractSyntaxTrees
@@ -29,6 +30,9 @@ class ProcDeclStmnt : public ScopedStmnt
         AttribPrefixPtr         attribPrefix;   // may be null
         ProcSignaturePtr        procSignature;
         CodeBlockPtr            codeBlock;      // may be null (for extern procedures)
+
+        // dast
+        ProcOverloadSwitch      overloadSwitch;
 
 };
 

@@ -161,6 +161,29 @@ const TypeDenoter* ProcSignature::GetTypeDenoter() const
     return returnTypeDenoter.get();
 }
 
+bool ProcSignature::AreSimilar(const ProcSignature& lhs, const ProcSignature& rhs)
+{
+    /* Compare parameter counts */
+    if (lhs.params.size() != rhs.params.size())
+        return false;
+
+    /* Compare identifiers */
+    if (lhs.ident != rhs.ident)
+        return false;
+
+    /* Compare parameter types */
+    for (size_t i = 0, n = lhs.params.size(); i < n; ++i)
+    {
+        auto typeLhs = lhs.params[i]->GetTypeDenoter();
+        auto typeRhs = rhs.params[i]->GetTypeDenoter();
+
+        if (!typeLhs || !typeRhs || !TypeDenoter::AreEqual(*typeLhs, *typeRhs))
+            return false;
+    }
+
+    return true;
+}
+
 
 /* --- ProcCall --- */
 
@@ -389,6 +412,44 @@ std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const 
     if (rootClass != this && baseClassRef_)
         return ident + separator + baseClassRef_->HierarchyString(separator, rootClass);
     return ident;
+}
+
+
+/* --- TypeDenoter --- */
+
+bool TypeDenoter::AreEqual(const TypeDenoter& lhs, const TypeDenoter& rhs)
+{
+    if (lhs.Type() != rhs.Type())
+        return false;
+
+    switch (lhs.Type())
+    {
+        case AST::Types::BuiltinTypeDenoter:
+        {
+            const auto& typeLhs = static_cast<const BuiltinTypeDenoter&>(lhs);
+            const auto& typeRhs = static_cast<const BuiltinTypeDenoter&>(rhs);
+            return typeLhs.typeName == typeRhs.typeName;
+        }
+        break;
+
+        case AST::Types::ArrayTypeDenoter:
+        {
+            const auto& typeLhs = static_cast<const ArrayTypeDenoter&>(lhs);
+            const auto& typeRhs = static_cast<const ArrayTypeDenoter&>(rhs);
+            return TypeDenoter::AreEqual(*typeLhs.lowerTypeDenoter, *typeRhs.lowerTypeDenoter);
+        }
+        break;
+
+        case AST::Types::PointerTypeDenoter:
+        {
+            const auto& typeLhs = static_cast<const PointerTypeDenoter&>(lhs);
+            const auto& typeRhs = static_cast<const PointerTypeDenoter&>(rhs);
+            return typeLhs.declIdent == typeRhs.declIdent;
+        }
+        break;
+    }
+
+    return true;
 }
 
 

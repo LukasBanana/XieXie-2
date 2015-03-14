@@ -1,0 +1,39 @@
+
+// Proc Test 1
+// 14/03/2015
+
+class ProcTest {
+	
+	static void main() {
+		ProcTest app := new ProcTest()
+		app.test1(5)
+		app.test2(2)
+	}
+	
+	int f(int x) {
+		return x*x
+	}
+	float f(float x) {
+		return x*x
+	}
+	
+	static int f(int x, int y) {
+		return x+y
+	}
+	
+	void test1(int p) {
+		
+		int		a := f(2)
+		float	b := f(2.0)
+		
+	//	int		a := f(p*2) + ProcTest.f(p+3)
+	//	float	b := f((float)p*4.0)
+		
+	}
+	
+	void test2(int p) {
+		
+	}
+	
+}
+

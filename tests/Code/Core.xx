@@ -5,15 +5,59 @@
  * See "LICENSE.txt" for license information.
  */
 
+// Low-level intrinsic functions.
 extern class Intrinsics {
+	static int allocMem(int size)
+	static void freeMem(int ptr)
+	static void copyMem(int destPtr, int srcPtr, int size)
 	
+	static void sysCall(int commandPtr)
+	static void clearTerm()
+	static void print(int textPtr)
+	static void printLn(int textPtr)
+	static void printInt(int value)
+	static void printFloat(float value)
+	static String input()
+	static int inputInt()
+	static float inputFloat()
+	
+	static int createFile(int filenamePtr)
+	static int deleteFile(int filenamePtr)
+	static int openFile(int filenamePtr)
+	static void closeFile(int handlePtr)
+	static int fileSize(int handlePtr)
+	static void fileSetPos(int handlePtr, int pos)
+	static int fileGetPos(int handlePtr)
+	static int fileEOF(int handlePtr)
+	static void writeByte(int handlePtr, int value)
+	static void writeInt(int handlePtr, int value)
+	static void writeBuffer(int handlePtr, int bufferPtr, int size)
+	static int readByte(int handlePtr)
+	static int readInt(int handlePtr)
+	static void readBuffer(int handlePtr, int bufferPtr, int size)
+	
+	static float sin(float x)
+	static float cos(float x)
+	static float tan(float x)
+	static float asin(float x)
+	static float acos(float x)
+	static float atan(float x)
+	static float pow(float b, float e)
+	static float sqrt(float x)
+	
+	static int randInt()
+	static float randFloat()
+	static int time()
+	static void sleep(int duration)
 }
 
+// Root base object for all classes
 extern class Object {
 	Object copy()
 	String toString()
 }
 
+// UTF-8 string class.
 extern class String {
 	Object copy()
 	String toString()
@@ -22,6 +66,7 @@ extern class String {
 	String add(String rhs)
 }
 
+// (Generic) array class.
 extern class Array {
 	Object copy()
 	String toString()

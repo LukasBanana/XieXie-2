@@ -9,7 +9,7 @@
 #include "ASTImport.h"
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
-#include "CodeGenerators/XASM/XASMNameMangling.h"
+#include "CodeGenerators/NameMangling.h"
 
 
 namespace ControlFlowGraph
@@ -188,7 +188,7 @@ DEF_VISIT_PROC(GraphGenerator, VarDeclStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 {
-    auto procIdent = CodeGenerator::XASM::NameMangling::GenerateLabel(*ast->procSignature);
+    auto procIdent = CodeGenerator::NameMangling::UniqueLabel(*ast->procSignature);
     
     auto in = CT()->CreateRootBasicBlock(procIdent);
     auto out = CT()->CreateBasicBlock();

@@ -25,15 +25,15 @@ namespace AbstractSyntaxTrees
 using namespace SyntaxAnalyzer;
 
 
-#define AST_INTERFACE_BASE(name)                        \
-    static const Types astType = Types::name;           \
-    Types Type() const override                         \
-    {                                                   \
-        return Types::name;                             \
-    }                                                   \
-    void Visit(Visitor* visitor, void* args = nullptr)  \
-    {                                                   \
-        visitor->Visit##name(this, args);               \
+#define AST_INTERFACE_BASE(name)                                \
+    static const Types astType = Types::name;                   \
+    Types Type() const override                                 \
+    {                                                           \
+        return Types::name;                                     \
+    }                                                           \
+    void Visit(Visitor* visitor, void* args = nullptr) override \
+    {                                                           \
+        visitor->Visit##name(this, args);                       \
     }
 
 #define AST_INTERFACE_EXT(name, super)                  \
@@ -74,6 +74,7 @@ class AST
             ArrayAccess,
             ProcCall,
             SwitchCase,
+            ProcOverloadSwitch,
 
             /* --- Statements --- */
             ReturnStmnt,

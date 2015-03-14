@@ -225,18 +225,18 @@ DEF_VISIT_PROC(Decorator, ProcCall)
     else
         Visit(ast->procName);
 
-    /* Decoreate procedure call arguments */
+    /* Decoreate arguments and procedure call itself */
     Visit(ast->args);
 
     /* Decorate procedure call with procedure declaration reference */
     auto declRef = ast->procName->GetLast().declRef;
-    if (declRef && declRef->Type() == AST::Types::ProcDeclStmnt)
-        ast->declStmntRef = static_cast<ProcDeclStmnt*>(declRef);
+    if (declRef && declRef->Type() == AST::Types::ProcOverloadSwitch)
+    {
+        auto overloadSwitch = static_cast<ProcOverloadSwitch*>(declRef);
+        DecorateProcCall(*ast, *overloadSwitch);
+    }
     else
         Error("identifier \"" + ast->procName->FullName() + "\" does not refer to a procedure declaration", ast);
-
-    /* Decorate procedure arguments */
-    DecorateProcArgs(*ast);
 }
 
 DEF_VISIT_PROC(Decorator, SwitchCase)
@@ -441,7 +441,7 @@ DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
     switch (state_)
     {
         case States::RegisterMemberSymbols:
-            RegisterSymbol(ast->procSignature->ident, ast);
+            RegisterProcSymbol(*ast);
             break;
 
         case States::AnalyzeCode:
@@ -740,11 +740,6 @@ const TypeDenoter* Decorator::DeduceTypeFromVarDecls(const std::vector<VarDeclPt
             return varDecl->initExpr->GetTypeDenoter();
     }
     return nullptr;
-}
-
-void Decorator::DecorateProcArgs(ProcCall& ast)
-{
-    //...
 }
 
 void Decorator::DecorateAttribPrefix(
@@ -1130,6 +1125,56 @@ void Decorator::VerifyVarNameMutable(VarName& ast)
     auto varType = ast.GetLast().GetTypeDenoter();
     if (varType && varType->IsConst())
         Error("variable \"" + ast.FullName() + "\" is not mutable");
+}
+
+void Decorator::RegisterProcSymbol(ProcDeclStmnt& ast)
+{
+    ProcOverloadSwitch* overloadSwitch = &(ast.overloadSwitch);
+
+    /* Check if procedure identifier is already registerd in current scope */
+    const auto& ident = ast.procSignature->ident;
+    auto symbol = symTab_->Fetch(ident, false);
+
+    if (symbol)
+    {
+        if (symbol->Type() == AST::Types::ProcOverloadSwitch)
+            overloadSwitch = static_cast<ProcOverloadSwitch*>(symbol);
+        else
+        {
+            Error("identifier \"" + ident + "\" already used and not for procedure overloading", &ast);
+            return;
+        }
+    }
+    else
+    {
+        /* Register new procedure declaration */
+        RegisterSymbol(ident, overloadSwitch);
+    }
+
+    /* Check if there is a procedure with similar signature */
+    for (auto prevDeclRef : overloadSwitch->procDeclRefs)
+    {
+        if (ProcSignature::AreSimilar(*prevDeclRef->procSignature, *ast.procSignature))
+        {
+            Error(
+                "can not overload procedure \"" + ast.procSignature->ident +
+                "\" with similar signature, defined at (" + prevDeclRef->sourceArea.ToString() + ")", &ast
+            );
+            return;
+        }
+    }
+
+    /* Add procedure to overload switch */
+    overloadSwitch->procDeclRefs.push_back(&ast);
+}
+
+void Decorator::DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch)
+{
+    const auto& procDeclRefs = overloadSwitch.procDeclRefs;
+
+    //...
+
+    ast.declStmntRef = procDeclRefs.front();
 }
 
 /* --- Symbol table --- */

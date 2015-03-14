@@ -108,8 +108,10 @@ template <typename Owner, typename Symbol> class SymbolTable
         /**
         Returns the symbol with the specified identifer which is in
         the deepest scope, or null if there is no such symbol.
+        \param[in] ident Specifies the symbol's identifier.
+        \param[in] allowFallbackSymTab Specifies whether the fallback symbol table can be used or not. By default true.
         */
-        SymbolType* Fetch(const std::string& ident) const
+        SymbolType* Fetch(const std::string& ident, bool allowFallbackSymTab = true) const
         {
             /* Search identifier in this symbol table */
             auto it = symTable_.find(ident);
@@ -117,7 +119,7 @@ template <typename Owner, typename Symbol> class SymbolTable
                 return it->second.top().symbol;
 
             /* Search identifier in the fallback symbol table */
-            if (fallbackSymTab)
+            if (allowFallbackSymTab && fallbackSymTab)
                 return fallbackSymTab->Fetch(ident);
 
             /* No symbol found */

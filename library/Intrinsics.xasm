@@ -1,11 +1,155 @@
 
-; Intrinsics XASM
+; Intrinsics.xasm
 ; 10/03/2015
+
+CIntrinsics.PallocMem,I:
+	call <AllocMem>
+	ret (0) 0
+
+CIntrinsics.PfreeMem,I:
+	call <FreeMem>
+	ret (0) 0
+
+CIntrinsics.PcopyMem,I,I,I:
+	call <CopyMem>
+	ret (0) 0
+
+CIntrinsics.PsysCall,I:
+	call <SysCall>
+	ret (0) 0
+
+CIntrinsics.PclearTerm:
+	call <ClearTerm>
+	ret (0) 0
+
+CIntrinsics.Pprint,I:
+	call <Print>
+	ret (0) 0
+
+CIntrinsics.PprintLn,I:
+	call <PrintLn>
+	ret (0) 0
+
+CIntrinsics.PprintInt,I:
+	call <PrintInt>
+	ret (0) 0
+
+CIntrinsics.PprintFloat,F:
+	call <PrintFloat>
+	ret (0) 0
+
+CIntrinsics.Pinput:
+	call <Input>
+	ret (0) 0
+
+CIntrinsics.PinputInt:
+	call <InputInt>
+	ret (0) 0
+
+CIntrinsics.PinputFloat:
+	call <InputFloat>
+	ret (0) 0
+
+CIntrinsics.PcreateFile,I:
+	call <CreateFile>
+	ret (0) 0
+
+CIntrinsics.PdeleteFile,I:
+	call <DeleteFile>
+	ret (0) 0
+
+CIntrinsics.PopenFile,I:
+	call <OpenFile>
+	ret (0) 0
+
+CIntrinsics.PcloseFile,I:
+	call <CloseFile>
+	ret (0) 0
+
+CIntrinsics.PfileSize,I:
+	call <FileSize>
+	ret (0) 0
+
+CIntrinsics.PfileSetPos,I,I:
+	call <FileSetPos>
+	ret (0) 0
+
+CIntrinsics.PfileGetPos,I:
+	call <FileGetPos>
+	ret (0) 0
+
+CIntrinsics.PfileEOF,I:
+	call <FileEOF>
+	ret (0) 0
+
+CIntrinsics.PwriteByte,I,I:
+	call <WriteByte>
+	ret (0) 0
+
+CIntrinsics.PwriteInt,I,I:
+	call <WriteInt>
+	ret (0) 0
+
+CIntrinsics.PwriteBuffer,I,I,I:
+	call <WriteBuffer>
+	ret (0) 0
+
+CIntrinsics.PreadByte,I:
+	call <ReadByte>
+	ret (0) 0
+
+CIntrinsics.PreadInt,I:
+	call <ReadInt>
+	ret (0) 0
+
+CIntrinsics.PreadBuffer,I,I,I:
+	call <ReadBuffer>
+	ret (0) 0
 
 CIntrinsics.Psin,F:
 	call <Sin>
 	ret (0) 0
 
-CIntrinsics.PcopyMem.I:
-	call <CopyMem>
+CIntrinsics.Pcos,F:
+	call <Cos>
+	ret (0) 0
+
+CIntrinsics.Ptan,F:
+	call <Tan>
+	ret (0) 0
+
+CIntrinsics.Pasin,F:
+	call <ASin>
+	ret (0) 0
+
+CIntrinsics.Pacos,F:
+	call <ACos>
+	ret (0) 0
+
+CIntrinsics.Patan,F:
+	call <ATan>
+	ret (0) 0
+
+CIntrinsics.Ppow,F,F:
+	call <Pow>
+	ret (0) 0
+
+CIntrinsics.Psqrt,F:
+	call <Sqrt>
+	ret (0) 0
+
+CIntrinsics.PrandInt,:
+	call <RandInt>
+	ret (0) 0
+
+CIntrinsics.PrandFloat,:
+	call <RandFloat>
+	ret (0) 0
+
+CIntrinsics.Ptime,:
+	call <Time>
+	ret (0) 0
+
+CIntrinsics.Psleep,I:
+	call <Sleep>
 	ret (0) 0

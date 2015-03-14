@@ -99,6 +99,9 @@ class TypeDenoter : public AST
         //! Returns a declarative string for this type.
         virtual std::string ToString() const = 0;
 
+        //! Returns true if the two type denoters are equal.
+        static bool AreEqual(const TypeDenoter& lhs, const TypeDenoter& rhs);
+
     protected:
         
         TypeDenoter() = default;
