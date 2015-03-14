@@ -87,9 +87,9 @@ void Scanner::ErrorEOF()
     Error("unexpected end-of-file");
 }
 
-void Scanner::ErrorLetterInNumber()
+void Scanner::ErrorCharAfterLiteral()
 {
-    Error("letter '" + ToStr(chr_) + "' is not allowed within a number");
+    Error("character '" + ToStr(chr_) + "' is not allowed after literal");
 }
 
 /* --- Scanning --- */
@@ -653,15 +653,16 @@ TokenPtr Scanner::ScanNumber()
 
     /* Scan integer or floating-point number */
     auto type = Tokens::IntLiteral;
+    bool hasDigitSep = false, isDigitSepAllowed = true;
 
-    ScanDecimalLiteral(spell);
+    ScanDecimalLiteral(spell, hasDigitSep, isDigitSepAllowed, true);
 
     if (Is('.'))
     {
         spell += TakeIt();
         
         if (std::isdigit(UChr()))
-            ScanDecimalLiteral(spell);
+            ScanDecimalLiteral(spell, hasDigitSep, isDigitSepAllowed, false);
         else
             Error("floating-point literals must have a decimal on both sides of the dot (e.g. '0.0' but not '0.' or '.0')");
 
@@ -669,7 +670,7 @@ TokenPtr Scanner::ScanNumber()
     }
 
     if (std::isalpha(UChr()) || Is('.'))
-        ErrorLetterInNumber();
+        ErrorCharAfterLiteral();
 
     /* Create number token */
     return Make(type, spell);
@@ -679,12 +680,11 @@ TokenPtr Scanner::ScanHexNumber()
 {
     /* Scan hex literal */
     std::string spell;
-    while (std::isxdigit(UChr()))
-        spell += TakeIt();
+    ScanNonDecimalLiteral(spell, [&]() -> bool { return std::isxdigit(UChr()) != 0; });
 
     /* Check for wrong appendix */
     if ( ( std::isalpha(UChr()) && !std::isxdigit(UChr()) ) || Is('.') )
-        ErrorLetterInNumber();
+        ErrorCharAfterLiteral();
 
     /* Convert literal to decimal */
     spell = ToStr(HexToNum<int>(spell));
@@ -695,12 +695,11 @@ TokenPtr Scanner::ScanOctNumber()
 {
     /* Scan octal literal */
     std::string spell;
-    while (chr_ >= '0' && chr_ <= '7')
-        spell += TakeIt();
+    ScanNonDecimalLiteral(spell, [&]() -> bool { return (chr_ >= '0' && chr_ <= '7'); });
 
     /* Check for wrong appendix */
     if (std::isalpha(UChr()) || Is('.') )
-        ErrorLetterInNumber();
+        ErrorCharAfterLiteral();
 
     /* Convert literal to decimal */
     spell = ToStr(OctToNum<int>(spell));
@@ -711,22 +710,146 @@ TokenPtr Scanner::ScanBinNumber()
 {
     /* Scan binary literal */
     std::string spell;
-    while (Is('1') || Is('0'))
-        spell += TakeIt();
+    ScanNonDecimalLiteral(spell, [&]() -> bool { return Is('1') || Is('0'); });
 
     /* Check for wrong appendix */
     if (std::isalpha(UChr()) || Is('.') )
-        ErrorLetterInNumber();
+        ErrorCharAfterLiteral();
 
     /* Convert literal to decimal */
     spell = ToStr(BinToNum<int>(spell));
     return Make(Tokens::IntLiteral, spell);
 }
 
-void Scanner::ScanDecimalLiteral(std::string& spell)
+/*
+Scans a decimal literal with the optional digit separator.
+Rules for digit separators are:
+1.) For decimal literals, the separators must be three steps apart from each other, beginning at the dot.
+2.) For non-decimal literals, the separators must be four steps apart from each other, beginning at the dot.
+3.) A separator must not appear at the beginning or the end of the literal.
+4.) No valid separator must be omitted.
+*/
+void Scanner::ScanDecimalLiteral(std::string& spell, bool& hasDigitSep, bool& isDigitSepAllowed, bool isBeforeComma)
 {
-    while (std::isdigit(UChr()))
-        spell += TakeIt();
+    static const size_t sepDefCount = 3;
+
+    /* Initialize digit separation counter */
+    size_t sepCounter = (hasDigitSep && !isBeforeComma ? 0 : sepDefCount);
+    size_t charCounter = 1;
+
+    /* Can digit characters */
+    while (true)
+    {
+        if (std::isdigit(UChr()))
+        {
+            /* Scan digit and add to literal */
+            spell += TakeIt();
+            ++charCounter;
+
+            /* Increase digit counter if separators are used */
+            if (hasDigitSep)
+                ++sepCounter;
+        }
+        else if (Is('\''))
+        {
+            /* Scan digit separator */
+            TakeIt();
+
+            if (!isBeforeComma && !isDigitSepAllowed)
+                Error("invalid appearance of digit separator after dot in floating-point literal");
+
+            if (hasDigitSep)
+            {
+                if (sepCounter != sepDefCount)
+                    Error("invalid appearance of digit separator inside decimal literal");
+            }
+            else if (isBeforeComma)
+            {
+                if (charCounter > sepDefCount)
+                    Error("invalid appearance of digit separator at the beginning of decimal literal");
+                hasDigitSep = true;
+            }
+
+            /* Reset counter */
+            sepCounter = 0;
+        }
+        else
+            break;
+    }
+
+    /* Check for digit separator after scanning */
+    if (hasDigitSep)
+    {
+        if (sepCounter == 0)
+            Error("digit separator must not appear at the end of a literal");
+        else if (isBeforeComma && sepCounter != sepDefCount)
+            Error("invalid appearance of digit separator at the end of decimal literal");
+        else if (!isBeforeComma && sepCounter > sepDefCount)
+            Error("missing digit separator after dot in floating-point literal");
+        isDigitSepAllowed = true;
+    }
+    else
+        isDigitSepAllowed = (charCounter <= sepDefCount);
+}
+
+void Scanner::ScanNonDecimalLiteral(std::string& spell, const std::function<bool()>& pred)
+{
+    static const size_t sepDefCount = 4;
+
+    /* Initialize digit separation counter */
+    size_t sepCounter = sepDefCount;
+    size_t charCounter = 0;
+    bool hasDigitSep = false;
+
+    /* Check if non-decimal literal begin with digit separator */
+    if (Is('\''))
+        Error("digit separator must not appear at the beginning of a literal");
+
+    /* Can digit characters */
+    while (true)
+    {
+        if (pred())
+        {
+            /* Scan digit and add to literal */
+            spell += TakeIt();
+            ++charCounter;
+
+            /* Increase digit counter if separators are used */
+            if (hasDigitSep)
+                ++sepCounter;
+        }
+        else if (Is('\''))
+        {
+            /* Scan digit separator */
+            TakeIt();
+
+            if (hasDigitSep)
+            {
+                if (sepCounter != sepDefCount)
+                    Error("invalid appearance of digit separator inside non-decimal literal");
+            }
+            else
+            {
+                if (charCounter > sepDefCount)
+                    Error("invalid appearance of digit separator at the beginning of decimal literal");
+                hasDigitSep = true;
+            }
+
+            /* Reset counter */
+            sepCounter = 0;
+        }
+        else
+            break;
+    }
+
+    /* Check for digit separator after scanning */
+    if (hasDigitSep)
+    {
+        if (sepCounter == 0)
+            Error("digit separator must not appear at the end of a literal");
+        else if (sepCounter != sepDefCount)
+            Error("invalid appearance of digit separator at the end of non-decimal literal");
+    }
 }
 
 bool Scanner::IsEscapeChar() const

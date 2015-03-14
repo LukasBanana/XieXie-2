@@ -59,8 +59,8 @@ static KeywordMapType GenerateKeywordMap()
         { "static",     Ty::Static         },
         { "init",       Ty::Init           },
 
-        { "enum",       Ty::Enum           },
-        { "flags",      Ty::Flags          },
+        //{ "enum",       Ty::Enum           },
+        //{ "flags",      Ty::Flags          },
 
         { "new",        Ty::New            },
 
@@ -80,6 +80,10 @@ static KeywordMapType GenerateKeywordMap()
         { "ulong",      Ty::Reserved       },
         { "double",     Ty::Reserved       },
         { "release",    Ty::Reserved       },
+        { "enum",       Ty::Reserved       },
+        { "flags",      Ty::Reserved       },
+        { "override",   Ty::Reserved       },
+        { "readonly",   Ty::Reserved       },
     };
 }
 

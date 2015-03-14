@@ -116,15 +116,15 @@ class Token
             Static,         //!< static
             Init,           //!< init
 
-            Enum,           //!< enum
-            Flags,          //!< flags
+            //Enum,           //!< enum
+            //Flags,          //!< flags
 
             New,            //!< new
 
             Import,         //!< import
 
             // Reserved keywords (for later use)
-            Reserved,       //!< abstract, package, alias, pattern, sync, byte, ubyte, short, ushort, uint, long, ulong, double, const, release
+            Reserved,
 
             // Special tokens
             EndOfFile,

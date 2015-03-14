@@ -9,6 +9,7 @@ class Main {
 	static void main(String[] args) {
 		Main.test1(args)
 		Main.test2()
+		Main.test3()
 	}
 	
 	// Loops & arrays
@@ -68,6 +69,20 @@ class Main {
 		
 		int		i := h					// ok, i and h are both int
 	//	float	j := h					// error, j is float but h is int
+		
+	}
+	
+	static void test3() {
+		
+		// Digit separator in literals
+		int		a := 0b1100'0101'0100'0000
+		int		b := 0o1'2345'6702
+		int		c := 1'234'567'233
+		int		d := 0x123'4567'89ab'cdef
+		int		e := 0x120f'00ff
+		float	f := 239'273.283'323
+		float	g := 3.141'592'654
+		float	h := 283'623.238'263'23
 		
 	}
 	

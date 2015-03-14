@@ -16,8 +16,8 @@ namespace SyntaxAnalyzer
 const SourceArea SourceArea::ignore;
 
 SourceArea::SourceArea(const SourcePosition& pos) :
-    start{ pos },
-    end  { pos }
+    start{ pos                             },
+    end  { { pos.Row(), pos.Column() + 1 } }
 {
 }
 SourceArea::SourceArea(const SourcePosition& startPos, const SourcePosition& endPos) :

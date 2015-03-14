@@ -834,7 +834,7 @@ ForStmntPtr Parser::ParseForStmnt(bool parseComplete, const TokenPtr& identTkn)
     return ast;
 }
 
-// for_range_stmnt: 'for' (IDENT ':')? INT_LITERAL '..' INT_LITERAL ('->' INT_LITERAL)? code_block;
+// for_range_stmnt: 'for' (INT_LITERAL | IDENT ':' for_range '..' for_range ('->' INT_LITERAL)?) code_block;
 ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& identTkn)
 {
     auto ast = Make<ForRangeStmnt>();
@@ -843,6 +843,8 @@ ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& 
     if (parseComplete)
         Accept(Tokens::For);
 
+    bool hasInvisibleIndex = false;
+
     if (identTkn)
     {
         ast->varIdent = identTkn->Spell();
@@ -850,24 +852,41 @@ ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& 
     }
     else
     {
-        if (Is(Tokens::Ident))
+        if (Is(Tokens::IntLiteral))
+        {
+            /* Single integer literal */
+            ast->rangeStart = 0;
+            ast->rangeEnd = AcceptUnsignedIntLiteral();
+
+            if (ast->rangeEnd == 0)
+                ++ast->rangeStart;
+            else
+                --ast->rangeEnd;
+
+            ast->varIdent = defaultForRangeIdent;
+            hasInvisibleIndex = true;
+        }
+        else if (Is(Tokens::Ident))
         {
             ast->varIdent = AcceptIdent();
             Accept(Tokens::Colon);
         }
         else
-            ast->varIdent = defaultForRangeIdent;
+            ErrorUnexpected("expected identifier of integer literal");
     }
 
-    /* Parse range literals */
-    ast->rangeStart = AcceptSignedIntLiteral();
-    Accept(Tokens::RangeSep);
-    ast->rangeEnd = AcceptSignedIntLiteral();
-
-    if (Is(Tokens::Arrow))
+    if (!hasInvisibleIndex)
     {
-        AcceptIt();
-        ast->rangeStep = AcceptUnsignedIntLiteral();
+        /* Parse range literals */
+        ast->rangeStart = AcceptSignedIntLiteral();
+        Accept(Tokens::RangeSep);
+        ast->rangeEnd = AcceptSignedIntLiteral();
+
+        if (Is(Tokens::Arrow))
+        {
+            AcceptIt();
+            ast->rangeStep = AcceptUnsignedIntLiteral();
+        }
     }
 
     /* Parse for-statement code block */

@@ -59,7 +59,7 @@ class Scanner
         void ErrorUnexpected();
         void ErrorUnexpected(char expectedChar);
         void ErrorEOF();
-        void ErrorLetterInNumber();
+        void ErrorCharAfterLiteral();
 
         /* --- Scanning --- */
 
@@ -67,7 +67,7 @@ class Scanner
         char TakeIt();
 
         //! Ignores all characters which comply the specified predicate.
-        void Ignore(const std::function<bool (char)>& pred);
+        void Ignore(const std::function<bool(char)>& pred);
 
         void IgnoreWhiteSpaces();
         void IgnoreCommentLine();
@@ -91,7 +91,8 @@ class Scanner
         TokenPtr ScanOctNumber();
         TokenPtr ScanBinNumber();
 
-        void ScanDecimalLiteral(std::string& spell);
+        void ScanDecimalLiteral(std::string& spell, bool& hasDigitSep, bool& isDigitSepAllowed, bool isBeforeComma);
+        void ScanNonDecimalLiteral(std::string& spell, const std::function<bool()>& pred);
 
         bool IsEscapeChar() const;
 
