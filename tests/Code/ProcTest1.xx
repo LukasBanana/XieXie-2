@@ -1,8 +1,24 @@
 
-// Proc Test 1
+// Proc (Overloading) Test 1
 // 14/03/2015
 
-class ProcTest {
+class Base {
+	
+	int[] f(int x, int y, int z) {
+		return { x, y, z }
+	}
+	
+	int f(int x) {
+		return 0
+	}
+	
+	float[] g(float x) {
+		return { x }
+	}
+	
+}
+
+class ProcTest : Base {
 	
 	static void main() {
 		ProcTest app := new ProcTest()
@@ -17,6 +33,10 @@ class ProcTest {
 		return x*x
 	}
 	
+	int f(int x, int y, int z) {
+		return { 0 }
+	}
+	
 	static String f(int x, int y) {
 		return null
 	}
@@ -26,6 +46,9 @@ class ProcTest {
 		int		a := f(2)
 		float	b := ProcTest.f(2.0)
 		String	c := f(1, 2)
+		int 	d := this.f(0, 1, 2)
+		int[] 	e := super.f(0, 1, 2)
+		float[] f := g(0.0)
 		
 	//	int		a := f(p*2) + ProcTest.f(p+3)
 	//	float	b := f((float)p*4.0)

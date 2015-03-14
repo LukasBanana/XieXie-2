@@ -248,6 +248,8 @@ class Parser
         */
         std::stack<bool>    procHasReturnTypeStack_;
 
+        ClassDeclStmnt*     class_          = nullptr;  //!< Reference to the current class declaration.
+
 };
 
 

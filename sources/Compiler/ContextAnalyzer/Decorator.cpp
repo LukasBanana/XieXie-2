@@ -1156,6 +1156,7 @@ void Decorator::RegisterProcSymbol(ProcDeclStmnt& ast)
     {
         if (ProcSignature::AreSimilar(*prevDeclRef->procSignature, *ast.procSignature))
         {
+            /* Procedure signature can not be overridden -> Error */
             Error(
                 "can not overload procedure \"" + ast.procSignature->ident +
                 "\" with similar signature, defined at (" + prevDeclRef->sourceArea.ToString() + ")", &ast
@@ -1245,7 +1246,7 @@ void Decorator::PushSymTab(ScopedStmnt& ast)
 
     /* Update reference to inner class */
     if (ast.Type() == AST::Types::ClassDeclStmnt)
-        class_ = dynamic_cast<ClassDeclStmnt*>(&ast);
+        class_ = static_cast<ClassDeclStmnt*>(&ast);
 }
 
 void Decorator::PopSymTab()
@@ -1257,7 +1258,10 @@ void Decorator::PopSymTab()
         /* Pop symbol table */
         symTabStack_.pop_back();
         if (symTabStack_.empty())
+        {
             symTab_ = nullptr;
+            class_ = nullptr;
+        }
         else
         {
             symTab_ = symTabStack_.back();

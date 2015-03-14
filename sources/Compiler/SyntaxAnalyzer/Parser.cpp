@@ -964,6 +964,7 @@ ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
 ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>();
+    class_ = ast.get();
 
     ast->attribPrefix = attribPrefix;
     ast->sourceArea.start = Accept(Tokens::Class)->Area().start;
@@ -987,6 +988,7 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
 ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>();
+    class_ = ast.get();
 
     ast->isExtern = true;
     ast->attribPrefix = attribPrefix;
@@ -1117,6 +1119,7 @@ FlagsDeclStmntPtr Parser::ParseFlagsDeclStmnt()
 ProcDeclStmntPtr Parser::ParseProcDeclStmnt(bool isExtern, AttribPrefixPtr attribPrefix)
 {
     auto ast = Make<ProcDeclStmnt>();
+    ast->parentRef = class_;
 
     if (attribPrefix)
         ast->attribPrefix = attribPrefix;
@@ -1142,6 +1145,7 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(bool isExtern, AttribPrefixPtr attri
 ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic)
 {
     auto ast = Make<ProcDeclStmnt>();
+    ast->parentRef = class_;
 
     ast->procSignature = ParseProcSignature(typeDenoter, identTkn, isStatic);
 
