@@ -45,6 +45,7 @@ class Parser
 
         /* --- Error handling --- */
 
+        void EmitError(const std::string& msg, const SourceArea& area);
         void Error(const std::string& msg, const TokenPtr& token, bool breakParsing = true);
         void Error(const std::string& msg, bool breakParsing = true);
         void ErrorUnexpected(bool breakParsing = true);

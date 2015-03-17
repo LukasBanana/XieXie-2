@@ -70,12 +70,19 @@ ProgramPtr Parser::ParseSource(const std::string& filename, ErrorReporter& error
 
 /* --- Error handling --- */
 
+void Parser::EmitError(const std::string& msg, const SourceArea& area)
+{
+    std::string line, marker;
+    if (scanner_.Source()->FetchLineMarker(area, line, marker))
+        errorReporter_->Add(SyntaxError(area, msg, line, marker));
+    else
+        errorReporter_->Add(SyntaxError(area, msg));
+}
+
 void Parser::Error(const std::string& msg, const TokenPtr& token, bool breakParsing)
 {
     /* Add syntax error message */
-    errorReporter_->Add(
-        SyntaxError(token != nullptr ? token->Area() : tkn_->Area(), msg)
-    );
+    EmitError(msg, token != nullptr ? token->Area() : tkn_->Area());
     if (breakParsing)
         throw std::exception();
 }

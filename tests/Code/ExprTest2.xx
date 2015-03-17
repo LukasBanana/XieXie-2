@@ -8,7 +8,7 @@ class Main {
 	
 	static void main(String[] args) {
 		Main.test1(args)
-		Main.test2()
+		Main.test2(1, 2.0)
 		Main.test3()
 	}
 	

@@ -25,9 +25,9 @@ std::unique_ptr<Command> InstantiateCommand(const std::string& cmdName)
         return Make<PromptCommand>();
     if (cmdName == "pause")
         return Make<PauseCommand>();
-    if (cmdName == "compile" || cmdName == "c")
+    if (cmdName == "compile" || cmdName == "C")
         return Make<CompileCommand>();
-    if (cmdName == "assemble" || cmdName == "asm")
+    if (cmdName == "assemble" || cmdName == "A")
         return Make<AssembleCommand>();
     if (cmdName == "version")
         return Make<VersionCommand>();

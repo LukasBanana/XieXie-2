@@ -11,6 +11,7 @@
 
 #include "DeclPtr.h"
 #include "SourcePosition.h"
+#include "SourceArea.h"
 
 #include <string>
 
@@ -33,6 +34,12 @@ class SourceCode
 
         //! Returns the next character from the source.
         virtual char Next() = 0;
+
+        /**
+        Fetches the line and a marker at the specified source area.
+        \return True if the line could be fetched. Otherwise the area is invalid or too large.
+        */
+        virtual bool FetchLineMarker(const SourceArea& area, std::string& line, std::string& marker, char markerChar = '~') = 0;
 
         //! Ignores the current character.
         inline void Ignore()

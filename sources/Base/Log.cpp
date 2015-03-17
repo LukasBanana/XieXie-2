@@ -68,18 +68,46 @@ void Log::Message(const std::string& message)
     PrintLn(message);
 }
 
+static void PrintMark(Log& log, const std::string& text, const Color::ValueType color)
+{
+    log.StartLn();
+    {
+        log.Print(">> ");
+        PushColor(color);
+        {
+            log.Print(text);
+        }
+        PopColor();
+    }
+    log.EndLn();
+}
+
 static void PrintMessageColored(Log& log, const CompilerMessage& message, const Color::ValueType color)
 {
     log.StartLn();
     {
+        /* Print colored message category */
         PushColor(color);
-        log.Print(message.GetCategoryString(message.GetCategory()));
+        {
+            log.Print(message.GetCategoryString(message.GetCategory()));
+        }
         PopColor();
+
+        /* Print source area */
         if (message.GetSourceArea().IsValid())
             log.Print(" (" + message.GetSourceArea().ToString() + ")");
+
+        /* Print message */
         log.Print(" -- " + message.GetMessage());
     }
     log.EndLn();
+
+    /* Print line and marker */
+    if (!message.GetLine().empty() && !message.GetMarker().empty())
+    {
+        PrintMark(log, message.GetLine(), color);
+        PrintMark(log, message.GetMarker(), color);
+    }
 }
 
 void Log::Message(const CompilerMessage& message)

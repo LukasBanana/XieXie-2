@@ -3079,8 +3079,8 @@ int main(int argc, char* argv[])
     06  call Intr.PrintFloat
     07  invk TESTPROCID_HELLO_WORLD
     08  stop
-    09  flt_lit_0: DATA.float 3.0
-    10  flt_lit_1: DATA.float 5.0
+    09  flt_lit_0: .float 3.0
+    10  flt_lit_1: .float 5.0
     */
 
     float flt_lit0 = 3.0f;

@@ -68,6 +68,12 @@ class TypeDenoter : public AST
             return false;
         }
 
+        //! Returns true if this is an arithmetic type (integral or floating-point).
+        bool IsArithmetic() const
+        {
+            return IsIntegral() || IsFloat();
+        }
+
         //! Sets this type denoter to constant.
         virtual void SetConst(bool isConst)
         {

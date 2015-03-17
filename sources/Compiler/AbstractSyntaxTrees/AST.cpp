@@ -49,9 +49,18 @@ template <typename T> std::string MapTypeToSpell(
 
 const TypeDenoter* VarName::GetTypeDenoter() const
 {
-    /* Return type denoter of the last variable name AST node */
+    /* Get last variable name AST node */
     auto& last = GetLast();
-    return last.declRef != nullptr ? last.declRef->GetTypeDenoter() : nullptr;
+    if (!last.declRef)
+        return nullptr;
+    
+    /* Get base type denoter */
+    auto varType = last.declRef->GetTypeDenoter();
+    if (!varType)
+        return nullptr;
+
+    /* Get type denoter for array access */
+    return varType->GetLast(last.arrayAccess.get());
 }
 
 std::string VarName::FullName(const std::string& sep) const
@@ -317,31 +326,7 @@ void InitListExpr::EstablishArrayType(const TypeDenoterPtr& lowerTypeDenoter)
 
 const TypeDenoter* VarAccessExpr::GetTypeDenoter() const
 {
-    const auto& lastIdent = varName->GetLast();
-    auto varType = lastIdent.GetTypeDenoter();
-    
-    if (varType)
-    {
-        /* Reduce type for each array access */
-        auto arrayAccess = lastIdent.arrayAccess.get();
-        while (arrayAccess)
-        {
-            if (varType->Type() == AST::Types::ArrayTypeDenoter)
-            {
-                /* Get next lower type */
-                auto arrayType = static_cast<const ArrayTypeDenoter*>(varType);
-                varType = arrayType->lowerTypeDenoter.get();
-            }
-            else
-            {
-                /* Array access but no further lower type */
-                return nullptr;
-            }
-            arrayAccess = arrayAccess->next.get();
-        }
-    }
-
-    return varType;
+    return varName->GetTypeDenoter();
 }
 
 

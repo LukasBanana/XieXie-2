@@ -491,12 +491,22 @@ DEF_VISIT_PROC(Decorator, ModifyAssignStmnt)
 
     VerifyAssignStmntExprTypes(*ast->varName, *ast->expr);
     VerifyVarNameMutable(*ast->varName);
+
+    auto varType = ast->varName->GetTypeDenoter();
+    if (varType && !varType->IsArithmetic())
+        Error("modify-assign statements can only be used for arithmetic types", ast);
 }
 
 DEF_VISIT_PROC(Decorator, PostOperatorStmnt)
 {
     Visit(ast->varName);
     VerifyVarNameMutable(*ast->varName);
+
+    auto varType = ast->varName->GetTypeDenoter();
+    if (!varType)
+        Error("invalid type of identifier \"" + ast->varName->FullName() + "\" in post-operator statement", ast);
+    else if (!varType->IsArithmetic())
+        Error("post-operator statements can only be used for arithmetic types", ast);
 }
 
 /* --- Expressions --- */
@@ -713,23 +723,21 @@ void Decorator::VerifyVarDeclInitExpr(VarDecl& ast)
 void Decorator::VerifyAssignStmntExprTypes(const VarName& varName, const Expr& expr)
 {
     /* Check compatibility of expression type and variable declaration type */
-    const auto& lastVarName = varName.GetLast();
-    auto varNameType = lastVarName.GetTypeDenoter()->GetLast(lastVarName.arrayAccess.get());
-    auto exprType = expr.GetTypeDenoter();
-
-    if (exprType)
+    auto varNameType = varName.GetTypeDenoter();
+    if (varNameType)
     {
-        if (varNameType)
+        auto exprType = expr.GetTypeDenoter();
+        if (exprType)
         {
             std::string errorOut;
             if (!TypeChecker::VerifyTypeCompatibility(*varNameType, *exprType, &errorOut))
                 Error(errorOut, &varName);
         }
         else
-            Error("invalid type of identifier \"" + varName.FullName() + "\" in assign statement", &varName);
+            Error("invalid type of expression in assign statement", &expr);
     }
     else
-        Error("invalid type of expression in assign statement", &expr);
+        Error("invalid type of identifier \"" + varName.FullName() + "\" in assign statement", &varName);
 }
 
 const TypeDenoter* Decorator::DeduceTypeFromVarDecls(const std::vector<VarDeclPtr>& varDecls)
@@ -1122,7 +1130,7 @@ void Decorator::DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const
 void Decorator::VerifyVarNameMutable(VarName& ast)
 {
     /* Check if variable is constant */
-    auto varType = ast.GetLast().GetTypeDenoter();
+    auto varType = ast.GetTypeDenoter();
     if (varType && varType->IsConst())
         Error("variable \"" + ast.FullName() + "\" is not mutable");
 }

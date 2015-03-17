@@ -29,7 +29,9 @@ class SourceFile : public SourceCode
 
         bool ReadFile(const std::string& filename);
 
-        char Next();
+        char Next() override;
+
+        bool FetchLineMarker(const SourceArea& area, std::string& line, std::string& marker, char markerChar = '~') override;
 
         inline const std::string& Filename() const
         {

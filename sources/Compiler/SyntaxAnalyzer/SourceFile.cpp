@@ -50,6 +50,40 @@ char SourceFile::Next()
     return chr;
 }
 
+static bool FinalizeMarker(
+    const SourceArea& area, const std::string& lineIn,
+    std::string& lineOut, std::string& markerOut, char markerChar)
+{
+    if (area.end.Column() >= lineIn.size() || area.start.Column() == 0)
+        return false;
+
+    lineOut = lineIn;
+    markerOut = std::string(area.start.Column() - 1, ' ');
+
+    for (size_t i = 0, n = markerOut.size(); i < n; ++i)
+    {
+        if (lineIn[i] == '\t')
+            markerOut[i] = '\t';
+    }
+
+    markerOut += std::string(area.end.Column() - area.start.Column(), markerChar);
+
+    return true;
+}
+
+bool SourceFile::FetchLineMarker(const SourceArea& area, std::string& line, std::string& marker, char markerChar)
+{
+    if (!area.IsValid() || area.start.Row() != area.end.Row())
+        return false;
+
+    auto row = area.start.Row();
+
+    if (row == pos_.Row())
+        return FinalizeMarker(area, Line(), line, marker, markerChar);
+
+    return false;
+}
+
 
 } // /namespace SyntaxAnalyzer
 
