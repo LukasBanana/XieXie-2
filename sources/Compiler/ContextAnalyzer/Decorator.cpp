@@ -81,7 +81,19 @@ void Decorator::Error(const ContextError& err, bool breakAnalysis)
 void Decorator::Error(const std::string& msg, const AST* ast, bool breakAnalysis)
 {
     if (ast)
-        Error(ContextError(ast->sourceArea, msg));
+    {
+        auto source = GetCurrentSource();
+        if (source)
+        {
+            std::string line, marker;
+            if (source->FetchLineMarker(ast->sourceArea, line, marker))
+                Error(ContextError(ast->sourceArea, msg, line, marker));
+            else
+                Error(ContextError(ast->sourceArea, msg));
+        }
+        else
+            Error(ContextError(ast->sourceArea, msg));
+    }
     else
         Error(ContextError(msg));
 }
@@ -97,6 +109,11 @@ void Decorator::Warning(const std::string& msg, const AST* ast)
         errorReporter_->Add(CompilerWarning(ast->sourceArea, msg));
     else
         errorReporter_->Add(CompilerWarning(msg));
+}
+
+const SyntaxAnalyzer::SourceCode* Decorator::GetCurrentSource() const
+{
+    return class_ != nullptr ? class_->GetSource() : nullptr;
 }
 
 /* --- Common AST nodes --- */

@@ -157,6 +157,7 @@ class Parser
         ExprPtr                 ParsePrimaryValueExpr(const TokenPtr& identTkn = nullptr);
         ExprPtr                 ParseVarAccessOrProcCallExpr(const TokenPtr& identTkn = nullptr);
         ExprPtr                 ParseBracketOrCastExpr();
+        ExprPtr                 ParseBracketOrCastExprSub();
 
         AllocExprPtr            ParseAllocExpr();
         UnaryExprPtr            ParseUnaryExpr();
@@ -240,6 +241,7 @@ class Parser
         /* === Members === */
 
         Scanner             scanner_;
+        SourceCodePtr       source_;
         TokenPtr            tkn_;
         ErrorReporter*      errorReporter_  = nullptr;
 

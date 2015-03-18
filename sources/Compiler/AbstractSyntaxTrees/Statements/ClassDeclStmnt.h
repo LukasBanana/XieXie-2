@@ -12,6 +12,7 @@
 #include "ScopedStmnt.h"
 #include "PointerTypeDenoter.h"
 #include "Attrib.h"
+#include "SourceCode.h"
 
 
 namespace AbstractSyntaxTrees
@@ -25,12 +26,10 @@ class ClassDeclStmnt : public ScopedStmnt
         
         AST_INTERFACE_BASE(ClassDeclStmnt);
 
-        ClassDeclStmnt();
-        ClassDeclStmnt(const SourceArea& area);
+        ClassDeclStmnt(const SourceCodePtr& source);
+        ClassDeclStmnt(const SourceArea& area, const SourceCodePtr& source);
 
         const TypeDenoter* GetTypeDenoter() const override;
-
-        void UpdateSourceArea() override;
 
         //! Binds the base class reference and the fallback symbol table.
         void BindBaseClassRef(ClassDeclStmnt* classDeclStmnt);
@@ -41,6 +40,12 @@ class ClassDeclStmnt : public ScopedStmnt
 
         std::string HierarchyString(const std::string& separator = " -> ") const;
 
+        //! Returns the reference to the source, where this class was declared.
+        inline const SourceCode* GetSource() const
+        {
+            return source_.get();
+        }
+
         bool                                isExtern = false;
         AttribPrefixPtr                     attribPrefix;       // may be null
         std::string                         ident;
@@ -50,6 +55,8 @@ class ClassDeclStmnt : public ScopedStmnt
     private:
         
         std::string HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const;
+
+        SourceCodePtr                       source_;            // Reference to the source where this class is declared.
 
         // dast
         PointerTypeDenoter                  thisTypeDenoter_;   // type denoter for this class declaration

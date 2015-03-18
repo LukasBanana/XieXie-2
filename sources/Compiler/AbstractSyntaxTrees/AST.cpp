@@ -107,23 +107,6 @@ const TypeDenoter* VarDeclStmnt::GetTypeDenoter() const
 }
 
 
-/* --- CodeBlock --- */
-
-void CodeBlock::UpdateSourceArea()
-{
-    if (!stmnts.empty())
-    {
-        /* Refresh source area of statements first */
-        for (auto& ast : stmnts)
-            ast->UpdateSourceArea();
-
-        /* Set source area to the begin and end of the statement list */
-        sourceArea.start    = stmnts.front()->sourceArea.start;
-        sourceArea.end      = stmnts.back()->sourceArea.end;
-    }
-}
-
-
 /* --- LiteralExpr --- */
 
 const TypeDenoter* LiteralExpr::GetTypeDenoter() const
@@ -348,12 +331,14 @@ const TypeDenoter* VarAccessExpr::GetTypeDenoter() const
 
 /* --- ClassDeclStmnt --- */
 
-ClassDeclStmnt::ClassDeclStmnt()
+ClassDeclStmnt::ClassDeclStmnt(const SourceCodePtr& source) :
+    source_{ source }
 {
     thisTypeDenoter_.declRef = this;
 }
-ClassDeclStmnt::ClassDeclStmnt(const SourceArea& area) :
-    ScopedStmnt{ area }
+ClassDeclStmnt::ClassDeclStmnt(const SourceArea& area, const SourceCodePtr& source) :
+    ScopedStmnt { area   },
+    source_     { source }
 {
     thisTypeDenoter_.declRef = this;
 }
@@ -361,14 +346,6 @@ ClassDeclStmnt::ClassDeclStmnt(const SourceArea& area) :
 const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const
 {
     return &thisTypeDenoter_;
-}
-
-void ClassDeclStmnt::UpdateSourceArea()
-{
-    if (attribPrefix)
-        attribPrefix->UpdateSourceArea();
-    for (auto& segment : bodySegments)
-        segment->UpdateSourceArea();
 }
 
 void ClassDeclStmnt::BindBaseClassRef(ClassDeclStmnt* classDeclStmnt)

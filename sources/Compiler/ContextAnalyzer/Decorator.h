@@ -19,6 +19,7 @@
 #include "ExprTypeChecker.h"
 #include "ExprNamespaceFinder.h"
 #include "ProcOverloadSwitch.h"
+#include "SourceCode.h"
 
 #include <functional>
 
@@ -57,6 +58,9 @@ class Decorator final : private Visitor
         void Error(const std::string& msg, bool breakAnalysis = false);
 
         void Warning(const std::string& msg, const AST* ast = nullptr);
+
+        //! Returns the source code wherein the current class was declared.
+        const SyntaxAnalyzer::SourceCode* GetCurrentSource() const;
 
         DECL_VISITOR_INTERFACE;
 
@@ -150,13 +154,12 @@ class Decorator final : private Visitor
 
         Program*                        program_        = nullptr;
         ProcDeclStmnt*                  procDeclStmnt_  = nullptr;  //!< Reference to the current procedure declaration statement.
+        ClassDeclStmnt*                 class_          = nullptr;  //!< Reference to the current class declaration.
 
         StmntSymbolTable*               symTab_         = nullptr;  //!< Reference to the current symbol table.
         std::vector<StmntSymbolTable*>  symTabStack_;
 
         SafeStack<bool>                 scopeStaticStack_;          //!< Stack with information if the current scope is static or non-static.
-
-        ClassDeclStmnt*                 class_          = nullptr;  //!< Reference to the current class declaration.
 
 };
 

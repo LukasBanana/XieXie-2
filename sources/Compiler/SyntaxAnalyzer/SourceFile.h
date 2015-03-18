@@ -12,6 +12,8 @@
 #include "SourceCode.h"
 
 #include <fstream>
+#include <vector>
+#include <string>
 
 
 namespace SyntaxAnalyzer
@@ -28,10 +30,15 @@ class SourceFile : public SourceCode
         SourceFile(const std::string& filename);
 
         bool ReadFile(const std::string& filename);
+        void Close();
 
         char Next() override;
 
-        bool FetchLineMarker(const SourceArea& area, std::string& line, std::string& marker, char markerChar = '~') override;
+        std::string FetchLine(size_t lineNumber) const override;
+
+        bool FetchLineMarker(
+            const SourceArea& area, std::string& line, std::string& marker, char markerChar = '~'
+        ) const override;
 
         inline const std::string& Filename() const
         {
@@ -40,8 +47,9 @@ class SourceFile : public SourceCode
 
     private:
         
-        std::ifstream   stream_;
-        std::string     filename_;
+        std::ifstream               stream_;
+        std::string                 filename_;
+        std::vector<std::string>    content_;
 
 };
 

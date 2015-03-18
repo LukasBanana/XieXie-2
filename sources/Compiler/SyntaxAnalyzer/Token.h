@@ -141,9 +141,14 @@ class Token
         Token(const SourcePosition& pos, const Types type, std::string&& spell);
 
         //! Returns the token start source position.
-        inline const SourcePosition& Pos() const
+        inline const SourcePosition& PosStart() const
         {
             return Area().start;
+        }
+        //! Returns the token start source position.
+        inline const SourcePosition& PosEnd() const
+        {
+            return Area().end;
         }
 
         //! Returns the token type.

@@ -36,10 +36,18 @@ class SourceCode
         virtual char Next() = 0;
 
         /**
+        Returns the line string for the specified line number.
+        If the line number is out of range, the returned string is empty.
+        */
+        virtual std::string FetchLine(size_t lineNumber) const = 0;
+
+        /**
         Fetches the line and a marker at the specified source area.
         \return True if the line could be fetched. Otherwise the area is invalid or too large.
         */
-        virtual bool FetchLineMarker(const SourceArea& area, std::string& line, std::string& marker, char markerChar = '~') = 0;
+        virtual bool FetchLineMarker(
+            const SourceArea& area, std::string& line, std::string& marker, char markerChar = '~'
+        ) const = 0;
 
         //! Ignores the current character.
         inline void Ignore()

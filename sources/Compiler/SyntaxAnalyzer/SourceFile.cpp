@@ -25,6 +25,11 @@ bool SourceFile::ReadFile(const std::string& filename)
     return stream_.good();
 }
 
+void SourceFile::Close()
+{
+    stream_.close();
+}
+
 char SourceFile::Next()
 {
     if (!stream_.is_open())
@@ -37,6 +42,9 @@ char SourceFile::Next()
         std::getline(stream_, line_);
         line_ += '\n';
         pos_.IncRow();
+
+        /* Store line for later error messages */
+        content_.push_back(line_);
 
         /* Check if end-of-file is reached */
         if (stream_.eof())
@@ -54,7 +62,7 @@ static bool FinalizeMarker(
     const SourceArea& area, const std::string& lineIn,
     std::string& lineOut, std::string& markerOut, char markerChar)
 {
-    if (area.end.Column() >= lineIn.size() || area.start.Column() == 0)
+    if (area.end.Column() > lineIn.size() || area.start.Column() == 0)
         return false;
 
     lineOut = lineIn;
@@ -71,7 +79,12 @@ static bool FinalizeMarker(
     return true;
 }
 
-bool SourceFile::FetchLineMarker(const SourceArea& area, std::string& line, std::string& marker, char markerChar)
+std::string SourceFile::FetchLine(size_t lineNumber) const
+{
+    return lineNumber < content_.size() ? content_[lineNumber] : "";
+}
+
+bool SourceFile::FetchLineMarker(const SourceArea& area, std::string& line, std::string& marker, char markerChar) const
 {
     if (!area.IsValid() || area.start.Row() != area.end.Row())
         return false;
@@ -80,6 +93,8 @@ bool SourceFile::FetchLineMarker(const SourceArea& area, std::string& line, std:
 
     if (row == pos_.Row())
         return FinalizeMarker(area, Line(), line, marker, markerChar);
+    else if (row > 0)
+        return FinalizeMarker(area, FetchLine(static_cast<size_t>(row - 1)), line, marker, markerChar);
 
     return false;
 }

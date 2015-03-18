@@ -132,12 +132,6 @@ class AST
         */
         virtual void Visit(Visitor* visitor, void* args = nullptr) = 0;
 
-        //! Updates for some AST nodes the source area (e.g. for all lists).
-        virtual void UpdateSourceArea()
-        {
-            // dummy
-        }
-
         /**
         Returns the type denoter for this AST node or null if the AST node has no type denoter,
         e.g. variable tpye, procedure return type etc.

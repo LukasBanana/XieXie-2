@@ -32,6 +32,11 @@ class Scanner
         
         Scanner() = default;
 
+        /**
+        Starts scanning the specified source code.
+        \param[in] source Specifies the shared source code.
+        \param[in,out] errorReporter Specifies the error reporter, which is used to emit error messages.
+        */
         bool ScanSource(const SourceCodePtr& source, ErrorReporter& errorReporter);
 
         /**
@@ -40,9 +45,11 @@ class Scanner
         */
         TokenPtr Next();
 
+        //! Returns the current source position.
         SourcePosition Pos() const;
 
-        inline SourceCode* Source() const
+        //! Returns the current source code, which is scanned.
+        inline const SourceCode* Source() const
         {
             return source_.get();
         }

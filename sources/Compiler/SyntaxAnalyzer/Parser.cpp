@@ -27,6 +27,7 @@ bool Parser::ParseSource(Program& program, const SourceCodePtr& source, ErrorRep
         /* Initialize parser */
         errorReporter_ = &errorReporter;
 
+        source_ = source;
         scanner_.ScanSource(source, errorReporter);
         AcceptIt();
 
@@ -47,7 +48,8 @@ ProgramPtr Parser::ParseSource(const std::string& filename, ErrorReporter& error
         /* Initialize parser */
         errorReporter_ = &errorReporter;
 
-        scanner_.ScanSource(std::make_shared<SourceFile>(filename), errorReporter);
+        source_ = std::make_shared<SourceFile>(filename);
+        scanner_.ScanSource(source_, errorReporter);
         AcceptIt();
 
         /* Parse program */
@@ -214,11 +216,7 @@ void Parser::ParseProgram(Program& ast)
         if (Is(Tokens::Import))
             ast.importFilenames.push_back(AcceptImport());
         else
-        {
-            auto declStmnt = ParseClassDeclStmnt();
-            declStmnt->UpdateSourceArea();
-            ast.classDeclStmnts.push_back(declStmnt);
-        }
+            ast.classDeclStmnts.push_back(ParseClassDeclStmnt());
     }
 }
 
@@ -227,10 +225,12 @@ CodeBlockPtr Parser::ParseCodeBlock()
 {
     auto ast = Make<CodeBlock>();
 
-    Accept(Tokens::LCurly);
-    if (!Is(Tokens::RCurly))
-        ast->stmnts = ParseStmntList();
-    Accept(Tokens::RCurly);
+    ast->sourceArea.start = Accept(Tokens::LCurly)->PosStart();
+    {
+        if (!Is(Tokens::RCurly))
+            ast->stmnts = ParseStmntList();
+    }
+    ast->sourceArea.end = Accept(Tokens::RCurly)->PosEnd();
 
     return ast;
 }
@@ -248,6 +248,8 @@ VarNamePtr Parser::ParseVarName(TokenPtr identTkn, bool hasArrayAccess)
         else
             ErrorUnexpected("expected identifier, 'this', or 'super'");
     }
+    else
+        ast->sourceArea = identTkn->Area();
 
     ast->ident = identTkn->Spell();
     
@@ -262,6 +264,7 @@ VarNamePtr Parser::ParseVarName(TokenPtr identTkn, bool hasArrayAccess)
     {
         AcceptIt();
         ast->next = ParseVarNameSub();
+        ast->sourceArea.end = ast->next->sourceArea.end;
     }
 
     return ast;
@@ -290,7 +293,13 @@ VarDeclPtr Parser::ParseVarDecl(const TokenPtr& identTkn)
 {
     auto ast = Make<VarDecl>();
 
-    ast->ident = (identTkn != nullptr ? identTkn->Spell() : AcceptIdent());
+    if (identTkn)
+    {
+        ast->ident = identTkn->Spell();
+        ast->sourceArea = identTkn->Area();
+    }
+    else
+        ast->ident = AcceptIdent();
 
     if (Is(Tokens::CopyAssignOp))
     {
@@ -464,10 +473,14 @@ ProcCallPtr Parser::ParseProcCall(const VarNamePtr& varName)
     auto ast = Make<ProcCall>();
 
     ast->procName = (varName != nullptr ? varName : ParseVarName());
+    ast->sourceArea.start = ast->procName->sourceArea.start;
+
     Accept(Tokens::LBracket);
-    if (!Is(Tokens::RBracket))
-        ast->args = ParseArgList();
-    Accept(Tokens::RBracket);
+    {
+        if (!Is(Tokens::RBracket))
+            ast->args = ParseArgList();
+    }
+    ast->sourceArea.end = Accept(Tokens::RBracket)->PosEnd();
 
     return ast;
 }
@@ -970,7 +983,7 @@ ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
 // intern_class_decl_stmnt: 'class' class_name base_class_ident? class_body;
 ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
-    auto ast = Make<ClassDeclStmnt>();
+    auto ast = Make<ClassDeclStmnt>(source_);
     class_ = ast.get();
 
     ast->attribPrefix = attribPrefix;
@@ -994,7 +1007,7 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
 // extern_class_decl_stmnt: 'class' class_name base_class_ident? extern_class_body;
 ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
-    auto ast = Make<ClassDeclStmnt>();
+    auto ast = Make<ClassDeclStmnt>(source_);
     class_ = ast.get();
 
     ast->isExtern = true;
@@ -1410,8 +1423,16 @@ ExprPtr Parser::ParseVarAccessOrProcCallExpr(const TokenPtr& identTkn)
 // cast_expr: '(' type_denoter ')' value_expr;
 ExprPtr Parser::ParseBracketOrCastExpr()
 {
-    Accept(Tokens::LBracket);
+    auto startPos = Accept(Tokens::LBracket)->PosStart();
 
+    auto ast = ParseBracketOrCastExprSub();
+    ast->sourceArea.start = startPos;
+
+    return ast;
+}
+
+ExprPtr Parser::ParseBracketOrCastExprSub()
+{
     /* Check for built-in type denoter */
     if (Is(Tokens::BuiltinType))
         return ParseCastExpr(false);
@@ -1486,10 +1507,12 @@ InitListExprPtr Parser::ParseInitListExpr()
 {
     auto ast = Make<InitListExpr>();
 
-    Accept(Tokens::LCurly);
-    if (!Is(Tokens::RCurly))
-        ast->exprs = ParseExprList();
-    Accept(Tokens::RCurly);
+    ast->sourceArea.start = Accept(Tokens::LCurly)->PosStart();
+    {
+        if (!Is(Tokens::RCurly))
+            ast->exprs = ParseExprList();
+    }
+    ast->sourceArea.end = Accept(Tokens::RCurly)->PosEnd();
 
     return ast;
 }
@@ -1533,7 +1556,7 @@ ExprPtr Parser::ParseBracketExpr(bool parseComplete, const TokenPtr& identTkn)
         Accept(Tokens::LBracket);
 
     auto ast = ParseExpr(identTkn);
-    Accept(Tokens::RBracket);
+    ast->sourceArea.end = Accept(Tokens::RBracket)->PosEnd();
 
     return ast;
 }
@@ -1550,6 +1573,7 @@ CastExprPtr Parser::ParseCastExpr(bool parseComplete, const TokenPtr& identTkn)
     Accept(Tokens::RBracket);
 
     ast->expr = ParseValueExpr();
+    ast->sourceArea.end = ast->expr->sourceArea.end;
 
     return ast;
 }
@@ -1560,6 +1584,7 @@ ProcCallExprPtr Parser::ParseProcCallExpr(const VarNamePtr& varName)
     auto ast = Make<ProcCallExpr>();
 
     ast->procCall = ParseProcCall(varName);
+    ast->sourceArea = ast->procCall->sourceArea;
 
     return ast;
 }
@@ -1570,9 +1595,13 @@ PostfixValueExprPtr Parser::ParsePostfixValueExpr(const ExprPtr& primaryValueExp
     auto ast = Make<PostfixValueExpr>();
 
     ast->primaryValueExpr = primaryValueExpr;
+    ast->sourceArea.start = ast->primaryValueExpr->sourceArea.start;
 
     if (Is(Tokens::LParen))
+    {
         ast->arrayAccess = ParseArrayAccess();
+        ast->sourceArea.end = ast->arrayAccess->sourceArea.end;
+    }
 
     if (Is(Tokens::Dot))
     {
@@ -1581,9 +1610,15 @@ PostfixValueExprPtr Parser::ParsePostfixValueExpr(const ExprPtr& primaryValueExp
         auto varName = ParseVarName();
 
         if (Is(Tokens::LBracket))
+        {
             ast->procCall = ParseProcCall(varName);
+            ast->sourceArea.end = ast->procCall->sourceArea.end;
+        }
         else
+        {
             ast->varName = varName;
+            ast->sourceArea.end = ast->varName->sourceArea.end;
+        }
     }
 
     return ast;
@@ -1650,7 +1685,13 @@ PointerTypeDenoterPtr Parser::ParsePointerTypeDenoter(const TokenPtr& identTkn)
 {
     auto ast = Make<PointerTypeDenoter>();
 
-    ast->declIdent = (identTkn != nullptr ? identTkn->Spell() : AcceptIdent());
+    if (identTkn)
+    {
+        ast->declIdent = identTkn->Spell();
+        ast->sourceArea = identTkn->Area();
+    }
+    else
+        ast->declIdent = AcceptIdent();
 
     return ast;
 }
@@ -1803,16 +1844,23 @@ ExprPtr Parser::BuildBinaryExprTree(std::vector<ExprPtr>& exprs, std::vector<Bin
 
         auto ast = Make<BinaryExpr>();
 
+        /* Build right hand side */
         ast->rhsExpr = exprs.back();
         ast->binaryOperator = ops.back();
 
         exprs.pop_back();
         ops.pop_back();
 
+        /* Build left hand side */
         ast->lhsExpr = BuildBinaryExprTree(exprs, ops);
+
+        /* Finalize source area */
+        ast->sourceArea.start   = ast->lhsExpr->sourceArea.start;
+        ast->sourceArea.end     = ast->rhsExpr->sourceArea.end;
 
         return ast;
     }
+
     return exprs.front();
 }
 
