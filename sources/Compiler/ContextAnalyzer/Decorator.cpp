@@ -157,7 +157,13 @@ DEF_VISIT_PROC(Decorator, CodeBlock)
 // exceptional AST node decoration for VarName
 DEF_VISIT_PROC(Decorator, VarName)
 {
-    VisitVarName(*ast);
+    if (args)
+    {
+        auto symTab = reinterpret_cast<StmntSymbolTable*>(args);
+        VisitVarName(*ast, symTab);
+    }
+    else
+        VisitVarName(*ast);
 }
 
 DEF_VISIT_PROC(Decorator, VarDecl)
@@ -212,18 +218,7 @@ DEF_VISIT_PROC(Decorator, ArrayAccess)
 DEF_VISIT_PROC(Decorator, ProcCall)
 {
     /* Decorate procedure name */
-    if (args)
-    {
-        /* Temporary scope change for member call expressions */
-        auto symTab = reinterpret_cast<StmntSymbolTable*>(args);
-        PushSymTab(*symTab, true);
-        {
-            Visit(ast->procName);
-        }
-        PopSymTab();
-    }
-    else
-        Visit(ast->procName);
+    Visit(ast->procName, args);
 
     /* Decoreate arguments and procedure call itself */
     Visit(ast->args);
@@ -549,23 +544,16 @@ DEF_VISIT_PROC(Decorator, PostfixValueExpr)
         if (symTab)
             Visit(ast->procCall, reinterpret_cast<void*>(symTab));
         else
-            Error("invalid namespace in postfix-value sub-expression", ast->primaryValueExpr.get());
+            Error("invalid namespace in postfix-value sub-expression for member procedure call", ast->primaryValueExpr.get());
     }
     else if (ast->varName)
     {
         /* Find namespace of sub-expression for procedure call */
         auto symTab = exprNamespaceFinder_.FindNamespace(*ast->primaryValueExpr, ast->arrayAccess.get());
         if (symTab)
-        {
-            /* Temporary scope change for member call expressions */
-            PushSymTab(*symTab, true);
-            {
-                Visit(ast->varName);
-            }
-            PopSymTab();
-        }
+            Visit(ast->varName, reinterpret_cast<void*>(symTab));
         else
-            Error("invalid namespace in postfix-value sub-expression", ast->primaryValueExpr.get());
+            Error("invalid namespace in postfix-value sub-expression for member variable access", ast->primaryValueExpr.get());
     }
 }
 
@@ -992,16 +980,20 @@ StmntSymbolTable::SymbolType* Decorator::FetchSymbol(const std::string& ident, c
     return FetchSymbol(ident, ident, ast);
 }
 
-void Decorator::VisitVarName(VarName& ast)
+void Decorator::VisitVarName(VarName& ast, StmntSymbolTable* memberScope)
 {
     const auto fullName = ast.FullName();
 
-    auto symbol = FetchSymbol(ast.ident, fullName, &ast);
+    /* Fetch symbol from respective scope */
+    StmntSymbolTable::SymbolType* symbol = nullptr;
+    if (memberScope)
+        symbol = FetchSymbolFromScope(ast.ident, *memberScope, fullName, &ast);
+    else
+        symbol = FetchSymbol(ast.ident, fullName, &ast);
+
+    /* Decorate AST node */
     if (symbol)
-    {
-        /* Decorate AST node */
         DecorateVarName(ast, symbol, fullName);
-    }
 }
 
 void Decorator::DeduceNamespaceFromTypeDenoter(const TypeDenoter* varType, StmntSymbolTable::SymbolType*& symbol, const VarName& ast)

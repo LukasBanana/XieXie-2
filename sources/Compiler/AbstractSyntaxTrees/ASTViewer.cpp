@@ -322,6 +322,7 @@ DEF_VISIT_PROC(ASTViewer, PostfixValueExpr)
     Visit(ast->primaryValueExpr);
     Visit(ast->arrayAccess);
     Visit(ast->procCall);
+    Visit(ast->varName);
 }
 
 DEF_VISIT_PROC(ASTViewer, AllocExpr)

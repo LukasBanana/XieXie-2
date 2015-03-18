@@ -6,6 +6,7 @@ import System
 
 class C {
 	String str
+	int[] intAry
 }
 
 class Main {
@@ -98,6 +99,7 @@ class Main {
 		int			len		:= { new String().size() }[0]
 		String		str		:= { new C().str }[0]
 		String[]	strAry	:= { new C().str }
+		int[]		intAry	:= { new C().intAry[len] }
 		
 	}
 	

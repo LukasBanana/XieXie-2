@@ -100,7 +100,7 @@ class Decorator final : private Visitor
         StmntSymbolTable::SymbolType* FetchSymbol(const std::string& ident, const std::string& fullName, const AST* ast = nullptr);
         StmntSymbolTable::SymbolType* FetchSymbol(const std::string& ident, const AST* ast = nullptr);
 
-        void VisitVarName(VarName& ast);
+        void VisitVarName(VarName& ast, StmntSymbolTable* memberScope = nullptr);
         void DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symbol, const std::string& fullName);
         void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
         void VerifyVarNameMutable(VarName& ast);
