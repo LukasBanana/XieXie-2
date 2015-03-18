@@ -64,6 +64,8 @@ extern class String {
 	
 	int size()
 	String add(String rhs)
+	
+	int getRawPointer()
 }
 
 // (Generic) array class.

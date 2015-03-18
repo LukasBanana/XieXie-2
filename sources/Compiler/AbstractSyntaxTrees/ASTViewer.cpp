@@ -316,10 +316,11 @@ DEF_VISIT_PROC(ASTViewer, ProcCallExpr)
     Visit(ast->procCall);
 }
 
-DEF_VISIT_PROC(ASTViewer, MemberCallExpr)
+DEF_VISIT_PROC(ASTViewer, PostfixValueExpr)
 {
-    AST_INFO_COLOR("MemberCallExpr", colorExpr);
-    Visit(ast->objectExpr);
+    AST_INFO_COLOR("PostfixValueExpr", colorExpr);
+    Visit(ast->primaryValueExpr);
+    Visit(ast->arrayAccess);
     Visit(ast->procCall);
 }
 

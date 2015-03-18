@@ -25,7 +25,7 @@ class ExprNamespaceFinder final : private Visitor
     
     public:
         
-        StmntSymbolTable* FindNamespace(Expr& expr);
+        StmntSymbolTable* FindNamespace(Expr& expr, const ArrayAccess* arrayAccess = nullptr);
 
     private:
         
@@ -33,6 +33,8 @@ class ExprNamespaceFinder final : private Visitor
 
         DECL_VISIT_PROC( ArrayTypeDenoter   );
         DECL_VISIT_PROC( PointerTypeDenoter );
+
+        const ArrayAccess* arrayAccess_ = nullptr;
 
 };
 

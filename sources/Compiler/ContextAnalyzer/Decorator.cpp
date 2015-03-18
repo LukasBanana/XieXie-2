@@ -538,16 +538,35 @@ DEF_VISIT_PROC(Decorator, ProcCallExpr)
     Visit(ast->procCall);
 }
 
-DEF_VISIT_PROC(Decorator, MemberCallExpr)
+DEF_VISIT_PROC(Decorator, PostfixValueExpr)
 {
-    Visit(ast->objectExpr);
+    Visit(ast->primaryValueExpr);
 
-    /* Find namespace of sub-expression */
-    auto symTab = exprNamespaceFinder_.FindNamespace(*ast->objectExpr);
-    if (symTab)
-        Visit(ast->procCall, reinterpret_cast<void*>(symTab));
-    else
-        Error("invalid namespace in member-call sub-expression", ast->objectExpr.get());
+    if (ast->procCall)
+    {
+        /* Find namespace of sub-expression for procedure call */
+        auto symTab = exprNamespaceFinder_.FindNamespace(*ast->primaryValueExpr, ast->arrayAccess.get());
+        if (symTab)
+            Visit(ast->procCall, reinterpret_cast<void*>(symTab));
+        else
+            Error("invalid namespace in postfix-value sub-expression", ast->primaryValueExpr.get());
+    }
+    else if (ast->varName)
+    {
+        /* Find namespace of sub-expression for procedure call */
+        auto symTab = exprNamespaceFinder_.FindNamespace(*ast->primaryValueExpr, ast->arrayAccess.get());
+        if (symTab)
+        {
+            /* Temporary scope change for member call expressions */
+            PushSymTab(*symTab, true);
+            {
+                Visit(ast->varName);
+            }
+            PopSymTab();
+        }
+        else
+            Error("invalid namespace in postfix-value sub-expression", ast->primaryValueExpr.get());
+    }
 }
 
 DEF_VISIT_PROC(Decorator, AllocExpr)
@@ -565,6 +584,7 @@ DEF_VISIT_PROC(Decorator, InitListExpr)
 {
     Visit(&(ast->typeDenoter));
     Visit(ast->exprs);
+    ast->DeduceTypeDenoter();
 }
 
 /* --- Type denoters --- */

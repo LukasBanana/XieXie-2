@@ -2,6 +2,30 @@
 // Proc (Overloading) Test 1
 // 14/03/2015
 
+class A {
+	String[][] s
+}
+class B {
+	A[] a
+	C getC() {
+		return new C()
+	}
+	C[] getCArray() {
+		return { new C() }
+	}
+}
+class C {
+	B b
+	static void test() {
+		int i
+		C c
+		i := c.b.getC().b.a[0].s.size()
+		i := c.b.getCArray().size()
+		//i := c.b.getCArray()[0].b
+		i := c.b.getCArray()[0].b.a[0].s.size()
+	}
+}
+
 class Base {
 	
 	int[] f(int x, int y, int z) {
@@ -43,6 +67,14 @@ class ProcTest : Base {
 	
 	static String f(int x, int y) {
 		return null
+	}
+	
+	static int fibonacci(int n) {
+		if n <= 2 {
+			return 1
+		} else {
+			return ProcTest.fibonacci(n - 1) + ProcTest.fibonacci(n - 2)
+		}
 	}
 	
 	void test1(int p) {

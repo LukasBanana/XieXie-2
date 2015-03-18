@@ -165,8 +165,8 @@ class Parser
         ExprPtr                 ParseBracketExpr(bool parseComplete = true, const TokenPtr& identTkn = nullptr);
         CastExprPtr             ParseCastExpr(bool parseComplete = true, const TokenPtr& identTkn = nullptr);
         ProcCallExprPtr         ParseProcCallExpr(const VarNamePtr& varName = nullptr);
+        PostfixValueExprPtr     ParsePostfixValueExpr(const ExprPtr& primaryValueExpr);
         VarAccessExprPtr        ParseVarAccessExpr(const VarNamePtr& varName = nullptr);
-        MemberCallExprPtr       ParseMemberCallExpr(const ExprPtr& objectExpr);
 
         /* --- Type denoters --- */
 

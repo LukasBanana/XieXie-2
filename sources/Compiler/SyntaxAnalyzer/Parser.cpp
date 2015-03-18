@@ -1352,21 +1352,18 @@ ExprPtr Parser::ParseDivExpr(const TokenPtr& identTkn)
     return ParseAbstractBinaryExpr(std::bind(&Parser::ParseValueExpr, this, _1), Tokens::DivOp, identTkn);
 }
 
-// value_expr: primary_value_expr ('.' member_proc_call)*;
+// value_expr: primary_value_expr;
 ExprPtr Parser::ParseValueExpr(const TokenPtr& identTkn)
 {
     auto expr = ParsePrimaryValueExpr(identTkn);
 
-    while (Is(Tokens::Dot))
-    {
-        AcceptIt();
-        expr = ParseMemberCallExpr(expr);
-    }
+    while (Is(Tokens::LParen) || Is(Tokens::Dot))
+        expr = ParsePostfixValueExpr(expr);
 
     return expr;
 }
 
-// primary_value_expr : literal_expr | var_access_expr | alloc_expr | bracket_expr | cast_expr | call_expr | unary_expr | init_list_expr;
+// primary_value_expr : literal_expr | var_access_expr | alloc_expr | bracket_expr | cast_expr | call_expr | unary_expr | init_list_expr | postfix_value_expr;
 ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn)
 {
     if (!identTkn)
@@ -1567,23 +1564,37 @@ ProcCallExprPtr Parser::ParseProcCallExpr(const VarNamePtr& varName)
     return ast;
 }
 
+// postfix_value_expr: primary_value_expr array_access? ('.' (call_expr | var_access_expr))?;
+PostfixValueExprPtr Parser::ParsePostfixValueExpr(const ExprPtr& primaryValueExpr)
+{
+    auto ast = Make<PostfixValueExpr>();
+
+    ast->primaryValueExpr = primaryValueExpr;
+
+    if (Is(Tokens::LParen))
+        ast->arrayAccess = ParseArrayAccess();
+
+    if (Is(Tokens::Dot))
+    {
+        AcceptIt();
+
+        auto varName = ParseVarName();
+
+        if (Is(Tokens::LBracket))
+            ast->procCall = ParseProcCall(varName);
+        else
+            ast->varName = varName;
+    }
+
+    return ast;
+}
+
 // var_access_expr: var_name;
 VarAccessExprPtr Parser::ParseVarAccessExpr(const VarNamePtr& varName)
 {
     auto ast = Make<VarAccessExpr>();
 
     ast->varName = (varName != nullptr ? varName : ParseVarName());
-
-    return ast;
-}
-
-// member_call_expr: IDENT '(' arg_list? ')';
-MemberCallExprPtr Parser::ParseMemberCallExpr(const ExprPtr& objectExpr)
-{
-    auto ast = Make<MemberCallExpr>();
-
-    ast->objectExpr = objectExpr;
-    ast->procCall = ParseProcCall();
 
     return ast;
 }

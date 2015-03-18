@@ -178,7 +178,7 @@ sub_expr:			mul_expr ('-' mul_expr)*;
 mul_expr:			div_expr ('*' div_expr)*;
 div_expr:			value_expr (('/' | '%') value_expr)*;
 
-value_expr:			primary_value_expr ('.' member_call_expr)*;
+value_expr:			primary_value_expr;
 
 primary_value_expr	: literal_expr
 					| var_access_expr
@@ -187,7 +187,10 @@ primary_value_expr	: literal_expr
 					| cast_expr
 					| call_expr
 					| unary_expr
-					| init_list_expr;
+					| init_list_expr
+					| postfix_value_expr;
+
+postfix_value_expr:	primary_value_expr array_access? ('.' (proc_call | var_name))?;
 
 var_access_expr		: var_name;
 
@@ -200,7 +203,6 @@ literal_expr:		LITERAL;
 bracket_expr:		'(' expr ')';
 cast_expr: 			'(' type_denoter ')' value_expr;
 call_expr:			proc_call;
-member_call_expr:	IDENT '(' arg_list? ')';
 unary_expr:			('~' | '-' | 'not') value_expr;
 
 proc_call:			var_name '(' arg_list? ')';

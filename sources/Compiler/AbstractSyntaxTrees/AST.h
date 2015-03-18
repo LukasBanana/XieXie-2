@@ -108,7 +108,7 @@ class AST
             LiteralExpr,
             CastExpr,
             ProcCallExpr,
-            MemberCallExpr,
+            PostfixValueExpr,
             AllocExpr,
             VarAccessExpr,
             InitListExpr,

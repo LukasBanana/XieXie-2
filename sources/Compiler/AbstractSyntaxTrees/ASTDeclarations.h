@@ -72,7 +72,7 @@ DECL_SHR_PTR( UnaryExpr            );
 DECL_SHR_PTR( LiteralExpr          );
 DECL_SHR_PTR( CastExpr             );
 DECL_SHR_PTR( ProcCallExpr         );
-DECL_SHR_PTR( MemberCallExpr       );
+DECL_SHR_PTR( PostfixValueExpr     );
 DECL_SHR_PTR( AllocExpr            );
 DECL_SHR_PTR( VarAccessExpr        );
 DECL_SHR_PTR( InitListExpr         );

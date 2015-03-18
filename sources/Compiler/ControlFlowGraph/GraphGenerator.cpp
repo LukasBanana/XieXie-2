@@ -452,7 +452,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcCallExpr)
 {
 }
 
-DEF_VISIT_PROC(GraphGenerator, MemberCallExpr)
+DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)
 {
 }
 

@@ -59,7 +59,7 @@
 #include "LiteralExpr.h"
 #include "CastExpr.h"
 #include "ProcCallExpr.h"
-#include "MemberCallExpr.h"
+#include "PostfixValueExpr.h"
 #include "AllocExpr.h"
 #include "VarAccessExpr.h"
 #include "InitListExpr.h"

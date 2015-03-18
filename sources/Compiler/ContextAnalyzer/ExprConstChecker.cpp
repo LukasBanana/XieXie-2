@@ -62,7 +62,7 @@ DEF_VISIT_PROC(ExprConstChecker, ProcCallExpr)
     throw ast;
 }
 
-DEF_VISIT_PROC(ExprConstChecker, MemberCallExpr)
+DEF_VISIT_PROC(ExprConstChecker, PostfixValueExpr)
 {
     throw ast;
 }

@@ -4,12 +4,17 @@
 
 import System
 
+class C {
+	String str
+}
+
 class Main {
 	
 	static void main(String[] args) {
 		Main.test1(args)
 		Main.test2(1, 2.0)
 		Main.test3()
+		Main.test4()
 	}
 	
 	// Loops & arrays
@@ -84,6 +89,15 @@ class Main {
 		float	g := 3.141'592'654
 		float	h := 283'623.238'263'23
 		float	i := 1'000'000'000.0
+		
+	}
+	
+	static void test4() {
+		
+		int			strPtr	:= { "a" }[0].getRawPointer()
+		int			len		:= { new String().size() }[0]
+		String		str		:= { new C().str }[0]
+		String[]	strAry	:= { new C().str }
 		
 	}
 	

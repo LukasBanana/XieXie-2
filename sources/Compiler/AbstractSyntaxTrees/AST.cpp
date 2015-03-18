@@ -65,7 +65,19 @@ const TypeDenoter* VarName::GetTypeDenoter() const
 
 std::string VarName::FullName(const std::string& sep) const
 {
-    return next != nullptr ? (ident + sep + next->FullName(sep)) : ident;
+    auto name = ident;
+
+    auto arrayNode = arrayAccess.get();
+    while (arrayNode)
+    {
+        name += "[]";
+        arrayNode = arrayNode->next.get();
+    }
+
+    if (next)
+        name += sep + next->FullName(sep);
+
+    return name;
 }
 
 VarName& VarName::GetLast()
@@ -241,11 +253,15 @@ const TypeDenoter* ProcCallExpr::GetTypeDenoter() const
 }
 
 
-/* --- MemberCallExpr --- */
+/* --- PostfixValueExpr --- */
 
-const TypeDenoter* MemberCallExpr::GetTypeDenoter() const
+const TypeDenoter* PostfixValueExpr::GetTypeDenoter() const
 {
-    return procCall->GetTypeDenoter();
+    if (procCall)
+        return procCall->GetTypeDenoter();
+    if (varName)
+        return varName->GetTypeDenoter();
+    return primaryValueExpr->GetTypeDenoter()->GetLast(arrayAccess.get());
 }
 
 

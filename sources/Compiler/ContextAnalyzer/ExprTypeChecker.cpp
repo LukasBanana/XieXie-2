@@ -109,9 +109,11 @@ DEF_VISIT_PROC(ExprTypeChecker, ProcCallExpr)
         Error("invalid procedure call return type", *ast);
 }
 
-DEF_VISIT_PROC(ExprTypeChecker, MemberCallExpr)
+DEF_VISIT_PROC(ExprTypeChecker, PostfixValueExpr)
 {
-    Visit(ast->objectExpr);
+    Visit(ast->primaryValueExpr);
+    if (ast->procCall)
+        Visit(ast->procCall);
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, AllocExpr)
@@ -131,8 +133,6 @@ DEF_VISIT_PROC(ExprTypeChecker, InitListExpr)
         Visit(expr);
 
     /* Get non-null pointer type in sub expressions */
-    ast->DeduceTypeDenoter();
-
     auto typeRef = ast->GetDeducedTypeDenoter();
     if (!typeRef)
     {

@@ -39,7 +39,7 @@ class ArrayTypeDenoter : public TypeDenoter
         }
         const TypeDenoter* GetLast(const ArrayAccess* arrayAccess) const override
         {
-            return arrayAccess == nullptr ? this : lowerTypeDenoter->GetLast(arrayAccess->next.get());
+            return (!arrayAccess || !lowerTypeDenoter) ? this : lowerTypeDenoter->GetLast(arrayAccess->next.get());
         }
 
         TypeDenoterPtr CopyRef() const override
@@ -50,10 +50,10 @@ class ArrayTypeDenoter : public TypeDenoter
             return copy;
         }
 
-        TypeDenoterPtr  lowerTypeDenoter;
+        TypeDenoterPtr  lowerTypeDenoter;   // may be null (for initializer list expressions with undeduced type)
 
         // dast
-        AST*            declRef = nullptr; // reference to the "Array" class declaration statement
+        AST*            declRef = nullptr;  // reference to the "Array" class declaration statement
 
 };
 

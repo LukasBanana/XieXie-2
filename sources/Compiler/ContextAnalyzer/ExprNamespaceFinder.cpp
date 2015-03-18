@@ -13,15 +13,18 @@ namespace ContextAnalyzer
 {
 
 
-StmntSymbolTable* ExprNamespaceFinder::FindNamespace(Expr& expr)
+StmntSymbolTable* ExprNamespaceFinder::FindNamespace(Expr& expr, const ArrayAccess* arrayAccess)
 {
+    auto hasArray = (arrayAccess != nullptr);
+    arrayAccess_ = arrayAccess;
+
     try
     {
         Visit(&expr);
     }
     catch (StmntSymbolTable* symTab)
     {
-        return symTab;
+        return (hasArray && arrayAccess_ != nullptr) ? nullptr : symTab;
     }
     return nullptr;
 }
@@ -65,11 +68,26 @@ DEF_VISIT_PROC(ExprNamespaceFinder, ProcCallExpr)
         Visit(ref->procSignature->returnTypeDenoter.get());
 }
 
-DEF_VISIT_PROC(ExprNamespaceFinder, MemberCallExpr)
+DEF_VISIT_PROC(ExprNamespaceFinder, PostfixValueExpr)
 {
-    auto ref = ast->procCall->declStmntRef;
-    if (ref)
-        Visit(ref->procSignature->returnTypeDenoter.get());
+    if (ast->procCall)
+    {
+        auto ref = ast->procCall->declStmntRef;
+        if (ref)
+            Visit(ref->procSignature->returnTypeDenoter.get());
+    }
+    else if (ast->varName)
+    {
+        /* Cast to non-const type, since we do not modify any type denoter here */
+        auto varType = ast->varName->GetTypeDenoter();
+        Visit(const_cast<TypeDenoter*>(varType));
+    }
+    else if (ast->arrayAccess)
+    {
+        /* Cast to non-const type, since we do not modify any type denoter here */
+        auto exprType = ast->primaryValueExpr->GetTypeDenoter()->GetLast(ast->arrayAccess.get());
+        Visit(const_cast<TypeDenoter*>(exprType));
+    }
 }
 
 DEF_VISIT_PROC(ExprNamespaceFinder, AllocExpr)
@@ -99,7 +117,13 @@ static void ThrowSymbolTable(AST* declRef)
 
 DEF_VISIT_PROC(ExprNamespaceFinder, ArrayTypeDenoter)
 {
-    ThrowSymbolTable(ast->declRef);
+    if (arrayAccess_)
+    {
+        arrayAccess_ = arrayAccess_->next.get();
+        Visit(ast->lowerTypeDenoter);
+    }
+    else
+        ThrowSymbolTable(ast->declRef);
 }
 
 DEF_VISIT_PROC(ExprNamespaceFinder, PointerTypeDenoter)
