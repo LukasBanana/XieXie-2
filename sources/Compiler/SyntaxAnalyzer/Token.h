@@ -140,6 +140,9 @@ class Token
         Token(const SourcePosition& pos, const Types type, const std::string& spell);
         Token(const SourcePosition& pos, const Types type, std::string&& spell);
 
+        //! Returns the token type as string.
+        static std::string TypeToString(const Types type);
+
         //! Returns the token start source position.
         inline const SourcePosition& PosStart() const
         {

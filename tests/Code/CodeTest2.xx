@@ -2,8 +2,6 @@
 // XieXie 2.0 Code Test 2
 // 03/03/2015
 
-extern class String {}
-
 class CodeTest2 {
 	
 	static void main() {
@@ -14,7 +12,7 @@ class CodeTest2 {
 			} else if i > 5 {
 				break
 			}
-			for -1 .. -25 {
+			for j : -1 .. -25 {
 				int x := i
 			}
 		}

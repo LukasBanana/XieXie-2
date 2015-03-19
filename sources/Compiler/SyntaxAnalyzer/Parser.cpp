@@ -101,8 +101,11 @@ void Parser::ErrorUnexpected(bool breakParsing)
 
 void Parser::ErrorUnexpected(const Tokens expectedType, bool breakParsing)
 {
-    //Error("unexpected token \"" + tkn_->Spell() + "\" (expected )");
-    ErrorUnexpected(breakParsing);//!!!
+    auto typeStr = Token::TypeToString(expectedType);
+    if (typeStr.empty())
+        ErrorUnexpected(breakParsing);
+    else
+        Error("unexpected token \"" + tkn_->Spell() + "\" (expected \"" + typeStr + "\")");
 }
 
 void Parser::ErrorUnexpected(const std::string& hint, bool breakParsing)
