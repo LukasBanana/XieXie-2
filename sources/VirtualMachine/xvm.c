@@ -1375,23 +1375,27 @@ STATIC void xvm_invocation_dummy(xvm_env env)
     // dummy
 }
 
-//! Returns the argument as integer, specified by the parameter index (beginning with zero).
+//! Returns the argument as integer, specified by the parameter index (beginning with 1).
 STATIC int xvm_env_param_int(xvm_env env, unsigned int param_index)
 {
     return *(int*)((stack_word_t*)env - param_index);
 }
 
-//! Returns the argument as float, specified by the parameter index (beginning with zero).
+//! Returns the argument as float, specified by the parameter index (beginning with 1).
 STATIC float xvm_env_param_float(xvm_env env, unsigned int param_index)
 {
     return *(float*)((stack_word_t*)env - param_index);
 }
 
-//! Returns the argument as null-terminated C string, specified by the parameter index (beginning with zero).
-STATIC const char* xvm_env_param_string(xvm_env env, unsigned int param_index)
+//! Returns the argument as null-terminated C string, specified by the parameter index (beginning with 1).
+STATIC char* xvm_env_param_string(xvm_env env, unsigned int param_index)
 {
-    return (const char*)((stack_word_t*)env - param_index);
+    return (char*)((stack_word_t*)env - param_index);
 }
+
+#define XVM_PARAM_INT(ident, index) int ident = xvm_env_param_int(env, index)
+#define XVM_PARAM_FLOAT(ident, index) float ident = xvm_env_param_float(env, index)
+#define XVM_PARAM_STRING(ident, index) char* ident = xvm_env_param_string(env, index)
 
 
 /* ----- Byte code ----- */
@@ -3099,7 +3103,9 @@ STATIC int shell_parse_args(int argc, char* argv[])
 
 void TestInvokeExtern(xvm_env env)
 {
-    printf("<< Invocation Test Procedure >>\n");
+    XVM_PARAM_INT(x, 1);
+
+    printf("<< Invocation Test Procedure (%i) >>\n", x);
 }
 
 int main(int argc, char* argv[])
@@ -3144,35 +3150,36 @@ int main(int argc, char* argv[])
     00          mov     $r0, 0
     01          mov     $r1, 10
     02  l_for:  cmp     $r0, $r1
-    03          jge     l_end           ; jge ($pc) 10
-    04          call    Intr.Time
-    05          call    Intr.PrintInt
+    03          jge     l_end               ; jge ($pc) 10
+    04          push    42                  ; call    Intr.Time
+    05          invk    TestInvokeExtern    ; call    Intr.PrintInt
     06          lda     $r2, @str0
     07          push    $r2
     08          call    Intr.PrintLn
     09          push    1000
     10          call    Intr.Sleep
     11          inc     $r0
-    12          jmp     l_for           ; jmp ($pc) -10
+    12          jmp     l_for               ; jmp ($pc) -10
     13  l_end:  stop
     14  str0:   .ascii  "\nHello, World!"
     */
 
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_MOV1, REG_R0, 0                     ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_MOV1, REG_R1, 10                    ))
-    ADD_INSTR(xvm_instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JGE,  REG_PC, 10                    ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_TIME             ))
-    //ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_INT        ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_INVK, 0                             ))
-    ADD_INSTR(xvm_instr_make_mem        (OPCODE_LDA,  REG_R2, 14                    ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R2, 0                     ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_LN         ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_PUSHC,100                           ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_SLEEP            ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_INC,  REG_R0, 0                     ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_JMP,  REG_PC, (unsigned int)(-10)   ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_STOP, 0                             ))
+    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_MOV1,   REG_R0, 0                     ))
+    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_MOV1,   REG_R1, 10                    ))
+    ADD_INSTR(xvm_instr_make_reg2       (OPCODE_CMP,    REG_R0, REG_R1                ))
+    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JGE,    REG_PC, 10                    ))
+  //ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL,   REG_PC, INTR_TIME             ))
+    ADD_INSTR(xvm_instr_make_special1   (OPCODE_PUSHC,  42                            ))
+  //ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL,   REG_PC, INTR_PRINT_INT        ))
+    ADD_INSTR(xvm_instr_make_special1   (OPCODE_INVK,   0                             ))
+    ADD_INSTR(xvm_instr_make_mem        (OPCODE_LDA,    REG_R2, 14                    ))
+    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH,   REG_R2, 0                     ))
+    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL,   REG_PC, INTR_PRINT_LN         ))
+    ADD_INSTR(xvm_instr_make_special1   (OPCODE_PUSHC,  100                           ))
+    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL,   REG_PC, INTR_SLEEP            ))
+    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_INC,    REG_R0, 0                     ))
+    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_JMP,    REG_PC, (unsigned int)(-10)   ))
+    ADD_INSTR(xvm_instr_make_special1   (OPCODE_STOP,   0                             ))
 
     size_t tmp = 0;
     xvm_bytecode_datafield_ascii(byte_code.instructions + i, "\nHello, World!", &tmp);
