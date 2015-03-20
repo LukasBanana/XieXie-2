@@ -1384,7 +1384,7 @@ STATIC float xvm_env_param_float(xvm_env env, unsigned int param_index)
 //! Returns the argument as null-terminated C string, specified by the parameter index (beginning with 1).
 STATIC char* xvm_env_param_string(xvm_env env, unsigned int param_index)
 {
-    return (char*)((stack_word_t*)env - param_index);
+    return (char*)*((stack_word_t*)env - param_index);
 }
 
 #define XVM_PARAM_INT(ident, index) int ident = xvm_env_param_int(env, index)
@@ -1962,9 +1962,9 @@ Loads the specified module library filename.
 This must be a dynamic library (*.dll file on Win32, *.so file on GNU/Linux).
 The library must contain functions with the following interfaces:
 \code
-int xiexie_module_proc_count();
-XVM_INVOCATION_PROC xiexie_module_fetch_proc(int index);
-const char* xiexie_module_fetch_ident(int index);
+int xx_module_proc_count();
+XVM_INVOCATION_PROC xx_module_fetch_proc(int index);
+const char* xx_module_fetch_ident(int index);
 \endcode
 */
 STATIC int xvm_module_load(xvm_module* module, const char* filename)
@@ -1983,9 +1983,9 @@ STATIC int xvm_module_load(xvm_module* module, const char* filename)
     }
 
     // Load module interface
-    module->proc_count = (XVM_MODULEPROCCOUNT_PROC)GetProcAddress(module->handle, "xiexie_module_proc_count");
-    module->fetch_proc = (XVM_MODULEFETCHPROC_PROC)GetProcAddress(module->handle, "xiexie_module_fetch_proc");
-    module->fetch_ident = (XVM_MODULEFETCHIDENT_PROC)GetProcAddress(module->handle, "xiexie_module_fetch_ident");
+    module->proc_count = (XVM_MODULEPROCCOUNT_PROC)GetProcAddress(module->handle, "xx_module_proc_count");
+    module->fetch_proc = (XVM_MODULEFETCHPROC_PROC)GetProcAddress(module->handle, "xx_module_fetch_proc");
+    module->fetch_ident = (XVM_MODULEFETCHIDENT_PROC)GetProcAddress(module->handle, "xx_module_fetch_ident");
 
     #elif defined(__linux__)
 
@@ -1998,15 +1998,15 @@ STATIC int xvm_module_load(xvm_module* module, const char* filename)
     }
 
     // Load module interface
-    module->proc_count = (XVM_MODULEPROCCOUNT_PROC)dlsym(module->handle, "xiexie_module_proc_count");
-    module->fetch_proc = (XVM_MODULEFETCHPROC_PROC)dlsym(module->handle, "xiexie_module_fetch_proc");
-    module->fetch_ident = (XVM_MODULEFETCHIDENT_PROC)dlsym(module->handle, "xiexie_module_fetch_ident");
+    module->proc_count = (XVM_MODULEPROCCOUNT_PROC)dlsym(module->handle, "xx_module_proc_count");
+    module->fetch_proc = (XVM_MODULEFETCHPROC_PROC)dlsym(module->handle, "xx_module_fetch_proc");
+    module->fetch_ident = (XVM_MODULEFETCHIDENT_PROC)dlsym(module->handle, "xx_module_fetch_ident");
 
     #endif
 
     if (module->proc_count == NULL || module->fetch_proc == NULL || module->fetch_ident == NULL)
     {
-        printf("error: loading interface of module \"%s\" failed", filename);
+        printf("error: loading interface of module \"%s\" failed\n", filename);
         return 0;
     }
 
@@ -2044,14 +2044,14 @@ STATIC int xvm_module_unload(xvm_module* module)
     return 0;
 }
 
-STATIC int xvm_module_bind(const xvm_module* module, xvm_bytecode* byte_code)
+STATIC int _xvm_bytecode_bind_module_ext(xvm_bytecode* byte_code, const xvm_module* module, int unbindFlag)
 {
-    if (module == NULL || byte_code == NULL)
+    if (byte_code == NULL || module == NULL)
         return 0;
 
     if (module->proc_count == NULL || module->fetch_proc == NULL || module->fetch_ident == NULL)
     {
-        xvm_log_error("can not bind module with invalid interface");
+        xvm_log_error("can not bind/unbind module with invalid interface");
         return 0;
     }
 
@@ -2059,24 +2059,178 @@ STATIC int xvm_module_bind(const xvm_module* module, xvm_bytecode* byte_code)
     int num_procs = module->proc_count();
 
     // Bind all module invocation procedures to byte code
+    size_t num_errors = 0;
+
     for (int i = 0; i < num_procs; ++i)
     {
         // Fetch invocation identifier
         const char* ident = module->fetch_ident(i);
         if (ident == NULL)
-        {
-            xvm_log_error("invalid identifier fetched from module interface");
             return 0;
+
+        if (unbindFlag != 0)
+        {
+            // Unbind procedure invocation
+            if (xvm_bytecode_bind_invocation(byte_code, ident, NULL) == 0)
+                ++num_errors;
         }
+        else
+        {
+            // Fetch procedure pointer
+            XVM_INVOCATION_PROC proc = module->fetch_proc(i);
 
-        // Fetch procedure pointer
-        XVM_INVOCATION_PROC proc = module->fetch_proc(i);
+            // Bind procedure invocation
+            if (xvm_bytecode_bind_invocation(byte_code, ident, proc) == 0)
+                ++num_errors;
+        }
+    }
 
-        // Bind procedure invocation
-        xvm_bytecode_bind_invocation(byte_code, ident, proc);
+    // Check for errors during binding/unbinding
+    if (num_errors > 0)
+    {
+        printf("error: %i invocation binding(s)/unbinding(s) from module to byte code failed\n", num_errors);
+        return 0;
     }
 
     return 1;
+}
+
+STATIC int xvm_bytecode_bind_module(xvm_bytecode* byte_code, const xvm_module* module)
+{
+    return _xvm_bytecode_bind_module_ext(byte_code, module, 0);
+}
+
+STATIC int xvm_bytecode_unbind_module(xvm_bytecode* byte_code, const xvm_module* module)
+{
+    return _xvm_bytecode_bind_module_ext(byte_code, module, 1);
+}
+
+
+/* ----- Moduel Container ------ */
+
+typedef struct _xvm_module_container_node
+{
+    xvm_module                          module;
+    struct _xvm_module_container_node*  next;
+}
+_xvm_module_container_node;
+
+//! XVM module contianer structure.
+typedef struct xvm_module_container
+{
+    _xvm_module_container_node* first;
+}
+xvm_module_container;
+
+//! Initializes the specified module container with its default values.
+STATIC int xvm_module_container_init(xvm_module_container* container)
+{
+    if (container != NULL)
+    {
+        container->first = NULL;
+        return 1;
+    }
+    return 0;
+}
+
+STATIC int xvm_module_container_add(xvm_module_container* container, xvm_module module)
+{
+    if (container != NULL)
+    {
+        _xvm_module_container_node* node = container->first;
+
+        if (node == NULL)
+        {
+            // Create first node
+            container->first = (_xvm_module_container_node*)malloc(sizeof(_xvm_module_container_node));
+            node = container->first;
+        }
+        else
+        {
+            // Find last node
+            while (node->next != NULL)
+                node = node->next;
+
+            // Create next node
+            node->next = (_xvm_module_container_node*)malloc(sizeof(_xvm_module_container_node));
+            node = node->next;
+        }
+
+        // Add module to new node and initialize its link
+        node->module    = module;
+        node->next      = NULL;
+
+        return 1;
+    }
+    return 0;
+}
+
+STATIC int _xvm_module_container_node_free(_xvm_module_container_node* node)
+{
+    if (node != NULL)
+    {
+        // Unload module
+        xvm_module_unload(&(node->module));
+
+        // Check if there is a next node
+        int result = 1;
+        if (node->next != NULL)
+        {
+            // Free next node
+            result = _xvm_module_container_node_free(node->next);
+            free(node->next);
+        }
+
+        return result;
+    }
+    return 0;
+}
+
+/**
+Clears the specified container and unloads all modules.
+\note No byte code must then use any module which was loaded with this container!
+*/
+STATIC int xvm_module_container_clear(xvm_module_container* container)
+{
+    if (container != NULL)
+    {
+        if (container->first != NULL)
+        {
+            // Free node hierarchy
+            int result = _xvm_module_container_node_free(container->first);
+
+            // Free first node
+            free(container->first);
+            container->first = NULL;
+
+            return result;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+static _xvm_module_container_node* _xvm_module_iterator = NULL;
+
+STATIC int xvm_module_iteration_start(const xvm_module_container* container)
+{
+    if (container != NULL)
+    {
+        _xvm_module_iterator = container->first;
+        return 1;
+    }
+    return 0;
+}
+
+STATIC xvm_module* xvm_module_iteration_next()
+{
+    if (_xvm_module_iterator != NULL)
+    {
+        xvm_module* module = &(_xvm_module_iterator->module);
+        _xvm_module_iterator = _xvm_module_iterator->next;
+        return module;
+    }
+    return NULL;
 }
 
 
@@ -3113,12 +3267,14 @@ STATIC xvm_exit_codes xvm_execute_program_entry_point(
 
 STATIC void shell_print_help()
 {
-    xvm_log_println("Usage: xvm [options] file");
-    xvm_log_println("Options:");
-    xvm_log_println("  -h --help help           Prints the help information");
-    xvm_log_println("  --version                Prints the version and license note");
-    xvm_log_println("  --verbose                Prints additional output before and after program execution");
-    xvm_log_println("  -st --stack-size <arg>   Sets the stack size (by default 256)");
+    xvm_log_println("usage:");
+    xvm_log_println("  xvm [options] FILE         Executes the specified virtual program");
+    xvm_log_println("options:");
+    xvm_log_println("  -h, --help, help           Prints the help information");
+    xvm_log_println("  --version                  Prints the version and license note");
+    xvm_log_println("  --verbose                  Prints additional output before and after program execution");
+    xvm_log_println("  -st, --stack-size SIZE     Sets the stack size (by default 256)");
+    xvm_log_println("  -mod, --load-module FILE   Loads the module, specified by FILE");
 }
 
 STATIC void shell_print_version()
@@ -3142,6 +3298,10 @@ STATIC int shell_parse_args(int argc, char* argv[])
     int verbose = 0;
     const char* filename = NULL;
     size_t stack_size = 256;
+
+    // Initialize module container
+    xvm_module_container module_cont;
+    xvm_module_container_init(&module_cont);
 
     // Check if there are any arguments
     const char* arg;
@@ -3169,6 +3329,29 @@ STATIC int shell_parse_args(int argc, char* argv[])
             shell_print_version();
         else if (strcmp(arg, "--verbose") == 0)
             verbose = 1;
+        else if (strcmp(arg, "-mod") == 0 || strcmp(arg, "--load-module") == 0)
+        {
+            if (argc > 0)
+            {
+                // Get parameter from next argument
+                arg = *argv;
+
+                // Load module
+                xvm_module module;
+                xvm_module_init(&module);
+                
+                if (xvm_module_load(&module, arg) != 0)
+                    xvm_module_container_add(&module_cont, module);
+
+                ++argv;
+                --argc;
+            }
+            else
+            {
+                xvm_log_error("expected argument after \"-mod\" and \"--load-module\" flag");
+                return 0;
+            }
+        }
         else if (strcmp(arg, "-st") == 0 || strcmp(arg, "--stack-size") == 0)
         {
             if (argc > 0)
@@ -3179,7 +3362,7 @@ STATIC int shell_parse_args(int argc, char* argv[])
 
                 if (param <= 0)
                 {
-                    xvm_log_error("Stack size must be greater than zero");
+                    xvm_log_error("stack size must be greater than zero");
                     return 0;
                 }
                 else
@@ -3191,7 +3374,7 @@ STATIC int shell_parse_args(int argc, char* argv[])
             }
             else
             {
-                xvm_log_error("Expected argument after \"-st\" and \"--stack-size\" flag");
+                xvm_log_error("expected argument after \"-st\" and \"--stack-size\" flag");
                 return 0;
             }
         }
@@ -3199,7 +3382,7 @@ STATIC int shell_parse_args(int argc, char* argv[])
         {
             if (filename != NULL)
             {
-                xvm_log_error("Only a single program can be executed at a time");
+                xvm_log_error("only a single program can be executed at a time");
                 return 0;
             }
             else
@@ -3220,6 +3403,14 @@ STATIC int shell_parse_args(int argc, char* argv[])
             return 0;
         }
 
+        // Bind modules
+        if (xvm_module_iteration_start(&module_cont) != 0)
+        {
+            xvm_module* module = NULL;
+            while ( ( module = xvm_module_iteration_next() ) != NULL )
+                xvm_bytecode_bind_module(&byte_code, module);
+        }
+
         // Create stack
         xvm_stack stack;
         xvm_stack_init(&stack);
@@ -3231,7 +3422,7 @@ STATIC int shell_parse_args(int argc, char* argv[])
         if (exit_code != EXITCODE_SUCCESS)
             xvm_log_exitcode_error(exit_code);
         else if (verbose != 0)
-            xvm_log_println("Program terminated successful");
+            xvm_log_println("program terminated successful");
 
         // Clean up
         xvm_bytecode_free(&byte_code);
@@ -3263,7 +3454,7 @@ int main(int argc, char* argv[])
     // Ignore program path argument, then parse all other arguments
     shell_parse_args(--argc, ++argv);
 
-    #if defined(_DEBUG) || 0
+    #if ( defined(_DEBUG) || 0 ) && 0
 
     // Create a virtual stack
     xvm_stack stack;

@@ -2,9 +2,15 @@
 ; Invoke Test 1
 ; 20/03/2015
 
-invk test1
+push 0
+lda $r0, @msg
+push $r0
+lda $r0, @title
+push $r0
+invk messageBox
 
-;push 10
-;push 2
-invk test2
+stop
+
+title: .ascii "Hello, World!\nThis is an invocation test with the XVM."
+msg: .ascii "Hello, World!\nThis is an invocation test with the XVM."
 

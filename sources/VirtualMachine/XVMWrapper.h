@@ -1,7 +1,7 @@
 /*
- * XVM wrapper header
+ * XVMWrapper.h
  * 
- * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
@@ -569,6 +569,49 @@ class Intrinsics
 };
 
 
+//! Module wrapper class. This can be used for external invocations.
+class Module
+{
+    
+    public:
+        
+        Module(const Module&) = delete;
+        Module& operator = (const Module&) = delete;
+
+        Module()
+        {
+            xvm_module_init(&module_);
+        }
+        ~Module()
+        {
+            xvm_module_unload(&module_);
+        }
+
+        /**
+        Loads the module from the specified file.
+        \param[in] filename Specifies the XieXie module.
+        This must be a dynamic library (*.dll file on Win32, *.so file on GNU/Linux).
+        */
+        bool Load(const std::string& filename)
+        {
+            return xvm_module_load(&module_, filename.c_str()) != 0;
+        }
+
+        //! Loads this module.
+        bool Unload()
+        {
+            return xvm_module_unload(&module_) != 0;
+        }
+
+    private:
+        
+        friend class ByteCode;
+
+        xvm_module module_;
+
+};
+
+
 //! The byte code class represents an entire virtual program.
 class ByteCode
 {
@@ -687,6 +730,16 @@ class ByteCode
         }
 
         /**
+        Binds all procedure invocations from the specified module to this byte code.
+        \see Module
+        \see BindInvocation
+        */
+        bool BindModule(const Module& module)
+        {
+            return xvm_bytecode_bind_module(&byteCode_, &(module.module_)) != 0;
+        }
+
+        /**
         Finalizes the instruction building. After this call no further
         instructions can be added to this byte code object.
         \see instructions
@@ -793,41 +846,6 @@ class Stack
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const std::string& entryPoint);
 
         xvm_stack stack_;
-
-};
-
-
-//! Module wrapper class. This can be used for external invocations.
-class Module
-{
-    
-    public:
-        
-        Module(const Module&) = delete;
-        Module& operator = (const Module&) = delete;
-
-        Module()
-        {
-            xvm_module_init(&module_);
-        }
-        ~Module()
-        {
-            xvm_module_unload(&module_);
-        }
-
-        /**
-        Loads the module from the specified file.
-        \param[in] filename Specifies the XieXie module.
-        This must be a dynamic library (*.dll file on Win32, *.so file on GNU/Linux).
-        */
-        bool Load(const std::string& filename)
-        {
-            
-        }
-
-    private:
-        
-        xvm_module module_;
 
 };
 
