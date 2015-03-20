@@ -517,7 +517,8 @@ typedef enum
     EXITCODE_STACK_UNDERFLOW        = -6,
     EXITCODE_DIVISION_BY_ZERO       = -7,
     EXITCODE_UNKNOWN_ENTRY_POINT    = -8,
-    //EXITCODE_MEMORY_VIOLATION       = -9,
+    EXITCODE_INVOCATION_VIOLATION   = -9,
+  //EXITCODE_MEMORY_VIOLATION       = -10,
 }
 xvm_exit_codes;
 
@@ -1117,7 +1118,7 @@ STATIC instr_t xvm_instr_patch_value(instr_t instr, unsigned int value)
 }
 
 
-/* ----- Strings ----- */
+/* ----- String ----- */
 
 //! XVM string structure.
 typedef struct
@@ -1203,6 +1204,196 @@ STATIC int xvm_string_write_to_file(xvm_string string, FILE* file)
 }
 
 
+/* ----- Exception handling ----- */
+
+jmp_buf xvm_exception_envbuf;
+const char* xvm_exception_err = "";
+
+STATIC void xvm_exception_throw(const char* error_message, int error_code)
+{
+    // Setup exception error message and make a long jump
+    xvm_exception_err = error_message;
+    longjmp(xvm_exception_envbuf, error_code);
+}
+
+
+/* ----- Stack ----- */
+
+typedef int stack_word_t;
+
+typedef struct
+{
+    size_t          stack_size; // Number of entries in the stack.
+    stack_word_t*   storage;    // Stack data storage.
+}
+xvm_stack;
+
+/**
+Initializes the specified stack object.
+\see xvm_stack_create
+*/
+STATIC int xvm_stack_init(xvm_stack* stack)
+{
+    if (stack != NULL)
+    {
+        // Initialize stack data
+        stack->stack_size   = 0;
+        stack->storage      = NULL;
+        return 1;
+    }
+    return 0;
+}
+
+/**
+Clears all entries in the stack with the specified value
+\see xvm_stack_create
+*/
+STATIC int xvm_stack_clear(xvm_stack* stack, stack_word_t value)
+{
+    if (stack != NULL && stack->stack_size > 0 && stack->storage != NULL)
+    {
+        for (size_t i = 0; i < stack->stack_size; ++i)
+            stack->storage[i] = value;
+        return 1;
+    }
+    return 0;
+}
+
+/**
+Creats a new stack for the virtual machine.
+\param[out] stack Pointer to the resulting stack object.
+\param[in] stack_size Specifies the stack size or rather the number of WORD (32-bit) entries.
+\remarks Example:
+\code
+xvm_stack stack;
+xvm_stack_init(&stack);
+xvm_stack_create(&stack, 256);
+// ...
+xvm_stack_free(&stack);
+\endcode
+*/
+STATIC int xvm_stack_create(xvm_stack* stack, size_t stack_size)
+{
+    if (stack != NULL && stack->storage == NULL && stack_size != 0)
+    {
+        stack->stack_size   = stack_size;
+        stack->storage      = (stack_word_t*)malloc(sizeof(stack_word_t)*stack_size);
+        return 1;
+    }
+    return 0;
+}
+
+STATIC int xvm_stack_free(xvm_stack* stack)
+{
+    if (stack != NULL)
+    {
+        if (stack->storage != NULL)
+            free(stack->storage);
+
+        // Reset stack data
+        stack->stack_size   = 0;
+        stack->storage      = NULL;
+
+        return 1;
+    }
+    return 0;
+}
+
+INLINE STATIC void xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t value)
+{
+    stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
+    if (stack_ptr < stack->storage + stack->stack_size)
+    {
+        *stack_ptr = value;
+        (*reg_sp) += sizeof(stack_word_t);
+    }
+    else
+        xvm_exception_throw("stack overflow", EXITCODE_STACK_OVERFLOW);
+}
+
+INLINE STATIC stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
+{
+    stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
+    if (stack_ptr > stack->storage)
+        (*reg_sp) -= sizeof(stack_word_t);
+    else
+        xvm_exception_throw("stack underflow", EXITCODE_STACK_UNDERFLOW);
+    return *REG_TO_STACK_PTR(reg_sp);
+}
+
+INLINE STATIC stack_word_t xvm_stack_read(regi_t reg_sp, int word_offset)
+{
+    stack_word_t* stack_ptr = (stack_word_t*)reg_sp;
+    return stack_ptr[word_offset];
+}
+
+INLINE STATIC void xvm_stack_write(regi_t reg_sp, int word_offset, stack_word_t value)
+{
+    stack_word_t* stack_ptr = (stack_word_t*)reg_sp;
+    stack_ptr[word_offset] = value;
+}
+
+STATIC void xvm_stack_debug(xvm_stack* stack, size_t first_entry, size_t num_entries)
+{
+    if (stack != NULL)
+    {
+        // Print all n-th stack entries
+        const size_t n = XVM_MIN(first_entry + num_entries, stack->stack_size);
+        for (size_t i = first_entry; i < n; ++i)
+            printf("stack[%i] = %i\n", i, stack->storage[i]);
+    }
+}
+
+STATIC void xvm_stack_debug_float(xvm_stack* stack, size_t first_entry, size_t num_entries)
+{
+    if (stack != NULL)
+    {
+        // Print all n-th stack entries
+        const size_t n = XVM_MIN(first_entry + num_entries, stack->stack_size);
+        for (size_t i = first_entry; i < n; ++i)
+        {
+            stack_word_t* entry = (stack->storage + i);
+            printf("stack[%i] = %f\n", i, *((float*)entry));
+        }
+    }
+}
+
+
+/* ----- Invocation Environment ----- */
+
+//! XVM environment state type.
+typedef void* xvm_env;
+
+/**
+Invocation procedure signature. This is the signature for external procedure invocations in ANSI C.
+\param[in] env Environment handle to access the program state (e.g. the virtual stack).
+*/
+typedef void (*XVM_INVOCATION_PROC)(xvm_env env);
+
+STATIC void xvm_invocation_dummy(xvm_env env)
+{
+    // dummy
+}
+
+//! Returns the argument as integer, specified by the parameter index (beginning with zero).
+STATIC int xvm_env_param_int(xvm_env env, unsigned int param_index)
+{
+    return *(int*)((stack_word_t*)env - param_index);
+}
+
+//! Returns the argument as float, specified by the parameter index (beginning with zero).
+STATIC float xvm_env_param_float(xvm_env env, unsigned int param_index)
+{
+    return *(float*)((stack_word_t*)env - param_index);
+}
+
+//! Returns the argument as null-terminated C string, specified by the parameter index (beginning with zero).
+STATIC const char* xvm_env_param_string(xvm_env env, unsigned int param_index)
+{
+    return (const char*)((stack_word_t*)env - param_index);
+}
+
+
 /* ----- Byte code ----- */
 
 //! XVM export procedure address structure.
@@ -1225,14 +1416,15 @@ xvm_export_address;
 //! XVM byte code structure.
 typedef struct
 {
-    unsigned int        num_instructions;       //!< Number of instructions. By default 0.
-    instr_t*            instructions;           //!< Instruction array. By default NULL.
+    unsigned int            num_instructions;       //!< Number of instructions. By default 0.
+    instr_t*                instructions;           //!< Instruction array. By default NULL.
 
-    unsigned int        num_export_addresses;   //!< Number of export addresses. By default 0.
-    xvm_export_address* export_addresses;       //!< Export addresses array. By default NULL.
+    unsigned int            num_export_addresses;   //!< Number of export addresses. By default 0.
+    xvm_export_address*     export_addresses;       //!< Export addresses array. By default NULL.
 
-    unsigned int        num_invoke_idents;      //!< Number of invocation identifiers. By default 0.
-    xvm_string*         invoke_idents;          //!< Invocation identifiers. By default NULL.
+    unsigned int            num_invoke_idents;      //!< Number of invocation identifiers. By default 0.
+    xvm_string*             invoke_idents;          //!< Invocation identifiers. By default NULL.
+    XVM_INVOCATION_PROC*    invoke_bindings;        //!< Invocation procedure bindings. By default NULL.
 }
 xvm_bytecode;
 
@@ -1282,8 +1474,9 @@ STATIC int xvm_bytecode_init(xvm_bytecode* byte_code)
         byte_code->num_export_addresses = 0;
         byte_code->export_addresses     = NULL;
 
-        byte_code->num_export_addresses = 0;
+        byte_code->num_invoke_idents    = 0;
         byte_code->invoke_idents        = NULL;
+        byte_code->invoke_bindings      = NULL;
         return 1;
     }
     return 0;
@@ -1326,18 +1519,61 @@ STATIC int xvm_bytecode_create_export_addresses(xvm_bytecode* byte_code, unsigne
 }
 
 /**
-Allocates memory for the specified amount of byte code invocation identifiers.
+Allocates memory for the specified amount of byte code invocation identifiers and bindings.
 \param[in,out] byte_code Pointer to the byte code object.
 \param[in] num_invoke_idents Specifies the number of invocation identifiers to allocate for the byte code.
 \see xvm_bytecode_init
 \note All invocation identifiers are uninitialized!
+But all invocation bindings will be initialized to a default procedure.
 */
-STATIC int xvm_bytecode_create_invoke_idents(xvm_bytecode* byte_code, unsigned int num_invoke_idents)
+STATIC int xvm_bytecode_create_invocations(xvm_bytecode* byte_code, unsigned int num_invoke_idents)
 {
     if (byte_code != NULL && byte_code->invoke_idents == NULL && num_invoke_idents > 0)
     {
+        // Create invocation identifiers
         byte_code->num_invoke_idents    = num_invoke_idents;
         byte_code->invoke_idents        = (xvm_string*)malloc(sizeof(xvm_string)*num_invoke_idents);
+
+        // Create and initialize invocation bindings
+        byte_code->invoke_bindings      = (XVM_INVOCATION_PROC*)malloc(sizeof(XVM_INVOCATION_PROC)*num_invoke_idents);
+        for (unsigned int i = 0; i < num_invoke_idents; ++i)
+            byte_code->invoke_bindings[i] = xvm_invocation_dummy;
+        return 1;
+    }
+    return 0;
+}
+
+STATIC int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ident, XVM_INVOCATION_PROC proc)
+{
+    if (byte_code != NULL && ident != NULL)
+    {
+        // Check byte code fields
+        if (byte_code->invoke_bindings == NULL || byte_code->invoke_idents == NULL || byte_code->num_invoke_idents == 0)
+        {
+            xvm_log_error("can not bind invocation to byte code with zero invocation identifiers");
+            return 0;
+        }
+
+        // Find identifier in byte code
+        unsigned int i = 0;
+        for (; i < byte_code->num_invoke_idents; ++i)
+        {
+            if (strcmp(byte_code->invoke_idents[i].str, ident) == 0)
+                break;
+        }
+
+        if (i >= byte_code->num_invoke_idents)
+        {
+            printf("error: identifier \"%s\" not found in invocations\n", ident);
+            return 0;
+        }
+
+        // Bind invocation
+        if (proc == NULL)
+            proc = xvm_invocation_dummy;
+
+        byte_code->invoke_bindings[i] = proc;
+
         return 1;
     }
     return 0;
@@ -1355,6 +1591,7 @@ STATIC int xvm_bytecode_free(xvm_bytecode* byte_code)
             byte_code->instructions     = NULL;
             byte_code->num_instructions = 0;
         }
+
         if (byte_code->export_addresses != NULL)
         {
             // Free string of each export address
@@ -1369,6 +1606,7 @@ STATIC int xvm_bytecode_free(xvm_bytecode* byte_code)
             byte_code->export_addresses     = NULL;
             byte_code->num_export_addresses = 0;
         }
+
         if (byte_code->invoke_idents != NULL)
         {
             // Free each invocation identifier
@@ -1379,6 +1617,13 @@ STATIC int xvm_bytecode_free(xvm_bytecode* byte_code)
             free(byte_code->invoke_idents);
             byte_code->invoke_idents        = NULL;
             byte_code->num_invoke_idents    = 0;
+        }
+
+        if (byte_code->invoke_bindings != NULL)
+        {
+            // Free invocation bindings vector
+            free(byte_code->invoke_bindings);
+            byte_code->invoke_bindings = NULL;
         }
         return 1;
     }
@@ -1586,7 +1831,7 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
 
         if (num_invoke_idents > 0)
         {
-            if (xvm_bytecode_create_invoke_idents(byte_code, num_invoke_idents) == 0)
+            if (xvm_bytecode_create_invocations(byte_code, num_invoke_idents) == 0)
             {
                 xvm_log_error("creating byte code invocation identifiers failed");
                 fclose(file);
@@ -1678,161 +1923,6 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     fclose(file);
 
     return 1;
-}
-
-
-/* ----- Exception handling ----- */
-
-jmp_buf xvm_exception_envbuf;
-const char* xvm_exception_err = "";
-
-STATIC void xvm_exception_throw(const char* error_message, int error_code)
-{
-    // Setup exception error message and make a long jump
-    xvm_exception_err = error_message;
-    longjmp(xvm_exception_envbuf, error_code);
-}
-
-
-/* ----- Stack ----- */
-
-typedef int stack_word_t;
-
-typedef struct
-{
-    size_t          stack_size; // Number of entries in the stack.
-    stack_word_t*   storage;    // Stack data storage.
-}
-xvm_stack;
-
-/**
-Initializes the specified stack object.
-\see xvm_stack_create
-*/
-STATIC int xvm_stack_init(xvm_stack* stack)
-{
-    if (stack != NULL)
-    {
-        // Initialize stack data
-        stack->stack_size   = 0;
-        stack->storage      = NULL;
-        return 1;
-    }
-    return 0;
-}
-
-/**
-Clears all entries in the stack with the specified value
-\see xvm_stack_create
-*/
-STATIC int xvm_stack_clear(xvm_stack* stack, stack_word_t value)
-{
-    if (stack != NULL && stack->stack_size > 0 && stack->storage != NULL)
-    {
-        for (size_t i = 0; i < stack->stack_size; ++i)
-            stack->storage[i] = value;
-        return 1;
-    }
-    return 0;
-}
-
-/**
-Creats a new stack for the virtual machine.
-\param[out] stack Pointer to the resulting stack object.
-\param[in] stack_size Specifies the stack size or rather the number of WORD (32-bit) entries.
-\remarks Example:
-\code
-xvm_stack stack;
-xvm_stack_init(&stack);
-xvm_stack_create(&stack, 256);
-// ...
-xvm_stack_free(&stack);
-\endcode
-*/
-STATIC int xvm_stack_create(xvm_stack* stack, size_t stack_size)
-{
-    if (stack != NULL && stack->storage == NULL && stack_size != 0)
-    {
-        stack->stack_size   = stack_size;
-        stack->storage      = (stack_word_t*)malloc(sizeof(stack_word_t)*stack_size);
-        return 1;
-    }
-    return 0;
-}
-
-STATIC int xvm_stack_free(xvm_stack* stack)
-{
-    if (stack != NULL)
-    {
-        if (stack->storage != NULL)
-            free(stack->storage);
-
-        // Reset stack data
-        stack->stack_size   = 0;
-        stack->storage      = NULL;
-
-        return 1;
-    }
-    return 0;
-}
-
-INLINE STATIC void xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t value)
-{
-    stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
-    if (stack_ptr < stack->storage + stack->stack_size)
-    {
-        *stack_ptr = value;
-        (*reg_sp) += sizeof(stack_word_t);
-    }
-    else
-        xvm_exception_throw("stack overflow", EXITCODE_STACK_OVERFLOW);
-}
-
-INLINE STATIC stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
-{
-    stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
-    if (stack_ptr > stack->storage)
-        (*reg_sp) -= sizeof(stack_word_t);
-    else
-        xvm_exception_throw("stack underflow", EXITCODE_STACK_UNDERFLOW);
-    return *REG_TO_STACK_PTR(reg_sp);
-}
-
-INLINE STATIC stack_word_t xvm_stack_read(regi_t reg_sp, int word_offset)
-{
-    stack_word_t* stack_ptr = (stack_word_t*)reg_sp;
-    return stack_ptr[word_offset];
-}
-
-INLINE STATIC void xvm_stack_write(regi_t reg_sp, int word_offset, stack_word_t value)
-{
-    stack_word_t* stack_ptr = (stack_word_t*)reg_sp;
-    stack_ptr[word_offset] = value;
-}
-
-STATIC void xvm_stack_debug(xvm_stack* stack, size_t first_entry, size_t num_entries)
-{
-    if (stack != NULL)
-    {
-        // Print all n-th stack entries
-        const size_t n = XVM_MIN(first_entry + num_entries, stack->stack_size);
-        for (size_t i = first_entry; i < n; ++i)
-            printf("stack[%i] = %i\n", i, stack->storage[i]);
-    }
-}
-
-STATIC void xvm_stack_debug_float(xvm_stack* stack, size_t first_entry, size_t num_entries)
-{
-    if (stack != NULL)
-    {
-        // Print all n-th stack entries
-        const size_t n = XVM_MIN(first_entry + num_entries, stack->stack_size);
-        for (size_t i = first_entry; i < n; ++i)
-        {
-            stack_word_t* entry = (stack->storage + i);
-            printf("stack[%i] = %f\n", i, *((float*)entry));
-        }
-    }
 }
 
 
@@ -2146,21 +2236,6 @@ STATIC void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
             break;
     }
 }
-
-/**
-"Invoke extern" procedure signature.
-\param[in] proc_id Specifies the external procedure which is to be invoked.
-\param[in] stack_ptr Pointer to the current stack frame.
-THe first parameter can be accessed with (stack_ptr - 1), the second with (stack_ptr - 2) etc. (from left-to-right).
-*/
-typedef void (*XVM_INVOKE_EXTERN_PROC)(unsigned int proc_id, stack_word_t* stack_ptr);
-
-void xvm_invoke_extern_dummy(unsigned int proc_id, stack_word_t* stack_ptr)
-{
-    /* Dummy */
-}
-
-XVM_INVOKE_EXTERN_PROC xvm_invoke_extern = (&xvm_invoke_extern_dummy);
 
 /**
 Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Virtual Machine).
@@ -2807,7 +2882,14 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             case OPCODE_INVK:
             {
                 unsgn_value = xvm_instr_get_value26(instr);
-                xvm_invoke_extern(unsgn_value, REG_TO_STACK_PTR(reg_sp));
+                if (unsgn_value < byte_code->num_invoke_idents)
+                {
+                    // Invoke bounded procedure
+                    XVM_INVOCATION_PROC invokeProc = byte_code->invoke_bindings[unsgn_value];
+                    invokeProc(REG_TO_STACK_PTR(reg_sp));
+                }
+                else
+                    return EXITCODE_INVOCATION_VIOLATION;
             }
             break;
 
@@ -3015,20 +3097,9 @@ STATIC int shell_parse_args(int argc, char* argv[])
 
 /* ----- Main ----- */
 
-typedef enum
+void TestInvokeExtern(xvm_env env)
 {
-    TESTPROCID_HELLO_WORLD,
-}
-TestInvokeProcIDs;
-
-void TestInvokeExtern(unsigned int proc_id, stack_word_t* stack_ptr)
-{
-    switch (proc_id)
-    {
-        case TESTPROCID_HELLO_WORLD:
-            printf("\nHello, World\n");
-            break;
-    }
+    printf("<< Invocation Test Procedure >>\n");
 }
 
 int main(int argc, char* argv[])
@@ -3048,6 +3119,9 @@ int main(int argc, char* argv[])
     xvm_bytecode byte_code;
     xvm_bytecode_init(&byte_code);
     xvm_bytecode_create_instructions(&byte_code, 50);
+    xvm_bytecode_create_invocations(&byte_code, 1);
+
+    byte_code.invoke_idents[0] = xvm_string_create_from("TestInvokeExtern");
 
     const char* program_filename = "test_byte_code.xbc";
 
@@ -3089,7 +3163,8 @@ int main(int argc, char* argv[])
     ADD_INSTR(xvm_instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                ))
     ADD_INSTR(xvm_instr_make_jump       (OPCODE_JGE,  REG_PC, 10                    ))
     ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_TIME             ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_INT        ))
+    //ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_INT        ))
+    ADD_INSTR(xvm_instr_make_special1   (OPCODE_INVK, 0                             ))
     ADD_INSTR(xvm_instr_make_mem        (OPCODE_LDA,  REG_R2, 14                    ))
     ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R2, 0                     ))
     ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_LN         ))
@@ -3302,7 +3377,7 @@ int main(int argc, char* argv[])
     #undef FINISH_INSTR
 
     // Execute the virtual program
-    xvm_invoke_extern = (&TestInvokeExtern);
+    xvm_bytecode_bind_invocation(&byte_code, "TestInvokeExtern", TestInvokeExtern);
 
     const xvm_exit_codes exitCode = xvm_execute_program(&byte_code, &stack);
 

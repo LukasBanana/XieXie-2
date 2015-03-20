@@ -716,7 +716,7 @@ class ByteCode
             size_t numInvokeIdents = invokeIdentifiers_.size();
             if (numInvokeIdents > 0)
             {
-                if (xvm_bytecode_create_invoke_idents(&byteCode_, static_cast<unsigned int>(numInvokeIdents)) == 0)
+                if (xvm_bytecode_create_invocations(&byteCode_, static_cast<unsigned int>(numInvokeIdents)) == 0)
                     return false;
 
                 for (size_t i = 0; i < numInvokeIdents; ++i)
