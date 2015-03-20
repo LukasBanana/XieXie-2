@@ -56,7 +56,7 @@
 \lstset{
 	morekeywords = {
 		var, super, foreach, forever, init, release, and, or, not, null,
-		import
+		import, module
 	}
 }
 
@@ -72,6 +72,8 @@
 \def\almdone{\textcolor{weakYellow}{almost done}}
 \def\incompl{\textcolor{weakOrange}{incomplete}}
 \def\notimpl{\textcolor{weakRed}{not yet implemented}}
+\def\windows{\textsc{Windows}\xspace}
+\def\linux{\textsc{GNU/Linux}\xspace}
 
 
 %----------------------------------------------------------------------------------------
@@ -603,7 +605,6 @@ do {
 \end{lstlisting}
 
 
-
 %----------------------------------------------------------------------------------------
 %	CLASSES
 %----------------------------------------------------------------------------------------
@@ -611,8 +612,8 @@ do {
 \chapter{Classes}
 \label{ch:classes}
 
-A \xiexie program can only consist of imports and class declarations. And classes can only be defined in the global scope.
-That means every procedure must be defined inside a class and inner classes are currently not supported.
+A \xiexie program can only consist of imports, modules, and class declarations. And classes can only be defined
+in the global scope. That means every procedure must be defined inside a class and inner classes are currently not supported.
 
 
 %----------------------------------------------------------------------------------------
@@ -843,6 +844,99 @@ class S : B {
         int b := super.f(0, 0) // 'super' is required, due to overloaded procedure 'f'
         int c := g()           // no need for 'super', because 'g' is not overloaded
     }
+}
+\end{lstlisting}
+
+
+%----------------------------------------------------------------------------------------
+%	MODULES
+%----------------------------------------------------------------------------------------
+
+\chapter{Modules}
+\label{ch:modules}
+
+A \textit{module} consists of a shared library (\texttt{*.dll} on \windows and \texttt{*.so} on \linux)
+and a \xiexie module file. They are similar to \python modules.
+
+
+%----------------------------------------------------------------------------------------
+%	USING MODULES
+%----------------------------------------------------------------------------------------
+
+\section{Using Modules}
+
+Module declarations are similar to external classes. But they can only have static procedures. Here is an example:
+\begin{lstlisting}
+module MyModule {
+    static void doSomething(int x)
+}
+\end{lstlisting}
+Using this in your \xiexie code will then look like this:
+\begin{lstlisting}
+import MyModule
+class MyClass {
+    static void main() {
+        MyModule.doSomething(42)
+    }
+}
+\end{lstlisting}
+
+
+%----------------------------------------------------------------------------------------
+%	Creating MODULES
+%----------------------------------------------------------------------------------------
+
+\section{Creating Modules}
+
+Modules must be written in plain C or \cpp. A minimal module would consist of three files.
+Supposed our example module is named ``MyModule'' and we work on \windows we would have these files:
+\begin{itemize}
+	\item \textbf{\texttt{MyModule.c}} Module code written in C.
+	\item \textbf{\texttt{MyModule.dll}} Shared library which runs the module code.
+	\item \textbf{\texttt{MyModule.xx}} \xiexie code file which declares the module. 
+\end{itemize}
+The C code file must implement the following function interfaces to be a valid \xiexie module:
+\begin{lstlisting}
+// Returns the number of module procedures.
+int xx_module_proc_count();
+
+// Returns the procedure for the respective index.
+XVM_INVOCATION_PROC xx_module_fetch_proc(int index);
+
+// Returns the procedure identifier for the respective index.
+const char* xx_module_fetch_ident(int index);
+\end{lstlisting}
+Our simple module example from above could be implemented as follows:
+\begin{lstlisting}
+#include "../xx_module.h"
+
+// This is our module procedure "soSomething".
+// All module procedures must have this interface.
+void doSomething(xvm_env env) {
+    // Get 1st parameter from XVM environment
+    int x = xvm_param_int(env, 1);
+    
+    // Do something with 'x'
+    printf("input parameter 'x' is %i\n", i);
+}
+
+// Module procedure list
+static xvm_invocation procList[] = {
+    { "doSomething", doSomething },
+};
+
+#define NUM_PROCS 1
+
+XVM_EXPORT int xx_module_proc_count() {
+    return NUM_PROCS;
+}
+
+XVM_EXPORT XVM_INVOCATION_PROC xx_module_fetch_proc(int index) {
+    return index < NUM_PROCS ? procList[index].proc : NULL;
+}
+
+XVM_EXPORT const char* xx_module_fetch_ident(int index) {
+    return index < NUM_PROCS ? procList[index].ident : NULL;
 }
 \end{lstlisting}
 
