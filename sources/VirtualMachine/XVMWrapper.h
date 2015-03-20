@@ -12,7 +12,9 @@
 #include <string>
 #include <vector>
 
-#define _REMOVE_XVM_TESTSUITE_
+#ifndef _REMOVE_XVM_TESTSUITE_
+#   define _REMOVE_XVM_TESTSUITE_
+#endif
 #include "xvm.c"
 
 
@@ -20,7 +22,7 @@ namespace XieXie
 {
 
 /**
-This is a C++ wrapper (written against the C++98 standard) for the
+This is a C++ wrapper (written against the C++11 standard) for the
 xvm (XieXie VirtualMachine) which is written in plain C (c99).
 \code
 // Read byte code from file
@@ -51,6 +53,7 @@ enum class ExitCodes
     StackUnderflow,
     DivisionByZero,
     UnknownEntryPoint,
+    InvocationViolation,
     MemoryViolation,
 };
 
@@ -88,6 +91,9 @@ class Register
         static const Register lb; //!< $lb  ->  Local base pointer: pointer to the current stack frame.
         static const Register sp; //!< $sp  ->  Stack pointer: pointer to the top of the stack.
         static const Register pc; //!< $pc  ->  Program counter: pointer to the current instruction.
+
+        Register(const Register&) = delete;
+        Register& operator = (const Register&) = delete;
 
         operator reg_t () const
         {
@@ -171,17 +177,8 @@ class Register
     private:
         
         Register(register_id reg) :
-            reg_(static_cast<reg_t>(reg))
+            reg_{ static_cast<reg_t>(reg) }
         {
-        }
-        Register(const Register&)
-        {
-            /* Not used */
-        }
-        Register& operator = (const Register&)
-        {
-            /* Not used */
-            return *this;
         }
 
         reg_t reg_;
@@ -207,7 +204,7 @@ const Register Register::lb(REG_LB);
 const Register Register::sp(REG_SP);
 const Register Register::pc(REG_PC);
 
-typedef Register Reg;
+using Reg = Register;
 
 
 //! The instruction class only stores the 32-bit code of a single XVM instruction.
@@ -314,11 +311,11 @@ class Instruction
         /* ------- Functions ------- */
 
         Instruction() :
-            code_(0)
+            code_{ 0 }
         {
         }
         Instruction(int code) :
-            code_(code)
+            code_{ code }
         {
         }
 
@@ -493,7 +490,7 @@ class Instruction
 
 };
 
-typedef Instruction Instr;
+using Instr = Instruction;
 
 
 //! Intrinsics helper class.
@@ -502,11 +499,11 @@ class Intrinsics
     
     public:
         
-        typedef std::map<std::string, unsigned int> AddressMapType;
+        using AddressMapType = std::map<std::string, unsigned int>;
 
         Intrinsics()
         {
-            addresses_ = std::move(std::map<std::string, unsigned int>
+            addresses_ = std::move(AddressMapType
             {
                 { "AllocMem",   INTR_ALLOC_MEM    },
                 { "FreeMem",    INTR_FREE_MEM     },
@@ -584,6 +581,9 @@ class ByteCode
             std::string name;
             unsigned int address;
         };
+
+        ByteCode(const ByteCode&) = delete;
+        ByteCode& operator = (const ByteCode&) = delete;
 
         ByteCode()
         {
@@ -677,6 +677,16 @@ class ByteCode
         }
 
         /**
+        Binds an procedure to an invocation identifier.
+        \param[in] ident Specifies the invocation identifier.
+        \param[in] proc Specifies the procedure callback. If this is null, the default dummy procedure is used.
+        */
+        bool BindInvocation(const std::string& ident, XVM_INVOCATION_PROC proc)
+        {
+            return xvm_bytecode_bind_invocation(&byteCode_, ident.c_str(), proc) != 0;
+        }
+
+        /**
         Finalizes the instruction building. After this call no further
         instructions can be added to this byte code object.
         \see instructions
@@ -732,16 +742,6 @@ class ByteCode
 
     private:
         
-        ByteCode(const ByteCode&)
-        {
-            /* Not used */
-        }
-        ByteCode& operator = (const ByteCode&)
-        {
-            /* Not used */
-            return *this;
-        }
-
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack);
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const std::string& entryPoint);
 
@@ -759,15 +759,19 @@ class ByteCode
 };
 
 
-//! A virtual stack is required to execute a program.
+//! Virtual stack wrapper class. This is required to execute a program.
 class Stack
 {
 
     public:
 
+        //! Default stack size (in 32-bit word size). By default 256 words = 1024 bytes.
         static const size_t defaultSize = 256;
 
-        Stack(size_t size = defaultSize)
+        Stack(const Stack&) = delete;
+        Stack& operator = (const Stack&) = delete;
+
+        Stack(size_t size = Stack::defaultSize)
         {
             xvm_stack_init(&stack_);
             xvm_stack_create(&stack_, size);
@@ -785,20 +789,45 @@ class Stack
 
     private:
         
-        Stack(const Stack&)
-        {
-            /* Not used */
-        }
-        Stack& operator = (const Stack&)
-        {
-            /* Not used */
-            return *this;
-        }
-
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack);
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const std::string& entryPoint);
 
         xvm_stack stack_;
+
+};
+
+
+//! Module wrapper class. This can be used for external invocations.
+class Module
+{
+    
+    public:
+        
+        Module(const Module&) = delete;
+        Module& operator = (const Module&) = delete;
+
+        Module()
+        {
+            xvm_module_init(&module_);
+        }
+        ~Module()
+        {
+            xvm_module_unload(&module_);
+        }
+
+        /**
+        Loads the module from the specified file.
+        \param[in] filename Specifies the XieXie module.
+        This must be a dynamic library (*.dll file on Win32, *.so file on GNU/Linux).
+        */
+        bool Load(const std::string& filename)
+        {
+            
+        }
+
+    private:
+        
+        xvm_module module_;
 
 };
 
@@ -830,6 +859,8 @@ ExitCodes MapExitCode(xvm_exit_codes code)
             return ExitCodes::DivisionByZero;
         case EXITCODE_UNKNOWN_ENTRY_POINT:
             return ExitCodes::UnknownEntryPoint;
+        case EXITCODE_INVOCATION_VIOLATION:
+            return ExitCodes::InvocationViolation;
         /*case EXITCODE_MEMORY_VIOLATION:
             return ExitCodes::MemoryViolation;*/
     }

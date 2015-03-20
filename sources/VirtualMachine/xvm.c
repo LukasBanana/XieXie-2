@@ -35,13 +35,8 @@
 //! Enables opcode extraction optimization (safes one SLL instruction in x86 code)
 #define _OPTIMIZE_OPCODE_EXTRACTION_
 
-//! Enables OS specific features
-#define _ENABLE_OS_FEATURES_
-
 
 /* ----- OS specific includes ----- */
-
-#ifdef _ENABLE_OS_FEATURES_
 
 #if defined(_WIN32)
 #   define NOGDICAPMASKS
@@ -86,8 +81,7 @@
 #   include <Windows.h>
 #elif defined(__linux__)
 #   include <unistd.h>
-#endif
-
+#   include <dlfcn.h>
 #endif
 
 
@@ -1407,13 +1401,13 @@ typedef struct
     Export procedure address. This is the instruction
     INDEX where the procedure starts. By default 0.
     */
-    unsigned int addr;
+    unsigned int    addr;
     
     /**
     Procedure ID name. This depends on the 'name mangling' of
     the high-level compiler (e.g. "main" or "_ZN@main"). By default empty.
     */
-    xvm_string name;
+    xvm_string      name;
 }
 xvm_export_address;
 
@@ -1553,10 +1547,7 @@ STATIC int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ide
     {
         // Check byte code fields
         if (byte_code->invoke_bindings == NULL || byte_code->invoke_idents == NULL || byte_code->num_invoke_idents == 0)
-        {
-            xvm_log_error("can not bind invocation to byte code with zero invocation identifiers");
             return 0;
-        }
 
         // Find identifier in byte code
         unsigned int i = 0;
@@ -1567,10 +1558,7 @@ STATIC int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ide
         }
 
         if (i >= byte_code->num_invoke_idents)
-        {
-            printf("error: identifier \"%s\" not found in invocations\n", ident);
             return 0;
-        }
 
         // Bind invocation
         if (proc == NULL)
@@ -1925,6 +1913,168 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
 
     // Close file and return with success
     fclose(file);
+
+    return 1;
+}
+
+
+/* ----- Module ----- */
+
+typedef int (*XVM_MODULEPROCCOUNT_PROC)(void);
+typedef XVM_INVOCATION_PROC (*XVM_MODULEFETCHPROC_PROC)(int); 
+typedef const char* (*XVM_MODULEFETCHIDENT_PROC)(int); 
+
+//! XVM module library structure.
+typedef struct
+{
+    #if defined(_WIN32)
+    HMODULE                     handle;
+    #elif defined(__linux__)
+    void*                       handle;
+    #endif
+    XVM_MODULEPROCCOUNT_PROC    proc_count;
+    XVM_MODULEFETCHPROC_PROC    fetch_proc;
+    XVM_MODULEFETCHIDENT_PROC   fetch_ident;
+}
+xvm_module;
+
+//! Initializes the specified module with its default values.
+STATIC int xvm_module_init(xvm_module* module)
+{
+    if (module != NULL)
+    {
+        #if defined(_WIN32)
+        module->handle      = 0;
+        #elif defined(__linux__)
+        module->handle      = NULL;
+        #endif
+        module->proc_count  = NULL;
+        module->fetch_proc  = NULL;
+        module->fetch_ident = NULL;
+        return 1;
+    }
+    return 0;
+}
+
+/**
+Loads the specified module library filename.
+\param[in] filename Specifies the XieXie module.
+This must be a dynamic library (*.dll file on Win32, *.so file on GNU/Linux).
+The library must contain functions with the following interfaces:
+\code
+int xiexie_module_proc_count();
+XVM_INVOCATION_PROC xiexie_module_fetch_proc(int index);
+const char* xiexie_module_fetch_ident(int index);
+\endcode
+*/
+STATIC int xvm_module_load(xvm_module* module, const char* filename)
+{
+    if (module == NULL || filename == NULL)
+        return 0;
+
+    #if defined(_WIN32)
+    
+    // Load dynamic library
+    module->handle = LoadLibraryA(filename);
+    if (module->handle == 0)
+    {
+        printf("error: loading module \"%s\" failed\n", filename);
+        return 0;
+    }
+
+    // Load module interface
+    module->proc_count = (XVM_MODULEPROCCOUNT_PROC)GetProcAddress(module->handle, "xiexie_module_proc_count");
+    module->fetch_proc = (XVM_MODULEFETCHPROC_PROC)GetProcAddress(module->handle, "xiexie_module_fetch_proc");
+    module->fetch_ident = (XVM_MODULEFETCHIDENT_PROC)GetProcAddress(module->handle, "xiexie_module_fetch_ident");
+
+    #elif defined(__linux__)
+
+    // Load dynamic library
+    module->handle = dlopen(fileanme, RTLD_LAZY);
+    if (module->handle == NULL)
+    {
+        printf("error: loading module \"%s\" failed\n", filename);
+        return 0;
+    }
+
+    // Load module interface
+    module->proc_count = (XVM_MODULEPROCCOUNT_PROC)dlsym(module->handle, "xiexie_module_proc_count");
+    module->fetch_proc = (XVM_MODULEFETCHPROC_PROC)dlsym(module->handle, "xiexie_module_fetch_proc");
+    module->fetch_ident = (XVM_MODULEFETCHIDENT_PROC)dlsym(module->handle, "xiexie_module_fetch_ident");
+
+    #endif
+
+    if (module->proc_count == NULL || module->fetch_proc == NULL || module->fetch_ident == NULL)
+    {
+        printf("error: loading interface of module \"%s\" failed", filename);
+        return 0;
+    }
+
+    return 1;
+}
+
+STATIC int xvm_module_unload(xvm_module* module)
+{
+    if (module != NULL)
+    {
+        #if defined(_WIN32)
+
+        if (module->handle != 0)
+        {
+            FreeLibrary(module->handle);
+            module->handle = 0;
+        }
+
+        #elif defined(__linux__)
+
+        if (module->handle != NULL)
+        {
+            dlclose(module->handle);
+            module->handle = NULL;
+        }
+
+        #endif
+
+        module->proc_count  = NULL;
+        module->fetch_proc  = NULL;
+        module->fetch_ident = NULL;
+
+        return 1;
+    }
+    return 0;
+}
+
+STATIC int xvm_module_bind(const xvm_module* module, xvm_bytecode* byte_code)
+{
+    if (module == NULL || byte_code == NULL)
+        return 0;
+
+    if (module->proc_count == NULL || module->fetch_proc == NULL || module->fetch_ident == NULL)
+    {
+        xvm_log_error("can not bind module with invalid interface");
+        return 0;
+    }
+
+    // Fetch number of invocation procedures
+    int num_procs = module->proc_count();
+
+    // Bind all module invocation procedures to byte code
+    for (int i = 0; i < num_procs; ++i)
+    {
+        // Fetch invocation identifier
+        const char* ident = module->fetch_ident(i);
+        if (ident == NULL)
+        {
+            xvm_log_error("invalid identifier fetched from module interface");
+            return 0;
+        }
+
+        // Fetch procedure pointer
+        XVM_INVOCATION_PROC proc = module->fetch_proc(i);
+
+        // Bind procedure invocation
+        xvm_bytecode_bind_invocation(byte_code, ident, proc);
+    }
 
     return 1;
 }
