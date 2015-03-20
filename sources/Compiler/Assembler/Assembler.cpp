@@ -677,7 +677,7 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
             const auto& reg1 = ParseRegister();
 
             /* Add instruction */
-            byteCode_->instructions.push_back(
+            byteCode_->AddInstr(
                 Instr::MakeReg2(static_cast<opcode_reg2>(instr.opcodePrimary), reg0, reg1)
             );
         }
@@ -687,7 +687,7 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
             int value = ParseOperand();
             
             /* Add instruction */
-            byteCode_->instructions.push_back(
+            byteCode_->AddInstr(
                 Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeSecondary), reg0, value)
             );
         }
@@ -704,7 +704,7 @@ void Assembler::ParseInstrReg1(const InstrCategory& instr)
     const auto& reg = ParseRegister();
 
     /* Add instruction */
-    byteCode_->instructions.push_back(
+    byteCode_->AddInstr(
         Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodePrimary), reg, 0)
     );
 }
@@ -736,7 +736,7 @@ void Assembler::ParseInstrJump(const InstrCategory& instr)
     }
 
     /* Add instruction */
-    byteCode_->instructions.push_back(
+    byteCode_->AddInstr(
         Instr::MakeJump(static_cast<opcode_jump>(instr.opcodePrimary), *reg, offset)
     );
 }
@@ -751,7 +751,7 @@ void Assembler::ParseInstrFloat(const InstrCategory& instr)
     const auto& reg1 = ParseRegister();
 
     /* Add instruction */
-    byteCode_->instructions.push_back(
+    byteCode_->AddInstr(
         Instr::MakeFloat(static_cast<opcode_float>(instr.opcodePrimary), reg0, reg1)
     );
 }
@@ -766,7 +766,7 @@ void Assembler::ParseInstrMem(const InstrCategory& instr)
     auto address = static_cast<unsigned int>(ParseOperand());
 
     /* Add instruction */
-    byteCode_->instructions.push_back(
+    byteCode_->AddInstr(
         Instr::MakeMem(static_cast<opcode_mem>(instr.opcodePrimary), reg, address)
     );
 }
@@ -786,7 +786,7 @@ void Assembler::ParseInstrMemOff(const InstrCategory& instr)
     auto offset = ParseOperand();
 
     /* Add instruction */
-    byteCode_->instructions.push_back(
+    byteCode_->AddInstr(
         Instr::MakeMemOff(static_cast<opcode_memoff>(instr.opcodePrimary), reg0, reg1, offset)
     );
 }
@@ -818,7 +818,7 @@ void Assembler::ParseInstrSpecialPUSH()
         const auto& reg = ParseRegister();
         
         /* Add instruction */
-        byteCode_->instructions.push_back(
+        byteCode_->AddInstr(
             Instr::MakeReg1(OPCODE_PUSH, reg, 0)
         );
     }
@@ -828,7 +828,7 @@ void Assembler::ParseInstrSpecialPUSH()
         auto value = ParseOperand();
 
         /* Add instruction */
-        byteCode_->instructions.push_back(
+        byteCode_->AddInstr(
             Instr::MakeSpecial(OPCODE_PUSHC, int(value))
         );
     }
@@ -837,7 +837,7 @@ void Assembler::ParseInstrSpecialPUSH()
 void Assembler::ParseInstrSpecialSTOP()
 {
     /* Add instruction */
-    byteCode_->instructions.push_back(
+    byteCode_->AddInstr(
         Instr::MakeSpecial(OPCODE_STOP, int(0))
     );
 }
@@ -845,11 +845,12 @@ void Assembler::ParseInstrSpecialSTOP()
 void Assembler::ParseInstrSpecialINVK()
 {
     /* Parse operand */
-    auto value = ParseUIntLiteral();
+    auto ident = ParseIdent();
+    auto id = InvokeID(ident);
 
     /* Add instruction */
-    byteCode_->instructions.push_back(
-        Instr::MakeSpecial(OPCODE_INVK, value)
+    byteCode_->AddInstr(
+        Instr::MakeSpecial(OPCODE_INVK, id)
     );
 }
 
@@ -869,7 +870,7 @@ void Assembler::ParseInstrSpecialRET()
     }
 
     /* Add instruction */
-    byteCode_->instructions.push_back(
+    byteCode_->AddInstr(
         Instr::MakeSpecial(OPCODE_RET, resultSize, argSize)
     );
 }
@@ -900,6 +901,12 @@ int Assembler::ParseOperand(bool isDataField)
             break;
     }
     return 0;
+}
+
+std::string Assembler::ParseIdent()
+{
+    /* Parse identifier */
+    return Accept(Token::Types::Ident).spell;
 }
 
 int Assembler::ParseIntLiteral()
@@ -938,7 +945,7 @@ std::string Assembler::ParseStringLiteral()
 int Assembler::ParseLocalAddress(bool isDataField)
 {
     /* Parse address label */
-    auto label = Accept(Token::Types::Ident).spell;
+    auto label = ParseIdent();
     return AddressValue(label, BackPatchAddr::InstrUse::Types::Local, isDataField);
 }
 
@@ -946,7 +953,7 @@ int Assembler::ParseGlobalAddress(bool isDataField)
 {
     /* Parse address label */
     Accept(Token::Types::At);
-    auto label = Accept(Token::Types::Ident).spell;
+    auto label = ParseIdent();
     return AddressValue(label, BackPatchAddr::InstrUse::Types::Global, isDataField);
 }
 
@@ -954,7 +961,7 @@ int Assembler::ParseAddressPointer(bool isDataField)
 {
     /* Parse address label */
     Accept(Token::Types::Pointer);
-    auto label = Accept(Token::Types::Ident).spell;
+    auto label = ParseIdent();
     return AddressValue(label, BackPatchAddr::InstrUse::Types::Pointer, isDataField);
 }
 
@@ -1038,8 +1045,8 @@ int Assembler::BackPatchAddressValue(int labelIndex, const BackPatchAddr::InstrU
         case BackPatchAddr::InstrUse::Types::Pointer:
         {
             auto instrIndex = static_cast<size_t>(labelIndex);
-            if (instrIndex < byteCode_->instructions.size())
-                return static_cast<int>(byteCode_->instructions[instrIndex].Code());
+            if (instrIndex < byteCode_->NumInstr())
+                return static_cast<int>(byteCode_->GetInstr(instrIndex).Code());
             else
                 Error("address index out of range", false);
         }
@@ -1073,12 +1080,12 @@ void Assembler::ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr,
 
     /* Back patch instruction */
     auto instrIndex = static_cast<size_t>(instrUse.index);
-    if (instrIndex < byteCode_->instructions.size())
+    if (instrIndex < byteCode_->NumInstr())
     {
         if (instrUse.isDataField)
-            byteCode_->instructions[instrIndex] = value;
+            byteCode_->GetInstr(instrIndex) = value;
         else
-            byteCode_->instructions[instrIndex].BackPatch(value);
+            byteCode_->GetInstr(instrIndex).BackPatch(value);
     }
     else
         Error("back-patch address index out of bounds");
@@ -1092,6 +1099,20 @@ bool Assembler::CreateByteCode(const std::string& outFilename)
         return false;
     }
     return byteCode_->WriteToFile(outFilename);
+}
+
+unsigned int Assembler::InvokeID(const std::string& ident)
+{
+    auto it = invokeIdents_.find(ident);
+    if (it == invokeIdents_.end())
+    {
+        /* Add invocation identifier to byte code */
+        auto id = invokeIDCounter_++;
+        invokeIdents_[ident] = id;
+        byteCode_->AddInvokeIdent(ident);
+        return id;
+    }
+    return it->second;
 }
 
 

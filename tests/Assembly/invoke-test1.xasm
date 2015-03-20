@@ -1,0 +1,10 @@
+
+; Invoke Test 1
+; 20/03/2015
+
+invk test1
+
+;push 10
+;push 2
+invk test2
+

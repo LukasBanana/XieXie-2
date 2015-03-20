@@ -1225,10 +1225,14 @@ xvm_export_address;
 //! XVM byte code structure.
 typedef struct
 {
-    int                 num_instructions;       //!< Number of instructions. By default 0.
+    unsigned int        num_instructions;       //!< Number of instructions. By default 0.
     instr_t*            instructions;           //!< Instruction array. By default NULL.
+
     unsigned int        num_export_addresses;   //!< Number of export addresses. By default 0.
     xvm_export_address* export_addresses;       //!< Export addresses array. By default NULL.
+
+    unsigned int        num_invoke_idents;      //!< Number of invocation identifiers. By default 0.
+    xvm_string*         invoke_idents;          //!< Invocation identifiers. By default NULL.
 }
 xvm_bytecode;
 
@@ -1274,8 +1278,12 @@ STATIC int xvm_bytecode_init(xvm_bytecode* byte_code)
         // Initialize byte code data
         byte_code->num_instructions     = 0;
         byte_code->instructions         = NULL;
+        
         byte_code->num_export_addresses = 0;
         byte_code->export_addresses     = NULL;
+
+        byte_code->num_export_addresses = 0;
+        byte_code->invoke_idents        = NULL;
         return 1;
     }
     return 0;
@@ -1286,9 +1294,9 @@ Allocates memory for the specified amount of byte code instructions.
 \param[in,out] byte_code Pointer to the byte code object.
 \param[in] num_instructions Specifies the number of instruction to allocate for the byte code.
 \see xvm_bytecode_init
-\note All instructions be uninitialized!
+\note All instructions are uninitialized!
 */
-STATIC int xvm_bytecode_create_instructions(xvm_bytecode* byte_code, int num_instructions)
+STATIC int xvm_bytecode_create_instructions(xvm_bytecode* byte_code, unsigned int num_instructions)
 {
     if (byte_code != NULL && byte_code->instructions == NULL && num_instructions > 0)
     {
@@ -1302,9 +1310,9 @@ STATIC int xvm_bytecode_create_instructions(xvm_bytecode* byte_code, int num_ins
 /**
 Allocates memory for the specified amount of byte code export addresses.
 \param[in,out] byte_code Pointer to the byte code object.
-\param[in] num_instructions Specifies the number of instruction to allocate for the byte code.
+\param[in] num_export_addresses Specifies the number of export addresses to allocate for the byte code.
 \see xvm_bytecode_init
-\note All export addresses be uninitialized!
+\note All export addresses are uninitialized!
 */
 STATIC int xvm_bytecode_create_export_addresses(xvm_bytecode* byte_code, unsigned int num_export_addresses)
 {
@@ -1312,6 +1320,24 @@ STATIC int xvm_bytecode_create_export_addresses(xvm_bytecode* byte_code, unsigne
     {
         byte_code->num_export_addresses = num_export_addresses;
         byte_code->export_addresses     = (xvm_export_address*)malloc(sizeof(xvm_export_address)*num_export_addresses);
+        return 1;
+    }
+    return 0;
+}
+
+/**
+Allocates memory for the specified amount of byte code invocation identifiers.
+\param[in,out] byte_code Pointer to the byte code object.
+\param[in] num_invoke_idents Specifies the number of invocation identifiers to allocate for the byte code.
+\see xvm_bytecode_init
+\note All invocation identifiers are uninitialized!
+*/
+STATIC int xvm_bytecode_create_invoke_idents(xvm_bytecode* byte_code, unsigned int num_invoke_idents)
+{
+    if (byte_code != NULL && byte_code->invoke_idents == NULL && num_invoke_idents > 0)
+    {
+        byte_code->num_invoke_idents    = num_invoke_idents;
+        byte_code->invoke_idents        = (xvm_string*)malloc(sizeof(xvm_string)*num_invoke_idents);
         return 1;
     }
     return 0;
@@ -1343,6 +1369,17 @@ STATIC int xvm_bytecode_free(xvm_bytecode* byte_code)
             byte_code->export_addresses     = NULL;
             byte_code->num_export_addresses = 0;
         }
+        if (byte_code->invoke_idents != NULL)
+        {
+            // Free each invocation identifier
+            for (unsigned int i = 0; i < byte_code->num_invoke_idents; ++i)
+                xvm_string_free(&(byte_code->invoke_idents[i]));
+
+            // Free invocation identifier list
+            free(byte_code->invoke_idents);
+            byte_code->invoke_idents        = NULL;
+            byte_code->num_invoke_idents    = 0;
+        }
         return 1;
     }
     return 0;
@@ -1371,8 +1408,7 @@ xvm_bytecode_datafield_ascii(NULL, "Hello, World\n", &num_instr);
 xvm_bytecode_datafield_ascii(byte_code.instructions + current_instr_offset, "Hello, World\n", NULL);
 \endcode
 */
-STATIC int xvm_bytecode_datafield_ascii(
-    instr_t* instr_ptr, const char* text, size_t* num_instructions)
+STATIC int xvm_bytecode_datafield_ascii(instr_t* instr_ptr, const char* text, size_t* num_instructions)
 {
     char* instr_byte;
     size_t num_instr, remainder;
@@ -1432,20 +1468,43 @@ n times:
 
 WORD: magic number (Must be *(int*)"XBCF")
 WORD: version number (Must be 102 for "1.02")
-WORD: number of instructions (n)
-n times:
+WORD: number of instructions (n1)
+n1 times:
     WORD: instruction
-WORD: number of export addresses (m)
-m times:
+WORD: number of export addresses (n2)
+n2 times:
     WORD: address
     STR: name
 
+--- XBC file format spec (Version 1.03): ---
+
+WORD: magic number (Must be *(int*)"XBCF")
+WORD: version number (Must be 102 for "1.02")
+WORD: number of instructions (n1)
+n1 times:
+    WORD: instruction
+WORD: number of export addresses (n2)
+n2 times:
+    WORD: address
+    STR: name
+WORD: number of invoke identifiers (n3)
+n3 times:
+    STR: identifier
+
 */
 
-#define XBC_FORMAT_MAGIC        (*((int*)("XBCF")))
-#define XBC_FORMAT_VERSION_1_01 101
-#define XBC_FORMAT_VERSION_1_02 102
+#define XBC_FORMAT_MAGIC            (*((int*)("XBCF")))
+#define XBC_FORMAT_VERSION_1_01     101
+#define XBC_FORMAT_VERSION_1_02     102
+#define XBC_FORMAT_VERSION_1_03     103
+#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_03
 
+/**
+Reads a byte code form file.
+\param[out] byte_code Specifies the resulting byte code object.
+\param[in] filename Specifies the filename from which the byte code is to be read.
+\return Zero on failure and non-zero otherwise.
+*/
 STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
 {
     // Check arguments
@@ -1474,9 +1533,9 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
 
     // Read version number
     unsigned int version = xvm_file_read_uint(file);
-    if (version != XBC_FORMAT_VERSION_1_01 && version != XBC_FORMAT_VERSION_1_02)
+    if (version != XBC_FORMAT_VERSION_1_01 && version != XBC_FORMAT_VERSION_1_02 && version != XBC_FORMAT_VERSION_1_03)
     {
-        xvm_log_error("invalid version number (must be 1.01 or 1.02)");
+        xvm_log_error("invalid version number (must be 1.01, 1.02, or 1.03)");
         fclose(file);
         return 0;
     }
@@ -1520,18 +1579,53 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
         }
     }
 
+    // Read invocation identifiers
+    if (version >= XBC_FORMAT_VERSION_1_03)
+    {
+        unsigned int num_invoke_idents = xvm_file_read_uint(file);
+
+        if (num_invoke_idents > 0)
+        {
+            if (xvm_bytecode_create_invoke_idents(byte_code, num_invoke_idents) == 0)
+            {
+                xvm_log_error("creating byte code invocation identifiers failed");
+                fclose(file);
+                return 0;
+            }
+
+            for (unsigned int i = 0; i < num_invoke_idents; ++i)
+            {
+                // Read string and store it into the invocation identifier
+                byte_code->invoke_idents[i] = xvm_string_read_from_file(file);
+            }
+        }
+    }
+
     // Close file and return with success
     fclose(file);
 
     return 1;
 }
 
-STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filename)
+/**
+Writes the specified byte code to file.
+\param[in] byte_code specifies the byte code which is to be written to file.
+\param[in] filename Specifies the filename which is to be used to create the file.
+\param[in] version Specifies the format version. Must be one of the following values:
+XBC_FORMAT_VERSION_1_01, XBC_FORMAT_VERSION_1_02, XBC_FORMAT_VERSION_1_03, or XBC_FORMAT_VERSION_LATEST.
+\return Zero on failure and non-zero otherwise.
+*/
+STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filename, unsigned int version)
 {
     // Check arguments
-    if (byte_code == NULL || byte_code->num_instructions <= 0 || byte_code->instructions == NULL || filename == NULL)
+    if (byte_code == NULL || byte_code->instructions == NULL || filename == NULL)
     {
         xvm_log_error("invalid arguments to write byte code");
+        return 0;
+    }
+    if (version != XBC_FORMAT_VERSION_1_01 && version != XBC_FORMAT_VERSION_1_02 && version != XBC_FORMAT_VERSION_1_03)
+    {
+        xvm_log_error("invalid version number (must be 1.01, 1.02, or 1.03)");
         return 0;
     }
 
@@ -1547,23 +1641,16 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     xvm_file_write_uint(file, XBC_FORMAT_MAGIC);
 
     // Write version number
-    const int has_export_addr = (byte_code->export_addresses != NULL && byte_code->num_export_addresses > 0 ? 1 : 0);
-
-    xvm_file_write_uint(
-        file,
-        has_export_addr != 0 ?
-            XBC_FORMAT_VERSION_1_02 :
-            XBC_FORMAT_VERSION_1_01
-    );
+    xvm_file_write_uint(file, version);
 
     // Write instructions
-    unsigned int num_instr = (unsigned int)byte_code->num_instructions;
+    unsigned int num_instr = byte_code->num_instructions;
     xvm_file_write_uint(file, num_instr);
 
     fwrite(byte_code->instructions, sizeof(instr_t), num_instr, file);
 
     // Write export addresses
-    if (has_export_addr != 0)
+    if (version >= XBC_FORMAT_VERSION_1_02)
     {
         unsigned int num_export_addr = byte_code->num_export_addresses;
         xvm_file_write_uint(file, num_export_addr);
@@ -1575,6 +1662,16 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
             xvm_file_write_uint(file, export_addr->addr);
             xvm_string_write_to_file(export_addr->name, file);
         }
+    }
+
+    // Write invocation identifiers
+    if (version >= XBC_FORMAT_VERSION_1_03)
+    {
+        unsigned int num_invoke_idents = byte_code->num_invoke_idents;
+        xvm_file_write_uint(file, num_invoke_idents);
+
+        for (unsigned int i = 0; i < num_invoke_idents; ++i)
+            xvm_string_write_to_file(byte_code->invoke_idents[i], file);
     }
 
     // Close file and return with success
@@ -2096,7 +2193,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
     }
     reg;
 
-    const int num_instr = byte_code->num_instructions;
+    const int num_instr = (int)byte_code->num_instructions;
 
     const regi_t instr_ptr_begin    = (regi_t)byte_code->instructions;
     const regi_t instr_ptr_end      = instr_ptr_begin + num_instr*4;
@@ -3221,7 +3318,7 @@ int main(int argc, char* argv[])
     xvm_stack_debug_float(&stack, 0, 10);
     #endif
 
-    xvm_bytecode_write_to_file(&byte_code, program_filename);
+    xvm_bytecode_write_to_file(&byte_code, program_filename, XBC_FORMAT_VERSION_1_03);
 
     xvm_stack_free(&stack);
     xvm_bytecode_free(&byte_code);

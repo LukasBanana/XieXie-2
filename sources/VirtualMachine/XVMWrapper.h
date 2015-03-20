@@ -603,13 +603,37 @@ class ByteCode
         //! Writes the instructions to the specified file.
         bool WriteToFile(const std::string& filename)
         {
-            return xvm_bytecode_write_to_file(&byteCode_, filename.c_str()) != 0;
+            return xvm_bytecode_write_to_file(&byteCode_, filename.c_str(), XBC_FORMAT_VERSION_LATEST) != 0;
         }
 
         //! Adds the specifies instruction
         void AddInstr(const Instruction& instr)
         {
-            instructions.push_back(instr);
+            instructions_.push_back(instr);
+        }
+
+        //! Returns the instruction at the specified index.
+        const Instruction& GetInstr(size_t index) const
+        {
+            return instructions_.at(index);
+        }
+
+        //! Returns the instruction at the specified index.
+        Instruction& GetInstr(size_t index)
+        {
+            return instructions_.at(index);
+        }
+
+        //! Returns the number of instructions.
+        size_t NumInstr() const
+        {
+            return instructions_.size();
+        }
+
+        //! Returns the index for the next instruction.
+        size_t NextInstrIndex() const
+        {
+            return NumInstr();
         }
 
         //! Adds the specified integer literal word as instruction data field.
@@ -631,10 +655,10 @@ class ByteCode
             xvm_bytecode_datafield_ascii(NULL, asciiDataField.c_str(), &numInstr);
 
             size_t instrIndex = NextInstrIndex();
-            instructions.resize(instructions.size() + numInstr);
+            instructions_.resize(instructions_.size() + numInstr);
 
             xvm_bytecode_datafield_ascii(
-                reinterpret_cast<instr_t*>(&(instructions[instrIndex])),
+                reinterpret_cast<instr_t*>(&(instructions_[instrIndex])),
                 asciiDataField.c_str(),
                 NULL
             );
@@ -643,13 +667,13 @@ class ByteCode
         //! Adds a new export address.
         void AddExportAddress(const std::string& name, unsigned int address)
         {
-            exportAddresses.push_back({ name, address });
+            exportAddresses_.push_back({ name, address });
         }
 
-        //! Returns the index for the next instruction.
-        size_t NextInstrIndex() const
+        //! Adds a new invocation identifier.
+        void AddInvokeIdent(const std::string& ident)
         {
-            return instructions.size();
+            invokeIdentifiers_.push_back(ident);
         }
 
         /**
@@ -660,15 +684,15 @@ class ByteCode
         bool Finalize()
         {
             /* Copy instructions into XVM byte code */
-            size_t numInstr = instructions.size();
+            size_t numInstr = instructions_.size();
             if (xvm_bytecode_create_instructions(&byteCode_, static_cast<int>(numInstr)) == 0)
                 return false;
             
             for (size_t i = 0; i < numInstr; ++i)
-                byteCode_.instructions[i] = instructions[i].Code();
+                byteCode_.instructions[i] = instructions_[i].Code();
 
             /* Copy export-addresses into XVM byte code */
-            size_t numExportAddr = exportAddresses.size();
+            size_t numExportAddr = exportAddresses_.size();
             if (numExportAddr > 0)
             {
                 if (xvm_bytecode_create_export_addresses(&byteCode_, static_cast<unsigned int>(numExportAddr)) == 0)
@@ -676,7 +700,7 @@ class ByteCode
 
                 for (size_t i = 0; i < numExportAddr; ++i)
                 {
-                    const ExportAddress& addr = exportAddresses[i];
+                    const ExportAddress& addr = exportAddresses_[i];
                     xvm_export_address* exportAddr = &(byteCode_.export_addresses[i]);
 
                     /* Setup final export address */
@@ -688,14 +712,23 @@ class ByteCode
                 }
             }
 
+            /* Coyp invocation identifiers into XVM byte code */
+            size_t numInvokeIdents = invokeIdentifiers_.size();
+            if (numInvokeIdents > 0)
+            {
+                if (xvm_bytecode_create_invoke_idents(&byteCode_, static_cast<unsigned int>(numInvokeIdents)) == 0)
+                    return false;
+
+                for (size_t i = 0; i < numInvokeIdents; ++i)
+                {
+                    /* Setup final invocation identifier */
+                    const char* ident = invokeIdentifiers_[i].c_str();
+                    byteCode_.invoke_idents[i] = xvm_string_create_from(ident);
+                }
+            }
+
             return true;
         }
-
-        //! Array list of all instructions.
-        std::vector<Instruction> instructions;
-
-        //! Array list of all export addresses.
-        std::vector<ExportAddress> exportAddresses;
 
     private:
         
@@ -712,7 +745,16 @@ class ByteCode
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack);
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const std::string& entryPoint);
 
-        xvm_bytecode byteCode_;
+        xvm_bytecode                byteCode_;
+
+        //! Array list of all instructions.
+        std::vector<Instruction>    instructions_;
+
+        //! Array list of all export addresses.
+        std::vector<ExportAddress>  exportAddresses_;
+
+        //! Array list of all invocation identifiers.
+        std::vector<std::string>    invokeIdentifiers_;
 
 };
 

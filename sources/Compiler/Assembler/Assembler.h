@@ -212,6 +212,7 @@ class Assembler
         const VirtualMachine::Register& ParseRegister();
         int ParseOperand(bool isDataField = false);
 
+        std::string ParseIdent();
         int ParseIntLiteral();
         unsigned int ParseUIntLiteral();
         float ParseFloatLiteral();
@@ -238,30 +239,38 @@ class Assembler
 
         bool CreateByteCode(const std::string& outFilename);
 
+        unsigned int InvokeID(const std::string& ident);
+
         /* === Members === */
 
-        std::string line_;              //!< Current source line.
-        std::string::iterator lineIt_;  //!< Source line iterator.
+        std::string                                 line_;                  //!< Current source line.
+        std::string::iterator                       lineIt_;                //!< Source line iterator.
 
-        char chr_ = 0;
-        Token tkn_;
+        char                                        chr_ = 0;
+        Token                                       tkn_;
 
-        SyntaxAnalyzer::SourceArea sourceArea_;
+        SyntaxAnalyzer::SourceArea                  sourceArea_;
 
         // (Can not be unique_ptr because of unknown type)
-        std::shared_ptr<VirtualMachine::ByteCode> byteCode_;
+        std::shared_ptr<VirtualMachine::ByteCode>   byteCode_;
         std::shared_ptr<VirtualMachine::Intrinsics> intrinsics_;
 
-        //! Parent label will be pre-appended to all sub labels (e.g. parent is "Main", sub label is ".end" -> ".Main.end").
-        std::string globalLabel_;
+        /**
+        Parent label will be pre-appended to all sub labels
+        (e.g. parent is "Main", sub label is ".end" -> ".Main.end").
+        */
+        std::string                                 globalLabel_;
 
-        std::map<std::string, size_t> labelAddresses_;              //!< [ label name | instruction index ].
-        std::map<std::string, BackPatchAddr> backPatchAddresses_;   //!< [ label name | back patch address ].
+        std::map<std::string, size_t>               labelAddresses_;        //!< [ label name | instruction index ].
+        std::map<std::string, BackPatchAddr>        backPatchAddresses_;    //!< [ label name | back patch address ].
+        
+        std::map<std::string, InstrCategory>        mnemonicTable_;
 
-        std::map<std::string, InstrCategory> mnemonicTable_;
+        unsigned int                                invokeIDCounter_ = 0;
+        std::map<std::string, unsigned int>         invokeIdents_;
 
-        Log&            log_;
-        ErrorReporter   errorReporter_;
+        Log&                                        log_;
+        ErrorReporter                               errorReporter_;
 
 };
 
