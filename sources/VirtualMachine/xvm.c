@@ -1200,14 +1200,24 @@ STATIC int xvm_string_write_to_file(xvm_string string, FILE* file)
 
 /* ----- Exception handling ----- */
 
-jmp_buf xvm_exception_envbuf;
-const char* xvm_exception_err = "";
+static jmp_buf _xvm_exception_envbuf;
+static const char* _xvm_exception_err = "";
 
-STATIC void xvm_exception_throw(const char* error_message, int error_code)
+STATIC void _xvm_exception_throw(const char* error_message, int error_code)
 {
     // Setup exception error message and make a long jump
-    xvm_exception_err = error_message;
-    longjmp(xvm_exception_envbuf, error_code);
+    _xvm_exception_err = error_message;
+    longjmp(_xvm_exception_envbuf, error_code);
+}
+
+STATIC void _xvm_exception_stack_overflow()
+{
+    _xvm_exception_throw("stack overflow", EXITCODE_STACK_OVERFLOW);
+}
+
+STATIC void _xvm_exception_stack_underflow()
+{
+    _xvm_exception_throw("stack underflow", EXITCODE_STACK_UNDERFLOW);
 }
 
 
@@ -1302,7 +1312,7 @@ INLINE STATIC void xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t
         (*reg_sp) += sizeof(stack_word_t);
     }
     else
-        xvm_exception_throw("stack overflow", EXITCODE_STACK_OVERFLOW);
+        _xvm_exception_stack_overflow();
 }
 
 INLINE STATIC stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
@@ -1311,7 +1321,7 @@ INLINE STATIC stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
     if (stack_ptr > stack->storage)
         (*reg_sp) -= sizeof(stack_word_t);
     else
-        xvm_exception_throw("stack underflow", EXITCODE_STACK_UNDERFLOW);
+        _xvm_exception_stack_underflow();
     return *REG_TO_STACK_PTR(reg_sp);
 }
 
@@ -1353,10 +1363,18 @@ STATIC void xvm_stack_debug_float(xvm_stack* stack, size_t first_entry, size_t n
 }
 
 
-/* ----- Invocation Environment ----- */
+/* ----- Stack Environment ----- */
 
 //! XVM environment state type.
 typedef void* xvm_env;
+
+typedef struct
+{
+    stack_word_t**  ptr_ref;    // reference to stack pointer (register $sp)
+    stack_word_t*   begin;      // stack begin
+    stack_word_t*   end;        // stack end
+}
+_xvm_env_internal;
 
 /**
 Invocation procedure signature. This is the signature for external procedure invocations in ANSI C.
@@ -1372,24 +1390,71 @@ STATIC void xvm_invocation_dummy(xvm_env env)
 //! Returns the argument as integer, specified by the parameter index (beginning with 1).
 STATIC int xvm_env_param_int(xvm_env env, unsigned int param_index)
 {
-    return *(int*)((stack_word_t*)env - param_index);
+    stack_word_t* ptr = *((_xvm_env_internal*)env)->ptr_ref;
+    return *(int*)(ptr - param_index);
 }
 
 //! Returns the argument as float, specified by the parameter index (beginning with 1).
 STATIC float xvm_env_param_float(xvm_env env, unsigned int param_index)
 {
-    return *(float*)((stack_word_t*)env - param_index);
+    stack_word_t* ptr = *((_xvm_env_internal*)env)->ptr_ref;
+    return *(float*)(ptr - param_index);
 }
 
 //! Returns the argument as null-terminated C string, specified by the parameter index (beginning with 1).
 STATIC char* xvm_env_param_string(xvm_env env, unsigned int param_index)
 {
-    return (char*)*((stack_word_t*)env - param_index);
+    stack_word_t* ptr = *((_xvm_env_internal*)env)->ptr_ref;
+    return (char*)*(ptr - param_index);
+}
+
+//! Returns the argument as raw pointer, specified by the parameter index (beginning with 1).
+STATIC void* xvm_env_param_pointer(xvm_env env, unsigned int param_index)
+{
+    stack_word_t* ptr = *((_xvm_env_internal*)env)->ptr_ref;
+    return (void*)*(ptr - param_index);
+}
+
+// Pop 'arg_size' words from the stack.
+STATIC void xvm_env_return_void(xvm_env env, unsigned int arg_size)
+{
+    _xvm_env_internal* stack_env = (_xvm_env_internal*)env;
+
+    // Pop arguments from stack
+    *stack_env->ptr_ref -= arg_size;
+    if (*stack_env->ptr_ref < stack_env->begin)
+        _xvm_exception_stack_underflow();
+}
+
+// Pop 'arg_size' words from the stack and push 'value' onto the stack.
+STATIC void xvm_env_return_int(xvm_env env, unsigned int arg_size, int value)
+{
+    _xvm_env_internal* stack_env = (_xvm_env_internal*)env;
+
+    // Pop arguments from stack
+    *stack_env->ptr_ref -= arg_size;
+    if (*stack_env->ptr_ref < stack_env->begin)
+        _xvm_exception_stack_underflow();
+
+    // Push result onto stack
+    **stack_env->ptr_ref = value;
+    ++*stack_env->ptr_ref;
+    if (*stack_env->ptr_ref > stack_env->end)
+        _xvm_exception_stack_overflow();
+}
+
+// Pop 'arg_size' words from the stack and push 'value' onto the stack.
+STATIC void xvm_env_return_float(xvm_env env, unsigned int arg_size, float value)
+{
+    xvm_env_return_int(env, arg_size, FLT_TO_INT_REINTERPRET(value));
 }
 
 #define XVM_PARAM_INT(ident, index) int ident = xvm_env_param_int(env, index)
 #define XVM_PARAM_FLOAT(ident, index) float ident = xvm_env_param_float(env, index)
 #define XVM_PARAM_STRING(ident, index) char* ident = xvm_env_param_string(env, index)
+
+#define XVM_RETURN_INT(value) xvm_env_push_int(env, value)
+#define XVM_RETURN_FLOAT(value) xvm_env_push_float(env, value)
 
 
 /* ----- Byte code ----- */
@@ -2540,7 +2605,7 @@ STATIC void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         #endif
 
         default:
-            xvm_exception_throw("invalid intrinsic", EXITCODE_INVALID_INTRINSIC);
+            _xvm_exception_throw("invalid intrinsic", EXITCODE_INVALID_INTRINSIC);
             break;
     }
 }
@@ -2589,6 +2654,12 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
     // Program start pointer is used to load memory from program "DATA" section
     const byte_t* const program_start_ptr = (const byte_t*)(byte_code->instructions);
 
+    // Invocation environment
+    _xvm_env_internal stack_env;
+    stack_env.ptr_ref   = (stack_word_t**)reg_sp;
+    stack_env.begin     = stack->storage;
+    stack_env.end       = stack->storage + stack->stack_size;
+
     /* --- Temporary memory --- */
     instr_t         instr;          // Current instruction
     opcode_t        opcode;         // Current opcode
@@ -2614,10 +2685,10 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
         *reg_pc += (entry_point->addr << 2);
 
     /* --- Catch exceptions --- */
-    int exception_val = setjmp(xvm_exception_envbuf);
+    int exception_val = setjmp(_xvm_exception_envbuf);
     if (exception_val != 0)
     {
-        xvm_log_error(xvm_exception_err);
+        xvm_log_error(_xvm_exception_err);
         return (xvm_exit_codes)exception_val;
     }
 
@@ -2838,7 +2909,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg0 = xvm_instr_get_reg0(instr);
                 sgn_value = xvm_instr_get_sgn_value22(instr);
                 if (sgn_value == 0)
-                    xvm_exception_throw("division by zero (DIV instruction)", EXITCODE_DIVISION_BY_ZERO);
+                    _xvm_exception_throw("division by zero (DIV instruction)", EXITCODE_DIVISION_BY_ZERO);
                 reg.i[reg0] /= sgn_value;
             }
             break;
@@ -2849,7 +2920,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg0 = xvm_instr_get_reg0(instr);
                 sgn_value = xvm_instr_get_sgn_value22(instr);
                 if (sgn_value == 0)
-                    xvm_exception_throw("division by zero (MOD instruction)", EXITCODE_DIVISION_BY_ZERO);
+                    _xvm_exception_throw("division by zero (MOD instruction)", EXITCODE_DIVISION_BY_ZERO);
                 reg.i[reg0] %= sgn_value;
             }
             break;
@@ -3194,7 +3265,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 {
                     // Invoke bounded procedure
                     XVM_INVOCATION_PROC invokeProc = byte_code->invoke_bindings[unsgn_value];
-                    invokeProc(REG_TO_STACK_PTR(reg_sp));
+                    invokeProc((void*)&stack_env);
                 }
                 else
                     return EXITCODE_INVOCATION_VIOLATION;

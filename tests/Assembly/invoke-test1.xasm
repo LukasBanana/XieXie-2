@@ -2,15 +2,37 @@
 ; Invoke Test 1
 ; 20/03/2015
 
-push 0
+push 1
 lda $r0, @msg
 push $r0
-lda $r0, @title
-push $r0
+lda $r1, @title
+push $r1
 invk messageBox
+
+pop $r2
+mov $r3, 2
+cmp $r2, $r3
+je .cancel
+	; OK button pressed
+	push 0
+	lda $r0, @msg_ok
+	push $r0
+	push $r1
+	invk messageBox
+jmp .end
+.cancel:
+	; CANCEL button pressed
+	push 0
+	lda $r0, @msg_cancel
+	push $r0
+	push $r1
+	invk messageBox
+.end:
 
 stop
 
-title: .ascii "Hello, World!\nThis is an invocation test with the XVM."
+title: .ascii "Information"
 msg: .ascii "Hello, World!\nThis is an invocation test with the XVM."
+msg_ok: .ascii "You pressed OK!"
+msg_cancel: .ascii "You pressed CANCEL!"
 

@@ -1,5 +1,5 @@
 /*
- * msgbox.xx
+ * MsgBox.xx
  * 
  * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -9,7 +9,7 @@
 Message box module.
 @note Because the file is "msgbox" and not "MsgBox", this attribute is required!
 */
-[[file("msgbox")]]
+//[[file("MsgBox")]]
 module MsgBox {
 	
 	/**
@@ -17,7 +17,8 @@ module MsgBox {
 	@title Specifies the box title.
 	@text Specifies the message text.
 	@bitFlags Specifies the flags bitmask.
+	@return ID of the clicked button.
 	*/
-	static void messageBox(String title, String text, int bitFlags := 0)
+	static int messageBox(String title, String text, int bitFlags := 0)
 	
 }
