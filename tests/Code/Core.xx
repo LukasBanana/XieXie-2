@@ -7,6 +7,7 @@
 
 // Low-level intrinsic functions.
 extern class Intrinsics {
+	
 	static int allocMem(int size)
 	static void freeMem(int ptr)
 	static void copyMem(int destPtr, int srcPtr, int size)
@@ -49,27 +50,37 @@ extern class Intrinsics {
 	static float randFloat()
 	static int time()
 	static void sleep(int duration)
+	
 }
 
 // Root base object for all classes
 extern class Object {
+	
 	Object copy()
 	String toString()
+	
 }
 
 // UTF-8 string class.
 extern class String {
+	
 	Object copy()
 	String toString()
 	
 	int size()
 	String add(String rhs)
 	
-	int getRawPointer()
+	/**
+	Returns the raw pointer (as integer) which points to
+	the first character in this null terminated string.
+	*/
+	int pointer()
+	
 }
 
 // (Generic) array class.
 extern class Array {
+	
 	Object copy()
 	String toString()
 	
@@ -80,4 +91,35 @@ extern class Array {
 	void remove(Object o)
 	
 	bool contains(Object o)
+	
+	//! Returns the raw pointer (as integer) of this array.
+	int pointer()
+	
+}
+
+//! General purpose buffer. This class manages a pointer.
+extern class Buffer {
+	
+	Object copy()
+	
+	int size()
+	void resize(int s)
+	
+	void writeByte(int offset, int value)
+	int readByte(int offset)
+	
+	void writeInt(int offset, int value)
+	int readInt(int offset)
+	
+	void writeFloat(int offset, float value)
+	float readFloat(int offset)
+	
+	//! Writes the specified sub buffer into this buffer.
+	void writeBuffer(int offset, int size, Buffer subBuffer)
+	//! Reads this buffer into the specified sub buffer.
+	void readBuffer(int offset, int size, Buffer subBuffer)
+	
+	//! Returns the raw pointer (as integer) of this buffer.
+	int pointer()
+	
 }

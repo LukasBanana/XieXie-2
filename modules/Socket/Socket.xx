@@ -1,0 +1,16 @@
+/*
+ * Socket.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+//! Socket API module.
+module Socket {
+	
+	static int open(int domain, int type, int protocol)
+	static void close(int socket)
+	
+	//static int accept(int socket, )
+	
+}
