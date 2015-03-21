@@ -19,7 +19,7 @@ namespace AbstractSyntaxTrees
 using namespace Platform::ConsoleManip;
 
 ASTViewer::ASTViewer(Log& log) :
-    log_{ log }
+    log_(log)
 {
 }
 

@@ -2055,7 +2055,7 @@ STATIC int xvm_module_load(xvm_module* module, const char* filename)
     #elif defined(__linux__)
 
     // Load dynamic library
-    module->handle = dlopen(fileanme, RTLD_LAZY);
+    module->handle = dlopen(filename, RTLD_LAZY);
     if (module->handle == NULL)
     {
         printf("error: loading module \"%s\" failed\n", filename);

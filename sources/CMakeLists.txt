@@ -116,7 +116,6 @@ include_directories("${PROJECT_SOURCE_DIR}/Platform")
 include_directories("${PROJECT_SOURCE_DIR}/Shell")
 include_directories("${PROJECT_SOURCE_DIR}/Shell/Command")
 
-
 # === Executable ===
 
 add_executable(xxc ${FilesAll})
@@ -124,5 +123,10 @@ add_executable(xvm ${FilesVirtualMachineAll})
 
 set_target_properties(xxc PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(xvm PROPERTIES LINKER_LANGUAGE C)
+
+if(UNIX)
+	target_link_libraries(xvm dl m)
+	target_link_libraries(xxc dl m)
+endif()
 
 

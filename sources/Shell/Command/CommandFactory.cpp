@@ -14,7 +14,11 @@ namespace CommandFactory
 
 template <typename T, typename... Args> std::unique_ptr<T> Make(Args&&... args)
 {
+    #ifdef __GNUC__
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+    #else
     return std::make_unique<T>(std::forward<Args>(args)...);
+    #endif
 }
 
 std::unique_ptr<Command> InstantiateCommand(const std::string& cmdName)

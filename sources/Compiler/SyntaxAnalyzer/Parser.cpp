@@ -11,6 +11,8 @@
 #include "SourceFile.h"
 #include "BuiltinTypeDenoter.h"
 
+#include <algorithm>
+
 
 namespace SyntaxAnalyzer
 {

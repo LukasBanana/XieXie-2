@@ -39,7 +39,8 @@ class ScopedStmnt : public Stmnt
     protected:
         
         ScopedStmnt() :
-            symTab{ *this }
+            // bracket initializer required for GCC
+            symTab(*this)
         {
         }
         ScopedStmnt(const SourceArea& area) :

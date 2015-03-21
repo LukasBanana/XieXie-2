@@ -12,10 +12,10 @@ namespace SyntaxAnalyzer
 {
 
 
-Token::Token(Token&& other) :
-    type_   { other.type_             },
-    area_   { other.area_             },
-    spell_  { std::move(other.spell_) }
+Token::Token(Token&& rhs) :
+    type_   { rhs.type_             },
+    area_   { rhs.area_             },
+    spell_  { std::move(rhs.spell_) }
 {
 }
 

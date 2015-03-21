@@ -18,7 +18,11 @@ namespace ControlFlowGraph
 BasicBlock* ClassTree::CreateBasicBlock()
 {
     /* Create new basic block */
+    #ifdef __GNUC__
+    basicBlocks_.emplace_back(std::unique_ptr<BasicBlock>(new BasicBlock()));
+    #else
     basicBlocks_.emplace_back(std::make_unique<BasicBlock>());
+    #endif
     return basicBlocks_.back().get();
 }
 
@@ -29,7 +33,11 @@ BasicBlock* ClassTree::CreateRootBasicBlock(const std::string& ident)
         throw std::invalid_argument("identifier \"" + ident + "\" has already been used for a CFG basic block");
 
     /* Create new basic block */
+    #ifdef __GNUC__
+    basicBlocks_.emplace_back(std::unique_ptr<BasicBlock>(new BasicBlock()));
+    #else
     basicBlocks_.emplace_back(std::make_unique<BasicBlock>());
+    #endif
     
     /* Register identifier */
     auto bb = basicBlocks_.back().get();

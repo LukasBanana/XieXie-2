@@ -130,7 +130,7 @@ class Token
             EndOfFile,
         };
 
-        Token(Token&& other);
+        Token(Token&& rhs);
 
         Token(const SourceArea& area, const Types type);
         Token(const SourceArea& area, const Types type, const std::string& spell);

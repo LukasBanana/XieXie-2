@@ -21,9 +21,9 @@ namespace XieXie
 using namespace VirtualMachine;
 
 Assembler::Assembler(Log& log) :
-    byteCode_   { std::make_shared< ByteCode   >() },
-    intrinsics_ { std::make_shared< Intrinsics >() },
-    log_        { log                              }
+    byteCode_   ( std::make_shared< ByteCode   >() ),
+    intrinsics_ ( std::make_shared< Intrinsics >() ),
+    log_        ( log                              )
 {
     EstablishMnemonicTable();
 }

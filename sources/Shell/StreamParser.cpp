@@ -9,7 +9,8 @@
 
 
 StreamParser::StreamParser(std::istream& stream) :
-    stream_{ stream }
+    // bracket initializer required for GCC
+    stream_(stream)
 {
     Accept();
 }

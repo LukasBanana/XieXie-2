@@ -73,11 +73,19 @@ std::unique_ptr<TACCopyInst> ConstantPropagation::ConstantFolding(const TACModif
 
     auto MakeInt = [&inst](int value)
     {
+        #ifdef __GNUC__
+        return std::unique_ptr<TACCopyInst>(new TACCopyInst(inst.dest, TACVar(ToStr(value))));
+        #else
         return std::make_unique<TACCopyInst>(inst.dest, TACVar(ToStr(value)));
+        #endif
     };
     auto MakeFloat = [&inst](float value)
     {
+        #ifdef __GNUC__
+        return std::unique_ptr<TACCopyInst>(new TACCopyInst(inst.dest, TACVar(ToStr(value))));
+        #else
         return std::make_unique<TACCopyInst>(inst.dest, TACVar(ToStr(value)));
+        #endif
     };
 
     const auto& lhs = inst.srcLhs;

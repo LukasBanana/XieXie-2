@@ -100,9 +100,11 @@ class Assembler
             };
 
             Token() = default;
-            Token(Token&& other) :
-                type    ( other.type             ),
-                spell   ( std::move(other.spell) )
+            Token(const Token& rhs) = default;
+            Token& operator = (const Token& rhs) = default;
+            Token(Token&& rhs) :
+                type    ( rhs.type             ),
+                spell   ( std::move(rhs.spell) )
             {
             }
             Token(const Types type, const std::string& spell) :

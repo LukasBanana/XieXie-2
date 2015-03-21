@@ -21,19 +21,20 @@ namespace ContextAnalyzer
 
 
 //! Common symbol table class with a single scope.
-template <typename Owner, typename Symbol> class SymbolTable
+template <typename Owner, typename Sym> class SymbolTable
 {
     
     public:
         
         using OwnerType = Owner;
-        using SymbolType = Symbol;
+        using SymbolType = Sym;
 
         //! Override symbol callback procedure. Must return true to allow a symbol override.
         using OnOverrideProc = std::function<bool (SymbolType* symbol)>;
 
         SymbolTable(OwnerType& owner) :
-            owner_{ owner }
+            // bracket initializer required for GCC
+            owner_(owner)
         {
             /* Open global scope */
             OpenScope();
