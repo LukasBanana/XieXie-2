@@ -487,11 +487,7 @@ DEF_VISIT_PROC(GraphGenerator, PointerTypeDenoter)
 
 void GraphGenerator::CreateClassTree()
 {
-    #ifdef __GNUC__
-    programClassTrees_.emplace_back(std::unique_ptr<ClassTree>(new ClassTree()));
-    #else
-    programClassTrees_.emplace_back(std::make_unique<ClassTree>());
-    #endif
+    programClassTrees_.emplace_back(MakeUnique<ClassTree>());
     classTree_ = programClassTrees_.back().get();
 }
 

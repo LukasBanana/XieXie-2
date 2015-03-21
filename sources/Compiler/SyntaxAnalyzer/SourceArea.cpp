@@ -16,9 +16,8 @@ namespace SyntaxAnalyzer
 const SourceArea SourceArea::ignore;
 
 SourceArea::SourceArea(const SourcePosition& pos) :
-    // bracket initializer required for GCC
-    start( pos                             ),
-    end  ( { pos.Row(), pos.Column() + 1 } )
+    start{ pos                                         },
+    end  { SourcePosition(pos.Row(), pos.Column() + 1) }
 {
 }
 SourceArea::SourceArea(const SourcePosition& startPos, const SourcePosition& endPos) :

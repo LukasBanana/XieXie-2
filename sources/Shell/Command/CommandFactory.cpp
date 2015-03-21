@@ -6,41 +6,33 @@
  */
 
 #include "CommandFactory.h"
+#include "MakeUnique.h"
 
 
 namespace CommandFactory
 {
 
 
-template <typename T, typename... Args> std::unique_ptr<T> Make(Args&&... args)
-{
-    #ifdef __GNUC__
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-    #else
-    return std::make_unique<T>(std::forward<Args>(args)...);
-    #endif
-}
-
 std::unique_ptr<Command> InstantiateCommand(const std::string& cmdName)
 {
     if (cmdName == "log")
-        return Make<LogCommand>();
+        return MakeUnique<LogCommand>();
     if (cmdName == "prompt")
-        return Make<PromptCommand>();
+        return MakeUnique<PromptCommand>();
     if (cmdName == "pause")
-        return Make<PauseCommand>();
+        return MakeUnique<PauseCommand>();
     if (cmdName == "compile" || cmdName == "C")
-        return Make<CompileCommand>();
+        return MakeUnique<CompileCommand>();
     if (cmdName == "assemble" || cmdName == "A")
-        return Make<AssembleCommand>();
+        return MakeUnique<AssembleCommand>();
     if (cmdName == "version")
-        return Make<VersionCommand>();
+        return MakeUnique<VersionCommand>();
     if (cmdName == "help")
-        return Make<HelpCommand>();
+        return MakeUnique<HelpCommand>();
     if (cmdName == "verbose")
-        return Make<VerboseCommand>();
+        return MakeUnique<VerboseCommand>();
     if (cmdName == "color")
-        return Make<ColorCommand>();
+        return MakeUnique<ColorCommand>();
     return nullptr;
 }
 

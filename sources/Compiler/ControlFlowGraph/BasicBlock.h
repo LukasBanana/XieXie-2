@@ -10,6 +10,7 @@
 
 
 #include "TACInst.h"
+#include "MakeUnique.h"
 
 #include <vector>
 #include <memory>
@@ -29,11 +30,7 @@ class BasicBlock
 
         template <typename T, typename... Args> T* MakeInst(Args&&... args)
         {
-            #ifdef __GNUC__
-            auto inst = std::unique_ptr<T>(new T(std::forward<T>(args)...));
-            #else
-            auto inst = std::make_unique<T>(std::forward<T>(args)...);
-            #endif
+            auto inst = MakeUnique<T>(std::forward<Args>(args)...);
             auto instRef = inst.get();
             insts.emplace_back(std::move(inst));
             return instRef;

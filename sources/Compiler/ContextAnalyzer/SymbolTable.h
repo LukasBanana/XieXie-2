@@ -33,7 +33,7 @@ template <typename Owner, typename Sym> class SymbolTable
         using OnOverrideProc = std::function<bool (SymbolType* symbol)>;
 
         SymbolTable(OwnerType& owner) :
-            // bracket initializer required for GCC
+            // bracket initializer required for GCC (due to bug 56032)
             owner_(owner)
         {
             /* Open global scope */
