@@ -23,9 +23,11 @@ class Test {
 		*/
 		
 		// if statement
-		int x := 3, y := 0
-		if x > 5 and x < 10 {
-			y := 1
+		int x := 3, y := -7*x
+		if x > 5 and x < 10 and x != 2 {
+			if x = 3 {
+				y := 1
+			}
 		} else {
 			y := 2
 		}

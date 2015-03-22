@@ -74,11 +74,12 @@ void BasicBlock::RemoveSucc(BasicBlock& block)
         return;
 
     /* Remove block from the list */
-    auto nextSucc = (*it)->GetSucc();
+    auto label = it->label;
     succ_.erase(it);
 
     /* Add all successors of the input block to this block */
-    succ_.insert(succ_.end(), nextSucc.begin(), nextSucc.end());
+    for (auto bb : block.GetSucc())
+        succ_.push_back({ bb.succ, label });
 
     /* Remove this block from the predecessor list of the specified block */
     auto itPred = std::find(block.pred_.begin(), block.pred_.end(), this);
@@ -86,10 +87,12 @@ void BasicBlock::RemoveSucc(BasicBlock& block)
         block.pred_.erase(itPred);
 }
 
-void BasicBlock::Merge()
+void BasicBlock::Clean()
 {
-    std::set<BasicBlock*> visitSet;
+    std::set<const BasicBlock*> visitSet;
     Merge(visitSet);
+    visitSet.clear();
+    Purge(visitSet);
 }
 
 
@@ -97,19 +100,25 @@ void BasicBlock::Merge()
  * ======= Private: =======
  */
 
+bool BasicBlock::HasVisited(std::set<const BasicBlock*>& visitSet) const
+{
+    if (visitSet.find(this) != visitSet.end())
+        return true;
+    else
+        visitSet.insert(this);
+    return false;
+}
+
 /*
 Cleans the entire basic block hierarchy for unecessary basic blocks.
 A successor is merged into its predecessor if they are the only links,
 i.e. when a basic block B has only a single successor, whose only predecessor is B.
 */
-void BasicBlock::Merge(std::set<BasicBlock*>& visitSet)
+void BasicBlock::Merge(std::set<const BasicBlock*>& visitSet)
 {
     /* Check if this basic block has already been visited */
-    if (visitSet.find(this) != visitSet.end())
+    if (HasVisited(visitSet))
         return;
-
-    /* Mark this basic block to be visited */
-    visitSet.insert(this);
 
     /* Merge as much successors as possible */
     while (succ_.size() == 1)
@@ -141,6 +150,25 @@ void BasicBlock::Merge(std::set<BasicBlock*>& visitSet)
     /* Visit successors */
     for (auto bb : succ_)
         bb->Merge(visitSet);
+}
+
+void BasicBlock::Purge(std::set<const BasicBlock*>& visitSet)
+{
+    /* Check if this basic block has already been visited */
+    if (HasVisited(visitSet))
+        return;
+
+    /* Resolve empty basic blocks */
+    auto origSucc = succ_;
+    for (auto bb : origSucc)
+    {
+        if (bb->insts.empty() && bb->succ_.size() == 1)
+            RemoveSucc(*bb);
+    }
+
+    /* Visit successors */
+    for (auto bb : succ_)
+        bb->Purge(visitSet);
 }
 
 

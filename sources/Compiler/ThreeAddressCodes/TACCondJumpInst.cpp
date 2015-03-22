@@ -19,8 +19,8 @@ TACCondJumpInst::TACCondJumpInst() :
 }
 TACCondJumpInst::TACCondJumpInst(const TACVar& lhs, const TACVar& rhs) :
     TACInst { OpCodes::CMPE },
-    lhs     { lhs           },
-    rhs     { rhs           }
+    srcLhs  { lhs           },
+    srcRhs  { rhs           }
 {
 }
 
@@ -62,12 +62,12 @@ std::string TACCondJumpInst::ToString() const
     }
 
     /* Return final instruction debug string */
-    return OpCodePrefix() + " | " + lhs.ToString() + " " + op + " " + rhs.ToString();
+    return OpCodePrefix() + " | " + srcLhs.ToString() + " " + op + " " + srcRhs.ToString();
 }
 
 bool TACCondJumpInst::ReadsVar(const TACVar& var) const
 {
-    return (lhs == var) || (rhs == var);
+    return (srcLhs == var) || (srcRhs == var);
 }
 
 

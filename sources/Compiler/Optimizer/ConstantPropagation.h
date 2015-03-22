@@ -33,6 +33,7 @@ class ConstantPropagation : public Optimizer
         void TransformInst(std::unique_ptr<TACInst>& inst);
         void TransformCopyInst(std::unique_ptr<TACInst>& inst);
         void TransformModifyInst(std::unique_ptr<TACInst>& inst);
+        void TransformCondJump(std::unique_ptr<TACInst>& inst);
 
         std::unique_ptr<TACCopyInst> ConstantFolding(const TACModifyInst& inst);
 

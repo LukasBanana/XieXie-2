@@ -69,8 +69,8 @@ class BasicBlock
         //! Removes the specified successor from this basic block.
         void RemoveSucc(BasicBlock& block);
 
-        //! Merges the basic block graph recursively for all successors.
-        void Merge();
+        //! Cleans the local CFG recursively.
+        void Clean();
 
         //! Returns the predecessor list.
         inline const PredListType& GetPred() const
@@ -91,7 +91,10 @@ class BasicBlock
 
     private:
         
-        void Merge(std::set<BasicBlock*>& visitSet);
+        bool HasVisited(std::set<const BasicBlock*>& visitSet) const;
+
+        void Merge(std::set<const BasicBlock*>& visitSet);
+        void Purge(std::set<const BasicBlock*>& visitSet);
 
         PredListType pred_; //!< Predecessor reference list.
         SuccListType succ_; //!< Successor reference list.

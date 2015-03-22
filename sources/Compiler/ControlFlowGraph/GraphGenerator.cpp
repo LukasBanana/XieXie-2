@@ -178,8 +178,8 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
         auto condCFG = VisitAndLink(ast->condExpr);
 
         in->AddSucc(*condCFG.in);
-        condCFG.out->AddSucc(*trueBranch.in);
-        condCFG.outAlt->AddSucc(*falseBranchIn);
+        condCFG.out->AddSucc(*trueBranch.in, "true");
+        condCFG.outAlt->AddSucc(*falseBranchIn, "false");
         trueBranch.out->AddSucc(*out);
 
         RETURN_BLOCK_REF(BlockRef(in, out));
@@ -252,8 +252,8 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     if (graph.in)
         root->AddSucc(*graph.in);
 
-    /* Merge sub-CFG of this procedure */
-    root->Merge();
+    /* Clean local CFG of this procedure */
+    root->Clean();
 
     RETURN_BLOCK_REF(BlockRef(root, graph.out));
 }
@@ -620,9 +620,9 @@ void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
         auto isFloat = ast->GetTypeDenoter()->IsFloat();
         auto inst = BB()->MakeInst<TACCondJumpInst>();
     
-        inst->lhs       = srcLhs;
-        inst->rhs       = srcRhs;
-        inst->opcode    = OperatorToOpCode(ast->binaryOperator, isFloat);
+        inst->srcLhs = srcLhs;
+        inst->srcRhs = srcRhs;
+        inst->opcode = OperatorToOpCode(ast->binaryOperator, isFloat);
 
         PopVar(2);
     }

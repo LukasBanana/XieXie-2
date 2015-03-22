@@ -7,6 +7,7 @@
 
 #include "ConstantPropagation.h"
 #include "StringModifier.h"
+#include "TACCondJumpInst.h"
 
 
 namespace Optimization
@@ -33,6 +34,9 @@ void ConstantPropagation::TransformInst(std::unique_ptr<TACInst>& inst)
             break;
         case TACInst::Types::Modify:
             TransformModifyInst(inst);
+            break;
+        case TACInst::Types::CondJump:
+            TransformCondJump(inst);
             break;
     }
 }
@@ -65,6 +69,15 @@ void ConstantPropagation::TransformModifyInst(std::unique_ptr<TACInst>& inst)
             inst = std::move(newInst);
         }
     }
+}
+
+void ConstantPropagation::TransformCondJump(std::unique_ptr<TACInst>& inst)
+{
+    auto jumpInst = static_cast<TACCondJumpInst*>(inst.get());
+
+    /* Propagate constant */
+    FetchConst(jumpInst->srcLhs);
+    FetchConst(jumpInst->srcRhs);
 }
 
 std::unique_ptr<TACCopyInst> ConstantPropagation::ConstantFolding(const TACModifyInst& inst)
@@ -119,7 +132,7 @@ std::unique_ptr<TACCopyInst> ConstantPropagation::ConstantFolding(const TACModif
         case OpCodes::SLR:
             return MakeInt(lhs.Int() >> rhs.Int());
 
-        case OpCodes::CMPE:
+        /*case OpCodes::CMPE:
             return MakeInt(lhs.Int() == rhs.Int() ? 1 : 0);
         case OpCodes::FCMPE:
             return MakeInt(lhs.Float() == rhs.Float() ? 1 : 0);
@@ -147,7 +160,7 @@ std::unique_ptr<TACCopyInst> ConstantPropagation::ConstantFolding(const TACModif
         case OpCodes::CMPGE:
             return MakeInt(lhs.Int() >= rhs.Int() ? 1 : 0);
         case OpCodes::FCMPGE:
-            return MakeInt(lhs.Float() >= rhs.Float() ? 1 : 0);
+            return MakeInt(lhs.Float() >= rhs.Float() ? 1 : 0);*/
     }
 
     return nullptr;

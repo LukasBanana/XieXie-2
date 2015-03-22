@@ -30,7 +30,7 @@ class TACCondJumpInst : public TACInst
 
         bool ReadsVar(const TACVar& var) const override;
 
-        TACVar lhs, rhs;
+        TACVar srcLhs, srcRhs;
 
 };
 
