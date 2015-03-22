@@ -79,8 +79,13 @@ void CFGViewer::DefineBlock(const BasicBlock& block)
         instrList += inst->ToString() + "\\l";
 
     /* Write graph node for this block */
-    auto blockLabel = "bb" + ToStr(id);
-    WriteLine(blockLabel + " [label=\"<" + blockLabel + ">\\n" + instrList + "\"];");
+    auto blockID = "bb" + ToStr(id);
+    auto blockLabel = "<" + blockID + ">";
+
+    if (!block.label.empty())
+        blockLabel += " (" + block.label + ")";
+
+    WriteLine(blockID + " [label=\"" + blockLabel + "\\n" + instrList + "\"];");
 
     /* Travers sucessors */
     for (const auto& succ : block.GetSucc())

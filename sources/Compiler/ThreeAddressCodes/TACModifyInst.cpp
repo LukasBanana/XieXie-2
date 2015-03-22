@@ -24,6 +24,9 @@ std::string TACModifyInst::ToString() const
 
     switch (opcode)
     {
+        case OpCodes::NOT:
+            return OpCodePrefix() + " | " + dest.ToString() + " := not " + srcRhs.ToString();
+
         case OpCodes::AND:
             op = "and";
             break;
@@ -59,31 +62,6 @@ std::string TACModifyInst::ToString() const
         case OpCodes::SLR:
             op = ">>";
             break;
-
-        case OpCodes::CMPE:
-        case OpCodes::FCMPE:
-            op = "=";
-            break;
-        case OpCodes::CMPNE:
-        case OpCodes::FCMPNE:
-            op = "!=";
-            break;
-        case OpCodes::CMPL:
-        case OpCodes::FCMPL:
-            op = "<";
-            break;
-        case OpCodes::CMPLE:
-        case OpCodes::FCMPLE:
-            op = "<=";
-            break;
-        case OpCodes::CMPG:
-        case OpCodes::FCMPG:
-            op = ">";
-            break;
-        case OpCodes::CMPGE:
-        case OpCodes::FCMPGE:
-            op = ">=";
-            break;
     }
 
     /* Return final instruction debug string */
@@ -97,7 +75,7 @@ bool TACModifyInst::WritesVar(const TACVar& var) const
 
 bool TACModifyInst::ReadsVar(const TACVar& var) const
 {
-    return srcLhs == var || srcRhs == var;
+    return (srcLhs == var) || (srcRhs == var);
 }
 
 

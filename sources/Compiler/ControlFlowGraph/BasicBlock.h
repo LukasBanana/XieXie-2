@@ -15,6 +15,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <set>
 
 
 namespace ControlFlowGraph
@@ -68,22 +69,32 @@ class BasicBlock
         //! Removes the specified successor from this basic block.
         void RemoveSucc(BasicBlock& block);
 
+        //! Merges the basic block graph recursively for all successors.
+        void Merge();
+
+        //! Returns the predecessor list.
         inline const PredListType& GetPred() const
         {
-            return pred;
+            return pred_;
         }
+        //! Returns the successor list.
         inline const SuccListType& GetSucc() const
         {
-            return succ;
+            return succ_;
         }
+
+        //! Basic block label.
+        std::string label;
 
         //! TAC instructions.
         std::vector<std::unique_ptr<ThreeAddressCodes::TACInst>> insts;
 
     private:
         
-        PredListType pred; //!< Predecessor reference list.
-        SuccListType succ; //!< Successor reference list.
+        void Merge(std::set<BasicBlock*>& visitSet);
+
+        PredListType pred_; //!< Predecessor reference list.
+        SuccListType succ_; //!< Successor reference list.
 
 };
 

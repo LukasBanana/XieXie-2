@@ -24,7 +24,7 @@ class ClassTree
     
     public:
         
-        BasicBlock* CreateBasicBlock();
+        BasicBlock* CreateBasicBlock(const std::string& label = "");
         //! \throws std::invalid_argument If "ident" has already been used.
         BasicBlock* CreateRootBasicBlock(const std::string& ident);
 

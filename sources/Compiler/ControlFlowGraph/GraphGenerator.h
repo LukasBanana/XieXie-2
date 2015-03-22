@@ -43,13 +43,23 @@ class GraphGenerator final : private Visitor
             BlockRef() = default;
             BlockRef(BasicBlock* bb);
             BlockRef(BasicBlock* in, BasicBlock* out);
-            BasicBlock* in  = nullptr;
-            BasicBlock* out = nullptr;
+            BlockRef(BasicBlock* in, BasicBlock* out, BasicBlock* outAlt);
+
+            BasicBlock* in      = nullptr;
+            BasicBlock* out     = nullptr; // default out/ true branch.
+            BasicBlock* outAlt  = nullptr; // alternative out/ false branch.
         };
 
         /* === Functions === */
 
         DECL_VISITOR_INTERFACE;
+
+        /* --- Generation --- */
+
+        void GenerateLogicOrBinaryExpr(BinaryExpr* ast, void* args);
+        void GenerateLogicAndBinaryExpr(BinaryExpr* ast, void* args);
+        void GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args);
+        void GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args);
 
         /* --- Conversion --- */
 
@@ -57,7 +67,7 @@ class GraphGenerator final : private Visitor
         template <typename T> BlockRef VisitAndLink(const std::vector<std::shared_ptr<T>>& astList);
 
         void CreateClassTree();
-        BasicBlock* MakeBlock();
+        BasicBlock* MakeBlock(const std::string& label = "");
 
         void PushBB(BasicBlock* bb);
         void PopBB();

@@ -9,6 +9,7 @@
 #include "ASTImport.h"
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
+#include "TACCondJumpInst.h"
 #include "CodeGenerators/NameMangling.h"
 
 
@@ -158,33 +159,29 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
     if (ast->condExpr)
     {
         /* Generate CFG for if-statement */
-        auto in = MakeBlock();
-        auto out = MakeBlock();
+        auto in = MakeBlock("If");
+        auto out = MakeBlock("EndIf");
 
-        auto thenBlock = VisitAndLink(ast->codeBlock);
-        auto elseBlockIn = out;
-
-        if (thenBlock.in)
-            in->AddSucc(*thenBlock.in, "true");
-        if (thenBlock.out)
-            thenBlock.out->AddSucc(*out);
+        /* Build <true> and <false> branch CFGs */
+        auto trueBranch = VisitAndLink(ast->codeBlock);
+        auto falseBranchIn = out;
 
         if (ast->elseStmnt)
         {
-            auto elseBlock = VisitAndLink(ast->elseStmnt);
-            elseBlockIn = elseBlock.in;
-            elseBlock.out->AddSucc(*out);
-            in->AddSucc(*elseBlockIn, "false");
+            auto falseBranch = VisitAndLink(ast->elseStmnt);
+            falseBranchIn = falseBranch.in;
+            if (falseBranch.out)
+                falseBranch.out->AddSucc(*out);
         }
-        else
-            in->AddSucc(*out, "false");
 
-        /*PushBB(thenBlock.in, elseBlockIn);
-        {
-            auto cond = VisitAndLink(ast->condExpr);
-        }
-        PopBB();*/
-        
+        /* Build branch CFG */
+        auto condCFG = VisitAndLink(ast->condExpr);
+
+        in->AddSucc(*condCFG.in);
+        condCFG.out->AddSucc(*trueBranch.in);
+        condCFG.outAlt->AddSucc(*falseBranchIn);
+        trueBranch.out->AddSucc(*out);
+
         RETURN_BLOCK_REF(BlockRef(in, out));
     }
     else
@@ -249,10 +246,14 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     auto procIdent = CodeGenerator::NameMangling::UniqueLabel(*ast->procSignature);
     
     auto root = CT()->CreateRootBasicBlock(procIdent);
-    auto graph = VisitAndLink(ast->codeBlock);
 
+    /* Generate sub-CFG for this procedure */
+    auto graph = VisitAndLink(ast->codeBlock);
     if (graph.in)
         root->AddSucc(*graph.in);
+
+    /* Merge sub-CFG of this procedure */
+    root->Merge();
 
     RETURN_BLOCK_REF(BlockRef(root, graph.out));
 }
@@ -261,7 +262,6 @@ DEF_VISIT_PROC(GraphGenerator, InitDeclStmnt)
 {
 }
 
-//TODO: connect basic blocks
 DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
 {
     /* Make basic block */
@@ -359,103 +359,65 @@ DEF_VISIT_PROC(GraphGenerator, ModifyAssignStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, PostOperatorStmnt)
 {
+    /* Get variable identifier */
+    auto& varName = ast->varName->GetLast();
+    auto var = LocalVarFromVarName(varName);
+    auto isFloat = IsVarFloat(varName);
+
+    /* Make basic block and instruction */
     auto bb = MakeBlock();
+    auto inst = bb->MakeInst<TACModifyInst>();
 
-    PushBB(bb);
-    {
-        /* Get variable identifier */
-        auto& varName = ast->varName->GetLast();
-        auto var = LocalVarFromVarName(varName);
-        auto isFloat = IsVarFloat(varName);
+    if (ast->postOperator == PostOperatorStmnt::Operators::Inc)
+        inst->opcode = (isFloat ? OpCodes::FADD : OpCodes::ADD);
+    else
+        inst->opcode = (isFloat ? OpCodes::FSUB : OpCodes::SUB);
 
-        /* Make basic block and instruction */
-        auto inst = bb->MakeInst<TACModifyInst>();
-
-        if (ast->postOperator == PostOperatorStmnt::Operators::Inc)
-            inst->opcode = (isFloat ? OpCodes::FADD : OpCodes::ADD);
-        else
-            inst->opcode = (isFloat ? OpCodes::FSUB : OpCodes::SUB);
-
-        inst->dest      = var;
-        inst->srcLhs    = var;
-        inst->srcRhs    = TACVar("1");
-    }
-    PopBB();
+    inst->dest      = var;
+    inst->srcLhs    = var;
+    inst->srcRhs    = TACVar("1");
 
     RETURN_BLOCK_REF(bb);
 }
 
 /* --- Expressions --- */
 
-static OpCodes OperatorToOpCode(const BinaryExpr::Operators op, bool isFloat)
+DEF_VISIT_PROC(GraphGenerator, BinaryExpr)
 {
     using Ty = BinaryExpr::Operators;
 
-    switch (op)
+    switch (ast->binaryOperator)
     {
         case Ty::LogicOr:
-            return OpCodes::OR;
+            GenerateLogicOrBinaryExpr(ast, args);
+            break;
+
         case Ty::LogicAnd:
-            return OpCodes::AND;
-        case Ty::BitwiseOr:
-            return OpCodes::OR;
-        case Ty::BitwiseXOr:
-            return OpCodes::XOR;
-        case Ty::BitwiseAnd:
-            return OpCodes::AND;
+            GenerateLogicAndBinaryExpr(ast, args);
+            break;
 
         case Ty::Equal:
-            return isFloat ? OpCodes::FCMPE : OpCodes::CMPE;
         case Ty::Inequal:
-            return isFloat ? OpCodes::FCMPNE : OpCodes::CMPNE;
         case Ty::Less:
-            return isFloat ? OpCodes::FCMPL : OpCodes::CMPL;
         case Ty::LessEqual:
-            return isFloat ? OpCodes::FCMPLE : OpCodes::CMPLE;
         case Ty::Greater:
-            return isFloat ? OpCodes::FCMPG : OpCodes::CMPG;
         case Ty::GreaterEqual:
-            return isFloat ? OpCodes::FCMPGE : OpCodes::CMPGE;
+            GenerateConditionalBinaryExpr(ast, args);
+            break;
 
+        case Ty::BitwiseOr:
+        case Ty::BitwiseXOr:
+        case Ty::BitwiseAnd:
         case Ty::Add:
-            return isFloat ? OpCodes::FADD : OpCodes::ADD;
         case Ty::Sub:
-            return isFloat ? OpCodes::FSUB : OpCodes::SUB;
         case Ty::Mul:
-            return isFloat ? OpCodes::FMUL : OpCodes::MUL;
         case Ty::Div:
-            return isFloat ? OpCodes::FDIV : OpCodes::DIV;
-
         case Ty::Mod:
-            return OpCodes::MOD;
         case Ty::LShift:
-            return OpCodes::SLL;
         case Ty::RShift:
-            return OpCodes::SLR;
+            GenerateArithmeticBinaryExpr(ast, args);
+            break;
     }
-
-    return OpCodes::NOP;
-}
-
-DEF_VISIT_PROC(GraphGenerator, BinaryExpr)
-{
-    Visit(ast->lhsExpr);
-    auto srcLhs = Var();
-
-    Visit(ast->rhsExpr);
-    auto srcRhs = Var();
-
-    /* Make instruction */
-    auto isFloat = ast->GetTypeDenoter()->IsFloat();
-    auto inst = BB()->MakeInst<TACModifyInst>();
-    
-    inst->dest      = TempVar();
-    inst->srcLhs    = srcLhs;
-    inst->srcRhs    = srcRhs;
-    inst->opcode    = OperatorToOpCode(ast->binaryOperator, isFloat);
-
-    PopVar(2);
-    PushVar(inst->dest);
 }
 
 static OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isFloat)
@@ -564,6 +526,132 @@ DEF_VISIT_PROC(GraphGenerator, PointerTypeDenoter)
 {
 }
 
+/* --- Generation --- */
+
+static OpCodes OperatorToOpCode(const BinaryExpr::Operators op, bool isFloat)
+{
+    using Ty = BinaryExpr::Operators;
+
+    switch (op)
+    {
+        case Ty::LogicOr:
+            return OpCodes::OR;
+        case Ty::LogicAnd:
+            return OpCodes::AND;
+        case Ty::BitwiseOr:
+            return OpCodes::OR;
+        case Ty::BitwiseXOr:
+            return OpCodes::XOR;
+        case Ty::BitwiseAnd:
+            return OpCodes::AND;
+
+        case Ty::Equal:
+            return isFloat ? OpCodes::FCMPE : OpCodes::CMPE;
+        case Ty::Inequal:
+            return isFloat ? OpCodes::FCMPNE : OpCodes::CMPNE;
+        case Ty::Less:
+            return isFloat ? OpCodes::FCMPL : OpCodes::CMPL;
+        case Ty::LessEqual:
+            return isFloat ? OpCodes::FCMPLE : OpCodes::CMPLE;
+        case Ty::Greater:
+            return isFloat ? OpCodes::FCMPG : OpCodes::CMPG;
+        case Ty::GreaterEqual:
+            return isFloat ? OpCodes::FCMPGE : OpCodes::CMPGE;
+
+        case Ty::Add:
+            return isFloat ? OpCodes::FADD : OpCodes::ADD;
+        case Ty::Sub:
+            return isFloat ? OpCodes::FSUB : OpCodes::SUB;
+        case Ty::Mul:
+            return isFloat ? OpCodes::FMUL : OpCodes::MUL;
+        case Ty::Div:
+            return isFloat ? OpCodes::FDIV : OpCodes::DIV;
+
+        case Ty::Mod:
+            return OpCodes::MOD;
+        case Ty::LShift:
+            return OpCodes::SLL;
+        case Ty::RShift:
+            return OpCodes::SLR;
+    }
+
+    return OpCodes::NOP;
+}
+
+void GraphGenerator::GenerateLogicAndBinaryExpr(BinaryExpr* ast, void* args)
+{
+    auto lhs = VisitAndLink(ast->lhsExpr);
+    auto rhs = VisitAndLink(ast->rhsExpr);
+
+    auto trueBranch = MakeBlock();
+    auto falseBranch = MakeBlock();
+
+    lhs.out->AddSucc(*rhs.in, "true");
+    lhs.outAlt->AddSucc(*falseBranch, "false");
+
+    rhs.out->AddSucc(*trueBranch, "true");
+    rhs.outAlt->AddSucc(*falseBranch, "false");
+
+    RETURN_BLOCK_REF(BlockRef(lhs.in, trueBranch, falseBranch));
+}
+
+void GraphGenerator::GenerateLogicOrBinaryExpr(BinaryExpr* ast, void* args)
+{
+    Visit(ast->lhsExpr);
+
+    Visit(ast->rhsExpr);
+
+    //...
+
+}
+
+void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
+{
+    auto bb = MakeBlock();
+    PushBB(bb);
+    {
+        Visit(ast->lhsExpr);
+        auto srcLhs = Var();
+
+        Visit(ast->rhsExpr);
+        auto srcRhs = Var();
+
+        /* Make instruction */
+        auto isFloat = ast->GetTypeDenoter()->IsFloat();
+        auto inst = BB()->MakeInst<TACCondJumpInst>();
+    
+        inst->lhs       = srcLhs;
+        inst->rhs       = srcRhs;
+        inst->opcode    = OperatorToOpCode(ast->binaryOperator, isFloat);
+
+        PopVar(2);
+    }
+    PopBB();
+
+    RETURN_BLOCK_REF(bb);
+}
+
+void GraphGenerator::GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args)
+{
+    Visit(ast->lhsExpr);
+    auto srcLhs = Var();
+
+    Visit(ast->rhsExpr);
+    auto srcRhs = Var();
+
+    /* Make instruction */
+    auto isFloat = ast->GetTypeDenoter()->IsFloat();
+    auto inst = BB()->MakeInst<TACModifyInst>();
+    
+    inst->dest      = TempVar();
+    inst->srcLhs    = srcLhs;
+    inst->srcRhs    = srcRhs;
+    inst->opcode    = OperatorToOpCode(ast->binaryOperator, isFloat);
+
+    PopVar(2);
+    PushVar(inst->dest);
+}
+
 #undef RETURN_BLOCK_REF
 
 /* --- Conversion --- */
@@ -607,9 +695,9 @@ void GraphGenerator::CreateClassTree()
     classTree_ = programClassTrees_.back().get();
 }
 
-BasicBlock* GraphGenerator::MakeBlock()
+BasicBlock* GraphGenerator::MakeBlock(const std::string& label)
 {
-    return CT()->CreateBasicBlock();
+    return CT()->CreateBasicBlock(label);
 }
 
 void GraphGenerator::PushBB(BasicBlock* bb)
@@ -675,14 +763,22 @@ TACVar GraphGenerator::LocalVarFromVarName(const VarName& ast)
  * BlockRef structure
  */
 
-GraphGenerator::BlockRef::BlockRef(BasicBlock* in, BasicBlock* out) :
-    in  { in  },
-    out { out }
+GraphGenerator::BlockRef::BlockRef(BasicBlock* bb) :
+    in      { bb },
+    out     { bb },
+    outAlt  { bb }
 {
 }
-GraphGenerator::BlockRef::BlockRef(BasicBlock* bb) :
-    in  { bb },
-    out { bb }
+GraphGenerator::BlockRef::BlockRef(BasicBlock* in, BasicBlock* out) :
+    in      { in  },
+    out     { out },
+    outAlt  { out }
+{
+}
+GraphGenerator::BlockRef::BlockRef(BasicBlock* in, BasicBlock* out, BasicBlock* outAlt) :
+    in      { in     },
+    out     { out    },
+    outAlt  { outAlt }
 {
 }
 

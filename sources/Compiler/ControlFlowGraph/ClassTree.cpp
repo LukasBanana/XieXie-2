@@ -16,11 +16,13 @@ namespace ControlFlowGraph
 {
 
 
-BasicBlock* ClassTree::CreateBasicBlock()
+BasicBlock* ClassTree::CreateBasicBlock(const std::string& label)
 {
     /* Create new basic block */
     basicBlocks_.emplace_back(MakeUnique<BasicBlock>());
-    return basicBlocks_.back().get();
+    auto bb = basicBlocks_.back().get();
+    bb->label = label;
+    return bb;
 }
 
 BasicBlock* ClassTree::CreateRootBasicBlock(const std::string& ident)
