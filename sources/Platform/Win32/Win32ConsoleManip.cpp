@@ -35,7 +35,7 @@ static void PushAttrib()
     scrBufferInfoStack.push(bufInfo);
 }
 
-void PushColor(const Color::ValueType& front)
+void PushColor(std::ostream&, const Color::ValueType& front)
 {
     if (!IsEnabled())
         return;
@@ -59,7 +59,7 @@ void PushColor(const Color::ValueType& front)
     SetConsoleTextAttribute(StdOut(), attrib);
 }
 
-void PushColor(const Color::ValueType& front, const Color::ValueType& back)
+void PushColor(std::ostream&, const Color::ValueType& front, const Color::ValueType& back)
 {
     if (!IsEnabled())
         return;
@@ -84,7 +84,7 @@ void PushColor(const Color::ValueType& front, const Color::ValueType& back)
     SetConsoleTextAttribute(StdOut(), attrib);
 }
 
-void PopColor()
+void PopColor(std::ostream&)
 {
     if (!IsEnabled())
         return;

@@ -30,20 +30,7 @@ static xvm_invocation procList[] =
     { "messageBox", messageBox },
 };
 
-XVM_EXPORT int xx_module_proc_count()
-{
-    return 1;
-}
-
-XVM_EXPORT XVM_INVOCATION_PROC xx_module_fetch_proc(int index)
-{
-    return index < 1 ? procList[index].proc : NULL;
-}
-
-XVM_EXPORT const char* xx_module_fetch_ident(int index)
-{
-    return index < 1 ? procList[index].ident : NULL;
-}
+XVM_IMPLEMENT_MODULE_INTERFACE(procList);
 
 
 //#endif

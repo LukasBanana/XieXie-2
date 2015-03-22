@@ -918,6 +918,9 @@ void doSomething(xvm_env env) {
     
     // Do something with 'x'
     printf("input parameter 'x' is %i\n", i);
+    
+    // Pop arguments from stack (1 for the single parameter 'x')
+    xvm_return_void(env, 1);
 }
 
 // Module procedure list

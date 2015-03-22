@@ -421,6 +421,8 @@ class Instruction
 
 };
 
+// >> Template specialization outside class declaration required for GCC
+
 template <> bool Instruction::InRange<26>(int value)
 {
     return InBitRange<SgnValue26>(value);

@@ -25,10 +25,25 @@
 #define XVM_PARAM_INT(ident, index)         int ident = xvm_param_int(env, index)
 #define XVM_PARAM_FLOAT(ident, index)       float ident = xvm_param_float(env, index)
 #define XVM_PARAM_STRING(ident, index)      char* ident = xvm_param_string(env, index)
+#define XVM_PARAM_POINTER(ident, index)     void* ident = xvm_param_pointer(env, index)
 
-#define XVM_RETURN_VOID(arg_size)           xvm_env_return_void(env, arg_size)
-#define XVM_RETURN_INT(arg_size, value)     xvm_env_return_int(env, arg_size, value)
-#define XVM_RETURN_FLOAT(arg_size, value)   xvm_env_return_float(env, arg_size, value)
+#define XVM_RETURN_VOID(arg_size)           xvm_return_void(env, arg_size)
+#define XVM_RETURN_INT(arg_size, value)     xvm_return_int(env, arg_size, value)
+#define XVM_RETURN_FLOAT(arg_size, value)   xvm_return_float(env, arg_size, value)
+
+#define XVM_IMPLEMENT_MODULE_INTERFACE(procList)                                \
+    XVM_EXPORT int xx_module_proc_count()                                       \
+    {                                                                           \
+        return sizeof(procList)/sizeof(xvm_invocation);                         \
+    }                                                                           \
+    XVM_EXPORT XVM_INVOCATION_PROC xx_module_fetch_proc(int index)              \
+    {                                                                           \
+        return index < xx_module_proc_count() ? procList[index].proc : NULL;    \
+    }                                                                           \
+    XVM_EXPORT const char* xx_module_fetch_ident(int index)                     \
+    {                                                                           \
+        return index < xx_module_proc_count() ? procList[index].ident : NULL;   \
+    }
 
 
 //! XVM environment state type.
@@ -82,14 +97,14 @@ char* xvm_param_string(xvm_env env, unsigned int param_index)
 }
 
 //! Returns the argument as raw pointer, specified by the parameter index (beginning with 1).
-void* xvm_env_param_pointer(xvm_env env, unsigned int param_index)
+void* xvm_param_pointer(xvm_env env, unsigned int param_index)
 {
     stack_word_t* ptr = *((_xvm_env_internal*)env)->ptr_ref;
     return (void*)*(ptr - param_index);
 }
 
 // Pop 'arg_size' words from the stack.
-int xvm_env_return_void(xvm_env env, unsigned int arg_size)
+int xvm_return_void(xvm_env env, unsigned int arg_size)
 {
     _xvm_env_internal* stack_env = (_xvm_env_internal*)env;
 
@@ -102,7 +117,7 @@ int xvm_env_return_void(xvm_env env, unsigned int arg_size)
 }
 
 // Pop 'arg_size' words from the stack and push 'value' onto the stack.
-int xvm_env_return_int(xvm_env env, unsigned int arg_size, int value)
+int xvm_return_int(xvm_env env, unsigned int arg_size, int value)
 {
     _xvm_env_internal* stack_env = (_xvm_env_internal*)env;
 
@@ -121,9 +136,9 @@ int xvm_env_return_int(xvm_env env, unsigned int arg_size, int value)
 }
 
 // Pop 'arg_size' words from the stack and push 'value' onto the stack.
-int xvm_env_return_float(xvm_env env, unsigned int arg_size, float value)
+int xvm_return_float(xvm_env env, unsigned int arg_size, float value)
 {
-    return xvm_env_return_int(env, arg_size, XVM_FLT_TO_INT_REINTERPRET(value));
+    return xvm_return_int(env, arg_size, XVM_FLT_TO_INT_REINTERPRET(value));
 }
 
 
