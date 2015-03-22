@@ -95,7 +95,7 @@ class Main {
 	
 	static void test4() {
 		
-		int			strPtr	:= { "a" }[0].getRawPointer()
+		int			strPtr	:= { "a" }[0].pointer()
 		int			len		:= { new String().size() }[0]
 		String		str		:= { new C().str }[0]
 		String[]	strAry	:= { new C().str }

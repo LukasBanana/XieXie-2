@@ -9,6 +9,9 @@
 #define __XX_PLATFORM_CONSOLE_MANIP_H__
 
 
+#include <iostream>
+
+
 namespace Platform
 {
 
@@ -42,25 +45,35 @@ void Enable(bool enable);
 //! Returns true if console manipulation is enabled.
 bool IsEnabled();
 
-void PushColor(const Color::ValueType& front);
-void PushColor(const Color::ValueType& front, const Color::ValueType& back);
-void PopColor();
+void PushColor(std::ostream& stream, const Color::ValueType& front);
+void PushColor(std::ostream& stream, const Color::ValueType& front, const Color::ValueType& back);
+void PopColor(std::ostream& stream);
 
 
-struct ScopedColor
+class ScopedColor
 {
-    ScopedColor(const Color::ValueType& front)
-    {
-        PushColor(front);
-    }
-    ScopedColor(const Color::ValueType& front, const Color::ValueType& back)
-    {
-        PushColor(front, back);
-    }
-    ~ScopedColor()
-    {
-        PopColor();
-    }
+    
+    public:
+    
+        ScopedColor(std::ostream& stream, const Color::ValueType& front) :
+            stream_(stream)
+        {
+            PushColor(stream_, front);
+        }
+        ScopedColor(std::ostream& stream, const Color::ValueType& front, const Color::ValueType& back) :
+            stream_(stream)
+        {
+            PushColor(stream_, front, back);
+        }
+        ~ScopedColor()
+        {
+            PopColor(stream_);
+        }
+        
+    private:
+        
+        std::ostream& stream_;
+        
 };
 
 

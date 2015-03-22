@@ -38,23 +38,23 @@ Log::ScopedIndent::~ScopedIndent()
 
 Log::Log(std::ostream& stream) :
     // bracket initializer required for GCC (due to bug 56032)
-    stream_(stream)
+    stream(stream)
 {
 }
 
 void Log::StartLn()
 {
-    stream_ << currentIndent_;
+    stream << currentIndent_;
 }
 
 void Log::EndLn()
 {
-    stream_ << std::endl;
+    stream << std::endl;
 }
 
 void Log::Print(const std::string& text)
 {
-    stream_ << text;
+    stream << text;
 }
 
 void Log::PrintLn(const std::string& text)
@@ -74,11 +74,11 @@ static void PrintMark(Log& log, const std::string& text, const Color::ValueType 
     log.StartLn();
     {
         log.Print(">> ");
-        PushColor(color);
+        PushColor(log.stream, color);
         {
             log.Print(text);
         }
-        PopColor();
+        PopColor(log.stream);
     }
     log.EndLn();
 }
@@ -88,11 +88,11 @@ static void PrintMessageColored(Log& log, const CompilerMessage& message, const 
     log.StartLn();
     {
         /* Print colored message category */
-        PushColor(color);
+        PushColor(log.stream, color);
         {
             log.Print(message.GetCategoryString(message.GetCategory()));
         }
-        PopColor();
+        PopColor(log.stream);
 
         /* Print source area */
         if (message.GetSourceArea().IsValid())
@@ -129,47 +129,47 @@ void Log::Messages(const std::initializer_list<std::string>& messages)
 
 void Log::Warning(const std::string& message, bool appendPrefix)
 {
-    PushColor(Color::Yellow);
+    PushColor(stream, Color::Yellow);
     {
         if (appendPrefix)
             Message("warning: " + message);
         else
             Message(message);
     }
-    PopColor();
+    PopColor(stream);
 }
 
 void Log::Error(const std::string& message, bool appendPrefix)
 {
-    PushColor(Color::Red | Color::Intens);
+    PushColor(stream, Color::Red | Color::Intens);
     {
         if (appendPrefix)
             Message("error: " + message);
         else
             Message(message);
     }
-    PopColor();
+    PopColor(stream);
 }
 
 void Log::FatalError(const std::string& message, bool appendPrefix)
 {
-    PushColor(Color::Black, Color::Red | Color::Intens);
+    PushColor(stream, Color::Black, Color::Red | Color::Intens);
     {
         if (appendPrefix)
             Message("error: " + message);
         else
             Message(message);
     }
-    PopColor();
+    PopColor(stream);
 }
 
 void Log::Success(const std::string& message)
 {
-    PushColor(Color::Green | Color::Intens);
+    PushColor(stream, Color::Green | Color::Intens);
     {
         Message(message);
     }
-    PopColor();
+    PopColor(stream);
 }
 
 void Log::Blank()

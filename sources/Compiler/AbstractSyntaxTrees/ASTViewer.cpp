@@ -39,9 +39,9 @@ void ASTViewer::ViewProgram(Program& ast, bool showPos)
     SCOPED_INDENT(log_)
 
 #define AST_INFO_COLOR(info, color) \
-    PushColor(color);               \
+    PushColor(log_.stream, color);  \
     Info(info, ast);                \
-    PopColor();                     \
+    PopColor(log_.stream);          \
     SCOPED_INDENT(log_)
 
 #define AST_VALUE(ident)    Value(#ident, ToStr(ast->ident))
@@ -378,9 +378,9 @@ void ASTViewer::Value(const std::string& ident, const std::string& value)
 {
     log_.StartLn();
     log_.Print(ident + " = ");
-    PushColor(Color::Pink);
+    PushColor(log_.stream, Color::Pink);
     log_.Print(value);
-    PopColor();
+    PopColor(log_.stream);
     log_.EndLn();
 }
 
