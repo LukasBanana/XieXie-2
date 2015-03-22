@@ -26,6 +26,7 @@ void CFGViewer::ViewGraph(
 
     WriteLine("digraph G {");
     WriteLine("node [shape=\"box\", fontname=\"" + fontName + "\", fontsize=\"" + ToStr(fontSize) + "\"];");
+    WriteLine("edge [fontname=\"courier new bold\", fontsize=\"10\"];");
 
     DefineBlock(entryPoint);
     LinkBlock(entryPoint);
@@ -41,8 +42,14 @@ void CFGViewer::ViewGraph(
 {
     for (const auto& block : classTree.GetRootBasicBlocks())
     {
-        std::ofstream file(path + "." + block.first + ".vg");
+        auto filename = path + "." + block.first + ".vg";
+        std::ofstream file(filename);
         ViewGraph(*block.second, file, fontName, fontSize);
+
+        #if 1//DEBUG!!!
+        auto cmd = "dot-png.bat " + filename;
+        system(cmd.c_str());
+        #endif
     }
 }
 
@@ -98,7 +105,12 @@ void CFGViewer::LinkBlock(const BasicBlock& block)
 
         std::string succList;
         for (const auto& succ : block.GetSucc())
-            WriteLine(blockID + ":s -> " + GetBlockID(*succ) + ":n;");
+        {
+            auto edge = blockID + ":s -> " + GetBlockID(*succ) + ":n";
+            if (!succ.label.empty())
+                edge += " [label=\"" + succ.label + "\"]";
+            WriteLine(edge + ";");
+        }
 
         /* Travers sucessors */
         for (const auto& succ : block.GetSucc())

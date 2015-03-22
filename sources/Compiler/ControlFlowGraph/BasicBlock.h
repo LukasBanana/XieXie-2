@@ -14,6 +14,7 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 
 
 namespace ControlFlowGraph
@@ -26,7 +27,31 @@ class BasicBlock
     
     public:
         
-        using ListType = std::vector<BasicBlock*>;
+        //! Edge of the directed control flow graph.
+        struct Edge
+        {
+            Edge() = default;
+            Edge(BasicBlock* succ, const std::string& label = "");
+
+            bool operator == (BasicBlock* rhs) const
+            {
+                return succ == rhs;
+            }
+            BasicBlock* operator -> () const
+            {
+                return succ;
+            }
+            BasicBlock& operator * () const
+            {
+                return *succ;
+            }
+
+            BasicBlock* succ = nullptr; //!< Successor.
+            std::string label;          //!< Edge label.
+        };
+
+        using PredListType = std::vector<BasicBlock*>;
+        using SuccListType = std::vector<Edge>;
 
         template <typename T, typename... Args> T* MakeInst(Args&&... args)
         {
@@ -37,27 +62,28 @@ class BasicBlock
         }
 
         //! Adds the specified successor to this basic block.
-        void AddSucc(BasicBlock& block);
+        void AddSucc(BasicBlock& block, const std::string& label = "");
         //! Inserts the specified successor into this basic block.
-        void InsertSucc(BasicBlock& block, BasicBlock& blockToReplace);
+        void InsertSucc(BasicBlock& block, BasicBlock& blockToReplace, const std::string& label = "");
         //! Removes the specified successor from this basic block.
         void RemoveSucc(BasicBlock& block);
 
-        inline const ListType& GetPred() const
+        inline const PredListType& GetPred() const
         {
             return pred;
         }
-        inline const ListType& GetSucc() const
+        inline const SuccListType& GetSucc() const
         {
             return succ;
         }
 
-        std::vector<std::unique_ptr<ThreeAddressCodes::TACInst>> insts; //!< TAB instructions.
+        //! TAC instructions.
+        std::vector<std::unique_ptr<ThreeAddressCodes::TACInst>> insts;
 
     private:
         
-        ListType pred; //!< Predecessor reference list.
-        ListType succ; //!< Successor reference list.
+        PredListType pred; //!< Predecessor reference list.
+        SuccListType succ; //!< Successor reference list.
 
 };
 

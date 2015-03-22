@@ -38,10 +38,13 @@ class GraphGenerator final : private Visitor
         
         using IDType = TACVar::IDType;
 
-        struct BlockReference
+        struct BlockRef
         {
-            BasicBlock* in;
-            BasicBlock* out;
+            BlockRef() = default;
+            BlockRef(BasicBlock* bb);
+            BlockRef(BasicBlock* in, BasicBlock* out);
+            BasicBlock* in  = nullptr;
+            BasicBlock* out = nullptr;
         };
 
         /* === Functions === */
@@ -50,16 +53,19 @@ class GraphGenerator final : private Visitor
 
         /* --- Conversion --- */
 
-        void CreateClassTree();
+        template <typename T> BlockRef VisitAndLink(T ast);
+        template <typename T> BlockRef VisitAndLink(const std::vector<std::shared_ptr<T>>& astList);
 
-        void PushBB(BasicBlock* in, BasicBlock* out);
+        void CreateClassTree();
+        BasicBlock* MakeBlock();
+
+        void PushBB(BasicBlock* bb);
         void PopBB();
 
-        //! Returns the current in-going basic block.
-        BasicBlock* In() const;
-        //! Returns the current out-going basic block.
-        BasicBlock* Out() const;
+        //! Returns the current basic block.
+        BasicBlock* BB() const;
 
+        //! Returns the current class tree.
         inline ClassTree* CT() const
         {
             return classTree_;
@@ -83,7 +89,7 @@ class GraphGenerator final : private Visitor
         std::vector<std::unique_ptr<ClassTree>> programClassTrees_;
         ClassTree*                              classTree_          = nullptr;  //!< Reference to the current class tree.
 
-        SafeStack<BlockReference>               basicBlockStack_;
+        SafeStack<BasicBlock*>                  stackBB_;
 
         TACVarManager                           varMngr_;
 

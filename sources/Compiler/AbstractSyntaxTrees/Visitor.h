@@ -165,16 +165,12 @@ class Visitor
 
     protected:
         
-        template <typename T> void Visit(T* ast, void* args = nullptr)
+        template <typename T> void Visit(T ast, void* args = nullptr)
         {
             if (ast)
                 ast->Visit(this, args);
         }
-        template <typename T> void Visit(const std::shared_ptr<T>& ast, void* args = nullptr)
-        {
-            if (ast)
-                ast->Visit(this, args);
-        }
+
         template <typename T> void Visit(const std::vector<std::shared_ptr<T>>& astList, void* args = nullptr)
         {
             for (const auto& ast : astList)

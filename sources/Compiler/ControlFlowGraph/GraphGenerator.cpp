@@ -46,6 +46,11 @@ std::vector<std::unique_ptr<ClassTree>> GraphGenerator::GenerateCFG(const Progra
  * ======= Private: =======
  */
 
+#define RETURN_BLOCK_REF(expr)                          \
+    auto&& _result = expr;                              \
+    if (args)                                           \
+        *reinterpret_cast<BlockRef*>(args) = _result
+
 /* --- Common AST nodes --- */
 
 DEF_VISIT_PROC(GraphGenerator, Program)
@@ -55,7 +60,7 @@ DEF_VISIT_PROC(GraphGenerator, Program)
 
 DEF_VISIT_PROC(GraphGenerator, CodeBlock)
 {
-    Visit(ast->stmnts);
+    RETURN_BLOCK_REF(VisitAndLink(ast->stmnts));
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarName)
@@ -66,16 +71,25 @@ DEF_VISIT_PROC(GraphGenerator, VarDecl)
 {
     if (ast->initExpr)
     {
-        Visit(ast->initExpr);
-        auto var = Var();
+        /* Make basic block */
+        auto bb = MakeBlock();
 
-        /* Make instruction */
-        auto inst = In()->MakeInst<TACCopyInst>();
+        PushBB(bb);
+        {
+            Visit(ast->initExpr);
+            auto var = Var();
 
-        inst->src   = var;
-        inst->dest  = LocalVar(ast);
+            /* Make instruction */
+            auto inst = bb->MakeInst<TACCopyInst>();
 
-        PopVar();
+            inst->src   = var;
+            inst->dest  = LocalVar(ast);
+
+            PopVar();
+        }
+        PopBB();
+
+        RETURN_BLOCK_REF(bb);
     }
 }
 
@@ -103,7 +117,7 @@ DEF_VISIT_PROC(GraphGenerator, Attrib)
 
 DEF_VISIT_PROC(GraphGenerator, ClassBodySegment)
 {
-    Visit(ast->declStmnts);
+    RETURN_BLOCK_REF(VisitAndLink(ast->declStmnts));
 }
 
 DEF_VISIT_PROC(GraphGenerator, ArrayAccess)
@@ -132,8 +146,52 @@ DEF_VISIT_PROC(GraphGenerator, ProcCallStmnt)
 {
 }
 
+/*
+    If               If
+   /  \             /  \
+ Then Else   or   Then  |
+   \  /             \  /
+   EndIf            EndIf
+*/
 DEF_VISIT_PROC(GraphGenerator, IfStmnt)
 {
+    if (ast->condExpr)
+    {
+        /* Generate CFG for if-statement */
+        auto in = MakeBlock();
+        auto out = MakeBlock();
+
+        auto thenBlock = VisitAndLink(ast->codeBlock);
+        auto elseBlockIn = out;
+
+        if (thenBlock.in)
+            in->AddSucc(*thenBlock.in, "true");
+        if (thenBlock.out)
+            thenBlock.out->AddSucc(*out);
+
+        if (ast->elseStmnt)
+        {
+            auto elseBlock = VisitAndLink(ast->elseStmnt);
+            elseBlockIn = elseBlock.in;
+            elseBlock.out->AddSucc(*out);
+            in->AddSucc(*elseBlockIn, "false");
+        }
+        else
+            in->AddSucc(*out, "false");
+
+        /*PushBB(thenBlock.in, elseBlockIn);
+        {
+            auto cond = VisitAndLink(ast->condExpr);
+        }
+        PopBB();*/
+        
+        RETURN_BLOCK_REF(BlockRef(in, out));
+    }
+    else
+    {
+        /* Generate CFG for else-statement */
+        RETURN_BLOCK_REF(VisitAndLink(ast->codeBlock));
+    }
 }
 
 DEF_VISIT_PROC(GraphGenerator, SwitchStmnt)
@@ -152,19 +210,19 @@ DEF_VISIT_PROC(GraphGenerator, ForStmnt)
 {
 }
 
+//TODO: incomplete
 DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
 {
     /* Create new basic block */
-    auto bb = CT()->CreateBasicBlock();
-    In()->InsertSucc(*bb, *Out());
+    auto bb = MakeBlock();
     
-    bb->AddSucc(*bb);
-
-    PushBB(bb, Out());
+    PushBB(bb);
     {
         Visit(ast->codeBlock);
     }
     PopBB();
+
+    RETURN_BLOCK_REF(bb);
 }
 
 DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
@@ -183,50 +241,57 @@ DEF_VISIT_PROC(GraphGenerator, ClassDeclStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, VarDeclStmnt)
 {
-    Visit(ast->varDecls);
+    RETURN_BLOCK_REF(VisitAndLink(ast->varDecls));
 }
 
 DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 {
     auto procIdent = CodeGenerator::NameMangling::UniqueLabel(*ast->procSignature);
     
-    auto in = CT()->CreateRootBasicBlock(procIdent);
-    auto out = CT()->CreateBasicBlock();
+    auto root = CT()->CreateRootBasicBlock(procIdent);
+    auto graph = VisitAndLink(ast->codeBlock);
 
-    in->AddSucc(*out);
+    if (graph.in)
+        root->AddSucc(*graph.in);
 
-    PushBB(in, out);
-    {
-        Visit(ast->codeBlock);
-    }
-    PopBB();
+    RETURN_BLOCK_REF(BlockRef(root, graph.out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, InitDeclStmnt)
 {
 }
 
+//TODO: connect basic blocks
 DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
 {
-    /* Visit expression */
-    Visit(ast->expr);
+    /* Make basic block */
+    auto bb = MakeBlock();
 
-    auto src = Var();
-    PopVar();
-
-    for (auto& varName : ast->varNames)
+    PushBB(bb);
     {
-        /* Get variable identifier */
-        auto& lastName = varName->GetLast();
-        auto var = LocalVarFromVarName(lastName);
-        auto isFloat = IsVarFloat(lastName);
+        /* Visit expression */
+        Visit(ast->expr);
 
-        /* Make instruction */
-        auto inst = In()->MakeInst<TACCopyInst>();
+        auto src = Var();
+        PopVar();
 
-        inst->dest  = var;
-        inst->src   = src;
+        for (auto& varName : ast->varNames)
+        {
+            /* Get variable identifier */
+            auto& lastName = varName->GetLast();
+            auto var = LocalVarFromVarName(lastName);
+            auto isFloat = IsVarFloat(lastName);
+
+            /* Make basic block and instruction */
+            auto inst = bb->MakeInst<TACCopyInst>();
+
+            inst->dest  = var;
+            inst->src   = src;
+        }
     }
+    PopBB();
+
+    RETURN_BLOCK_REF(bb);
 }
 
 static OpCodes OperatorToOpCode(const ModifyAssignStmnt::Operators op, bool isFloat)
@@ -264,44 +329,60 @@ static OpCodes OperatorToOpCode(const ModifyAssignStmnt::Operators op, bool isFl
 
 DEF_VISIT_PROC(GraphGenerator, ModifyAssignStmnt)
 {
-    /* Visit expression */
-    Visit(ast->expr);
+    auto bb = MakeBlock();
 
-    auto src = Var();
-    PopVar();
+    PushBB(bb);
+    {
+        /* Visit expression */
+        Visit(ast->expr);
 
-    /* Get variable identifier */
-    auto& varName = ast->varName->GetLast();
-    auto var = LocalVarFromVarName(varName);
-    auto isFloat = IsVarFloat(varName);
+        auto src = Var();
+        PopVar();
 
-    /* Make instruction */
-    auto inst = In()->MakeInst<TACModifyInst>();
+        /* Get variable identifier */
+        auto& varName = ast->varName->GetLast();
+        auto var = LocalVarFromVarName(varName);
+        auto isFloat = IsVarFloat(varName);
 
-    inst->opcode    = OperatorToOpCode(ast->modifyOperator, isFloat);
-    inst->dest      = var;
-    inst->srcLhs    = var;
-    inst->srcRhs    = src;
+        /* Make instruction */
+        auto inst = bb->MakeInst<TACModifyInst>();
+
+        inst->opcode    = OperatorToOpCode(ast->modifyOperator, isFloat);
+        inst->dest      = var;
+        inst->srcLhs    = var;
+        inst->srcRhs    = src;
+    }
+    PopBB();
+
+    RETURN_BLOCK_REF(bb);
 }
 
 DEF_VISIT_PROC(GraphGenerator, PostOperatorStmnt)
 {
-    /* Get variable identifier */
-    auto& varName = ast->varName->GetLast();
-    auto var = LocalVarFromVarName(varName);
-    auto isFloat = IsVarFloat(varName);
+    auto bb = MakeBlock();
 
-    /* Make instruction */
-    auto inst = In()->MakeInst<TACModifyInst>();
+    PushBB(bb);
+    {
+        /* Get variable identifier */
+        auto& varName = ast->varName->GetLast();
+        auto var = LocalVarFromVarName(varName);
+        auto isFloat = IsVarFloat(varName);
 
-    if (ast->postOperator == PostOperatorStmnt::Operators::Inc)
-        inst->opcode = (isFloat ? OpCodes::FADD : OpCodes::ADD);
-    else
-        inst->opcode = (isFloat ? OpCodes::FSUB : OpCodes::SUB);
+        /* Make basic block and instruction */
+        auto inst = bb->MakeInst<TACModifyInst>();
 
-    inst->dest      = var;
-    inst->srcLhs    = var;
-    inst->srcRhs    = TACVar("1");
+        if (ast->postOperator == PostOperatorStmnt::Operators::Inc)
+            inst->opcode = (isFloat ? OpCodes::FADD : OpCodes::ADD);
+        else
+            inst->opcode = (isFloat ? OpCodes::FSUB : OpCodes::SUB);
+
+        inst->dest      = var;
+        inst->srcLhs    = var;
+        inst->srcRhs    = TACVar("1");
+    }
+    PopBB();
+
+    RETURN_BLOCK_REF(bb);
 }
 
 /* --- Expressions --- */
@@ -366,7 +447,7 @@ DEF_VISIT_PROC(GraphGenerator, BinaryExpr)
 
     /* Make instruction */
     auto isFloat = ast->GetTypeDenoter()->IsFloat();
-    auto inst = In()->MakeInst<TACModifyInst>();
+    auto inst = BB()->MakeInst<TACModifyInst>();
     
     inst->dest      = TempVar();
     inst->srcLhs    = srcLhs;
@@ -400,7 +481,7 @@ DEF_VISIT_PROC(GraphGenerator, UnaryExpr)
 
     /* Make instruction */
     auto isFloat = ast->GetTypeDenoter()->IsFloat();
-    auto inst = In()->MakeInst<TACModifyInst>();
+    auto inst = BB()->MakeInst<TACModifyInst>();
     
     inst->dest      = TempVar();
     inst->srcLhs    = TACVar("0");
@@ -414,7 +495,7 @@ DEF_VISIT_PROC(GraphGenerator, UnaryExpr)
 DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
 {
     /* Make instruction */
-    auto inst = In()->MakeInst<TACCopyInst>();
+    auto inst = BB()->MakeInst<TACCopyInst>();
 
     inst->dest      = TempVar();
     inst->src       = ast->value;
@@ -433,7 +514,7 @@ DEF_VISIT_PROC(GraphGenerator, CastExpr)
 
     if (isDestFloat != isSrcFloat)
     {
-        auto inst = In()->MakeInst<TACCopyInst>();
+        auto inst = BB()->MakeInst<TACCopyInst>();
 
         inst->dest  = TempVar();
         inst->src   = src;
@@ -483,7 +564,42 @@ DEF_VISIT_PROC(GraphGenerator, PointerTypeDenoter)
 {
 }
 
+#undef RETURN_BLOCK_REF
+
 /* --- Conversion --- */
+
+template <typename T> GraphGenerator::BlockRef GraphGenerator::VisitAndLink(T ast)
+{
+    BlockRef ref;
+    if (ast)
+        ast->Visit(this, &ref);
+    return ref;
+}
+
+template <typename T> GraphGenerator::BlockRef GraphGenerator::VisitAndLink(const std::vector<std::shared_ptr<T>>& astList)
+{
+    BasicBlock* first = nullptr;
+    BlockRef prev;
+
+    for (size_t i = 0, n = astList.size(); i < n; ++i)
+    {
+        /* Visit current AST */
+        auto bb = VisitAndLink(astList[i]);
+
+        /* Store final in/out blocks */
+        if (i == 0)
+            first = bb.in;
+
+        /* Connect current with previous block */
+        if (prev.out && bb.in)
+            prev.out->AddSucc(*bb.in);
+
+        /* Store previous block */
+        prev = bb;
+    }
+
+    return { first, prev.out };
+}
 
 void GraphGenerator::CreateClassTree()
 {
@@ -491,24 +607,24 @@ void GraphGenerator::CreateClassTree()
     classTree_ = programClassTrees_.back().get();
 }
 
-void GraphGenerator::PushBB(BasicBlock* in, BasicBlock* out)
+BasicBlock* GraphGenerator::MakeBlock()
 {
-    basicBlockStack_.Push({ in, out });
+    return CT()->CreateBasicBlock();
+}
+
+void GraphGenerator::PushBB(BasicBlock* bb)
+{
+    stackBB_.Push(bb);
 }
 
 void GraphGenerator::PopBB()
 {
-    basicBlockStack_.Pop();
+    stackBB_.Pop();
 }
 
-BasicBlock* GraphGenerator::In() const
+BasicBlock* GraphGenerator::BB() const
 {
-    return basicBlockStack_.Empty() ? nullptr : basicBlockStack_.Top().in;
-}
-
-BasicBlock* GraphGenerator::Out() const
-{
-    return basicBlockStack_.Empty() ? nullptr : basicBlockStack_.Top().out;
+    return stackBB_.Empty() ? nullptr : stackBB_.Top();
 }
 
 /* --- Variables --- */
@@ -554,6 +670,21 @@ TACVar GraphGenerator::LocalVarFromVarName(const VarName& ast)
     return LocalVar(ast.GetLast().declRef);
 }
 
+
+/*
+ * BlockRef structure
+ */
+
+GraphGenerator::BlockRef::BlockRef(BasicBlock* in, BasicBlock* out) :
+    in  { in  },
+    out { out }
+{
+}
+GraphGenerator::BlockRef::BlockRef(BasicBlock* bb) :
+    in  { bb },
+    out { bb }
+{
+}
 
 } // /namespace ControlFlowGraph
 

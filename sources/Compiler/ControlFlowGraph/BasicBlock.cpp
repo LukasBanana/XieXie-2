@@ -14,20 +14,35 @@ namespace ControlFlowGraph
 {
 
 
-void BasicBlock::AddSucc(BasicBlock& block)
+/*
+ * Edge structure
+ */
+
+BasicBlock::Edge::Edge(BasicBlock* succ, const std::string& label) :
+    succ    { succ  },
+    label   { label }
+{
+}
+
+
+/*
+ * BasicBlock class
+ */
+
+void BasicBlock::AddSucc(BasicBlock& block, const std::string& label)
 {
     /* Check if block is already a successor of this block */
     if (std::find(succ.begin(), succ.end(), &block) != succ.end())
         return;
 
     /* Add block to the successor list */
-    succ.push_back(&block);
+    succ.push_back({ &block, label });
 
     /* Add this block to the predecessor list of the specified block */
     block.pred.push_back(this);
 }
 
-void BasicBlock::InsertSucc(BasicBlock& block, BasicBlock& blockToReplace)
+void BasicBlock::InsertSucc(BasicBlock& block, BasicBlock& blockToReplace, const std::string& label)
 {
     /* Check if block is already a successor of this block */
     if (std::find(succ.begin(), succ.end(), &block) != succ.end())
@@ -39,16 +54,16 @@ void BasicBlock::InsertSucc(BasicBlock& block, BasicBlock& blockToReplace)
         return;
 
     /* Replace block-to-replace by block-to-insert */
-    *it = &block;
+    *it = { &block, label };
 
     /* Add this block to the predecessor list of the inserted block */
     block.pred.push_back(this);
     block.succ.push_back(&blockToReplace);
 
     /* Replace this block in the predecessor list of the block-to-replace by the new inserted block */
-    it = std::find(blockToReplace.pred.begin(), blockToReplace.pred.end(), this);
-    if (it != blockToReplace.pred.end())
-        *it = &block;
+    auto itPred = std::find(blockToReplace.pred.begin(), blockToReplace.pred.end(), this);
+    if (itPred != blockToReplace.pred.end())
+        *itPred = &block;
 }
 
 void BasicBlock::RemoveSucc(BasicBlock& block)
@@ -66,9 +81,9 @@ void BasicBlock::RemoveSucc(BasicBlock& block)
     succ.insert(succ.end(), nextSucc.begin(), nextSucc.end());
 
     /* Remove this block from the predecessor list of the specified block */
-    it = std::find(block.pred.begin(), block.pred.end(), this);
-    if (it != block.pred.end())
-        block.pred.erase(it);
+    auto itPred = std::find(block.pred.begin(), block.pred.end(), this);
+    if (itPred != block.pred.end())
+        block.pred.erase(itPred);
 }
 
 

@@ -2,11 +2,14 @@
 // CFG Test 1
 // 08/03/2015
 
+extern class Object {}
+
 class Test {
 	
 	void main() {
 		
-		int a := 1
+		/*
+		int a := 17
 		int b := 2
 		int c := (a + b) * 4				// c = (1+2)*4 = 3*4 = 12
 		int d := 2 * c + (3 - 5) * -2		// d = 2*12+(3-5)*(-2) = 24+(-2)*(-2) = 24+4 = 28
@@ -17,15 +20,25 @@ class Test {
 		f++		// f = 2.35
 		a--		// a = 0
 		a += 5	// a = 5
+		*/
 		
-		for i : 1 .. 10 {
+		// if statement
+		int x := 3, y := 0
+		if x > 5 {
+			y := 1
+		} else {
+			y := 2
+		}
+		y++
+		
+		/*for i : 1 .. 10 {
 			a += i
 			b,c := 2
 			
 			for j : 1 .. 3 {
 				d++
 			}
-		}
+		}*/
 		
 	}
 	
