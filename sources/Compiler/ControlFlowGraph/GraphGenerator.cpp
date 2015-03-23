@@ -606,9 +606,9 @@ void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
         auto srcRhs = Var();
 
         /* Make instruction */
-        auto isFloat = ast->GetTypeDenoter()->IsFloat();
+        auto isFloat = ast->lhsExpr->GetTypeDenoter()->IsFloat();
         auto inst = BB()->MakeInst<TACCondJumpInst>();
-    
+
         inst->srcLhs = srcLhs;
         inst->srcRhs = srcRhs;
         inst->opcode = OperatorToOpCode(ast->binaryOperator, isFloat);

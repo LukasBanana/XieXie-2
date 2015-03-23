@@ -6,9 +6,8 @@ extern class Object {}
 
 class Test {
 	
-	void main(int a) {
+	void main(int p) {
 		
-		/*
 		int a := 17
 		int b := 2
 		int c := (a + b) * 4				// c = (1+2)*4 = 3*4 = 12
@@ -20,18 +19,17 @@ class Test {
 		f++		// f = 2.35
 		a--		// a = 0
 		a += 5	// a = 5
-		*/
 		
 		// if statement
-		int x := a, y := -7*x
-		/*if x > 5 and x < 10 and not (x != 2) {
+		int x := p, y := -7*x
+		if x > 5 and f < 10.0 and not (x != 2) {
 			if x = 3 {
 				y := 1
 			}
 		} else {
 			y := 2
-		}*/
-		if x > 5 or (x < 10 and y % a + 2 = 4 * a) {
+		}
+		if x > 5 or (x < 10 and y % p + 2 = 4 * p) {
 			y := 1
 		} else {
 			y := 2
