@@ -10,7 +10,7 @@
 
 
 #include "TACVar.h"
-#include "Flags.h"
+#include "BitMask.h"
 
 #include <string>
 #include <set>
@@ -89,9 +89,9 @@ class TACInst
         {
             enum
             {
-                Dest        = 0x01,
-                Source      = 0x02,
-                TempOnly    = 0x04,
+                Dest        = (1 << 0),
+                Source      = (1 << 1),
+                TempOnly    = (1 << 2),
             };
         };
 
@@ -111,9 +111,9 @@ class TACInst
         virtual bool ReadsVar(const TACVar& var) const;
 
         //! Inserts the destination variable of this instruction (if it has one) to the specified set.
-        virtual void InsertDestVar(std::set<TACVar>& vars, const Flags& flags = 0) const;
+        virtual void InsertDestVar(std::set<TACVar>& vars, const BitMask& flags = 0) const;
         //! Replaces the variable 'varToReplace' by 'replacedVar'.
-        virtual void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags = (VarFlags::Dest | VarFlags::Source));
+        virtual void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source));
 
         //! Returns a string for the specified op-code.
         static std::string OpCodeToString(const OpCodes opcode);

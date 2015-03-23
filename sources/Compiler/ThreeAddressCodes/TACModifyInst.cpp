@@ -78,13 +78,13 @@ bool TACModifyInst::ReadsVar(const TACVar& var) const
     return (srcLhs == var) || (srcRhs == var);
 }
 
-void TACModifyInst::InsertDestVar(std::set<TACVar>& vars, const Flags& flags) const
+void TACModifyInst::InsertDestVar(std::set<TACVar>& vars, const BitMask& flags) const
 {
     if (!flags(TACInst::VarFlags::TempOnly) || dest.IsTemp())
         vars.insert(dest);
 }
 
-void TACModifyInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags)
+void TACModifyInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
 {
     if ( flags(VarFlags::Dest) && ( !flags(VarFlags::TempOnly) || dest.IsTemp() ) )
         dest.Replace(varToReplace, replacedVar);

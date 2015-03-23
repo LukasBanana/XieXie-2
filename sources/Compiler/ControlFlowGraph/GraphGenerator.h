@@ -15,6 +15,7 @@
 #include "SafeStack.h"
 #include "TACVar.h"
 #include "TACVarManager.h"
+#include "ErrorReporter.h"
 
 #include <vector>
 
@@ -32,7 +33,7 @@ class GraphGenerator final : private Visitor
     
     public:
         
-        std::vector<std::unique_ptr<ClassTree>> GenerateCFG(const Program& program);
+        std::vector<std::unique_ptr<ClassTree>> GenerateCFG(const Program& program, ErrorReporter& errorReporter);
 
     private:
         
@@ -52,6 +53,10 @@ class GraphGenerator final : private Visitor
 
         /* === Functions === */
 
+        void Error(const std::string& msg, const AST* ast = nullptr);
+
+        /* --- AST Interface --- */
+
         DECL_VISITOR_INTERFACE;
 
         /* --- Generation --- */
@@ -64,6 +69,9 @@ class GraphGenerator final : private Visitor
         void GenerateLogicNotUnaryExpr(UnaryExpr* ast, void* args);
         void GenerateArithmeticUnaryExpr(UnaryExpr* ast, void* args);
 
+        void GenerateBreakCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args);
+        void GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args);
+
         /* --- Conversion --- */
 
         template <typename T> BlockRef VisitAndLink(T ast);
@@ -74,9 +82,13 @@ class GraphGenerator final : private Visitor
 
         void PushBB(BasicBlock* bb);
         void PopBB();
-
         //! Returns the current basic block.
         BasicBlock* BB() const;
+
+        void PushBreakBB(BasicBlock* bb);
+        void PopBreakBB();
+        //! Returns the current basic block for a loop break.
+        BasicBlock* BreakBB() const;
 
         //! Returns the current class tree.
         inline ClassTree* CT() const
@@ -103,6 +115,7 @@ class GraphGenerator final : private Visitor
         ClassTree*                              classTree_          = nullptr;  //!< Reference to the current class tree.
 
         SafeStack<BasicBlock*>                  stackBB_;
+        SafeStack<BasicBlock*>                  breakStackBB_;
 
         TACVarManager                           varMngr_;
 

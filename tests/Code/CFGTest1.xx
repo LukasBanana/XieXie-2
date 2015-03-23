@@ -22,6 +22,7 @@ class Test {
 		
 		// if statement
 		int x := p, y := -7*x
+		
 		/*if x > 5 and f < 10.0 and not (x != 2) {
 		//if x > 5 and f < 10.0 and (int)(not false) != 2 {
 		//if x > 5 and f < 10.0 and not true {
@@ -31,12 +32,23 @@ class Test {
 		} else {
 			y := 2
 		}*/
-		if x > 5 or (x < 10 and y % p + 2 = 4 * p) {
+		
+		/*if x > 5 or (x < 10 and y % p + 2 = 4 * p) {
 			y := 1
 		} else {
 			y := 2
 		}
-		y++
+		y++*/
+		
+		int i
+		forever {
+			i += 4
+			if i > 100 {
+				break
+			}
+			i++
+		}
+		i := 42
 		
 		/*for i : 1 .. 10 {
 			a += i

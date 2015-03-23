@@ -28,8 +28,8 @@ class TACModifyInst : public TACInst
         bool WritesVar(const TACVar& var) const override;
         bool ReadsVar(const TACVar& var) const override;
 
-        void InsertDestVar(std::set<TACVar>& vars, const Flags& flags = 0) const override;
-        void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags = (VarFlags::Dest | VarFlags::Source)) override;
+        void InsertDestVar(std::set<TACVar>& vars, const BitMask& flags = 0) const override;
+        void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
 
         TACVar dest, srcLhs, srcRhs;
 

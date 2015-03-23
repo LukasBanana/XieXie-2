@@ -30,7 +30,7 @@ class TACCondJumpInst : public TACInst
 
         bool ReadsVar(const TACVar& var) const override;
 
-        void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags = (VarFlags::Dest | VarFlags::Source)) override;
+        void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
 
         TACVar srcLhs, srcRhs;
 

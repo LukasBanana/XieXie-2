@@ -11,6 +11,7 @@
 
 #include "TACInst.h"
 #include "MakeUnique.h"
+#include "BitMask.h"
 
 #include <vector>
 #include <memory>
@@ -51,6 +52,14 @@ class BasicBlock
             std::string label;          //!< Edge label.
         };
 
+        struct Flags
+        {
+            enum
+            {
+                IsCtrlTransform = (1 << 0), //!< This basic block is a control transfer ('break' or 'continue').
+            };
+        };
+
         using PredListType = std::vector<BasicBlock*>;
         using SuccListType = std::vector<Edge>;
 
@@ -88,6 +97,9 @@ class BasicBlock
 
         //! TAC instructions.
         std::vector<std::unique_ptr<ThreeAddressCodes::TACInst>> insts;
+
+        //! Bit mask of the basic block flags.
+        BitMask flags;
 
     private:
         

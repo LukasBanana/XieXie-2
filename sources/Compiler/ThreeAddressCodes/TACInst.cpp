@@ -23,12 +23,12 @@ bool TACInst::ReadsVar(const TACVar& var) const
     return false;
 }
 
-void TACInst::InsertDestVar(std::set<TACVar>& vars, const Flags& flags) const
+void TACInst::InsertDestVar(std::set<TACVar>& vars, const BitMask& flags) const
 {
     // dummy
 }
 
-void TACInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags)
+void TACInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
 {
     // dummy
 }

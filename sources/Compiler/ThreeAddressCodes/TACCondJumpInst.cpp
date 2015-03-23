@@ -70,7 +70,7 @@ bool TACCondJumpInst::ReadsVar(const TACVar& var) const
     return (srcLhs == var) || (srcRhs == var);
 }
 
-void TACCondJumpInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags)
+void TACCondJumpInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
 {
     if (flags(VarFlags::Source))
     {

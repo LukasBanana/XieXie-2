@@ -11,6 +11,7 @@
 #include "TACCopyInst.h"
 #include "TACCondJumpInst.h"
 #include "CodeGenerators/NameMangling.h"
+#include "CompilerMessage.h"
 
 
 namespace ControlFlowGraph
@@ -34,11 +35,20 @@ static bool IsVarFloat(const VarName& ast)
  * GraphGenerator class
  */
 
-std::vector<std::unique_ptr<ClassTree>> GraphGenerator::GenerateCFG(const Program& program)
+std::vector<std::unique_ptr<ClassTree>> GraphGenerator::GenerateCFG(const Program& program, ErrorReporter& errorReporter)
 {
     /* Cast program AST node to non-const; we don't modify the AST here at all! */
     programClassTrees_.clear();
-    Visit(const_cast<Program*>(&program));
+    
+    try
+    {
+        Visit(const_cast<Program*>(&program));
+    }
+    catch (const CompilerMessage& err)
+    {
+        errorReporter.Add(err);
+    }
+
     return std::move(programClassTrees_);
 }
 
@@ -51,6 +61,11 @@ std::vector<std::unique_ptr<ClassTree>> GraphGenerator::GenerateCFG(const Progra
     auto&& _result = expr;                              \
     if (args)                                           \
         *reinterpret_cast<BlockRef*>(args) = _result
+
+void GraphGenerator::Error(const std::string& msg, const AST* ast)
+{
+    throw ;
+}
 
 /* --- Common AST nodes --- */
 
@@ -70,11 +85,11 @@ DEF_VISIT_PROC(GraphGenerator, VarName)
 
 DEF_VISIT_PROC(GraphGenerator, VarDecl)
 {
+    /* Make basic block */
+    auto bb = MakeBlock();
+
     if (ast->initExpr)
     {
-        /* Make basic block */
-        auto bb = MakeBlock();
-
         PushBB(bb);
         {
             Visit(ast->initExpr);
@@ -89,9 +104,17 @@ DEF_VISIT_PROC(GraphGenerator, VarDecl)
             PopVar();
         }
         PopBB();
-
-        RETURN_BLOCK_REF(bb);
     }
+    else
+    {
+        /* Make instruction */
+        auto inst = bb->MakeInst<TACCopyInst>();
+
+        inst->src   = TACVar("0");
+        inst->dest  = LocalVar(ast);
+    }
+
+    RETURN_BLOCK_REF(bb);
 }
 
 DEF_VISIT_PROC(GraphGenerator, Param)
@@ -141,6 +164,15 @@ DEF_VISIT_PROC(GraphGenerator, ReturnStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, CtrlTransferStmnt)
 {
+    switch (ast->ctrlTransfer)
+    {
+        case CtrlTransferStmnt::Transfers::Break:
+            GenerateBreakCtrlTransferStmnt(ast, args);
+            break;
+        case CtrlTransferStmnt::Transfers::Continue:
+            GenerateContinueCtrlTransferStmnt(ast, args);
+            break;
+    }
 }
 
 DEF_VISIT_PROC(GraphGenerator, ProcCallStmnt)
@@ -163,24 +195,26 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
         auto out = MakeBlock("EndIf");
 
         /* Build <true> and <false> branch CFGs */
-        auto trueBranch = VisitAndLink(ast->codeBlock);
-        auto falseBranchIn = out;
+        auto thenBranch = VisitAndLink(ast->codeBlock);
+        auto elseBranchIn = out;
 
         if (ast->elseStmnt)
         {
-            auto falseBranch = VisitAndLink(ast->elseStmnt);
-            falseBranchIn = falseBranch.in;
-            if (falseBranch.out)
-                falseBranch.out->AddSucc(*out);
+            auto elseBranch = VisitAndLink(ast->elseStmnt);
+            elseBranchIn = elseBranch.in;
+            if (elseBranch.out)
+                elseBranch.out->AddSucc(*out);
         }
 
         /* Build branch CFG */
         auto condCFG = VisitAndLink(ast->condExpr);
 
         in->AddSucc(*condCFG.in);
-        condCFG.out->AddSucc(*trueBranch.in, "true");
-        condCFG.outAlt->AddSucc(*falseBranchIn, "false");
-        trueBranch.out->AddSucc(*out);
+        condCFG.out->AddSucc(*thenBranch.in, "true");
+        condCFG.outAlt->AddSucc(*elseBranchIn, "false");
+
+        if (!thenBranch.out->flags(BasicBlock::Flags::IsCtrlTransform))
+            thenBranch.out->AddSucc(*out);
 
         RETURN_BLOCK_REF(BlockRef(in, out));
     }
@@ -226,8 +260,34 @@ DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
 {
 }
 
+/*
+   ForEver
+    |   ^
+    v   |
+  Body  |
+  /  \__/
+  |
+  v
+Break
+*/
 DEF_VISIT_PROC(GraphGenerator, ForEverStmnt)
 {
+    auto in = MakeBlock();
+    auto out = MakeBlock();
+
+    PushBreakBB(out);
+    {
+        auto body = VisitAndLink(ast->codeBlock);
+
+        if (body.in && body.out)
+        {
+            in->AddSucc(*body.in);
+            body.out->AddSucc(*body.in, "loop");
+        }
+    }
+    PopBreakBB();
+
+    RETURN_BLOCK_REF(BlockRef(in, out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, ClassDeclStmnt)
@@ -688,6 +748,26 @@ void GraphGenerator::GenerateArithmeticUnaryExpr(UnaryExpr* ast, void* args)
     PushVar(inst->dest);
 }
 
+void GraphGenerator::GenerateBreakCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args)
+{
+    if (BreakBB())
+    {
+        auto bb = MakeBlock();
+        
+        bb->AddSucc(*BreakBB(), "break");
+        bb->flags << BasicBlock::Flags::IsCtrlTransform;
+
+        RETURN_BLOCK_REF(bb);
+    }
+    else
+        Error("missing loop exit point", ast);
+}
+
+void GraphGenerator::GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args)
+{
+    //todo...
+}
+
 #undef RETURN_BLOCK_REF
 
 /* --- Conversion --- */
@@ -749,6 +829,21 @@ void GraphGenerator::PopBB()
 BasicBlock* GraphGenerator::BB() const
 {
     return stackBB_.Empty() ? nullptr : stackBB_.Top();
+}
+
+void GraphGenerator::PushBreakBB(BasicBlock* bb)
+{
+    breakStackBB_.Push(bb);
+}
+
+void GraphGenerator::PopBreakBB()
+{
+    breakStackBB_.Pop();
+}
+
+BasicBlock* GraphGenerator::BreakBB() const
+{
+    return breakStackBB_.Empty() ? nullptr : breakStackBB_.Top();
 }
 
 /* --- Variables --- */

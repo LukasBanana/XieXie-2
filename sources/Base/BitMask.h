@@ -1,22 +1,22 @@
 /*
- * Flags.h
+ * BitMask.h
  * 
  * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_FLAGS_H__
-#define __XX_FLAGS_H__
+#ifndef __XX_BIT_MASK_H__
+#define __XX_BIT_MASK_H__
 
 
 //! Base class for any flags (or rather options).
-class Flags
+class BitMask
 {
     
     public:
         
-        Flags() = default;
-        Flags(int bitMask) :
+        BitMask() = default;
+        BitMask(int bitMask) :
             bitMask_{ bitMask }
         {
         }
@@ -38,12 +38,12 @@ class Flags
         {
             return Has(flag);
         }
-        Flags& operator << (int flag)
+        BitMask& operator << (int flag)
         {
             Add(flag);
             return *this;
         }
-        Flags& operator >> (int flag)
+        BitMask& operator >> (int flag)
         {
             Remove(flag);
             return *this;
@@ -66,12 +66,12 @@ class Flags
 };
 
 
-inline bool operator == (const Flags& lhs, const Flags& rhs)
+inline bool operator == (const BitMask& lhs, const BitMask& rhs)
 {
     return lhs.Mask() == rhs.Mask();
 }
 
-inline bool operator != (const Flags& lhs, const Flags& rhs)
+inline bool operator != (const BitMask& lhs, const BitMask& rhs)
 {
     return lhs.Mask() != rhs.Mask();
 }

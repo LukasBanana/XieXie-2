@@ -94,28 +94,33 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             output.Message("AST to CFG conversion ...");
 
         ControlFlowGraph::GraphGenerator converter;
-        auto classTrees = converter.GenerateCFG(program);
+        auto classTrees = converter.GenerateCFG(program, errorReporter);
 
-        /* Optimize */
-        if (optimize)
+        if (errorReporter.HasErrors())
+            hasError = true;
+        else
         {
-            if (output.verbose)
-                output.Message("optimize CFG ...");
-            Optimization::Optimizer::OptimizeProgram(classTrees);
-        }
-
-        /* Show flow graph */
-        if (showCFG)
-        {
-            ControlFlowGraph::CFGViewer viewer;
-
-            size_t i = 0;
-            for (const auto& tree : classTrees)
+            /* Optimize */
+            if (optimize)
             {
-                std::string path = "classtree." + ToStr(++i);
                 if (output.verbose)
-                    output.Message("dump CFG class tree \"" + path + "\"");
-                viewer.ViewGraph(*tree, path);
+                    output.Message("optimize CFG ...");
+                Optimization::Optimizer::OptimizeProgram(classTrees);
+            }
+
+            /* Show flow graph */
+            if (showCFG)
+            {
+                ControlFlowGraph::CFGViewer viewer;
+
+                size_t i = 0;
+                for (const auto& tree : classTrees)
+                {
+                    std::string path = "classtree." + ToStr(++i);
+                    if (output.verbose)
+                        output.Message("dump CFG class tree \"" + path + "\"");
+                    viewer.ViewGraph(*tree, path);
+                }
             }
         }
 
