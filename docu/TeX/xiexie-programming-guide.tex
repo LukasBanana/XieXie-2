@@ -3,11 +3,14 @@
 %----------------------------------------------------------------------------------------
 
 \documentclass{report}
+%\documentclass{style-template/WileySix}
 
 
 %----------------------------------------------------------------------------------------
 %	PACKAGES
 %----------------------------------------------------------------------------------------
+
+%\usepackage{style-template/w-bookps}
 
 \usepackage{amsmath}
 \usepackage{listings}
@@ -20,6 +23,8 @@
 \usepackage{xspace}
 \usepackage{longtable}
 \usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{subcaption}
 
 \geometry{
 	a4paper,
@@ -77,16 +82,39 @@
 
 
 %----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\newcommand*{\plogo}{\fbox{$\mathcal{LH}$}\xspace} % Generic publisher logo
+\newcommand*{\titleGM}{\begingroup % Create the command for including the title page in the document
+\hbox{ % Horizontal box
+\hspace*{0.2\textwidth} % Whitespace to the left of the title page
+\rule{1pt}{\textheight} % Vertical line
+\hspace*{0.05\textwidth} % Whitespace between the vertical line and title page text
+\parbox[b]{0.75\textwidth}{ % Paragraph box which restricts text to less than the width of the page
+
+{\noindent\Huge\bfseries \xiexie Programming Guide}\\[2\baselineskip] % Title
+{\large \textit{A beginner guidance for the Xi\`eXie programming language}}\\[4\baselineskip] % Tagline or further description
+{\Large Lukas \textsc{Hermanns}} % Author name
+
+\vspace{0.5\textheight} % Whitespace between the title block and the publisher
+{\noindent Updated on \today}\\[\baselineskip] % Publisher and logo
+}}
+\endgroup}
+
+
+%----------------------------------------------------------------------------------------
 %	DOCUMENT INFORMATION
 %----------------------------------------------------------------------------------------
 
-\title{\xiexie Programming Guide \\ {\normalsize Version 2.0 Alpha}}
-\author{Lukas \textsc{Hermanns}}
-\date{\today}
+%\title{\xiexie Programming Guide \\ {\normalsize Version 2.0 Alpha}}
+%\author{Lukas \textsc{Hermanns}}
+%\date{\today}
 
 \begin{document}
 
-\maketitle
+\titleGM
+%\maketitle
 
 
 %----------------------------------------------------------------------------------------
@@ -158,7 +186,11 @@ may change over time. Here is a rough ToDo-list:
 	\hline \hline
 	\multicolumn{2}{|c|}{\textsc{Code Generator}} \\
 	\hline
-	CFG and TAC generation from DAST & \notimpl \\
+	Common CFG and TAC Generation from DAST & \incompl \\
+	\hline
+	If Statement & \almdone \\
+	\hline
+	ForEver Statement & \done \\
 	
 	\hline \hline
 	\multicolumn{2}{|c|}{\textsc{XASM Backend}} \\
@@ -892,7 +924,7 @@ Modules must be written in plain C or \cpp. A minimal module would consist of th
 Supposed our example module is named ``MyModule'' and we work on \windows we would have these files:
 \begin{itemize}
 	\item \textbf{\texttt{MyModule.c}} Module code written in C.
-	\item \textbf{\texttt{MyModule.dll}} Shared library which runs the module code.
+	\item \textbf{\texttt{MyModule.dll}}/ \textbf{\texttt{.so}} Shared library which runs the module code.
 	\item \textbf{\texttt{MyModule.xx}} \xiexie code file which declares the module. 
 \end{itemize}
 The C code file must implement the following function interfaces to be a valid \xiexie module:
@@ -923,24 +955,12 @@ void doSomething(xvm_env env) {
     xvm_return_void(env, 1);
 }
 
-// Module procedure list
+// Implement the module interface
 static xvm_invocation procList[] = {
     { "doSomething", doSomething },
 };
 
-#define NUM_PROCS 1
-
-XVM_EXPORT int xx_module_proc_count() {
-    return NUM_PROCS;
-}
-
-XVM_EXPORT XVM_INVOCATION_PROC xx_module_fetch_proc(int index) {
-    return index < NUM_PROCS ? procList[index].proc : NULL;
-}
-
-XVM_EXPORT const char* xx_module_fetch_ident(int index) {
-    return index < NUM_PROCS ? procList[index].ident : NULL;
-}
+XVM_IMPLEMENT_MODULE_INTERFACE(procList);
 \end{lstlisting}
 
 
@@ -969,10 +989,48 @@ Enter \texttt{xxc help} in a command line to see the manual pages.
 
 In contrast to most other command line tools, the commands for \xxc don't have the `-' prefix.
 Instead the command options use this prefix. Here is an example:
+\begin{quote}
+\texttt{xxc C -f FILE1 -f FILE2 -O}
+\end{quote}
+The above command line uses the \texttt{C} command (also \texttt{compile}) with the flags `-f' and `-O'.
+
+\subsection{Output}
+
+The compiler tries to show you where an error or warning occurred.
+If possible, it is highlighted with a \textit{line marker}. Consider the following code sample:
 \begin{lstlisting}
-xxc compile -f FILE1 -f FILE2 -O
+class Foo {
+    void Bar() {
+        int x := y
+    }
+}
 \end{lstlisting}
-The above command line uses the \texttt{compile} command with the flags `-f' and `-O'.
+Now consider the compiler processes this code with the following command line:
+\begin{quote}
+\texttt{xxc C -f Core.xx -f Foo.xx}
+\end{quote}
+Then the compiler indicates that the variable 'y' was not declared (see Figure \ref{fig:compiler-output}).
+\begin{figure}[ht]
+	\centering
+	\begin{subfigure}[here]{0.9 \textwidth}
+		\includegraphics[width=\textwidth]{images/compiler-output-win32}
+		\caption{Output in \textsc{PowerShell} on \windows 7}
+		\label{fig:compiler-output-win32}
+	\end{subfigure}
+	\begin{subfigure}[here]{0.9 \textwidth}
+		\includegraphics[width=\textwidth]{images/compiler-output-linux}
+		\caption{Output in \textsc{Terminal} on \textsc{Kubuntu} \linux}
+		\label{fig:compiler-output-linux}
+	\end{subfigure}
+	\caption{Compiler output for the above code sample.}
+	\label{fig:compiler-output}
+\end{figure}
+As you can see, some errors may produce multiple outputs. In this case, 'y' is undeclared which produces two error
+outputs here:
+\begin{enumerate}
+	\item The identifier 'y' is undeclared, so the appearance in the initializer expression is invalid.
+	\item The type of the initializer expression for the declaration of 'x' can not be deduced, so the type check fails.
+\end{enumerate}
 
 
 %----------------------------------------------------------------------------------------
