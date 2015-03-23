@@ -9,7 +9,11 @@
 #define __XX_TAC_INST_H__
 
 
+#include "TACVar.h"
+#include "Flags.h"
+
 #include <string>
+#include <set>
 
 
 namespace ThreeAddressCodes
@@ -81,6 +85,16 @@ class TACInst
             ITF,
         };
 
+        struct VarFlags
+        {
+            enum
+            {
+                Dest        = 0x01,
+                Source      = 0x02,
+                TempOnly    = 0x04,
+            };
+        };
+
         virtual ~TACInst()
         {
         }
@@ -92,15 +106,14 @@ class TACInst
         virtual std::string ToString() const = 0;
 
         //! Returns true if this instruction writes the specified variable.
-        virtual bool WritesVar(const TACVar& var) const
-        {
-            return false;
-        }
+        virtual bool WritesVar(const TACVar& var) const;
         //! Returns true if this instruction reads the specified variable.
-        virtual bool ReadsVar(const TACVar& var) const
-        {
-            return false;
-        }
+        virtual bool ReadsVar(const TACVar& var) const;
+
+        //! Inserts the destination variable of this instruction (if it has one) to the specified set.
+        virtual void InsertDestVar(std::set<TACVar>& vars, const Flags& flags = 0) const;
+        //! Replaces the variable 'varToReplace' by 'replacedVar'.
+        virtual void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags = (VarFlags::Dest | VarFlags::Source));
 
         //! Returns a string for the specified op-code.
         static std::string OpCodeToString(const OpCodes opcode);

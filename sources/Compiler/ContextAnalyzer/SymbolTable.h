@@ -34,7 +34,7 @@ template <typename Owner, typename Sym> class SymbolTable
 
         SymbolTable(OwnerType& owner) :
             // bracket initializer required for GCC (due to bug 56032)
-            owner_(owner)
+            owner_( owner )
         {
             /* Open global scope */
             OpenScope();

@@ -13,6 +13,26 @@ namespace ThreeAddressCodes
 {
 
 
+bool TACInst::WritesVar(const TACVar& var) const
+{
+    return false;
+}
+
+bool TACInst::ReadsVar(const TACVar& var) const
+{
+    return false;
+}
+
+void TACInst::InsertDestVar(std::set<TACVar>& vars, const Flags& flags) const
+{
+    // dummy
+}
+
+void TACInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags)
+{
+    // dummy
+}
+
 std::string TACInst::OpCodeToString(const OpCodes opcode)
 {
     switch (opcode)

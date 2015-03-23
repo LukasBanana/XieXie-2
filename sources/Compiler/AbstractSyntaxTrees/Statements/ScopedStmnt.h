@@ -40,7 +40,7 @@ class ScopedStmnt : public Stmnt
         
         ScopedStmnt() :
             // bracket initializer required for GCC (due to bug 56032)
-            symTab(*this)
+            symTab( *this )
         {
         }
         ScopedStmnt(const SourceArea& area) :

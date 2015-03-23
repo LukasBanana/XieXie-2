@@ -78,6 +78,25 @@ bool TACModifyInst::ReadsVar(const TACVar& var) const
     return (srcLhs == var) || (srcRhs == var);
 }
 
+void TACModifyInst::InsertDestVar(std::set<TACVar>& vars, const Flags& flags) const
+{
+    if (!flags(TACInst::VarFlags::TempOnly) || dest.IsTemp())
+        vars.insert(dest);
+}
+
+void TACModifyInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags)
+{
+    if ( flags(VarFlags::Dest) && ( !flags(VarFlags::TempOnly) || dest.IsTemp() ) )
+        dest.Replace(varToReplace, replacedVar);
+    if (flags(VarFlags::Source))
+    {
+        if (!flags(VarFlags::TempOnly) || srcLhs.IsTemp())
+            srcLhs.Replace(varToReplace, replacedVar);
+        if (!flags(VarFlags::TempOnly) || srcRhs.IsTemp())
+            srcRhs.Replace(varToReplace, replacedVar);
+    }
+}
+
 
 } // /namespace ThreeAddressCodes
 

@@ -44,6 +44,20 @@ bool TACCopyInst::ReadsVar(const TACVar& var) const
     return src == var;
 }
 
+void TACCopyInst::InsertDestVar(std::set<TACVar>& vars, const Flags& flags) const
+{
+    if (!flags(TACInst::VarFlags::TempOnly) || dest.IsTemp())
+        vars.insert(dest);
+}
+
+void TACCopyInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags)
+{
+    if ( flags(VarFlags::Dest) && ( !flags(VarFlags::TempOnly) || dest.IsTemp() ) )
+        dest.Replace(varToReplace, replacedVar);
+    if ( flags(VarFlags::Source) && ( !flags(VarFlags::TempOnly) || src.IsTemp() ) )
+        src.Replace(varToReplace, replacedVar);
+}
+
 
 } // /namespace ThreeAddressCodes
 

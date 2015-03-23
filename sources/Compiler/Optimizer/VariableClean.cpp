@@ -17,7 +17,7 @@ namespace Optimization
 
 void VariableClean::Transform(BasicBlock& basicBlock)
 {
-    /* Transform instructions */
+    /* Transform instructions (bottom-up) */
     for (auto it = basicBlock.insts.rbegin(); it != basicBlock.insts.rend(); ++it)
         TransformInst(*it);
 

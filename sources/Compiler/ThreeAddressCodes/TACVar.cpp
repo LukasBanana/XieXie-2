@@ -76,6 +76,16 @@ float TACVar::Float() const
     return StrToNum<float>(value);
 }
 
+bool TACVar::Replace(const TACVar& varToReplace, const TACVar& replacedVar)
+{
+    if (*this == varToReplace)
+    {
+        *this = replacedVar;
+        return true;
+    }
+    return false;
+}
+
 
 /* 
  * Global operators

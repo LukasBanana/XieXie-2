@@ -57,7 +57,7 @@ class TypeDenoter : public AST
         {
             return false;
         }
-        //! Returns true if a variable fo this type can be concatenated with another variable. By default false.
+        //! Returns true if a variable of this type can be concatenated with another variable. By default false.
         virtual bool CanBeConcatenated() const
         {
             return false;

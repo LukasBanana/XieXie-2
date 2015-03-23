@@ -8,6 +8,7 @@
 #include "Optimizer.h"
 #include "ConstantPropagation.h"
 #include "VariableClean.h"
+#include "VariableReduction.h"
 
 
 namespace Optimization
@@ -16,7 +17,6 @@ namespace Optimization
 
 void Optimizer::OptimizeProgram(std::vector<std::unique_ptr<ClassTree>>& classTrees)
 {
-    //!TODO! -> create top-bottom and bottom-top traversal classes!!!
     for (auto& ct : classTrees)
     {
         for (auto& bb : ct->GetBasicBlocks())
@@ -26,6 +26,9 @@ void Optimizer::OptimizeProgram(std::vector<std::unique_ptr<ClassTree>>& classTr
 
             VariableClean vc;
             vc.Transform(*bb);
+
+            VariableReduction vr;
+            vr.Transform(*bb);
         }
     }
 }

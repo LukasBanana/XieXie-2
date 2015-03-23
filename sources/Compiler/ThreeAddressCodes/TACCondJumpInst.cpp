@@ -70,6 +70,17 @@ bool TACCondJumpInst::ReadsVar(const TACVar& var) const
     return (srcLhs == var) || (srcRhs == var);
 }
 
+void TACCondJumpInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const Flags& flags)
+{
+    if (flags(VarFlags::Source))
+    {
+        if (!flags(VarFlags::TempOnly) || srcLhs.IsTemp())
+            srcLhs.Replace(varToReplace, replacedVar);
+        if (!flags(VarFlags::TempOnly) || srcRhs.IsTemp())
+            srcRhs.Replace(varToReplace, replacedVar);
+    }
+}
+
 
 } // /namespace ThreeAddressCodes
 

@@ -38,7 +38,7 @@ Log::ScopedIndent::~ScopedIndent()
 
 Log::Log(std::ostream& stream) :
     // bracket initializer required for GCC (due to bug 56032)
-    stream(stream)
+    stream( stream )
 {
 }
 

@@ -56,6 +56,9 @@ class TACVar
         //! Returns the value as floating-point.
         float Float() const;
 
+        //! Replaces this variable by 'replacedVar' if this variable is equal to 'varToReplace'.
+        bool Replace(const TACVar& varToReplace, const TACVar& replacedVar);
+
         IDType      id      = TACVar::invalidID;
         Types       type    = Types::Temp;
         std::string value;
