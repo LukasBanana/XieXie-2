@@ -39,6 +39,7 @@ class ConstantPropagation : public Optimizer
 
         void FetchConst(TACVar& var);
         void PropagateConst(const TACVar& dest, const TACVar& src);
+        void RemoveConst(const TACVar& dest);
 
         std::map<TACVar, std::string> vars_;
 

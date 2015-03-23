@@ -6,6 +6,7 @@
  */
 
 #include "VariableClean.h"
+#include "TACCondJumpInst.h"
 
 #include <algorithm>
 
@@ -43,6 +44,9 @@ void VariableClean::TransformInst(std::unique_ptr<TACInst>& inst)
         case TACInst::Types::Modify:
             TransformModifyInst(inst);
             break;
+        case TACInst::Types::CondJump:
+            TransformCondJump(inst);
+            break;
     }
 }
 
@@ -73,6 +77,15 @@ void VariableClean::TransformModifyInst(std::unique_ptr<TACInst>& inst)
     }
     else
         inst = nullptr;
+}
+
+void VariableClean::TransformCondJump(std::unique_ptr<TACInst>& inst)
+{
+    auto jumpInst = static_cast<TACCondJumpInst*>(inst.get());
+
+    /* Propagate variable usage */
+    ReadVar(jumpInst->srcLhs);
+    ReadVar(jumpInst->srcRhs);
 }
 
 void VariableClean::ReadVar(const TACVar& var)

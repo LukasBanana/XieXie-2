@@ -565,26 +565,33 @@ void GraphGenerator::GenerateLogicAndBinaryExpr(BinaryExpr* ast, void* args)
     auto lhs = VisitAndLink(ast->lhsExpr);
     auto rhs = VisitAndLink(ast->rhsExpr);
 
-    auto trueBranch = MakeBlock();
-    auto falseBranch = MakeBlock();
+    auto thenBranch = MakeBlock();
+    auto elseBranch = MakeBlock();
 
     lhs.out->AddSucc(*rhs.in, "true");
-    lhs.outAlt->AddSucc(*falseBranch, "false");
+    lhs.outAlt->AddSucc(*elseBranch, "false");
 
-    rhs.out->AddSucc(*trueBranch, "true");
-    rhs.outAlt->AddSucc(*falseBranch, "false");
+    rhs.out->AddSucc(*thenBranch, "true");
+    rhs.outAlt->AddSucc(*elseBranch, "false");
 
-    RETURN_BLOCK_REF(BlockRef(lhs.in, trueBranch, falseBranch));
+    RETURN_BLOCK_REF(BlockRef(lhs.in, thenBranch, elseBranch));
 }
 
 void GraphGenerator::GenerateLogicOrBinaryExpr(BinaryExpr* ast, void* args)
 {
-    Visit(ast->lhsExpr);
+    auto lhs = VisitAndLink(ast->lhsExpr);
+    auto rhs = VisitAndLink(ast->rhsExpr);
 
-    Visit(ast->rhsExpr);
+    auto thenBranch = MakeBlock();
+    auto elseBranch = MakeBlock();
 
-    //...
+    lhs.out->AddSucc(*thenBranch, "true");
+    lhs.outAlt->AddSucc(*rhs.in, "false");
 
+    rhs.out->AddSucc(*thenBranch, "true");
+    rhs.outAlt->AddSucc(*elseBranch, "false");
+
+    RETURN_BLOCK_REF(BlockRef(lhs.in, thenBranch, elseBranch));
 }
 
 void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)

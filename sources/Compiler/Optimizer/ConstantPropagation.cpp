@@ -69,6 +69,11 @@ void ConstantPropagation::TransformModifyInst(std::unique_ptr<TACInst>& inst)
             inst = std::move(newInst);
         }
     }
+    else
+    {
+        /* Destination is now variable -> remove constant */
+        RemoveConst(modifyInst->dest);
+    }
 }
 
 void ConstantPropagation::TransformCondJump(std::unique_ptr<TACInst>& inst)
@@ -180,6 +185,13 @@ void ConstantPropagation::PropagateConst(const TACVar& dest, const TACVar& src)
 {
     if (src.IsConst())
         vars_[dest] = src.value;
+}
+
+void ConstantPropagation::RemoveConst(const TACVar& dest)
+{
+    auto it = vars_.find(dest);
+    if (it != vars_.end())
+        vars_.erase(it);
 }
 
 

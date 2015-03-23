@@ -47,7 +47,7 @@ void CFGViewer::ViewGraph(
         ViewGraph(*block.second, file, fontName, fontSize);
 
         #if 1//DEBUG!!!
-        auto cmd = "dot-png.bat " + filename;
+        auto cmd = "dot-png.bat \"" + filename + "\"";
         system(cmd.c_str());
         #endif
     }
