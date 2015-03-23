@@ -61,6 +61,9 @@ class GraphGenerator final : private Visitor
         void GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args);
         void GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args);
 
+        void GenerateLogicNotUnaryExpr(UnaryExpr* ast, void* args);
+        void GenerateArithmeticUnaryExpr(UnaryExpr* ast, void* args);
+
         /* --- Conversion --- */
 
         template <typename T> BlockRef VisitAndLink(T ast);

@@ -135,9 +135,9 @@ void BasicBlock::Merge(std::set<const BasicBlock*>& visitSet)
             /* Move successor list */
             succ_ = next->succ_;
 
-            /* Set this block as predecessor to all new successors */
             for (auto& bb : succ_)
             {
+                /* Set this block as predecessor to this successors */
                 auto it = std::find(bb->pred_.begin(), bb->pred_.end(), next);
                 if (it != bb->pred_.end())
                     *it = this;
@@ -158,6 +158,10 @@ void BasicBlock::Purge(std::set<const BasicBlock*>& visitSet)
     if (HasVisited(visitSet))
         return;
 
+    /* Visit successors */
+    for (auto bb : succ_)
+        bb->Purge(visitSet);
+
     /* Resolve empty basic blocks */
     auto origSucc = succ_;
     for (auto bb : origSucc)
@@ -165,10 +169,6 @@ void BasicBlock::Purge(std::set<const BasicBlock*>& visitSet)
         if (bb->insts.empty() && bb->succ_.size() == 1)
             RemoveSucc(*bb);
     }
-
-    /* Visit successors */
-    for (auto bb : succ_)
-        bb->Purge(visitSet);
 }
 
 

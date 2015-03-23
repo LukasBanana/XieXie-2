@@ -70,10 +70,13 @@ DEF_VISIT_PROC(ExprTypeChecker, UnaryExpr)
     /* Visit sub expression */
     Visit(ast->expr);
 
-    /* Check if type can be modified */
-    auto exprType = ast->expr->GetTypeDenoter();
-    if (!exprType->CanBeConcatenated())
-        Error("sub expression can not be modified in unary expression", *ast);
+    if (ast->unaryOperator != UnaryExpr::Operators::LogicNot)
+    {
+        /* Check if type can be modified */
+        auto exprType = ast->expr->GetTypeDenoter();
+        if (!exprType->CanBeConcatenated())
+            Error("sub expression can not be modified in unary expression", *ast);
+    }
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, LiteralExpr)

@@ -420,38 +420,20 @@ DEF_VISIT_PROC(GraphGenerator, BinaryExpr)
     }
 }
 
-static OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isFloat)
+DEF_VISIT_PROC(GraphGenerator, UnaryExpr)
 {
     using Ty = UnaryExpr::Operators;
 
-    switch (op)
+    switch (ast->unaryOperator)
     {
         case Ty::LogicNot:
+            GenerateLogicNotUnaryExpr(ast, args);
+            break;
         case Ty::BitwiseNot:
-            return OpCodes::NOT;
         case Ty::Negate:
-            return isFloat ? OpCodes::FSUB : OpCodes::SUB;
+            GenerateArithmeticUnaryExpr(ast, args);
+            break;
     }
-
-    return OpCodes::NOP;
-}
-
-DEF_VISIT_PROC(GraphGenerator, UnaryExpr)
-{
-    Visit(ast->expr);
-    auto src = Var();
-
-    /* Make instruction */
-    auto isFloat = ast->GetTypeDenoter()->IsFloat();
-    auto inst = BB()->MakeInst<TACModifyInst>();
-    
-    inst->dest      = TempVar();
-    inst->srcLhs    = TACVar("0");
-    inst->srcRhs    = src;
-    inst->opcode    = OperatorToOpCode(ast->unaryOperator, isFloat);
-
-    PopVar();
-    PushVar(inst->dest);
 }
 
 DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
@@ -649,6 +631,53 @@ void GraphGenerator::GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args)
     inst->opcode    = OperatorToOpCode(ast->binaryOperator, isFloat);
 
     PopVar(2);
+    PushVar(inst->dest);
+}
+
+static OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isFloat)
+{
+    using Ty = UnaryExpr::Operators;
+
+    switch (op)
+    {
+        case Ty::BitwiseNot:
+            return OpCodes::NOT;
+        case Ty::Negate:
+            return isFloat ? OpCodes::FSUB : OpCodes::SUB;
+    }
+
+    return OpCodes::NOP;
+}
+
+void GraphGenerator::GenerateLogicNotUnaryExpr(UnaryExpr* ast, void* args)
+{
+    auto expr = VisitAndLink(ast->expr);
+
+    auto trueBranch = MakeBlock();
+    auto falseBranch = MakeBlock();
+
+    expr.out->AddSucc(*trueBranch, "true");
+    expr.outAlt->AddSucc(*falseBranch, "false");
+
+    /* Swap true/false branches to negate expression */
+    RETURN_BLOCK_REF(BlockRef(expr.in, falseBranch, trueBranch));
+}
+
+void GraphGenerator::GenerateArithmeticUnaryExpr(UnaryExpr* ast, void* args)
+{
+    Visit(ast->expr);
+    auto src = Var();
+
+    /* Make instruction */
+    auto isFloat = ast->GetTypeDenoter()->IsFloat();
+    auto inst = BB()->MakeInst<TACModifyInst>();
+    
+    inst->dest      = TempVar();
+    inst->srcLhs    = TACVar("0");
+    inst->srcRhs    = src;
+    inst->opcode    = OperatorToOpCode(ast->unaryOperator, isFloat);
+
+    PopVar();
     PushVar(inst->dest);
 }
 
