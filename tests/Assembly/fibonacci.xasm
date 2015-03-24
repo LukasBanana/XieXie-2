@@ -1,0 +1,83 @@
+
+; Fibonacci XASM
+; 24/03/2015
+
+lda $r0, @str_enter
+push $r0
+call <Print>
+
+call <InputInt>
+pop $r4
+
+lda $r5, @str_null
+lda $r6, @str_fib
+lda $r7, @str_eq
+
+push $r5
+call <PrintLn>
+
+mov $r3, 0
+loop:
+	cmp $r4, $r3
+	je .end
+	
+	push $r4
+	call fib
+	pop $r0
+	
+	push $r6
+	call <Print>
+	push $r4
+	call <PrintInt>
+	push $r7
+	call <Print>
+	push $r0
+	call <PrintInt>
+	push $r5
+	call <PrintLn>
+	
+	dec $r4
+	jmp loop
+.end:
+stop
+
+; f_1 = f_2 = 1
+; f_n = f_n-1 + f_n-2
+fib:
+	ldw $r0, ($lb) -4
+	mov $r1, 2
+	
+	cmp $r0, $r1
+	jle .end
+		dec $r0
+		
+		push $r0
+		call fib
+		pop $r0
+		
+		add $sp, $sp, 4
+		stw $r0, ($lb) 0
+		
+		ldw $r0, ($lb) -4
+		sub $r0, $r0, 2
+		
+		push $r0
+		call fib
+		pop $r0
+		
+		ldw $r1, ($lb) 0
+		sub $sp, $sp, 4
+		add $r0, $r0, $r1
+		
+		push $r0
+		ret (1) 1
+	.end:
+	push 1
+	ret (1) 1
+
+
+str_enter: .ascii "enter fibonacci number: "
+str_null: .ascii ""
+str_fib: .ascii "fib("
+str_eq: .ascii ") = "
+

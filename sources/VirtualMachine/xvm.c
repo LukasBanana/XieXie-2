@@ -897,7 +897,8 @@ STATIC const char* xvm_instr_get_mnemonic(const opcode_t opcode)
 Prints debug information for the specified instruction
 with the current state of the specified register set.
 */
-STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, const regi_t* reg_ptr)
+//!TODO! -> UPDATE THIS !!!
+STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, const regi_t* reg_ptr)
 {
     const opcode_t opcode = _xvm_instr_get_opcode(instr);
 
@@ -2680,7 +2681,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
     {
         #ifdef _ENABLE_RUNTIME_DEBUGGER_
         if (instr != 0)
-            xvm_instr_print_debug_info(instr, prev_pc_index, reg.i);
+            _xvm_instr_print_debug_info(instr, prev_pc_index, reg.i);
         #endif
 
         /* Load next instruction */
