@@ -11,10 +11,10 @@
 		mov		$r4, Math.Sq	; load relative address of 'Math.Sq' ($r4 = 8)
 		mov		$r5, @Math.Sq	; load absolute address of 'Math.Sq' ($r4 = 11)
 Main:	mov		$r1, *lng0		; load value of 'lng0' ($r1 = 999)
-		add		$sp, 4			; increase stack for local scope (4 bytes)
+		add		$sp, $sp, 4		; increase stack for local scope (4 bytes)
 		stw		$r1, ($lb) 8	; store value of $r1 in local scope (after dynamic-link)
 		lda 	$r2, @str0		; load address of 'str0' ($r2 = byte_code_memory + 18)
-		xor		$r0, $r0		; i := 0
+		mov		$r0, 0			; i := 0
 		mov		$r1, 10			; n := 10
 .for0:	cmp		$r0, $r1		; while i < 10
 		jge		.end0
@@ -29,7 +29,7 @@ lng1:	.word	0;0x00ffabcd
 lng2:	.word	0;0b110001010110011
 Math.Sq:
 		ldw		$r0, ($lb) -4
-		mul		$r0, $r0
+		mul		$r0, $r0, $r0
 		stw		$r0, ($lb) -4
 		ret		(0) 0			; Optimize return value by writing it back to the argument
 

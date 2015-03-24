@@ -2,12 +2,19 @@
 ; XASM Test 4
 ; 24/03/2015
 
-mov $r0, 3
-inc $r0
+mov $r0, 5
+mov $r1, 7
 
-mov $r1, 5
-mov $r2, 7
+add $r2, $r0, $r1	; r0 := r1 + r2
 
-add $r0, $r1, $r2	; r0 := r1 + r2
-add $r0, $r1, 10	; r0 := r1 + 10
+push $r2
+call <PrintInt>
+
+lda $r3, @str0
+push $r3
+call <PrintLn>
+
+stop
+
+str0: .ascii ""
 

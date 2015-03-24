@@ -32,17 +32,17 @@ get_value:
 print_bits:
 	ldw $r0, ($lb) -4
 
-	xor $r5, $r5
+	mov $r5, 0
 	
 	; for i := 0 ; i < 32; i++
-	xor $r1, $r1
+	mov $r1, 0
 	mov $r2, 32
 	.for:
 	cmp $r1, $r2
 	jge .end
 		; r3 := r0 >> 31
 		mov $r3, $r0
-		slr $r3, 31
+		slr $r3, $r3, 31
 		
 		; if r3 = 0
 		cmp $r3, $r5
@@ -58,7 +58,7 @@ print_bits:
 		call <Print>
 		
 		; r0 <<= 1
-		sll $r0, 1
+		sll $r0, $r0, 1
 	inc $r1
 	jmp .for
 	.end:
@@ -73,23 +73,21 @@ hamming_distance:
 	ldw $r1, ($lb) -8
 	
 	; result := 0
-	xor $r2, $r2
+	mov $r2, 0
 	
 	; for i := 0 ; i < 32 ; i++
-	xor $r3, $r3
+	mov $r3, 0
 	mov $r4, 32
 	.for:
 	cmp $r3, $r4
 	jge .end
 		; r5 = (r0 & 1) ^ (r1 & 1)
-		mov $r5, $r0
-		and $r5, 1;0x00000001
-		mov $r6, $r1
-		and $r6, 1
-		xor $r5, $r6
+		and $r5, $r0, 1;0x00000001
+		and $r6, $r1, 1
+		xor $r5, $r5, $r6
 		
 		; if r5 != 0
-		xor $r6, $r6
+		mov $r6, 0
 		cmp $r5, $r6
 		je .endif
 			; result++
@@ -97,8 +95,8 @@ hamming_distance:
 		.endif:
 		
 		; r0 >>= 1  r1 >>= 1
-		slr $r0, 1
-		slr $r1, 1
+		slr $r0, $r0, 1
+		slr $r1, $r1, 1
 	inc $r3
 	jmp .for
 	.end:

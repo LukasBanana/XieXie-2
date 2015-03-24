@@ -12,15 +12,15 @@ CObject._vtable:
 	.word @CObject.PtoString
 
 CString._vtable:
-	.word @Object.Pequals,R@CObject
-	.word @Object.PtoString
+	.word @CObject.Pequals,R@CObject
+	.word @CObject.PtoString
 	.word @CString.Psize
 
 ; int String.Size()
 CString.Psize:
 	ldw $r0, ($lb) -4 ; r0 := this
-	xor $r2, $r2
-	xor $r3, $r3
+	mov $r2, 0
+	mov $r3, 0
 	.while:
 		ldb $r4, ($r0) 0
 		cmp $r4, $r2

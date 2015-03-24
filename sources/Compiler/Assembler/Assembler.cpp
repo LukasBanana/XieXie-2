@@ -808,12 +808,12 @@ void Assembler::ParseInstrLoadStore(const InstrCategory& instr)
 
     /* Parse second operand */
     Accept(Token::Types::Comma);
+    Accept(Token::Types::LBracket);
     const auto& reg1 = ParseRegister();
+    Accept(Token::Types::RBracket);
 
     /* Parse third operand */
-    Accept(Token::Types::LBracket);
     auto offset = ParseOperand();
-    Accept(Token::Types::RBracket);
 
     /* Add instruction */
     byteCode_->AddInstr(
