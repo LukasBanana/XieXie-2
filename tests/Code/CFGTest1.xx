@@ -40,11 +40,13 @@ class Test {
 		}
 		y++*/
 		
-		int i
+		int i, j
 		forever {
 			i += 4
 			if i > 100 {
 				break
+			} else {
+				j += i
 			}
 			i++
 		}

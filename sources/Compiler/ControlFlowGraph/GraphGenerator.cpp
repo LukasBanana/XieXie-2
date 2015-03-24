@@ -10,6 +10,7 @@
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
 #include "TACCondJumpInst.h"
+#include "TACReturnInst.h"
 #include "CodeGenerators/NameMangling.h"
 #include "CompilerMessage.h"
 
@@ -311,6 +312,13 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     auto graph = VisitAndLink(ast->codeBlock);
     if (graph.in)
         root->AddSucc(*graph.in);
+    
+    if (graph.out)
+    {
+        auto out = MakeBlock();
+        auto inst = out->MakeInst<TACReturnInst>();
+        graph.out->AddSucc(*out, "return");
+    }
 
     /* Clean local CFG of this procedure */
     root->Clean();

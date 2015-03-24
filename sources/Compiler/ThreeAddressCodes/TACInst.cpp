@@ -105,6 +105,9 @@ std::string TACInst::OpCodeToString(const OpCodes opcode)
             return "fti";
         case OpCodes::ITF:
             return "itf";
+
+        case OpCodes::RETURN:
+            return "return";
     }
 
     return "";

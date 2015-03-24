@@ -40,7 +40,7 @@ class TACInst
             CondJump,       //!< conditional jump to basic block, if y = z, y != z, y < z, ...
             DirectCall,     //!< jump and link
             IndirectCall,   //!< jump register and link
-            CallReturn,     //!< return from call
+            Return,         //!< procedure return
         };
 
         //! TAC instruction opcodes.
@@ -83,6 +83,8 @@ class TACInst
 
             FTI,
             ITF,
+
+            RETURN,
         };
 
         struct VarFlags
