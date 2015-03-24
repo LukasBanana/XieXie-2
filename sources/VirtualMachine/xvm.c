@@ -209,145 +209,145 @@ WORDS are 32 bits wide.
 FLOATS are 32 bits wide.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                        3 Register Instruction Opcodes                                                           |
+|                                                    3 Register Instruction Opcodes (00....)                                                      |
 |-------------------------------------------------------------------------------------------------------------------------------------------------|
 |          | Opcode      | Dest.   | LSource | RSource | Unused                      | Description                                                |
 | Mnemonic |-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
 |          | 31.......26 | 25...22 | 21...18 | 17...14 | 13........................0 |                                                            |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| AND      | 0 0 0 0 1 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise AND.                                               |
+| AND      | 0 0 0 0 0 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise AND.                                               |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| OR       | 0 0 0 1 0 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise OR.                                                |
+| OR       | 0 0 0 0 1 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise OR.                                                |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| XOR      | 0 0 0 1 0 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise XOR.                                               |
+| XOR      | 0 0 0 0 1 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise XOR.                                               |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| ADD      | 0 0 0 1 1 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic addition.                                       |
+| ADD      | 0 0 0 1 0 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic addition.                                       |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| SUB      | 0 0 0 1 1 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic subtraction.                                    |
+| SUB      | 0 0 0 1 0 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic subtraction.                                    |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| MUL      | 0 0 1 0 0 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic multiplication.                                 |
+| MUL      | 0 0 0 1 1 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic multiplication.                                 |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| DIV      | 0 0 1 0 0 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic division.                                       |
+| DIV      | 0 0 0 1 1 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic division.                                       |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| MOD      | 0 0 1 0 1 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic modulo.                                         |
+| MOD      | 0 0 1 0 0 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic modulo.                                         |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| SLL      | 0 0 1 0 1 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Shift locial left.                                         |
+| SLL      | 0 0 1 0 0 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Shift locial left.                                         |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| SLR      | 0 0 1 1 0 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Shift locial right.                                        |
+| SLR      | 0 0 1 0 1 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Shift locial right.                                        |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| ADDF     | 1 0 1 0 1 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float addition.                                 |
+| ADDF     | 0 0 1 0 1 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float addition.                                 |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| SUBF     | 1 0 1 1 0 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float subtraction.                              |
+| SUBF     | 0 0 1 1 0 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float subtraction.                              |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| MULF     | 1 0 1 1 0 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float multiplication.                           |
+| MULF     | 0 0 1 1 0 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float multiplication.                           |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| DIVF     | 1 0 1 1 1 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float division.                                 |
+| DIVF     | 0 0 1 1 1 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float division.                                 |
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                        2 Register Instruction Opcodes                                                           |
+|                                                    2 Register Instruction Opcodes (01....)                                                      |
 |-------------------------------------------------------------------------------------------------------------------------------------------------|
 |          | Opcode      | Dest.   | Source  | Unused or Value                     | Description                                                  |
 | Mnemonic |-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
 |          | 31.......26 | 25...22 | 21...18 | 17................................0 |                                                              |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| MOV      | 0 0 0 0 0 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Move register source to destination.                         |
+| MOV      | 0 1 0 0 0 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Move register source to destination.                         |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| NOT      | 0 0 0 0 1 0 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise NOT.                                                 |
+| NOT      | 0 1 0 0 0 1 | D D D D | S S S S | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Bitwise NOT.                                                 |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| FTI      | 0 0 1 1 1 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Float to integer.                                            |
+| FTI      | 0 1 0 0 1 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Float to integer.                                            |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| ITF      | 0 0 1 1 1 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Integer to float (Flags like FTI).                           |
+| ITF      | 0 1 0 0 1 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Integer to float (Flags like FTI).                           |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| MOV      | 0 1 0 0 0 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Move value to register.                                      |
+| AND      | 0 1 0 1 0 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Bitwise AND.                                                 |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| AND      | 0 1 0 0 0 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Bitwise AND.                                                 |
+| OR       | 0 1 0 1 0 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Bitwise OR.                                                  |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| OR       | 0 1 0 0 1 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Bitwise OR.                                                  |
+| XOR      | 0 1 0 1 1 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Bitwise XOR.                                                 |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| XOR      | 0 1 0 0 1 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Bitwise XOR.                                                 |
+| ADD      | 0 1 0 1 1 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Arithmetic addition.                                         |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| ADD      | 0 1 0 1 0 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Arithmetic addition.                                         |
+| SUB      | 0 1 1 0 0 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Arithmetic subtraction.                                      |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| SUB      | 0 1 0 1 0 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Arithmetic subtraction.                                      |
+| MUL      | 0 1 1 0 0 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Arithmetic multiplication.                                   |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| MUL      | 0 1 0 1 1 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Arithmetic multiplication.                                   |
+| DIV      | 0 1 1 0 1 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Arithmetic division.                                         |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| DIV      | 0 1 0 1 1 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Arithmetic division.                                         |
+| MOD      | 0 1 1 0 1 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Arithmetic modulo.                                           |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| MOD      | 0 1 1 0 0 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Arithmetic modulo.                                           |
+| SLL      | 0 1 1 1 0 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Shift locial left.                                           |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| SLL      | 0 1 1 0 0 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Shift locial left.                                           |
+| SLR      | 0 1 1 1 0 1 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Shift locial right.                                          |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| SLR      | 0 1 1 0 1 0 | D D D D | S S S S | V V V V V V V V V V V V V V V V V V | Shift locial right.                                          |
+| CMP      | 0 1 1 1 1 0 | X X X X | Y Y Y Y | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Compares the two registers and stores the result in "cf".    |
 |----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| CMP      | 0 0 1 1 0 1 | X X X X | Y Y Y Y | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Compares the two registers and stores the result in "cf".    |
-|----------|-------------|---------|---------|-------------------------------------|--------------------------------------------------------------|
-| CMPF     | 1 0 1 1 1 1 | X X X X | Y Y Y Y | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Compares the two float and stores the result in "cf".        |
+| CMPF     | 0 1 1 1 1 1 | X X X X | Y Y Y Y | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Compares the two float and stores the result in "cf".        |
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                        1 Register Instruction Opcodes                                                           |
+|                                                    1 Register Instruction Opcodes (100...)                                                      |
 |-------------------------------------------------------------------------------------------------------------------------------------------------|
 |          | Opcode      | Reg.    | Unused or Value                             | Description                                                    |
 | Mnemonic |-------------|---------|---------------------------------------------|----------------------------------------------------------------|
 |          | 31.......26 | 25...22 | 21........................................0 |                                                                |
 |----------|-------------|---------|---------------------------------------------|----------------------------------------------------------------|
-| PUSH     | 0 1 1 0 1 1 | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Push source register onto stack.                               |
+| PUSH     | 1 0 0 0 0 0 | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Push source register onto stack.                               |
 |----------|-------------|---------|---------------------------------------------|----------------------------------------------------------------|
-| POP      | 0 1 1 1 0 0 | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Pop destination register from stack.                           |
+| POP      | 1 0 0 0 0 1 | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Pop destination register from stack.                           |
 |----------|-------------|---------|---------------------------------------------|----------------------------------------------------------------|
-| INC      | 0 1 1 1 0 1 | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Increment integral register.                                   |
+| INC      | 1 0 0 0 1 0 | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Increment integral register.                                   |
 |----------|-------------|---------|---------------------------------------------|----------------------------------------------------------------|
-| DEC      | 0 1 1 1 1 0 | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Decrement integral register.                                   |
+| DEC      | 1 0 0 0 1 1 | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Decrement integral register.                                   |
 |----------|-------------|---------|---------------------------------------------|----------------------------------------------------------------|
-| LDA      | 1 1 1 0 0 0 | R R R R | V V V V V V V V V V V V V V V V V V V V V V | Load address from program pointer (word aligned) + offset 'V'. |
+| MOV      | 1 0 0 1 0 0 | R R R R | V V V V V V V V V V V V V V V V V V V V V V | Move value to register.                                        |
+|----------|-------------|---------|---------------------------------------------|----------------------------------------------------------------|
+| LDA      | 1 0 0 1 0 1 | R R R R | V V V V V V V V V V V V V V V V V V V V V V | Load address from program pointer (word aligned) + offset 'V'. |
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                          Jump Instruction Opcodes                                                             |
+|                                                      Jump Instruction Opcodes (101...)                                                        |
 |-----------------------------------------------------------------------------------------------------------------------------------------------|
 |          | Opcode      | Reg.    | Offset                                      | Description                                                  |
 | Mnemonic |-------------|---------|---------------------------------------------|--------------------------------------------------------------|
 |          | 31.......26 | 25...22 | 21........................................0 |                                                              |
 |----------|-------------|---------|---------------------------------------------|--------------------------------------------------------------|
-| JMP      | 1 0 0 0 0 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump to address, stored in register 'S' + offset 'O'.        |
+| JMP      | 1 0 1 0 0 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump to address, stored in register 'S' + offset 'O'.        |
 |----------|-------------|---------|---------------------------------------------|--------------------------------------------------------------|
-| JE       | 1 0 0 0 0 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if greater.                                             |
+| JE       | 1 0 1 0 0 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if greater.                                             |
 |----------|-------------|---------|---------------------------------------------|--------------------------------------------------------------|
-| JNE      | 1 0 0 0 1 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if not-equal.                                           |
+| JNE      | 1 0 1 0 1 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if not-equal.                                           |
 |----------|-------------|---------|---------------------------------------------|--------------------------------------------------------------|
-| JG       | 1 0 0 0 1 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if greater.                                             |
+| JG       | 1 0 1 0 1 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if greater.                                             |
 |----------|-------------|---------|---------------------------------------------|--------------------------------------------------------------|
-| JL       | 1 0 0 1 0 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if less.                                                |
+| JL       | 1 0 1 1 0 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if less.                                                |
 |----------|-------------|---------|---------------------------------------------|--------------------------------------------------------------|
-| JGE      | 1 0 0 1 0 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if greater or equal.                                    |
+| JGE      | 1 0 1 1 0 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if greater or equal.                                    |
 |----------|-------------|---------|---------------------------------------------|--------------------------------------------------------------|
-| JLE      | 1 0 0 1 1 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if less or equal.                                       |
+| JLE      | 1 0 1 1 1 0 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Jump if less or equal.                                       |
 |----------|-------------|---------|---------------------------------------------|--------------------------------------------------------------|
 |          |             |         |                                             | Push the dynamic link ('lb' and 'pc' register) onto stack.   |
-| CALL     | 1 0 0 1 1 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Set 'lb' register to new stack frame.                        |
+| CALL     | 1 0 1 1 1 1 | S S S S | O O O O O O O O O O O O O O O O O O O O O O | Set 'lb' register to new stack frame.                        |
 |          |             |         |                                             | Jump to address, stored in register 'S' + offset 'O'.        |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-|                                                  Load/Store (Offset) Instruction Opcodes                                                      |
+|                                              Load/Store (Offset) Instruction Opcodes (1100..)                                                 |
 |-----------------------------------------------------------------------------------------------------------------------------------------------|
 |          | Opcode      | Reg.    | Addr.   | Offset                              | Description                                                |
 | Mnemonic |-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
 |          | 31.......26 | 25...22 | 21...18 | 17................................0 |                                                            |
 |----------|-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
-| LDB      | 1 1 1 1 0 0 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Load byte from memory to register (destination).           |
+| LDB      | 1 1 0 0 0 0 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Load byte from memory to register (destination).           |
 |----------|-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
-| STB      | 1 1 1 1 0 1 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Store byte from register (source) to memory.               |
+| STB      | 1 1 0 0 0 1 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Store byte from register (source) to memory.               |
 |----------|-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
-| LDW      | 1 1 1 1 1 0 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Load word from memory to register (destination).           |
+| LDW      | 1 1 0 0 1 0 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Load word from memory to register (destination).           |
 |----------|-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
-| STW      | 1 1 1 1 1 1 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Store word from register (source) to memory.               |
+| STW      | 1 1 0 0 1 1 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Store word from register (source) to memory.               |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -360,9 +360,9 @@ FLOATS are 32 bits wide.
 |----------|-------------|-----------------------------------------------------|----------------------------------------------------------------|
 | STOP     | 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Stop program execution.                                        |
 |----------|-------------|-----------------------------------------------------|----------------------------------------------------------------|
-| PUSH     | 1 1 0 0 0 1 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Push value 'V' onto stack.                                     |
+| PUSH     | 1 1 1 0 0 0 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Push value 'V' onto stack.                                     |
 |----------|-------------|-----------------------------------------------------|----------------------------------------------------------------|
-| INVK     | 1 1 0 0 1 0 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Invoke external procedure with ID 'V'.                         |
+| INVK     | 1 1 1 0 0 1 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Invoke external procedure with ID 'V'.                         |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -375,7 +375,7 @@ FLOATS are 32 bits wide.
 |----------|-------------|-----------------|-------------------------------------|--------------------------------------------------------------|
 |          |             |                 |                                     | Pop R words from the stack and buffer them.                  |
 |          |             |                 |                                     | Pop the current stack frame.                                 |
-| RET      | 1 1 0 0 0 0 | R R R R R R R R | A A A A A A A A A A A A A A A A A A | Pop A words from the stack.                                  |
+| RET      | 1 1 1 0 1 0 | R R R R R R R R | A A A A A A A A A A A A A A A A A A | Pop A words from the stack.                                  |
 |          |             |                 |                                     | Push the R words back onto the stack.                        |
 |          |             |                 |                                     | Restore the 'lb' and 'pc' registers.                         |
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -392,6 +392,90 @@ typedef unsigned char opcode_t;
 #   define GEN_OPCODE(op) ((op) << 26)
 #else
 #   define GEN_OPCODE(op) (op)
+#endif
+
+#if 0
+
+typedef enum
+{
+    /* --- 3 register opcodes --- */
+    OPCODE_AND3     = GEN_OPCODE(0x01), // AND  reg0, reg1, reg2  ->  reg0 = reg1 & reg2
+    OPCODE_OR3      = GEN_OPCODE(0x02), // OR   reg0, reg1, reg2  ->  reg0 = reg1 | reg2
+    OPCODE_XOR3     = GEN_OPCODE(0x03), // XOR  reg0, reg1, reg2  ->  reg0 = reg1 ^ reg2
+    OPCODE_ADD3     = GEN_OPCODE(0x04), // ADD  reg0, reg1, reg2  ->  reg0 = reg1 + reg2
+    OPCODE_SUB3     = GEN_OPCODE(0x05), // SUB  reg0, reg1, reg2  ->  reg0 = reg1 - reg2
+    OPCODE_MUL3     = GEN_OPCODE(0x06), // MUL  reg0, reg1, reg2  ->  reg0 = reg1 * reg2
+    OPCODE_DIV3     = GEN_OPCODE(0x07), // DIV  reg0, reg1, reg2  ->  reg0 = reg1 / reg2
+    OPCODE_MOD3     = GEN_OPCODE(0x08), // MOD  reg0, reg1, reg2  ->  reg0 = reg1 % reg2
+    OPCODE_SLL3     = GEN_OPCODE(0x09), // SLL  reg0, reg1, reg2  ->  reg0 = reg1 << reg2
+    OPCODE_SLR3     = GEN_OPCODE(0x0a), // SLR  reg0, reg1, reg2  ->  reg0 = reg1 >> reg2
+    OPCODE_ADDF     = GEN_OPCODE(0x0b), // ADDF reg0, reg1, reg2  ->  reg0 = reg1 + reg2
+    OPCODE_SUBF     = GEN_OPCODE(0x0c), // SUBF reg0, reg1, reg2  ->  reg0 = reg1 - reg2
+    OPCODE_MULF     = GEN_OPCODE(0x0d), // MULF reg0, reg1, reg2  ->  reg0 = reg1 * reg2
+    OPCODE_DIVF     = GEN_OPCODE(0x0e), // DIVF reg0, reg1, reg2  ->  reg0 = reg1 / reg2
+    //Reserved      = GEN_OPCODE(0x0f),
+
+    /* --- 2 register opcodes --- */
+    OPCODE_MOV2     = GEN_OPCODE(0x10), // MOV  reg0, reg1     ->  reg0 = reg1
+    OPCODE_NOT      = GEN_OPCODE(0x11), // NOT  reg0, reg1     ->  reg0 = ~reg1
+    OPCODE_FTI      = GEN_OPCODE(0x12), // FTI  reg0, reg1     ->  reg0 = (int)reg1
+    OPCODE_ITF      = GEN_OPCODE(0x13), // ITF  reg0, reg1     ->  reg0 = (float)reg1
+    OPCODE_AND2     = GEN_OPCODE(0x14), // AND  reg0, reg1, c  ->  reg0 = reg1 & c
+    OPCODE_OR2      = GEN_OPCODE(0x15), // OR   reg0, reg1, c  ->  reg0 = reg1 | c
+    OPCODE_XOR2     = GEN_OPCODE(0x16), // XOR  reg0, reg1, c  ->  reg0 = reg1 ^ c
+    OPCODE_ADD2     = GEN_OPCODE(0x17), // ADD  reg0, reg1, c  ->  reg0 = reg1 + c
+    OPCODE_SUB2     = GEN_OPCODE(0x18), // SUB  reg0, reg1, c  ->  reg0 = reg1 - c
+    OPCODE_MUL2     = GEN_OPCODE(0x19), // MUL  reg0, reg1, c  ->  reg0 = reg1 * c
+    OPCODE_DIV2     = GEN_OPCODE(0x1a), // DIV  reg0, reg1, c  ->  reg0 = reg1 / c
+    OPCODE_MOD2     = GEN_OPCODE(0x1b), // MOD  reg0, reg1, c  ->  reg0 = reg1 % c
+    OPCODE_SLL2     = GEN_OPCODE(0x1c), // SLL  reg0, reg1, c  ->  reg0 = reg1 << c
+    OPCODE_SLR2     = GEN_OPCODE(0x1d), // SLR  reg0, reg1, c  ->  reg0 = reg1 >> c
+    OPCODE_CMP      = GEN_OPCODE(0x1e), // CMP  reg0, reg1     ->  REG_CF = (reg0 - reg1)
+    OPCODE_CMPF     = GEN_OPCODE(0x1f), // CMPF reg0, reg1     ->  REG_CF = signum(reg0 - reg1)
+
+    /* --- 1 register opcodes --- */
+    OPCODE_PUSH     = GEN_OPCODE(0x20), // PUSH reg        ->  stack.push(reg)
+    OPCODE_POP      = GEN_OPCODE(0x21), // POP  reg        ->  reg = stack.pop()
+    OPCODE_INC      = GEN_OPCODE(0x22), // INC  reg        ->  ++reg
+    OPCODE_DEC      = GEN_OPCODE(0x23), // DEC  reg        ->  --reg
+    OPCODE_MOV1     = GEN_OPCODE(0x24), // MOV  reg, c     ->  reg = c
+    OPCODE_LDA      = GEN_OPCODE(0x25), // LDA  reg, addr  ->  reg = programMemoryStartWorldAligned[addr]
+    //Reserved      = GEN_OPCODE(0x26),
+    //Reserved      = GEN_OPCODE(0x27),
+
+    /* --- jump opcodes --- */
+    OPCODE_JMP      = GEN_OPCODE(0x28), // JMP  addr  ->  goto addr
+    OPCODE_JE       = GEN_OPCODE(0x29), // JE   addr  ->  if (REG_CF == 0) then goto addr
+    OPCODE_JNE      = GEN_OPCODE(0x2a), // JNE  addr  ->  if (REG_CF != 0) then goto addr
+    OPCODE_JG       = GEN_OPCODE(0x2b), // JG   addr  ->  if (REG_CF  > 0) then goto addr
+    OPCODE_JL       = GEN_OPCODE(0x2c), // JL   addr  ->  if (REG_CF  < 0) then goto addr
+    OPCODE_JGE      = GEN_OPCODE(0x2d), // JGE  addr  ->  if (REG_CF >= 0) then goto addr
+    OPCODE_JLE      = GEN_OPCODE(0x2e), // JLE  addr  ->  if (REG_CF <= 0) then goto addr
+    OPCODE_CALL     = GEN_OPCODE(0x2f), // CALL addr  ->  PUSH $pc; PUSH $lb; MOV $lb, $sp; JMP addr;
+
+    /* --- load/store opcodes --- */
+    OPCODE_LDB      = GEN_OPCODE(0x30), // LDB reg0, (reg1) c  ->  reg0 = dynamicMemoryByteAligned[reg1 + c]
+    OPCODE_STB      = GEN_OPCODE(0x31), // STB reg0, (reg1) c  ->  dynamicMemoryByteAligned[reg1 + c] = reg0
+    OPCODE_LDW      = GEN_OPCODE(0x32), // LDW reg0, (reg1) c  ->  reg0 = dynamicMemoryWordAligned[reg1 + c]
+    OPCODE_STW      = GEN_OPCODE(0x33), // STW reg0, (reg1) c  ->  dynamicMemoryWordAligned[reg1 + c] = reg0
+    //Reserved      = GEN_OPCODE(0x34),
+    //Reserved      = GEN_OPCODE(0x35),
+    //Reserved      = GEN_OPCODE(0x36),
+    //Reserved      = GEN_OPCODE(0x37),
+
+    /* --- special opcodes --- */
+    OPCODE_STOP     = GEN_OPCODE(0x00), // STOP          ->  exit(0)
+    OPCODE_PUSHC    = GEN_OPCODE(0x38), // RET  (c0) c1  ->  return
+    OPCODE_INVK     = GEN_OPCODE(0x39), // PUSH value    ->  stack.push(value)
+    OPCODE_RET      = GEN_OPCODE(0x3a), // INVK addr     ->  invoke external procedure
+    //Reserved      = GEN_OPCODE(0x3b),
+    //Reserved      = GEN_OPCODE(0x3c),
+    //Reserved      = GEN_OPCODE(0x3d),
+    //Reserved      = GEN_OPCODE(0x3e),
+    //Reserved      = GEN_OPCODE(0x3f),
+}
+xvm_opcode;
+
 #endif
 
 typedef enum
@@ -430,7 +514,7 @@ typedef enum
     OPCODE_PUSH     = GEN_OPCODE(0x1b), // PUSH reg     ->  stack.push(*reg)
     OPCODE_POP      = GEN_OPCODE(0x1c), // POP  reg     ->  *reg = stack.pop()
     OPCODE_INC      = GEN_OPCODE(0x1d), // INC  reg     ->  ++*reg
-    OPCODE_DEC      = GEN_OPCODE(0x1e), // DEV  reg     ->  --*reg
+    OPCODE_DEC      = GEN_OPCODE(0x1e), // DEC  reg     ->  --*reg
     //Reserved      = GEN_OPCODE(0x1f),
 }
 opcode_reg1;
