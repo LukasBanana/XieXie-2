@@ -118,46 +118,52 @@ void Assembler::EstablishMnemonicTable()
 {
     mnemonicTable_ = std::move(std::map<std::string, InstrCategory>
     {
-        { "mov",  { InstrCategory::Categories::Reg2,    OPCODE_MOV2, OPCODE_MOV1  } },
-        { "not",  { InstrCategory::Categories::Reg2,    OPCODE_NOT2, 0u           } },
-        { "and",  { InstrCategory::Categories::Reg2,    OPCODE_AND2, OPCODE_AND1  } },
-        { "or",   { InstrCategory::Categories::Reg2,    OPCODE_OR2,  OPCODE_OR1   } },
-        { "xor",  { InstrCategory::Categories::Reg2,    OPCODE_XOR2, OPCODE_XOR1  } },
-        { "add",  { InstrCategory::Categories::Reg2,    OPCODE_ADD2, OPCODE_ADD1  } },
-        { "sub",  { InstrCategory::Categories::Reg2,    OPCODE_SUB2, OPCODE_SUB1  } },
-        { "mul",  { InstrCategory::Categories::Reg2,    OPCODE_MUL2, OPCODE_MUL1  } },
-        { "div",  { InstrCategory::Categories::Reg2,    OPCODE_DIV2, OPCODE_DIV1  } },
-        { "mod",  { InstrCategory::Categories::Reg2,    OPCODE_MOD2, OPCODE_MOD1  } },
-        { "sll",  { InstrCategory::Categories::Reg2,    OPCODE_SLL2, OPCODE_SLL1  } },
-        { "slr",  { InstrCategory::Categories::Reg2,    OPCODE_SLR2, OPCODE_SLR1  } },
-        { "cmp",  { InstrCategory::Categories::Reg2,    OPCODE_CMP,  0u           } },
-        { "fti",  { InstrCategory::Categories::Reg2,    OPCODE_FTI,  0u           } },
-        { "itf",  { InstrCategory::Categories::Reg2,    OPCODE_ITF,  0u           } },
-        { "pop",  { InstrCategory::Categories::Reg1,    OPCODE_POP,  0u           } },
-        { "inc",  { InstrCategory::Categories::Reg1,    OPCODE_INC,  0u           } },
-        { "dec",  { InstrCategory::Categories::Reg1,    OPCODE_DEC,  0u           } },
-        { "jmp",  { InstrCategory::Categories::Jump,    OPCODE_JMP,  0u           } },
-        { "je",   { InstrCategory::Categories::Jump,    OPCODE_JE,   0u           } },
-        { "jne",  { InstrCategory::Categories::Jump,    OPCODE_JNE,  0u           } },
-        { "jg",   { InstrCategory::Categories::Jump,    OPCODE_JG,   0u           } },
-        { "jl",   { InstrCategory::Categories::Jump,    OPCODE_JL,   0u           } },
-        { "jge",  { InstrCategory::Categories::Jump,    OPCODE_JGE,  0u           } },
-        { "jle",  { InstrCategory::Categories::Jump,    OPCODE_JLE,  0u           } },
-        { "call", { InstrCategory::Categories::Jump,    OPCODE_CALL, 0u           } },
-        { "addf", { InstrCategory::Categories::Float,   OPCODE_ADDF, 0u           } },
-        { "subf", { InstrCategory::Categories::Float,   OPCODE_SUBF, 0u           } },
-        { "mulf", { InstrCategory::Categories::Float,   OPCODE_MULF, 0u           } },
-        { "divf", { InstrCategory::Categories::Float,   OPCODE_DIVF, 0u           } },
-        { "cmpf", { InstrCategory::Categories::Float,   OPCODE_CMPF, 0u           } },
-        { "lda",  { InstrCategory::Categories::Mem,     OPCODE_LDA,  0u           } },
-        { "ldb",  { InstrCategory::Categories::MemOff,  OPCODE_LDB,  0u           } },
-        { "ldw",  { InstrCategory::Categories::MemOff,  OPCODE_LDW,  0u           } },
-        { "stb",  { InstrCategory::Categories::MemOff,  OPCODE_STB,  0u           } },
-        { "stw",  { InstrCategory::Categories::MemOff,  OPCODE_STW,  0u           } },
-        { "push", { InstrCategory::Categories::Special, OPCODE_PUSH, OPCODE_PUSHC } },
-        { "stop", { InstrCategory::Categories::Special, OPCODE_STOP, 0u           } },
-        { "ret",  { InstrCategory::Categories::Special, OPCODE_RET,  0u           } },
-        { "invk", { InstrCategory::Categories::Special, OPCODE_INVK, 0u           } },
+        { "and",  { InstrCategory::Categories::Reg3,      OPCODE_AND3, OPCODE_AND2  } },
+        { "or",   { InstrCategory::Categories::Reg3,      OPCODE_OR3,  OPCODE_OR2   } },
+        { "xor",  { InstrCategory::Categories::Reg3,      OPCODE_XOR3, OPCODE_XOR2  } },
+        { "add",  { InstrCategory::Categories::Reg3,      OPCODE_ADD3, OPCODE_ADD2  } },
+        { "sub",  { InstrCategory::Categories::Reg3,      OPCODE_SUB3, OPCODE_SUB2  } },
+        { "mul",  { InstrCategory::Categories::Reg3,      OPCODE_MUL3, OPCODE_MUL2  } },
+        { "div",  { InstrCategory::Categories::Reg3,      OPCODE_DIV3, OPCODE_DIV2  } },
+        { "mod",  { InstrCategory::Categories::Reg3,      OPCODE_MOD3, OPCODE_MOD2  } },
+        { "sll",  { InstrCategory::Categories::Reg3,      OPCODE_SLL3, OPCODE_SLL2  } },
+        { "slr",  { InstrCategory::Categories::Reg3,      OPCODE_SLR3, OPCODE_SLR2  } },
+        { "addf", { InstrCategory::Categories::Reg3,      OPCODE_ADDF, 0u           } },
+        { "subf", { InstrCategory::Categories::Reg3,      OPCODE_SUBF, 0u           } },
+        { "mulf", { InstrCategory::Categories::Reg3,      OPCODE_MULF, 0u           } },
+        { "divf", { InstrCategory::Categories::Reg3,      OPCODE_DIVF, 0u           } },
+
+        { "mov",  { InstrCategory::Categories::Reg2,      OPCODE_MOV2, OPCODE_MOV1  } },
+        { "not",  { InstrCategory::Categories::Reg2,      OPCODE_NOT,  0u           } },
+        { "cmp",  { InstrCategory::Categories::Reg2,      OPCODE_CMP,  0u           } },
+        { "cmpf", { InstrCategory::Categories::Reg2,      OPCODE_CMPF, 0u           } },
+        { "fti",  { InstrCategory::Categories::Reg2,      OPCODE_FTI,  0u           } },
+        { "itf",  { InstrCategory::Categories::Reg2,      OPCODE_ITF,  0u           } },
+
+        { "pop",  { InstrCategory::Categories::Reg1,      OPCODE_POP,  0u           } },
+        { "inc",  { InstrCategory::Categories::Reg1,      OPCODE_INC,  0u           } },
+        { "dec",  { InstrCategory::Categories::Reg1,      OPCODE_DEC,  0u           } },
+
+        { "lda",  { InstrCategory::Categories::Reg1LDA,   OPCODE_LDA,  0u           } },
+
+        { "jmp",  { InstrCategory::Categories::Jump,      OPCODE_JMP,  0u           } },
+        { "je",   { InstrCategory::Categories::Jump,      OPCODE_JE,   0u           } },
+        { "jne",  { InstrCategory::Categories::Jump,      OPCODE_JNE,  0u           } },
+        { "jg",   { InstrCategory::Categories::Jump,      OPCODE_JG,   0u           } },
+        { "jl",   { InstrCategory::Categories::Jump,      OPCODE_JL,   0u           } },
+        { "jge",  { InstrCategory::Categories::Jump,      OPCODE_JGE,  0u           } },
+        { "jle",  { InstrCategory::Categories::Jump,      OPCODE_JLE,  0u           } },
+        { "call", { InstrCategory::Categories::Jump,      OPCODE_CALL, 0u           } },
+
+        { "ldb",  { InstrCategory::Categories::LoadStore, OPCODE_LDB,  0u           } },
+        { "ldw",  { InstrCategory::Categories::LoadStore, OPCODE_LDW,  0u           } },
+        { "stb",  { InstrCategory::Categories::LoadStore, OPCODE_STB,  0u           } },
+        { "stw",  { InstrCategory::Categories::LoadStore, OPCODE_STW,  0u           } },
+
+        { "push", { InstrCategory::Categories::Special,   OPCODE_PUSH, OPCODE_PUSHC } },
+        { "stop", { InstrCategory::Categories::Special,   OPCODE_STOP, 0u           } },
+        { "ret",  { InstrCategory::Categories::Special,   OPCODE_RET,  0u           } },
+        { "invk", { InstrCategory::Categories::Special,   OPCODE_INVK, 0u           } },
     });
 }
 
@@ -638,28 +644,67 @@ void Assembler::ParseInstr(const InstrCategory& instr)
 {
     switch (instr.category)
     {
+        case InstrCategory::Categories::Reg3:
+            ParseInstrReg3(instr);
+            break;
         case InstrCategory::Categories::Reg2:
             ParseInstrReg2(instr);
             break;
         case InstrCategory::Categories::Reg1:
             ParseInstrReg1(instr);
             break;
+        case InstrCategory::Categories::Reg1LDA:
+            ParseInstrReg1LDA(instr);
+            break;
         case InstrCategory::Categories::Jump:
             ParseInstrJump(instr);
             break;
-        case InstrCategory::Categories::Float:
-            ParseInstrFloat(instr);
-            break;
-        case InstrCategory::Categories::Mem:
-            ParseInstrMem(instr);
-            break;
-        case InstrCategory::Categories::MemOff:
-            ParseInstrMemOff(instr);
+        case InstrCategory::Categories::LoadStore:
+            ParseInstrLoadStore(instr);
             break;
         case InstrCategory::Categories::Special:
             ParseInstrSpecial(instr);
             break;
     }
+}
+
+void Assembler::ParseInstrReg3(const InstrCategory& instr)
+{
+    /* Parse first operand */
+    const auto& reg0 = ParseRegister();
+    Accept(Token::Types::Comma);
+
+    const auto& reg1 = ParseRegister();
+
+    if (tkn_.type == Token::Types::Comma)
+    {
+        AcceptIt();
+
+        if (tkn_.type == Token::Types::Register)
+        {
+            /* Parse third operand */
+            const auto& reg2 = ParseRegister();
+
+            /* Add instruction */
+            byteCode_->AddInstr(
+                Instr::MakeReg3(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, reg2)
+            );
+        }
+        else if (instr.opcodeSecondary != 0)
+        {
+            /* Parse third operand */
+            auto value = ParseOperand();
+            
+            /* Add instruction */
+            byteCode_->AddInstr(
+                Instr::MakeReg2(static_cast<xvm_opcode>(instr.opcodeSecondary), reg0, reg1, value)
+            );
+        }
+        else
+            Error("invalid third operand for 3-register instruction (expected register)");
+    }
+    else
+        Error("missing third operand for 3-register or 2-register instruction");
 }
 
 void Assembler::ParseInstrReg2(const InstrCategory& instr)
@@ -678,17 +723,17 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
 
             /* Add instruction */
             byteCode_->AddInstr(
-                Instr::MakeReg2(static_cast<opcode_reg2>(instr.opcodePrimary), reg0, reg1)
+                Instr::MakeReg2(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, 0)
             );
         }
         else if (instr.opcodeSecondary != 0)
         {
             /* Parse second operand */
-            int value = ParseOperand();
+            auto value = ParseOperand();
             
             /* Add instruction */
             byteCode_->AddInstr(
-                Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodeSecondary), reg0, value)
+                Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodeSecondary), reg0, value)
             );
         }
         else
@@ -705,7 +750,22 @@ void Assembler::ParseInstrReg1(const InstrCategory& instr)
 
     /* Add instruction */
     byteCode_->AddInstr(
-        Instr::MakeReg1(static_cast<opcode_reg1>(instr.opcodePrimary), reg, 0)
+        Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodePrimary), reg, 0)
+    );
+}
+
+void Assembler::ParseInstrReg1LDA(const InstrCategory& instr)
+{
+    /* Parse first operand */
+    const auto& reg = ParseRegister();
+
+    /* Parse second operand */
+    Accept(Token::Types::Comma);
+    auto address = ParseOperand();
+
+    /* Add instruction */
+    byteCode_->AddInstr(
+        Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodePrimary), reg, address)
     );
 }
 
@@ -737,11 +797,11 @@ void Assembler::ParseInstrJump(const InstrCategory& instr)
 
     /* Add instruction */
     byteCode_->AddInstr(
-        Instr::MakeJump(static_cast<opcode_jump>(instr.opcodePrimary), *reg, offset)
+        Instr::MakeJump(static_cast<xvm_opcode>(instr.opcodePrimary), *reg, offset)
     );
 }
 
-void Assembler::ParseInstrFloat(const InstrCategory& instr)
+void Assembler::ParseInstrLoadStore(const InstrCategory& instr)
 {
     /* Parse first operand */
     const auto& reg0 = ParseRegister();
@@ -749,45 +809,15 @@ void Assembler::ParseInstrFloat(const InstrCategory& instr)
     /* Parse second operand */
     Accept(Token::Types::Comma);
     const auto& reg1 = ParseRegister();
-
-    /* Add instruction */
-    byteCode_->AddInstr(
-        Instr::MakeFloat(static_cast<opcode_float>(instr.opcodePrimary), reg0, reg1)
-    );
-}
-
-void Assembler::ParseInstrMem(const InstrCategory& instr)
-{
-    /* Parse first operand */
-    const auto& reg = ParseRegister();
-
-    /* Parse second operand */
-    Accept(Token::Types::Comma);
-    auto address = static_cast<unsigned int>(ParseOperand());
-
-    /* Add instruction */
-    byteCode_->AddInstr(
-        Instr::MakeMem(static_cast<opcode_mem>(instr.opcodePrimary), reg, address)
-    );
-}
-
-void Assembler::ParseInstrMemOff(const InstrCategory& instr)
-{
-    /* Parse first operand */
-    const auto& reg0 = ParseRegister();
-
-    /* Parse second operand */
-    Accept(Token::Types::Comma);
-    Accept(Token::Types::LBracket);
-    const auto& reg1 = ParseRegister();
-    Accept(Token::Types::RBracket);
 
     /* Parse third operand */
+    Accept(Token::Types::LBracket);
     auto offset = ParseOperand();
+    Accept(Token::Types::RBracket);
 
     /* Add instruction */
     byteCode_->AddInstr(
-        Instr::MakeMemOff(static_cast<opcode_memoff>(instr.opcodePrimary), reg0, reg1, offset)
+        Instr::MakeLoadStore(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, offset)
     );
 }
 

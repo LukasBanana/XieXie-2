@@ -132,17 +132,18 @@ class Assembler
         {
             enum class Categories
             {
+                Reg3,
                 Reg2,
                 Reg1,
+                Reg1LDA,
                 Jump,
-                Float,
-                Mem,
-                MemOff,
+                LoadStore,
                 Special,
             };
 
-            Categories category;
-            unsigned int opcodePrimary, opcodeSecondary;
+            Categories      category;
+            unsigned int    opcodePrimary;
+            unsigned int    opcodeSecondary;
         };
 
         /* === Functions === */
@@ -198,12 +199,12 @@ class Assembler
         void ParseDataFieldAscii();
 
         void ParseInstr         (const InstrCategory& instr);
+        void ParseInstrReg3     (const InstrCategory& instr);
         void ParseInstrReg2     (const InstrCategory& instr);
         void ParseInstrReg1     (const InstrCategory& instr);
+        void ParseInstrReg1LDA  (const InstrCategory& instr);
         void ParseInstrJump     (const InstrCategory& instr);
-        void ParseInstrFloat    (const InstrCategory& instr);
-        void ParseInstrMem      (const InstrCategory& instr);
-        void ParseInstrMemOff   (const InstrCategory& instr);
+        void ParseInstrLoadStore(const InstrCategory& instr);
         void ParseInstrSpecial  (const InstrCategory& instr);
 
         void ParseInstrSpecialPUSH();

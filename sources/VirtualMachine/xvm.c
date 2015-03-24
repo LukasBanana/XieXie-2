@@ -394,8 +394,7 @@ typedef unsigned char opcode_t;
 #   define GEN_OPCODE(op) (op)
 #endif
 
-#if 0
-
+//! XASM instruction opcodes.
 typedef enum
 {
     /* --- 3 register opcodes --- */
@@ -475,107 +474,6 @@ typedef enum
     //Reserved      = GEN_OPCODE(0x3f),
 }
 xvm_opcode;
-
-#endif
-
-typedef enum
-{
-    OPCODE_MOV2     = GEN_OPCODE(0x01), // MOV  reg0, reg1  ->  *reg0 = *reg1
-    OPCODE_NOT2     = GEN_OPCODE(0x02), // NOT  reg0, reg1  ->  *reg0 = ~*reg1
-    OPCODE_AND2     = GEN_OPCODE(0x03), // AND  reg0, reg1  ->  *reg0 &= *reg1
-    OPCODE_OR2      = GEN_OPCODE(0x04), // OR   reg0, reg1  ->  *reg0 |= *reg1
-    OPCODE_XOR2     = GEN_OPCODE(0x05), // XOR  reg0, reg1  ->  *reg0 ^= *reg1
-    OPCODE_ADD2     = GEN_OPCODE(0x06), // ADD  reg0, reg1  ->  *reg0 += *reg1
-    OPCODE_SUB2     = GEN_OPCODE(0x07), // SUB  reg0, reg1  ->  *reg0 -= *reg1
-    OPCODE_MUL2     = GEN_OPCODE(0x08), // MUL  reg0, reg1  ->  *reg0 *= *reg1
-    OPCODE_DIV2     = GEN_OPCODE(0x09), // DIV  reg0, reg1  ->  *reg0 /= *reg1
-    OPCODE_MOD2     = GEN_OPCODE(0x0a), // MOD  reg0, reg1  ->  *reg0 %= *reg1
-    OPCODE_SLL2     = GEN_OPCODE(0x0b), // SLL  reg0, reg1  ->  *reg0 <<= *reg1
-    OPCODE_SLR2     = GEN_OPCODE(0x0c), // SLR  reg0, reg1  ->  *reg0 >>= *reg1
-    OPCODE_CMP      = GEN_OPCODE(0x0d), // CMP  reg0, reg1  ->  REG_CF = (*reg0 - *reg1)
-    OPCODE_FTI      = GEN_OPCODE(0x0e), // FTI  reg0, reg1  ->  *reg0 = (int)*reg1
-    OPCODE_ITF      = GEN_OPCODE(0x0f), // ITF  reg0, reg1  ->  *reg0 = (float)*reg1
-}
-opcode_reg2;
-
-typedef enum
-{
-    OPCODE_MOV1     = GEN_OPCODE(0x10), // MOV  reg, c  ->  *reg = c
-    OPCODE_AND1     = GEN_OPCODE(0x11), // AND  reg, c  ->  *reg &= c
-    OPCODE_OR1      = GEN_OPCODE(0x12), // OR   reg, c  ->  *reg |= c
-    OPCODE_XOR1     = GEN_OPCODE(0x13), // XOR  reg, c  ->  *reg ^= c
-    OPCODE_ADD1     = GEN_OPCODE(0x14), // ADD  reg, c  ->  *reg += c
-    OPCODE_SUB1     = GEN_OPCODE(0x15), // SUB  reg, c  ->  *reg -= c
-    OPCODE_MUL1     = GEN_OPCODE(0x16), // MUL  reg, c  ->  *reg *= c
-    OPCODE_DIV1     = GEN_OPCODE(0x17), // DIV  reg, c  ->  *reg /= c
-    OPCODE_MOD1     = GEN_OPCODE(0x18), // MOD  reg, c  ->  *reg %= c
-    OPCODE_SLL1     = GEN_OPCODE(0x19), // SLL  reg, c  ->  *reg <<= c
-    OPCODE_SLR1     = GEN_OPCODE(0x1a), // SLR  reg, c  ->  *reg >>= c
-    OPCODE_PUSH     = GEN_OPCODE(0x1b), // PUSH reg     ->  stack.push(*reg)
-    OPCODE_POP      = GEN_OPCODE(0x1c), // POP  reg     ->  *reg = stack.pop()
-    OPCODE_INC      = GEN_OPCODE(0x1d), // INC  reg     ->  ++*reg
-    OPCODE_DEC      = GEN_OPCODE(0x1e), // DEC  reg     ->  --*reg
-    //Reserved      = GEN_OPCODE(0x1f),
-}
-opcode_reg1;
-
-typedef enum
-{
-    OPCODE_JMP      = GEN_OPCODE(0x20), // JMP  addr    -> goto addr
-    OPCODE_JE       = GEN_OPCODE(0x21), // JE   addr    -> if (REG_CF == 0) then goto addr
-    OPCODE_JNE      = GEN_OPCODE(0x22), // JNE  addr    -> if (REG_CF != 0) then goto addr
-    OPCODE_JG       = GEN_OPCODE(0x23), // JG   addr    -> if (REG_CF  > 0) then goto addr
-    OPCODE_JL       = GEN_OPCODE(0x24), // JL   addr    -> if (REG_CF  < 0) then goto addr
-    OPCODE_JGE      = GEN_OPCODE(0x25), // JGE  addr    -> if (REG_CF >= 0) then goto addr
-    OPCODE_JLE      = GEN_OPCODE(0x26), // JLE  addr    -> if (REG_CF <= 0) then goto addr
-    OPCODE_CALL     = GEN_OPCODE(0x27), // CALL addr    -> PUSH pc ; PUSH lb ; MOV lb, sp ; JMP addr
-    //Reserved      = GEN_OPCODE(0x28),
-    //Reserved      = GEN_OPCODE(0x29),
-    //Reserved      = GEN_OPCODE(0x2a),
-}
-opcode_jump;
-
-typedef enum
-{
-    OPCODE_ADDF     = GEN_OPCODE(0x2b), // ADDF reg0, reg1  ->  *reg0 += *reg1
-    OPCODE_SUBF     = GEN_OPCODE(0x2c), // SUBF reg0, reg1  ->  *reg0 -= *reg1
-    OPCODE_MULF     = GEN_OPCODE(0x2d), // MULF reg0, reg1  ->  *reg0 *= *reg1
-    OPCODE_DIVF     = GEN_OPCODE(0x2e), // DIVF reg0, reg1  ->  *reg0 /= *reg1
-    OPCODE_CMPF     = GEN_OPCODE(0x2f), // CMPF reg0, reg1  ->  REG_CF = signum(*reg0 - *reg1)
-}
-opcode_float;
-
-typedef enum
-{
-    OPCODE_STOP     = GEN_OPCODE(0x00), // STOP          ->  exit(0)
-    OPCODE_RET      = GEN_OPCODE(0x30), // RET  (c0) c1  ->  return
-    OPCODE_PUSHC    = GEN_OPCODE(0x31), // PUSH value    ->  stack.push(value)
-    OPCODE_INVK     = GEN_OPCODE(0x32), // INVK addr     ->  invoke external procedure (no jump, no stack change)
-    //Reserved      = GEN_OPCODE(0x33),
-    //Reserved      = GEN_OPCODE(0x34),
-    //Reserved      = GEN_OPCODE(0x35),
-    //Reserved      = GEN_OPCODE(0x36),
-    //Reserved      = GEN_OPCODE(0x37),
-}
-opcode_special;
-
-typedef enum
-{
-    OPCODE_LDA      = GEN_OPCODE(0x38), // LDA reg0, addr  ->  *reg0 = programMemoryStartWorldAligned[addr]
-    //Reserved      = GEN_OPCODE(0x39),
-    //Reserved      = GEN_OPCODE(0x3a),
-    //Reserved      = GEN_OPCODE(0x3b),
-}
-opcode_mem;
-
-typedef enum
-{
-    OPCODE_LDB      = GEN_OPCODE(0x3c), // LDB reg0, (reg1) c  ->  *reg0 = dynamicMemoryByteAligned[*reg1 + c]
-    OPCODE_STB      = GEN_OPCODE(0x3d), // STB reg0, (reg1) c  ->  dynamicMemoryByteAligned[*reg1 + c] = *reg0
-    OPCODE_LDW      = GEN_OPCODE(0x3e), // LDW reg0, (reg1) c  ->  *reg0 = dynamicMemoryWordAligned[*reg1 + c]
-    OPCODE_STW      = GEN_OPCODE(0x3f), // STW reg0, (reg1) c  ->  dynamicMemoryWordAligned[*reg1 + c] = *reg0
-}
-opcode_memoff;
 
 
 /* ----- Virtual machine exit codes ----- */
@@ -839,7 +737,8 @@ STATIC const char* xvm_intrinsic_get_ident(const intrinsic_addr addr)
 
 typedef unsigned int instr_t;
 
-INLINE STATIC opcode_t xvm_instr_get_opcode(const instr_t instr)
+//! Returns the instruction opcode.
+INLINE STATIC opcode_t _xvm_instr_get_opcode(const instr_t instr)
 {
     #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
     /*
@@ -852,24 +751,28 @@ INLINE STATIC opcode_t xvm_instr_get_opcode(const instr_t instr)
     #endif
 }
 
-INLINE STATIC unsigned int xvm_instr_get_value26(const instr_t instr)
+//! Returns the 26-bit unsigned value of the specified instruction.
+INLINE STATIC unsigned int _xvm_instr_get_value26(const instr_t instr)
 {
     return (instr & XVM_VALUE26_MAX);
 }
 
-INLINE STATIC unsigned int xvm_instr_get_value22(const instr_t instr)
+//! Returns the 22-bit unsigned value of the specified instruction.
+INLINE STATIC unsigned int _xvm_instr_get_value22(const instr_t instr)
 {
     return (instr & XVM_VALUE22_MAX);
 }
 
-INLINE STATIC unsigned int xvm_instr_get_value18(const instr_t instr)
+//! Returns the 18-bit unsigned value of the specified instruction.
+INLINE STATIC unsigned int _xvm_instr_get_value18(const instr_t instr)
 {
     return (instr & XVM_VALUE18_MAX);
 }
 
-INLINE STATIC int xvm_instr_get_sgn_value26(const instr_t instr)
+//! Returns the 26-bit signed value of the specified instruction.
+INLINE STATIC int _xvm_instr_get_sgn_value26(const instr_t instr)
 {
-    unsigned int val = xvm_instr_get_value26(instr);
+    unsigned int val = _xvm_instr_get_value26(instr);
 
     // Sign extend
     if ((val & 0x02000000) != 0)
@@ -878,9 +781,10 @@ INLINE STATIC int xvm_instr_get_sgn_value26(const instr_t instr)
     return (int)val;
 }
 
-INLINE STATIC int xvm_instr_get_sgn_value22(const instr_t instr)
+//! Returns the 22-bit signed value of the specified instruction.
+INLINE STATIC int _xvm_instr_get_sgn_value22(const instr_t instr)
 {
-    unsigned int val = xvm_instr_get_value22(instr);
+    unsigned int val = _xvm_instr_get_value22(instr);
 
     // Sign extend
     if ((val & 0x00200000) != 0)
@@ -889,9 +793,10 @@ INLINE STATIC int xvm_instr_get_sgn_value22(const instr_t instr)
     return (int)val;
 }
 
-INLINE STATIC int xvm_instr_get_sgn_value18(const instr_t instr)
+//! Returns the 18-bit signed value of the specified instruction.
+INLINE STATIC int _xvm_instr_get_sgn_value18(const instr_t instr)
 {
-    unsigned int val = xvm_instr_get_value18(instr);
+    unsigned int val = _xvm_instr_get_value18(instr);
 
     // Sign extend
     if ((val & 0x00020000) != 0)
@@ -900,19 +805,28 @@ INLINE STATIC int xvm_instr_get_sgn_value18(const instr_t instr)
     return (int)val;
 }
 
-INLINE STATIC int xvm_instr_get_extra_value8(const instr_t instr)
+//! Returns the extra value of the special instruction RET.
+INLINE STATIC int _xvm_instr_get_extra_value8(const instr_t instr)
 {
     return (instr & 0x03fc0000) >> 18;
 }
 
-INLINE STATIC reg_t xvm_instr_get_reg0(const instr_t instr)
+//! Returns the index of the register 0.
+INLINE STATIC reg_t _xvm_instr_get_reg0(const instr_t instr)
 {
     return (instr & 0x03c00000) >> 22;
 }
 
-INLINE STATIC reg_t xvm_instr_get_reg1(const instr_t instr)
+//! Returns the index of the register 1.
+INLINE STATIC reg_t _xvm_instr_get_reg1(const instr_t instr)
 {
     return (instr & 0x003c0000) >> 18;
+}
+
+//! Returns the index of the register 2.
+INLINE STATIC reg_t _xvm_instr_get_reg2(const instr_t instr)
+{
+    return (instr & 0x0003c000) >> 14;
 }
 
 /**
@@ -923,45 +837,37 @@ STATIC const char* xvm_instr_get_mnemonic(const opcode_t opcode)
 {
     switch (opcode)
     {
-        /* --- opcode_reg2 --- */
-
         case OPCODE_MOV1:
         case OPCODE_MOV2:   return "mov ";
-        case OPCODE_NOT2:   return "not ";
-        case OPCODE_AND1:
-        case OPCODE_AND2:   return "and ";
-        case OPCODE_OR1:
-        case OPCODE_OR2:    return "or  ";
-        case OPCODE_XOR1:
-        case OPCODE_XOR2:   return "xor ";
-        case OPCODE_ADD1:
-        case OPCODE_ADD2:   return "add ";
-        case OPCODE_SUB1:
-        case OPCODE_SUB2:   return "sub ";
-        case OPCODE_MUL1:
-        case OPCODE_MUL2:   return "mul ";
-        case OPCODE_DIV1:
-        case OPCODE_DIV2:   return "div ";
-        case OPCODE_MOD1:
-        case OPCODE_MOD2:   return "mod ";
-        case OPCODE_SLL1:
-        case OPCODE_SLL2:   return "sll ";
-        case OPCODE_SLR1:
-        case OPCODE_SLR2:   return "slr ";
+        case OPCODE_NOT:    return "not ";
+        case OPCODE_AND2:
+        case OPCODE_AND3:   return "and ";
+        case OPCODE_OR2:
+        case OPCODE_OR3:    return "or  ";
+        case OPCODE_XOR2:
+        case OPCODE_XOR3:   return "xor ";
+        case OPCODE_ADD2:
+        case OPCODE_ADD3:   return "add ";
+        case OPCODE_SUB2:
+        case OPCODE_SUB3:   return "sub ";
+        case OPCODE_MUL2:
+        case OPCODE_MUL3:   return "mul ";
+        case OPCODE_DIV2:
+        case OPCODE_DIV3:   return "div ";
+        case OPCODE_MOD2:
+        case OPCODE_MOD3:   return "mod ";
+        case OPCODE_SLL2:
+        case OPCODE_SLL3:   return "sll ";
+        case OPCODE_SLR2:
+        case OPCODE_SLR3:   return "slr ";
         case OPCODE_CMP:    return "cmp ";
         case OPCODE_FTI:    return "fti ";
         case OPCODE_ITF:    return "itf ";
-            
-        /* --- opcode_reg1 --- */
-
         case OPCODE_PUSHC:
         case OPCODE_PUSH:   return "push";
         case OPCODE_POP:    return "pop ";
         case OPCODE_INC:    return "inc ";
         case OPCODE_DEC:    return "dec ";
-
-        /* --- opcode_jump --- */
-
         case OPCODE_JMP:    return "jmp ";
         case OPCODE_JE:     return "je  ";
         case OPCODE_JNE:    return "jne ";
@@ -970,28 +876,16 @@ STATIC const char* xvm_instr_get_mnemonic(const opcode_t opcode)
         case OPCODE_JGE:    return "jge ";
         case OPCODE_JLE:    return "jle ";
         case OPCODE_CALL:   return "call";
-
-        /* --- opcode_float --- */
-
         case OPCODE_ADDF:   return "addf";
         case OPCODE_SUBF:   return "subf";
         case OPCODE_MULF:   return "mulf";
         case OPCODE_DIVF:   return "divf";
         case OPCODE_CMPF:   return "cmpf";
-
-        /* --- opcode_mem --- */
-
         case OPCODE_LDA:    return "lda ";
-
-        /* --- opcode_memoff --- */
-
         case OPCODE_LDB:    return "ldb ";
         case OPCODE_STB:    return "stb ";
         case OPCODE_LDW:    return "ldw ";
         case OPCODE_STW:    return "stw ";
-
-        /* --- opcode_special --- */
-
         case OPCODE_STOP:   return "stop";
         case OPCODE_RET:    return "ret ";
         case OPCODE_INVK:   return "invk";
@@ -1005,7 +899,7 @@ with the current state of the specified register set.
 */
 STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, const regi_t* reg_ptr)
 {
-    const opcode_t opcode = xvm_instr_get_opcode(instr);
+    const opcode_t opcode = _xvm_instr_get_opcode(instr);
 
     #ifdef _SHOW_RUNTIME_HEXLINES_
     printf("0x%*.8x  %s", 8, (instr_index >> 2), xvm_instr_get_mnemonic(opcode));
@@ -1015,8 +909,8 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
 
     if (opcode == OPCODE_CMP || opcode == OPCODE_CMPF)
     {
-        reg_t reg0 = xvm_instr_get_reg0(instr);
-        reg_t reg1 = xvm_instr_get_reg1(instr);
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
+        reg_t reg1 = _xvm_instr_get_reg1(instr);
 
         const char* reg0name = xvm_register_get_name(reg0);
         const char* reg1name = xvm_register_get_name(reg1);
@@ -1025,15 +919,15 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
     }
     else if (opcode >= OPCODE_JMP && opcode <= OPCODE_JLE)
     {
-        int addr_offset = xvm_instr_get_sgn_value22(instr);
+        int addr_offset = _xvm_instr_get_sgn_value22(instr);
         printf("%i", addr_offset);
     }
     else if (opcode == OPCODE_CALL)
     {
-        int addr_offset = xvm_instr_get_sgn_value22(instr);
+        int addr_offset = _xvm_instr_get_sgn_value22(instr);
         if (addr_offset == INTR_RESERVED_MAX)
         {
-            reg_t reg0 = xvm_instr_get_reg0(instr);
+            reg_t reg0 = _xvm_instr_get_reg0(instr);
             const char* reg0name = xvm_register_get_name(reg0);
             printf("%s", reg0name);
         }
@@ -1044,8 +938,8 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
     }
     else if (opcode >= OPCODE_MOV2 && opcode <= OPCODE_ITF)
     {
-        reg_t reg0 = xvm_instr_get_reg0(instr);
-        reg_t reg1 = xvm_instr_get_reg1(instr);
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
+        reg_t reg1 = _xvm_instr_get_reg1(instr);
 
         const char* reg0name = xvm_register_get_name(reg0);
         const char* reg1name = xvm_register_get_name(reg1);
@@ -1057,7 +951,7 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
     else if ( ( opcode >= OPCODE_MOV1 && opcode <= OPCODE_DEC  ) ||
               ( opcode >= OPCODE_LDB && opcode <= OPCODE_STW ) )
     {
-        reg_t reg0 = xvm_instr_get_reg0(instr);
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
         regi_t value = reg_ptr[reg0];
 
         const char* reg0name = xvm_register_get_name(reg0);
@@ -1066,7 +960,7 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
     }
     else if (opcode >= OPCODE_ADDF && opcode <= OPCODE_DIVF)
     {
-        reg_t reg0 = xvm_instr_get_reg0(instr);
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
         regi_t value = reg_ptr[reg0];
 
         const char* reg0name = xvm_register_get_name(reg0);
@@ -1074,7 +968,7 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
         printf("%s         (%s = %f)", reg0name, reg0name, INT_TO_FLT_REINTERPRET(value));
     }
     else if (opcode == OPCODE_PUSHC)
-        printf("%i", xvm_instr_get_sgn_value26(instr));
+        printf("%i", _xvm_instr_get_sgn_value26(instr));
 
     printf("\n");
 }
@@ -1082,7 +976,8 @@ STATIC void xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, 
 
 /* ----- Instruction constructors ----- */
 
-STATIC instr_t xvm_instr_make_reg2(opcode_reg2 opcode, reg_t reg0, reg_t reg1)
+//! Makes a 3-register instruction.
+STATIC instr_t xvm_instr_make_reg3(xvm_opcode opcode, reg_t reg0, reg_t reg1, reg_t reg2)
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -1091,11 +986,28 @@ STATIC instr_t xvm_instr_make_reg2(opcode_reg2 opcode, reg_t reg0, reg_t reg1)
         ((opcode & 0x3f      ) << 26) |
         #endif
         ((reg0   & 0x0f      ) << 22) |
-        ((reg1   & 0x0f      ) << 18)
+        ((reg1   & 0x0f      ) << 18) |
+        ((reg2   & 0x0f      ) << 14)
     );
 }
 
-STATIC instr_t xvm_instr_make_reg1(opcode_reg1 opcode, reg_t reg, unsigned int value)
+//! Makes a 2-register instruction.
+STATIC instr_t xvm_instr_make_reg2(xvm_opcode opcode, reg_t reg0, reg_t reg1, unsigned int value)
+{
+    return (instr_t)(
+        #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
+        opcode                             |
+        #else
+        ((opcode & 0x3f           ) << 26) |
+        #endif
+        ((reg0   & 0x0f           ) << 22) |
+        ((reg1   & 0x0f           ) << 18) |
+         (value  & XVM_VALUE18_MAX)
+    );
+}
+
+//! Makes a 1-register instruction.
+STATIC instr_t xvm_instr_make_reg1(xvm_opcode opcode, reg_t reg, unsigned int value)
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -1108,36 +1020,20 @@ STATIC instr_t xvm_instr_make_reg1(opcode_reg1 opcode, reg_t reg, unsigned int v
     );
 }
 
-STATIC instr_t xvm_instr_make_jump(opcode_jump opcode, reg_t reg, unsigned int offset)
+//! Makes a jump instruction.
+STATIC instr_t xvm_instr_make_jump(xvm_opcode opcode, reg_t reg, unsigned int offset)
 {
-    return xvm_instr_make_reg1((opcode_reg1)opcode, reg, offset);
+    return xvm_instr_make_reg1(opcode, reg, offset);
 }
 
-STATIC instr_t xvm_instr_make_float(opcode_float opcode, reg_t reg0, reg_t reg1)
+//! Makes a load/store instruction.
+STATIC instr_t xvm_instr_make_loadstore(xvm_opcode opcode, reg_t reg0, reg_t reg1, unsigned int offset)
 {
-    return xvm_instr_make_reg2((opcode_reg2)opcode, reg0, reg1);
+    return xvm_instr_make_reg2(opcode, reg0, reg1, offset);
 }
 
-STATIC instr_t xvm_instr_make_mem(opcode_mem opcode, reg_t reg, unsigned int address)
-{
-    return xvm_instr_make_reg1((opcode_reg1)opcode, reg, address);
-}
-
-STATIC instr_t xvm_instr_make_memoff(opcode_memoff opcode, reg_t reg0, reg_t reg1, unsigned int offset)
-{
-    return (instr_t)(
-        #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
-        opcode                             |
-        #else
-        ((opcode & 0x3f           ) << 26) |
-        #endif
-        ((reg0   & 0x0f           ) << 22) |
-        ((reg1   & 0x0f           ) << 18) |
-         (offset & XVM_VALUE18_MAX)
-    );
-}
-
-STATIC instr_t xvm_instr_make_special1(opcode_special opcode, unsigned int value)
+//! Makes a special-1 instruction.
+STATIC instr_t xvm_instr_make_special1(xvm_opcode opcode, unsigned int value)
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -1149,7 +1045,8 @@ STATIC instr_t xvm_instr_make_special1(opcode_special opcode, unsigned int value
     );
 }
 
-STATIC instr_t xvm_instr_make_special2(opcode_special opcode, unsigned int result_size, unsigned int arg_size)
+//! Makes a special-2 instruction.
+STATIC instr_t xvm_instr_make_special2(xvm_opcode opcode, unsigned int result_size, unsigned int arg_size)
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -1162,31 +1059,31 @@ STATIC instr_t xvm_instr_make_special2(opcode_special opcode, unsigned int resul
     );
 }
 
-STATIC instr_t xvm_instr_patch_value18(instr_t instr, unsigned int value)
+STATIC instr_t _xvm_instr_patch_value18(instr_t instr, unsigned int value)
 {
     return (instr & 0xfffc0000) | (value & XVM_VALUE18_MAX);
 }
 
-STATIC instr_t xvm_instr_patch_value22(instr_t instr, unsigned int value)
+STATIC instr_t _xvm_instr_patch_value22(instr_t instr, unsigned int value)
 {
     return (instr & 0xffc00000) | (value & XVM_VALUE22_MAX);
 }
 
-STATIC instr_t xvm_instr_patch_value26(instr_t instr, unsigned int value)
+STATIC instr_t _xvm_instr_patch_value26(instr_t instr, unsigned int value)
 {
     return (instr & 0xfc000000) | (value & XVM_VALUE26_MAX);
 }
 
 STATIC instr_t xvm_instr_patch_value(instr_t instr, unsigned int value)
 {
-    opcode_t opcode = xvm_instr_get_opcode(instr);
+    opcode_t opcode = _xvm_instr_get_opcode(instr);
 
-    if (opcode >= OPCODE_LDB && opcode <= OPCODE_STW)
-        return xvm_instr_patch_value18(instr, value);
-    if ( ( opcode >= OPCODE_MOV1 && opcode <= OPCODE_CALL ) || opcode == OPCODE_LDA )
-        return xvm_instr_patch_value22(instr, value);
+    if ( ( opcode >= OPCODE_LDB && opcode <= OPCODE_STW ) || ( opcode >= OPCODE_FTI && opcode <= OPCODE_SLR2 ) )
+        return _xvm_instr_patch_value18(instr, value);
+    if ( ( opcode >= OPCODE_JMP && opcode <= OPCODE_CALL ) || opcode == OPCODE_LDA || opcode == OPCODE_MOV1 )
+        return _xvm_instr_patch_value22(instr, value);
     if (opcode == OPCODE_PUSHC || opcode == OPCODE_INVK)
-        return xvm_instr_patch_value26(instr, value);
+        return _xvm_instr_patch_value26(instr, value);
 
     return instr;
 }
@@ -1838,18 +1735,18 @@ STR:
     WORD:           length
     Byte[length]:   data
 
---- XBC file format spec (Version 1.01): ---
+--- XBC file format spec (Version 1.11): ---
 
 WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 101 for "1.01")
+WORD: version number (Must be 111 for "1.11")
 WORD: number of instructions (n)
 n times:
     WORD: instruction
 
---- XBC file format spec (Version 1.02): ---
+--- XBC file format spec (Version 1.12): ---
 
 WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 102 for "1.02")
+WORD: version number (Must be 112 for "1.12")
 WORD: number of instructions (n1)
 n1 times:
     WORD: instruction
@@ -1858,10 +1755,10 @@ n2 times:
     WORD: address
     STR: name
 
---- XBC file format spec (Version 1.03): ---
+--- XBC file format spec (Version 1.13): ---
 
 WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 102 for "1.02")
+WORD: version number (Must be 113 for "1.13")
 WORD: number of instructions (n1)
 n1 times:
     WORD: instruction
@@ -1876,10 +1773,10 @@ n3 times:
 */
 
 #define XBC_FORMAT_MAGIC            (*((int*)("XBCF")))
-#define XBC_FORMAT_VERSION_1_01     101
-#define XBC_FORMAT_VERSION_1_02     102
-#define XBC_FORMAT_VERSION_1_03     103
-#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_03
+#define XBC_FORMAT_VERSION_1_11     111
+#define XBC_FORMAT_VERSION_1_12     112
+#define XBC_FORMAT_VERSION_1_13     113
+#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_13
 
 /**
 Reads a byte code form file.
@@ -1915,9 +1812,9 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
 
     // Read version number
     unsigned int version = xvm_file_read_uint(file);
-    if (version != XBC_FORMAT_VERSION_1_01 && version != XBC_FORMAT_VERSION_1_02 && version != XBC_FORMAT_VERSION_1_03)
+    if (version != XBC_FORMAT_VERSION_1_11 && version != XBC_FORMAT_VERSION_1_12 && version != XBC_FORMAT_VERSION_1_13)
     {
-        xvm_log_error("invalid version number (must be 1.01, 1.02, or 1.03)");
+        xvm_log_error("invalid version number (must be 1.11, 1.12, or 1.13)");
         fclose(file);
         return 0;
     }
@@ -1935,7 +1832,7 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     fread(byte_code->instructions, sizeof(instr_t), num_instr, file);
 
     // Read export addresses
-    if (version >= XBC_FORMAT_VERSION_1_02)
+    if (version >= XBC_FORMAT_VERSION_1_12)
     {
         unsigned int num_export_addr = xvm_file_read_uint(file);
 
@@ -1962,7 +1859,7 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     }
 
     // Read invocation identifiers
-    if (version >= XBC_FORMAT_VERSION_1_03)
+    if (version >= XBC_FORMAT_VERSION_1_13)
     {
         unsigned int num_invoke_idents = xvm_file_read_uint(file);
 
@@ -1994,7 +1891,7 @@ Writes the specified byte code to file.
 \param[in] byte_code specifies the byte code which is to be written to file.
 \param[in] filename Specifies the filename which is to be used to create the file.
 \param[in] version Specifies the format version. Must be one of the following values:
-XBC_FORMAT_VERSION_1_01, XBC_FORMAT_VERSION_1_02, XBC_FORMAT_VERSION_1_03, or XBC_FORMAT_VERSION_LATEST.
+XBC_FORMAT_VERSION_1_11, XBC_FORMAT_VERSION_1_12, XBC_FORMAT_VERSION_1_13, or XBC_FORMAT_VERSION_LATEST.
 \return Zero on failure and non-zero otherwise.
 */
 STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filename, unsigned int version)
@@ -2005,7 +1902,7 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
         xvm_log_error("invalid arguments to write byte code");
         return 0;
     }
-    if (version != XBC_FORMAT_VERSION_1_01 && version != XBC_FORMAT_VERSION_1_02 && version != XBC_FORMAT_VERSION_1_03)
+    if (version != XBC_FORMAT_VERSION_1_11 && version != XBC_FORMAT_VERSION_1_12 && version != XBC_FORMAT_VERSION_1_13)
     {
         xvm_log_error("invalid version number (must be 1.01, 1.02, or 1.03)");
         return 0;
@@ -2032,7 +1929,7 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     fwrite(byte_code->instructions, sizeof(instr_t), num_instr, file);
 
     // Write export addresses
-    if (version >= XBC_FORMAT_VERSION_1_02)
+    if (version >= XBC_FORMAT_VERSION_1_12)
     {
         unsigned int num_export_addr = byte_code->num_export_addresses;
         xvm_file_write_uint(file, num_export_addr);
@@ -2047,7 +1944,7 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     }
 
     // Write invocation identifiers
-    if (version >= XBC_FORMAT_VERSION_1_03)
+    if (version >= XBC_FORMAT_VERSION_1_13)
     {
         unsigned int num_invoke_idents = byte_code->num_invoke_idents;
         xvm_file_write_uint(file, num_invoke_idents);
@@ -2743,8 +2640,9 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
     /* --- Temporary memory --- */
     instr_t         instr;          // Current instruction
     opcode_t        opcode;         // Current opcode
-    reg_t           reg0;           // First register
-    reg_t           reg1;           // Second register
+    reg_t           reg0;           // Register0 (Destination)
+    reg_t           reg1;           // Register1 (LSource)
+    reg_t           reg2;           // Register2 (RSource)
 
     byte_t*         byte_mem_addr;  // Memory address pointer (byte aligned)
     word_t*         word_mem_addr;  // Memory address pointer (word aligned)
@@ -2788,7 +2686,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
         /* Load next instruction */
         instr = *((instr_t*)(*reg_pc));
 
-        opcode = xvm_instr_get_opcode(instr);
+        opcode = _xvm_instr_get_opcode(instr);
 
         #ifdef _ENABLE_RUNTIME_DEBUGGER_
         prev_pc_index = *reg_pc - instr_ptr_begin;
@@ -2797,266 +2695,349 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
         /* Execute current instruction */
         switch (opcode)
         {
-            /* --- opcode_reg2 --- */
+            /* --- 3-register opcodes --- */
+
+            // Undefined behavior for floats
+            case OPCODE_AND3:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.i[reg0] = reg.i[reg1] & reg.i[reg2];
+            }
+            break;
+
+            // Undefined behavior for floats
+            case OPCODE_OR3:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.i[reg0] = reg.i[reg1] | reg.i[reg2];
+            }
+            break;
+
+            // Undefined behavior for floats
+            case OPCODE_XOR3:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.i[reg0] = reg.i[reg1] ^ reg.i[reg2];
+            }
+            break;
+
+            // Undefined behavior for floats
+            case OPCODE_ADD3:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.i[reg0] = reg.i[reg1] + reg.i[reg2];
+            }
+            break;
+
+            // Undefined behavior for floats
+            case OPCODE_SUB3:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.i[reg0] = reg.i[reg1] - reg.i[reg2];
+            }
+            break;
+
+            // Undefined behavior for floats
+            case OPCODE_MUL3:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.i[reg0] = reg.i[reg1] * reg.i[reg2];
+            }
+            break;
+
+            // Undefined behavior for floats
+            case OPCODE_DIV3:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                sgn_value = reg.i[reg2];
+                if (sgn_value == 0)
+                    _xvm_exception_throw("division by zero (DIV3 instruction)", EXITCODE_DIVISION_BY_ZERO);
+                reg.i[reg0] = reg.i[reg1] / sgn_value;
+            }
+            break;
+
+            // Undefined behavior for floats
+            case OPCODE_MOD3:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                sgn_value = reg.i[reg2];
+                if (sgn_value == 0)
+                    _xvm_exception_throw("division by zero (MOD3 instruction)", EXITCODE_DIVISION_BY_ZERO);
+                reg.i[reg0] = reg.i[reg1] % sgn_value;
+            }
+            break;
+
+            // Undefined behavior for floats
+            case OPCODE_SLL3:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.i[reg0] = reg.i[reg1] << reg.i[reg2];
+            }
+            break;
+
+            // Undefined behavior for floats
+            case OPCODE_SLR3:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.i[reg0] = reg.i[reg1] >> reg.i[reg2];
+            }
+            break;
+
+            case OPCODE_ADDF:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.f[reg0] = reg.f[reg1] + reg.f[reg1];
+            }
+            break;
+
+            case OPCODE_SUBF:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.f[reg0] = reg.f[reg1] - reg.f[reg1];
+            }
+            break;
+
+            case OPCODE_MULF:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.f[reg0] = reg.f[reg1] * reg.f[reg1];
+            }
+            break;
+
+            case OPCODE_DIVF:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.f[reg0] = reg.f[reg1] / reg.f[reg1];
+            }
+            break;
+
+            /* --- 2-register opcodes --- */
 
             case OPCODE_MOV2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
                 reg.i[reg0] = reg.i[reg1];
             }
             break;
 
             // Undefined behavior for floats
-            case OPCODE_NOT2:
+            case OPCODE_NOT:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
                 reg.i[reg0] = ~reg.i[reg1];
-            }
-            break;
-
-            // Undefined behavior for floats
-            case OPCODE_AND2:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.i[reg0] &= reg.i[reg1];
-            }
-            break;
-
-            // Undefined behavior for floats
-            case OPCODE_OR2:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.i[reg0] |= reg.i[reg1];
-            }
-            break;
-
-            // Undefined behavior for floats
-            case OPCODE_XOR2:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.i[reg0] ^= reg.i[reg1];
-            }
-            break;
-
-            case OPCODE_ADD2:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.i[reg0] += reg.i[reg1];
-            }
-            break;
-
-            case OPCODE_SUB2:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.i[reg0] -= reg.i[reg1];
-            }
-            break;
-
-            case OPCODE_MUL2:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.i[reg0] *= reg.i[reg1];
-            }
-            break;
-
-            case OPCODE_DIV2:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.i[reg0] /= reg.i[reg1];
-            }
-            break;
-
-            // Undefined behavior for floats
-            case OPCODE_MOD2:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.i[reg0] %= reg.i[reg1];
-            }
-            break;
-
-            // Undefined behavior for floats
-            case OPCODE_SLL2:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.i[reg0] <<= reg.i[reg1];
-            }
-            break;
-
-            // Undefined behavior for floats
-            case OPCODE_SLR2:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.i[reg0] >>= reg.i[reg1];
-            }
-            break;
-
-            case OPCODE_CMP:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                *reg_cf = (reg.i[reg0] - reg.i[reg1]);
             }
             break;
 
             case OPCODE_FTI:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
                 reg.i[reg0] = (regi_t)reg.f[reg1];
             }
             break;
 
             case OPCODE_ITF:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
                 reg.f[reg0] = (regf_t)reg.i[reg1];
             }
             break;
             
-            /* --- opcode_reg1 --- */
-
-            case OPCODE_MOV1:
+            // Undefined behavior for floats
+            case OPCODE_AND2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg.i[reg0] = xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg.i[reg0] = reg.i[reg1] & _xvm_instr_get_sgn_value18(instr);
             }
             break;
 
             // Undefined behavior for floats
-            case OPCODE_AND1:
+            case OPCODE_OR2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg.i[reg0] &= xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg.i[reg0] = reg.i[reg1] | _xvm_instr_get_sgn_value18(instr);
             }
             break;
 
             // Undefined behavior for floats
-            case OPCODE_OR1:
+            case OPCODE_XOR2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg.i[reg0] |= xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg.i[reg0] = reg.i[reg1] ^ _xvm_instr_get_sgn_value18(instr);
             }
             break;
 
-            // Undefined behavior for floats
-            case OPCODE_XOR1:
+            case OPCODE_ADD2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg.i[reg0] ^= xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg.i[reg0] = reg.i[reg1] + _xvm_instr_get_sgn_value18(instr);
             }
             break;
 
-            // Undefined behavior for floats
-            case OPCODE_ADD1:
+            case OPCODE_SUB2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg.i[reg0] += xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg.i[reg0] = reg.i[reg1] - _xvm_instr_get_sgn_value18(instr);
             }
             break;
 
-            // Undefined behavior for floats
-            case OPCODE_SUB1:
+            case OPCODE_MUL2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg.i[reg0] -= xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg.i[reg0] = reg.i[reg1] * _xvm_instr_get_sgn_value18(instr);
             }
             break;
 
-            // Undefined behavior for floats
-            case OPCODE_MUL1:
+            case OPCODE_DIV2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg.i[reg0] *= xvm_instr_get_sgn_value22(instr);
-            }
-            break;
-
-            // Undefined behavior for floats
-            case OPCODE_DIV1:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                sgn_value = xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                sgn_value = _xvm_instr_get_sgn_value18(instr);
                 if (sgn_value == 0)
-                    _xvm_exception_throw("division by zero (DIV instruction)", EXITCODE_DIVISION_BY_ZERO);
-                reg.i[reg0] /= sgn_value;
+                    _xvm_exception_throw("division by zero (DIV2 instruction)", EXITCODE_DIVISION_BY_ZERO);
+                reg.i[reg0] = reg.i[reg1] / sgn_value;
             }
             break;
 
             // Undefined behavior for floats
-            case OPCODE_MOD1:
+            case OPCODE_MOD2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                sgn_value = xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                sgn_value = _xvm_instr_get_sgn_value18(instr);
                 if (sgn_value == 0)
-                    _xvm_exception_throw("division by zero (MOD instruction)", EXITCODE_DIVISION_BY_ZERO);
-                reg.i[reg0] %= sgn_value;
+                    _xvm_exception_throw("division by zero (MOD2 instruction)", EXITCODE_DIVISION_BY_ZERO);
+                reg.i[reg0] = reg.i[reg1] % sgn_value;
             }
             break;
 
             // Undefined behavior for floats
-            case OPCODE_SLL1:
+            case OPCODE_SLL2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg.i[reg0] <<= xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg.i[reg0] = reg.i[reg1] << _xvm_instr_get_sgn_value18(instr);
             }
             break;
 
             // Undefined behavior for floats
-            case OPCODE_SLR1:
+            case OPCODE_SLR2:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg.i[reg0] >>= xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg.i[reg0] = reg.i[reg1] >> _xvm_instr_get_sgn_value18(instr);
             }
             break;
+
+            case OPCODE_CMP:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                *reg_cf = (reg.i[reg0] - reg.i[reg1]);
+            }
+            break;
+
+            case OPCODE_CMPF:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                *reg_cf = xvm_flt2int_signum(reg.f[reg0] - reg.f[reg1]);
+            }
+            break;
+
+            /* --- 1-register opcodes --- */
 
             case OPCODE_PUSH:
             {
-                reg0 = xvm_instr_get_reg0(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
                 xvm_stack_push(stack, reg_sp, reg.i[reg0]);
             }
             break;
 
             case OPCODE_POP:
             {
-                reg0 = xvm_instr_get_reg0(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
                 reg.i[reg0] = xvm_stack_pop(stack, reg_sp);
             }
             break;
 
             case OPCODE_INC:
             {
-                reg0 = xvm_instr_get_reg0(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
                 ++reg.i[reg0];
             }
             break;
 
             case OPCODE_DEC:
             {
-                reg0 = xvm_instr_get_reg0(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
                 --reg.i[reg0];
             }
             break;
 
-            /* --- opcode_jump --- */
+            case OPCODE_MOV1:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg.i[reg0] = _xvm_instr_get_sgn_value22(instr);
+            }
+            break;
+
+            case OPCODE_LDA:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                unsgn_value = _xvm_instr_get_value22(instr);
+
+                cbyte_mem_addr = program_start_ptr + (unsgn_value << 2);
+
+                reg.i[reg0] = (regi_t)(cbyte_mem_addr);
+            }
+            break;
+
+            /* --- jump opcodes --- */
 
             // Undefined behavior for floats
             case OPCODE_JMP:
             {
                 // Set program counter to (address + offset)
-                reg0 = xvm_instr_get_reg0(instr);
-                sgn_value = xvm_instr_get_sgn_value22(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                sgn_value = _xvm_instr_get_sgn_value22(instr);
                 *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                 continue;
             }
@@ -3068,8 +3049,8 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 if (*reg_cf == 0)
                 {
                     // Set program counter to (address + offset)
-                    reg0 = xvm_instr_get_reg0(instr);
-                    sgn_value = xvm_instr_get_sgn_value22(instr);
+                    reg0 = _xvm_instr_get_reg0(instr);
+                    sgn_value = _xvm_instr_get_sgn_value22(instr);
                     *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
@@ -3082,8 +3063,8 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 if (*reg_cf != 0)
                 {
                     // Set program counter to (address + offset)
-                    reg0 = xvm_instr_get_reg0(instr);
-                    sgn_value = xvm_instr_get_sgn_value22(instr);
+                    reg0 = _xvm_instr_get_reg0(instr);
+                    sgn_value = _xvm_instr_get_sgn_value22(instr);
                     *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
@@ -3096,8 +3077,8 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 if (*reg_cf > 0)
                 {
                     // Set program counter to (address + offset)
-                    reg0 = xvm_instr_get_reg0(instr);
-                    sgn_value = xvm_instr_get_sgn_value22(instr);
+                    reg0 = _xvm_instr_get_reg0(instr);
+                    sgn_value = _xvm_instr_get_sgn_value22(instr);
                     *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
@@ -3110,8 +3091,8 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 if (*reg_cf < 0)
                 {
                     // Set program counter to (address + offset)
-                    reg0 = xvm_instr_get_reg0(instr);
-                    sgn_value = xvm_instr_get_sgn_value22(instr);
+                    reg0 = _xvm_instr_get_reg0(instr);
+                    sgn_value = _xvm_instr_get_sgn_value22(instr);
                     *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
@@ -3124,8 +3105,8 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 if (*reg_cf >= 0)
                 {
                     // Set program counter to (address + offset)
-                    reg0 = xvm_instr_get_reg0(instr);
-                    sgn_value = xvm_instr_get_sgn_value22(instr);
+                    reg0 = _xvm_instr_get_reg0(instr);
+                    sgn_value = _xvm_instr_get_sgn_value22(instr);
                     *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
@@ -3138,8 +3119,8 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 if (*reg_cf <= 0)
                 {
                     // Set program counter to (address + offset)
-                    reg0 = xvm_instr_get_reg0(instr);
-                    sgn_value = xvm_instr_get_sgn_value22(instr);
+                    reg0 = _xvm_instr_get_reg0(instr);
+                    sgn_value = _xvm_instr_get_sgn_value22(instr);
                     *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
@@ -3149,7 +3130,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             // Undefined behavior for floats
             case OPCODE_CALL:
             {
-                sgn_value = xvm_instr_get_sgn_value22(instr);
+                sgn_value = _xvm_instr_get_sgn_value22(instr);
 
                 // -- Indirect call --
                 if (sgn_value == INTR_RESERVED_MAX)
@@ -3161,7 +3142,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                     xvm_stack_push(stack, reg_sp, *reg_pc);
 
                     // Jump to procedure address (absolute address)
-                    reg0 = xvm_instr_get_reg0(instr);
+                    reg0 = _xvm_instr_get_reg0(instr);
                     *reg_pc = (regi_t)(program_start_ptr + (reg.i[reg0] << 2));
                     continue;
                 }
@@ -3175,7 +3156,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                     xvm_stack_push(stack, reg_sp, *reg_pc);
 
                     // Jump to procedure address (relative address)
-                    reg0 = xvm_instr_get_reg0(instr);
+                    reg0 = _xvm_instr_get_reg0(instr);
                     *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                     continue;
                 }
@@ -3188,68 +3169,13 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             }
             break;
 
-            /* --- opcode_float --- */
-
-            case OPCODE_ADDF:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.f[reg0] += reg.f[reg1];
-            }
-            break;
-
-            case OPCODE_SUBF:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.f[reg0] -= reg.f[reg1];
-            }
-            break;
-
-            case OPCODE_MULF:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.f[reg0] *= reg.f[reg1];
-            }
-            break;
-
-            case OPCODE_DIVF:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                reg.f[reg0] /= reg.f[reg1];
-            }
-            break;
-
-            case OPCODE_CMPF:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                *reg_cf = xvm_flt2int_signum(reg.f[reg0] - reg.f[reg1]);
-            }
-            break;
-
-            /* --- opcode_mem --- */
-
-            case OPCODE_LDA:
-            {
-                reg0 = xvm_instr_get_reg0(instr);
-                unsgn_value = xvm_instr_get_value22(instr);
-
-                cbyte_mem_addr = program_start_ptr + (unsgn_value << 2);
-
-                reg.i[reg0] = (regi_t)(cbyte_mem_addr);
-            }
-            break;
-
-            /* --- opcode_memoff --- */
+            /* --- load/store opcodes --- */
 
             case OPCODE_LDB:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                sgn_value = xvm_instr_get_sgn_value18(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                sgn_value = _xvm_instr_get_sgn_value18(instr);
 
                 cbyte_mem_addr = (const byte_t*)reg.i[reg1];
                 cbyte_mem_addr += sgn_value;
@@ -3260,9 +3186,9 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
 
             case OPCODE_STB:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                sgn_value = xvm_instr_get_sgn_value18(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                sgn_value = _xvm_instr_get_sgn_value18(instr);
 
                 byte_mem_addr = (byte_t*)reg.i[reg1];
                 byte_mem_addr += sgn_value;
@@ -3273,9 +3199,9 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
 
             case OPCODE_LDW:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                sgn_value = xvm_instr_get_sgn_value18(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                sgn_value = _xvm_instr_get_sgn_value18(instr);
 
                 cbyte_mem_addr = (const byte_t*)reg.i[reg1];
                 cbyte_mem_addr += sgn_value;
@@ -3288,9 +3214,9 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
 
             case OPCODE_STW:
             {
-                reg0 = xvm_instr_get_reg0(instr);
-                reg1 = xvm_instr_get_reg1(instr);
-                sgn_value = xvm_instr_get_sgn_value18(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                sgn_value = _xvm_instr_get_sgn_value18(instr);
 
                 byte_mem_addr = (byte_t*)reg.i[reg1];
                 byte_mem_addr += sgn_value;
@@ -3301,7 +3227,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             }
             break;
 
-            /* --- opcode_special --- */
+            /* --- special opcodes --- */
 
             case OPCODE_STOP:
                 return EXITCODE_SUCCESS;
@@ -3310,8 +3236,8 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             {
                 // Get result size (extra_value) and argument size (unsgn_value)
                 // These sizes are in words (i.e. 4 bytes)
-                extra_value = xvm_instr_get_extra_value8(instr);
-                unsgn_value = xvm_instr_get_value18(instr);
+                extra_value = _xvm_instr_get_extra_value8(instr);
+                unsgn_value = _xvm_instr_get_value18(instr);
 
                 stack_word_t* stack_frame_ptr = REG_TO_STACK_PTR(reg_lb);
 
@@ -3333,14 +3259,14 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
 
             case OPCODE_PUSHC:
             {
-                sgn_value = xvm_instr_get_sgn_value26(instr);
+                sgn_value = _xvm_instr_get_sgn_value26(instr);
                 xvm_stack_push(stack, reg_sp, sgn_value);
             }
             break;
 
             case OPCODE_INVK:
             {
-                unsgn_value = xvm_instr_get_value26(instr);
+                unsgn_value = _xvm_instr_get_value26(instr);
                 if (unsgn_value < byte_code->num_invoke_idents)
                 {
                     // Invoke bounded procedure
@@ -3892,7 +3818,7 @@ int main(int argc, char* argv[])
     xvm_stack_debug_float(&stack, 0, 10);
     #endif
 
-    xvm_bytecode_write_to_file(&byte_code, program_filename, XBC_FORMAT_VERSION_1_03);
+    xvm_bytecode_write_to_file(&byte_code, program_filename, XBC_FORMAT_VERSION_1_13);
 
     xvm_stack_free(&stack);
     xvm_bytecode_free(&byte_code);
