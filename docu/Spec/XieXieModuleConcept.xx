@@ -1,0 +1,96 @@
+
+int[] list := { 1, 2, 3 }
+
+Buffer buffer
+buffer.resize(list.sizeInBytes())
+buffer.copy(list.pointer(), list.sizeInBytes())
+
+module GL {
+	
+	const GL_TEXTURE_1D		:= 1
+	const GL_TEXTURE_2D		:= 2
+	
+	const GL_RGB			:= 1
+	const GL_RGBA			:= 2
+	
+	const GL_UNSIGNED_BYTE	:= 1
+	const GL_FLOAT			:= 2
+	
+	static void glTexImage2D(int target, )
+	
+}
+
+module ImageFileHandler {
+	
+	static bool readImage(String filename)
+	static void closeImage()
+	
+	static int width()
+	static int height()
+	static int components()
+	static int pointer()
+	
+}
+
+class Image {
+	
+public:
+	
+	static Image read(String filename) {
+		if ImageFileHandler.readImage(filename) {
+			var image := new Image()
+			
+			image.resize(ImageFileHandler.width(), ImageFileHandler.height(), ImageFileHandler.components())
+			image.buffer.copy(ImageFileHandler.pointer(), image.sizeInBytes())
+			
+			return image
+		} else {
+			return null
+		}
+	}
+	
+	void resize(int width, int height, int components) {
+		this.width		:= width
+		this.height		:= height
+		this.components	:= components
+		buffer.resize(sizeInBytes())
+	}
+	
+	int getWidth() {
+		return width
+	}
+	
+	int getHeight() {
+		return height
+	}
+	
+	int getComponents() {
+		return components
+	}
+	
+	Buffer getBuffer() {
+		return buffer
+	}
+	
+	int sizeInBytes() {
+		return width*height*components
+	}
+	
+private:
+	
+	int width, height, components
+	Buffer buffer
+	
+}
+
+var image := Image.read("image.png")
+
+GL.glTexImage2D(
+	GL.GL_TEXTURE_2D,
+	image.getWidth(),
+	image.getHeight(),
+	image.getComponents(),
+	GL.GL_UNSIGNED_BYTE,
+	image.getBuffer().pointer()
+)
+
