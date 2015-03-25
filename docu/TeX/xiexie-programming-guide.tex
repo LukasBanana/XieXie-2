@@ -1118,6 +1118,8 @@ are all `real' pointers to the memory in your operating system.
 Each instruction stores its mnemonic (Greek `memory'$\equalhat$instruction identifier) in the first 6 bits.
 This provides a maximum of 64 instructions. However, only 52 mnemonics are currently in use.
 
+\clearpage % !!!
+
 {\footnotesize
 \begin{center}
 \begin{tabular}[ht]{
@@ -1125,70 +1127,151 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 	| p{0.065 \textwidth} | p{0.235 \textwidth} | p{0.2 \textwidth} |
 }
 	\hline
-	\multicolumn{7}{|c|}{\texttt{3-Register OpCodes}} \\
+	\multicolumn{7}{|c|}{\texttt{3-Register OpCodes (00....)}} \\
 	\hline \hline
 	
 	\multirow{2}{*}{\texttt{Mnemonic}} & \texttt{OpCode} & \texttt{Dest.} & \texttt{LSource} & \texttt{RSource} &
 		\texttt{Unused} & \multirow{2}{*}{\texttt{Description}} \\
-	%\hline
 	& \texttt{31.......26} & \texttt{25...22} & \texttt{21...18} & \texttt{17...14} &
 		\texttt{13........................0} & \\
 	\hline
 	
-	\texttt{AND} & \texttt{0 0 0 0 0 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{AND} & \texttt{0 0 0 0 0 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise AND. \\
 	\hline
 	
-	\texttt{OR} & \texttt{0 0 0 0 1 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{OR} & \texttt{0 0 0 0 1 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise OR. \\
 	\hline
 	
-	\texttt{XOR} & \texttt{0 0 0 0 1 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{XOR} & \texttt{0 0 0 0 1 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise XOR. \\
 	\hline
 	
-	\texttt{ADD} & \texttt{0 0 0 1 0 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{ADD} & \texttt{0 0 0 1 0 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer addition. \\
 	\hline
 	
-	\texttt{SUB} & \texttt{0 0 0 1 0 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{SUB} & \texttt{0 0 0 1 0 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer subtraction. \\
 	\hline
 	
-	\texttt{MUL} & \texttt{0 0 0 1 1 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{MUL} & \texttt{0 0 0 1 1 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer multiplication. \\
 	\hline
 	
-	\texttt{DIV} & \texttt{0 0 0 1 1 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{DIV} & \texttt{0 0 0 1 1 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer division. \\
 	\hline
 	
-	\texttt{MOD} & \texttt{0 0 1 0 0 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{MOD} & \texttt{0 0 1 0 0 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer modulo. \\
 	\hline
 	
-	\texttt{SLL} & \texttt{0 0 1 0 0 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{SLL} & \texttt{0 0 1 0 0 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Shift logical left. \\
 	\hline
 	
-	\texttt{SLR} & \texttt{0 0 1 0 1 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{SLR} & \texttt{0 0 1 0 1 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Shift logical right. \\
 	\hline
 	
-	\texttt{ADDF} & \texttt{0 0 1 0 1 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{ADDF} & \texttt{0 0 1 0 1 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float addition. \\
 	\hline
 	
-	\texttt{SUBF} & \texttt{0 0 1 1 0 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{SUBF} & \texttt{0 0 1 1 0 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float subtraction. \\
 	\hline
 	
-	\texttt{MULF} & \texttt{0 0 1 1 0 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{MULF} & \texttt{0 0 1 1 0 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float multiplication. \\
 	\hline
 	
-	\texttt{DIVF} & \texttt{0 0 1 1 1 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+	\texttt{DIVF} & \texttt{0 0 1 1 1 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float division. \\
+	\hline
+\end{tabular}
+\end{center}
+}
+
+{\footnotesize
+\begin{center}
+\begin{tabular}[ht]{
+	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.065 \textwidth} | p{0.065 \textwidth}
+	| p{0.305 \textwidth} | p{0.22 \textwidth} |
+}
+	\hline
+	\multicolumn{6}{|c|}{\texttt{2-Register OpCodes (01....)}} \\
+	\hline \hline
+	
+	\multirow{2}{*}{\texttt{Mnemonic}} & \texttt{OpCode} & \texttt{Dest.} & \texttt{Source} &
+		\texttt{Unused or Value} & \multirow{2}{*}{\texttt{Description}} \\
+	& \texttt{31.......26} & \texttt{25...22} & \texttt{21...18} & \texttt{17................................0} & \\
+	\hline
+	
+	\texttt{MOV} & \texttt{0 1 0 0 0 0} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise AND. \\
+	\hline
+	
+	\texttt{NOT} & \texttt{0 1 0 0 0 1} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise OR. \\
+	\hline
+	
+	\texttt{FTI} & \texttt{0 1 0 0 1 0} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise XOR. \\
+	\hline
+	
+	\texttt{ITF} & \texttt{0 1 0 0 1 1} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer addition. \\
+	\hline
+	
+	\texttt{AND} & \texttt{0 1 0 1 0 0} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{V V V V V V V V V V V V V V V V V V} & Integer subtraction. \\
+	\hline
+	
+	\texttt{OR} & \texttt{0 1 0 1 0 1} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{V V V V V V V V V V V V V V V V V V} & Integer multiplication. \\
+	\hline
+	
+	\texttt{XOR} & \texttt{0 1 0 1 1 0} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{V V V V V V V V V V V V V V V V V V} & Integer division. \\
+	\hline
+	
+	\texttt{ADD} & \texttt{0 1 0 1 1 1} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{V V V V V V V V V V V V V V V V V V} & Integer modulo. \\
+	\hline
+	
+	\texttt{SUB} & \texttt{0 1 1 0 0 0} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{V V V V V V V V V V V V V V V V V V} & Shift logical left. \\
+	\hline
+	
+	\texttt{MUL} & \texttt{0 1 1 0 0 1} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{V V V V V V V V V V V V V V V V V V} & Shift logical right. \\
+	\hline
+	
+	\texttt{DIV} & \texttt{0 1 1 0 1 0} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{V V V V V V V V V V V V V V V V V V} & Float addition. \\
+	\hline
+	
+	\texttt{MOD} & \texttt{0 1 1 0 1 1} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{V V V V V V V V V V V V V V V V V V} & Float subtraction. \\
+	\hline
+	
+	\texttt{SLL} & \texttt{0 1 1 1 0 0} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{V V V V V V V V V V V V V V V V V V} & Float multiplication. \\
+	\hline
+	
+	\texttt{SLR} & \texttt{0 1 1 1 0 1} & \texttt{D D D D} & \texttt{S S S S} &
+		\texttt{V V V V V V V V V V V V V V V V V V} & Float division. \\
+	\hline
+	
+	\texttt{CMP} & \texttt{0 1 1 1 1 0} & \texttt{X X X X} & \texttt{Y Y Y Y} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float division. \\
+	\hline
+	
+	\texttt{CMPF} & \texttt{0 1 1 1 1 1} & \texttt{X X X X} & \texttt{Y Y Y Y} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float division. \\
 	\hline
 \end{tabular}
 \end{center}
