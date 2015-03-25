@@ -25,6 +25,7 @@
 \usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{scalerel,amssymb}
 
 \geometry{
 	a4paper,
@@ -79,6 +80,19 @@
 \def\notimpl{\textcolor{weakRed}{not yet implemented}}
 \def\windows{\textsc{Windows}\xspace}
 \def\linux{\textsc{GNU/Linux}\xspace}
+
+\newcommand\equalhat{%
+	\let\savearraystretch\arraystretch
+	\renewcommand\arraystretch{0.3}
+	\begin{array}{c}
+	\stretchto{
+		\scalerel*[\widthof{=}]{\wedge}
+		{\rule{1ex}{3ex}}%
+	}{0.5ex}\\ 
+	=%
+	\end{array}
+	\let\arraystretch\savearraystretch
+}
 
 
 %----------------------------------------------------------------------------------------
@@ -1049,9 +1063,143 @@ The \textsc{\xiexie Virtual Machine} (XVM) is a separated program (named \xvm), 
 \section{Executing Programs}
 
 To execute (or run) a virtual program, just enter the filename of an \texttt{*.xbc} file into the \xvm:
-\begin{lstlisting}
-xvm HelloWorld.xbc
-\end{lstlisting}
+\begin{quote}
+\texttt{xvm HelloWorld.xbc}
+\end{quote}
+
+
+%----------------------------------------------------------------------------------------
+%	LOW-LEVEL
+%----------------------------------------------------------------------------------------
+
+\part{Low-Level Programming}
+
+
+%----------------------------------------------------------------------------------------
+%	VIRTUAL ASSEMBLER
+%----------------------------------------------------------------------------------------
+
+\chapter{Virtual Assembler}
+
+The \xiexie Virtual Assembler (XASM) is the low level language which is used as interface to the \xvm.
+It's a very low level language, with similarities to ARM$^\text{\scriptsize\textregistered}$ Assembler.
+
+
+%----------------------------------------------------------------------------------------
+%	REGISTERS
+%----------------------------------------------------------------------------------------
+
+\section{Registers}
+
+The \xvm is a register machine, i.e. it uses registers as operands for its instructions instead of the stack.
+This commonly increases performance but is a little more tricky to use, when you run out of registers.
+Each register index inside an instruction is stored with 4 bits, thus there are 16 registers and this is the list:
+\begin{enumerate}
+	\item \texttt{\$r0} \xspace General Purpose Register 0. \\ \vdots
+	\addtocounter{enumi}{8}
+	\item \texttt{\$r9} \xspace General Purpose Register 9.
+	\item \texttt{\$tr} \xspace Temporary Register.
+	\item \texttt{\$gp} \xspace Global Pointer.
+	\item \texttt{\$cf} \xspace Conditional Flag.
+	\item \texttt{\$lb} \xspace Local Base Pointer.
+	\item \texttt{\$sp} \xspace Stack Pointer.
+	\item \texttt{\$pc} \xspace Program Counter.
+\end{enumerate}
+All pointer registers and the program counter (i.e. \texttt{\$gp}, \texttt{\$lb}, \texttt{\$sp}, and \texttt{\$pc})
+are all `real' pointers to the memory in your operating system. 
+
+
+%----------------------------------------------------------------------------------------
+%	INSTRUCTION SET
+%----------------------------------------------------------------------------------------
+
+\section{Instruction Set}
+
+Each instruction stores its mnemonic (Greek `memory'$\equalhat$instruction identifier) in the first 6 bits.
+This provides a maximum of 64 instructions. However, only 52 mnemonics are currently in use.
+
+{\footnotesize
+\begin{center}
+\begin{tabular}[ht]{
+	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.065 \textwidth} | p{0.065 \textwidth}
+	| p{0.065 \textwidth} | p{0.235 \textwidth} | p{0.2 \textwidth} |
+}
+	\hline
+	\multicolumn{7}{|c|}{\texttt{3-Register OpCodes}} \\
+	\hline \hline
+	
+	\multirow{2}{*}{\texttt{Mnemonic}} & \texttt{OpCode} & \texttt{Dest.} & \texttt{LSource} & \texttt{RSource} &
+		\texttt{Unused} & \multirow{2}{*}{\texttt{Description}} \\
+	%\hline
+	& \texttt{31.......26} & \texttt{25...22} & \texttt{21...18} & \texttt{17...14} &
+		\texttt{13........................0} & \\
+	\hline
+	
+	\texttt{AND} & \texttt{0 0 0 0 0 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise AND. \\
+	\hline
+	
+	\texttt{OR} & \texttt{0 0 0 0 1 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise OR. \\
+	\hline
+	
+	\texttt{XOR} & \texttt{0 0 0 0 1 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise XOR. \\
+	\hline
+	
+	\texttt{ADD} & \texttt{0 0 0 1 0 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer addition. \\
+	\hline
+	
+	\texttt{SUB} & \texttt{0 0 0 1 0 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer subtraction. \\
+	\hline
+	
+	\texttt{MUL} & \texttt{0 0 0 1 1 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer multiplication. \\
+	\hline
+	
+	\texttt{DIV} & \texttt{0 0 0 1 1 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer division. \\
+	\hline
+	
+	\texttt{MOD} & \texttt{0 0 1 0 0 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer modulo. \\
+	\hline
+	
+	\texttt{SLL} & \texttt{0 0 1 0 0 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Shift logical left. \\
+	\hline
+	
+	\texttt{SLR} & \texttt{0 0 1 0 1 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Shift logical right. \\
+	\hline
+	
+	\texttt{ADDF} & \texttt{0 0 1 0 1 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float addition. \\
+	\hline
+	
+	\texttt{SUBF} & \texttt{0 0 1 1 0 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float subtraction. \\
+	\hline
+	
+	\texttt{MULF} & \texttt{0 0 1 1 0 1} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float multiplication. \\
+	\hline
+	
+	\texttt{DIVF} & \texttt{0 0 1 1 1 0} & \texttt{D D D D} & \texttt{L L L L} &  \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float division. \\
+	\hline
+\end{tabular}
+\end{center}
+}
+
+
+%----------------------------------------------------------------------------------------
+%	CALLING CONVENTION
+%----------------------------------------------------------------------------------------
+
+\section{Calling Convention}
 
 
 
