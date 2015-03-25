@@ -1137,59 +1137,59 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 	\hline
 	
 	\texttt{AND} & \texttt{0 0 0 0 0 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise AND. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise AND (D := L \& R). \\
 	\hline
 	
 	\texttt{OR} & \texttt{0 0 0 0 1 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise OR. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise OR (D := L | R). \\
 	\hline
 	
 	\texttt{XOR} & \texttt{0 0 0 0 1 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise XOR. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise XOR (D := L ${\mathchar"5E}$ R). \\
 	\hline
 	
 	\texttt{ADD} & \texttt{0 0 0 1 0 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer addition. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer add. (D := L + R). \\
 	\hline
 	
 	\texttt{SUB} & \texttt{0 0 0 1 0 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer subtraction. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer sub. (D := L - R). \\
 	\hline
 	
 	\texttt{MUL} & \texttt{0 0 0 1 1 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer multiplication. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer mul. (D := L $\times$ R). \\
 	\hline
 	
 	\texttt{DIV} & \texttt{0 0 0 1 1 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer division. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer div. (D := L $\div$ R). \\
 	\hline
 	
 	\texttt{MOD} & \texttt{0 0 1 0 0 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer modulo. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Modulo (D := L \% R). \\
 	\hline
 	
 	\texttt{SLL} & \texttt{0 0 1 0 0 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Shift logical left. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Shift left (D := L << R). \\
 	\hline
 	
 	\texttt{SLR} & \texttt{0 0 1 0 1 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Shift logical right. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Shift right (D := L >> R). \\
 	\hline
 	
 	\texttt{ADDF} & \texttt{0 0 1 0 1 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float addition. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float add. (D := L + R). \\
 	\hline
 	
 	\texttt{SUBF} & \texttt{0 0 1 1 0 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float subtraction. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float sub. (D := L - R). \\
 	\hline
 	
 	\texttt{MULF} & \texttt{0 0 1 1 0 1} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float multiplication. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float mul. (D := L $\times$ R). \\
 	\hline
 	
 	\texttt{DIVF} & \texttt{0 0 1 1 1 0} & \texttt{D D D D} & \texttt{L L L L} & \texttt{R R R R} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float division. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float div. (D := L $\div$ R). \\
 	\hline
 \end{tabular}
 \end{center}
@@ -1211,67 +1211,67 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 	\hline
 	
 	\texttt{MOV} & \texttt{0 1 0 0 0 0} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise AND. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Move (D := S). \\
 	\hline
 	
 	\texttt{NOT} & \texttt{0 1 0 0 0 1} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise OR. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise NOT (D := \textasciitilde S). \\
 	\hline
 	
 	\texttt{FTI} & \texttt{0 1 0 0 1 0} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Bitwise XOR. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float to integer (D := (int)S). \\
 	\hline
 	
 	\texttt{ITF} & \texttt{0 1 0 0 1 1} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer addition. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer to float (D := (float)S). \\
 	\hline
 	
 	\texttt{AND} & \texttt{0 1 0 1 0 0} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{V V V V V V V V V V V V V V V V V V} & Integer subtraction. \\
+		\texttt{V V V V V V V V V V V V V V V V V V} & Bitwise AND (D := S \& V). \\
 	\hline
 	
 	\texttt{OR} & \texttt{0 1 0 1 0 1} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{V V V V V V V V V V V V V V V V V V} & Integer multiplication. \\
+		\texttt{V V V V V V V V V V V V V V V V V V} & Bitwise OR (D := S | V). \\
 	\hline
 	
 	\texttt{XOR} & \texttt{0 1 0 1 1 0} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{V V V V V V V V V V V V V V V V V V} & Integer division. \\
+		\texttt{V V V V V V V V V V V V V V V V V V} & Bitwise XOR (D := S ${\mathchar"5E}$ V). \\
 	\hline
 	
 	\texttt{ADD} & \texttt{0 1 0 1 1 1} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{V V V V V V V V V V V V V V V V V V} & Integer modulo. \\
+		\texttt{V V V V V V V V V V V V V V V V V V} & Modulo (D := S \% V). \\
 	\hline
 	
 	\texttt{SUB} & \texttt{0 1 1 0 0 0} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{V V V V V V V V V V V V V V V V V V} & Shift logical left. \\
+		\texttt{V V V V V V V V V V V V V V V V V V} & Shift left (D := S << V). \\
 	\hline
 	
 	\texttt{MUL} & \texttt{0 1 1 0 0 1} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{V V V V V V V V V V V V V V V V V V} & Shift logical right. \\
+		\texttt{V V V V V V V V V V V V V V V V V V} & Shift right (D := S >> V). \\
 	\hline
 	
 	\texttt{DIV} & \texttt{0 1 1 0 1 0} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{V V V V V V V V V V V V V V V V V V} & Float addition. \\
+		\texttt{V V V V V V V V V V V V V V V V V V} & Integer add. (D := S + V). \\
 	\hline
 	
 	\texttt{MOD} & \texttt{0 1 1 0 1 1} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{V V V V V V V V V V V V V V V V V V} & Float subtraction. \\
+		\texttt{V V V V V V V V V V V V V V V V V V} & Integer sub. (D := S - V). \\
 	\hline
 	
 	\texttt{SLL} & \texttt{0 1 1 1 0 0} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{V V V V V V V V V V V V V V V V V V} & Float multiplication. \\
+		\texttt{V V V V V V V V V V V V V V V V V V} & Integer mul. (D := S $\times$ V). \\
 	\hline
 	
 	\texttt{SLR} & \texttt{0 1 1 1 0 1} & \texttt{D D D D} & \texttt{S S S S} &
-		\texttt{V V V V V V V V V V V V V V V V V V} & Float division. \\
+		\texttt{V V V V V V V V V V V V V V V V V V} & Integer div. (D := S $\div$ V). \\
 	\hline
 	
 	\texttt{CMP} & \texttt{0 1 1 1 1 0} & \texttt{X X X X} & \texttt{Y Y Y Y} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float division. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Integer comparison ($\rightarrow$ \texttt{\$cf}). \\
 	\hline
 	
 	\texttt{CMPF} & \texttt{0 1 1 1 1 1} & \texttt{X X X X} & \texttt{Y Y Y Y} &
-		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float division. \\
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float comparison ($\rightarrow$ \texttt{\$cf}). \\
 	\hline
 \end{tabular}
 \end{center}
