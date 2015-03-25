@@ -17,8 +17,8 @@
 
 /* ----- Compilation configuration ----- */
 
-//! Removes the XVM test suite (removes the "main" function)
-//#define _REMOVE_XVM_TESTSUITE_
+//! Disables the shell (and the "main" function)
+//#define _DISABLE_SHELL_
 
 //! Makes all functions non-static
 //#define _NON_STATIC_FUNCTIONS_
@@ -893,11 +893,12 @@ STATIC const char* xvm_instr_get_mnemonic(const opcode_t opcode)
     return "";
 }
 
+#ifdef _ENABLE_RUNTIME_DEBUGGER_
+
 /**
 Prints debug information for the specified instruction
 with the current state of the specified register set.
 */
-//!TODO! -> UPDATE THIS !!!
 STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, const regi_t* reg_ptr)
 {
     const opcode_t opcode = _xvm_instr_get_opcode(instr);
@@ -908,7 +909,32 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
     printf("%*.8i  %s  ", 8, (instr_index >> 2), xvm_instr_get_mnemonic(opcode));
     #endif
 
-    if (opcode == OPCODE_CMP || opcode == OPCODE_CMPF)
+    if (opcode >= OPCODE_AND3 && opcode <= OPCODE_DIVF)
+    {
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
+        reg_t reg1 = _xvm_instr_get_reg1(instr);
+        reg_t reg2 = _xvm_instr_get_reg2(instr);
+
+        const char* reg0name = xvm_register_get_name(reg0);
+        const char* reg1name = xvm_register_get_name(reg1);
+        const char* reg2name = xvm_register_get_name(reg2);
+
+        if (opcode >= OPCODE_ADDF)
+        {
+            printf(
+                "%s, %s, %s  (%s = %f)",
+                reg0name, reg1name, reg2name, reg0name, INT_TO_FLT_REINTERPRET(reg_ptr[reg0])
+            );
+        }
+        else
+        {
+            printf(
+                "%s, %s, %s  (%s = %i)",
+                reg0name, reg1name, reg2name, reg0name, reg_ptr[reg0]
+            );
+        }
+    }
+    else if (opcode >= OPCODE_MOV2 && opcode <= OPCODE_ITF)
     {
         reg_t reg0 = _xvm_instr_get_reg0(instr);
         reg_t reg1 = _xvm_instr_get_reg1(instr);
@@ -916,12 +942,59 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
         const char* reg0name = xvm_register_get_name(reg0);
         const char* reg1name = xvm_register_get_name(reg1);
 
-        printf("%s, %s    ($cf = %i)", reg0name, reg1name, reg_ptr[REG_CF]);
+        printf("%s, %s       (%s = %i)", reg0name, reg1name, reg0name, reg_ptr[reg0]);
+    }
+    else if (opcode >= OPCODE_AND2 && opcode <= OPCODE_SLR2)
+    {
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
+        reg_t reg1 = _xvm_instr_get_reg1(instr);
+
+        const char* reg0name = xvm_register_get_name(reg0);
+        const char* reg1name = xvm_register_get_name(reg1);
+
+        int value = _xvm_instr_get_sgn_value18(instr);
+
+        printf("%s, %s, %i    (%s = %i)", reg0name, reg1name, value, reg0name, reg_ptr[reg0]);
+    }
+    if (opcode == OPCODE_CMP)
+    {
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
+        reg_t reg1 = _xvm_instr_get_reg1(instr);
+
+        const char* reg0name = xvm_register_get_name(reg0);
+        const char* reg1name = xvm_register_get_name(reg1);
+
+        printf("%s, %s       ($cf = %i)", reg0name, reg1name, reg_ptr[reg0] - reg_ptr[reg1]);
+    }
+    else if (opcode == OPCODE_CMPF)
+    {
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
+        reg_t reg1 = _xvm_instr_get_reg1(instr);
+
+        const char* reg0name = xvm_register_get_name(reg0);
+        const char* reg1name = xvm_register_get_name(reg1);
+
+        float lhs = INT_TO_FLT_REINTERPRET(reg_ptr[reg0]);
+        float rhs = INT_TO_FLT_REINTERPRET(reg_ptr[reg1]);
+
+        printf("%s, %s       ($cf = %i)", reg0name, reg1name, xvm_flt2int_signum(lhs - rhs));
     }
     else if (opcode >= OPCODE_JMP && opcode <= OPCODE_JLE)
     {
         int addr_offset = _xvm_instr_get_sgn_value22(instr);
         printf("%i", addr_offset);
+    }
+    else if (opcode >= OPCODE_LDB && opcode <= OPCODE_STW)
+    {
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
+        reg_t reg1 = _xvm_instr_get_reg1(instr);
+
+        const char* reg0name = xvm_register_get_name(reg0);
+        const char* reg1name = xvm_register_get_name(reg1);
+
+        int offset = _xvm_instr_get_sgn_value18(instr);
+
+        printf("%s, (%s), %i  (%s = %i)", reg0name, reg1name, offset, reg0name, reg_ptr[reg0]);
     }
     else if (opcode == OPCODE_CALL)
     {
@@ -937,42 +1010,45 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
         else
             printf("%i", addr_offset);
     }
-    else if (opcode >= OPCODE_MOV2 && opcode <= OPCODE_ITF)
+    else if (opcode >= OPCODE_PUSH && opcode <= OPCODE_DEC)
     {
         reg_t reg0 = _xvm_instr_get_reg0(instr);
-        reg_t reg1 = _xvm_instr_get_reg1(instr);
 
         const char* reg0name = xvm_register_get_name(reg0);
-        const char* reg1name = xvm_register_get_name(reg1);
 
-        regi_t value = reg_ptr[reg0];
-
-        printf("%s, %s    (%s = %i)", reg0name, reg1name, reg0name, value);
+        printf("%s            (%s = %i)", reg0name, reg0name, reg_ptr[reg0]);
     }
-    else if ( ( opcode >= OPCODE_MOV1 && opcode <= OPCODE_DEC  ) ||
-              ( opcode >= OPCODE_LDB && opcode <= OPCODE_STW ) )
+    else if (opcode == OPCODE_MOV1)
     {
         reg_t reg0 = _xvm_instr_get_reg0(instr);
-        regi_t value = reg_ptr[reg0];
 
         const char* reg0name = xvm_register_get_name(reg0);
+        int value = _xvm_instr_get_sgn_value22(instr);
 
-        printf("%s         (%s = %i)", reg0name, reg0name, value);
+        printf("%s, %i         (%s = %i)", reg0name, value, reg0name, reg_ptr[reg0]);
     }
-    else if (opcode >= OPCODE_ADDF && opcode <= OPCODE_DIVF)
+    else if (opcode == OPCODE_LDA)
     {
         reg_t reg0 = _xvm_instr_get_reg0(instr);
-        regi_t value = reg_ptr[reg0];
 
         const char* reg0name = xvm_register_get_name(reg0);
 
-        printf("%s         (%s = %f)", reg0name, reg0name, INT_TO_FLT_REINTERPRET(value));
+        printf("%s            (%s = %i)", reg0name, reg0name, reg_ptr[reg0]);
+    }
+    else if (opcode == OPCODE_RET)
+    {
+        unsigned int extra_value = _xvm_instr_get_extra_value8(instr);
+        unsigned int value = _xvm_instr_get_value18(instr);
+
+        printf("(%u) %u", extra_value, value);
     }
     else if (opcode == OPCODE_PUSHC)
         printf("%i", _xvm_instr_get_sgn_value26(instr));
 
     printf("\n");
 }
+
+#endif
 
 
 /* ----- Instruction constructors ----- */
@@ -3341,9 +3417,11 @@ STATIC xvm_exit_codes xvm_execute_program_entry_point(
 }
 
 
+#ifndef _DISABLE_SHELL_
+
 /* ----- Shell ----- */
 
-STATIC void shell_print_help()
+STATIC void _xvm_shell_print_help()
 {
     xvm_log_println("usage:");
     xvm_log_println("  xvm [options] FILE         Executes the specified virtual program");
@@ -3355,7 +3433,7 @@ STATIC void shell_print_help()
     xvm_log_println("  -mod, --load-module FILE   Loads the module, specified by FILE");
 }
 
-STATIC void shell_print_version()
+STATIC void _xvm_shell_print_version()
 {
     #ifdef _ENABLE_RUNTIME_DEBUGGER_
     xvm_log_println("XieXie 2.0 (Rev.1) VirtualMachine (XVM) with RuntimeDebugger (RTD)");
@@ -3370,7 +3448,7 @@ STATIC void shell_print_version()
     xvm_log_println("of the BSD license.  See the LICENSE file for details.");
 }
 
-STATIC int shell_parse_args(int argc, char* argv[])
+STATIC int _xvm_shell_parse_args(int argc, char* argv[])
 {
     // Configuration memory
     int verbose = 0;
@@ -3402,9 +3480,9 @@ STATIC int shell_parse_args(int argc, char* argv[])
 
         // Parse current argument
         if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0 || strcmp(arg, "help") == 0)
-            shell_print_help();
+            _xvm_shell_print_help();
         else if (strcmp(arg, "--version") == 0)
-            shell_print_version();
+            _xvm_shell_print_version();
         else if (strcmp(arg, "--verbose") == 0)
             verbose = 1;
         else if (strcmp(arg, "-mod") == 0 || strcmp(arg, "--load-module") == 0)
@@ -3510,328 +3588,21 @@ STATIC int shell_parse_args(int argc, char* argv[])
     return 1;
 }
 
+// Main function for the shell
+int main(int argc, char* argv[])
+{
+    // Ignore program path argument, then parse all other arguments
+    _xvm_shell_parse_args(--argc, ++argv);
+    return 0;
+}
+
+#endif // /_DISABLE_SHELL_
+
 
 // Undefine internal macros
 #undef INLINE
 #undef STATIC
 
-
-#ifndef _REMOVE_XVM_TESTSUITE_
-
-/* ----- Main ----- */
-
-void TestInvokeExtern(xvm_env env)
-{
-    XVM_PARAM_INT(x, 1);
-
-    printf("<< Invocation Test Procedure (%i) >>\n", x);
-}
-
-int main(int argc, char* argv[])
-{
-    // Ignore program path argument, then parse all other arguments
-    shell_parse_args(--argc, ++argv);
-
-    #if ( defined(_DEBUG) || 0 ) && 0
-
-    // Create a virtual stack
-    xvm_stack stack;
-    xvm_stack_init(&stack);
-    xvm_stack_create(&stack, 256);
-    //xvm_stack_clear(&stack, 0xdeadbeef);
-
-    // Create the byte code
-    xvm_bytecode byte_code;
-    xvm_bytecode_init(&byte_code);
-    xvm_bytecode_create_instructions(&byte_code, 50);
-    xvm_bytecode_create_invocations(&byte_code, 1);
-
-    byte_code.invoke_idents[0] = xvm_string_create_from("TestInvokeExtern");
-
-    const char* program_filename = "test_byte_code.xbc";
-
-    size_t i = 0;
-    #define ADD_INSTR(INSTR) byte_code.instructions[i++] = INSTR;
-    #define FINISH_INSTR byte_code.num_instructions = i;
-
-    #define TEST 1
-
-    #if TEST == 1 //TEST1 (loop)
-
-    /*
-    // Counts from 0 to n
-    for int i := 0 ; i < 10 ; i++ {
-        Stack.Push(i)
-    }
-    */
-
-    /*
-    00          mov     $r0, 0
-    01          mov     $r1, 10
-    02  l_for:  cmp     $r0, $r1
-    03          jge     l_end               ; jge ($pc) 10
-    04          push    42                  ; call    Intr.Time
-    05          invk    TestInvokeExtern    ; call    Intr.PrintInt
-    06          lda     $r2, @str0
-    07          push    $r2
-    08          call    Intr.PrintLn
-    09          push    1000
-    10          call    Intr.Sleep
-    11          inc     $r0
-    12          jmp     l_for               ; jmp ($pc) -10
-    13  l_end:  stop
-    14  str0:   .ascii  "\nHello, World!"
-    */
-
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_MOV1,   REG_R0, 0                     ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_MOV1,   REG_R1, 10                    ))
-    ADD_INSTR(xvm_instr_make_reg2       (OPCODE_CMP,    REG_R0, REG_R1                ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JGE,    REG_PC, 10                    ))
-  //ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL,   REG_PC, INTR_TIME             ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_PUSHC,  42                            ))
-  //ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL,   REG_PC, INTR_PRINT_INT        ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_INVK,   0                             ))
-    ADD_INSTR(xvm_instr_make_mem        (OPCODE_LDA,    REG_R2, 14                    ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH,   REG_R2, 0                     ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL,   REG_PC, INTR_PRINT_LN         ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_PUSHC,  100                           ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL,   REG_PC, INTR_SLEEP            ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_INC,    REG_R0, 0                     ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_JMP,    REG_PC, (unsigned int)(-10)   ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_STOP,   0                             ))
-
-    size_t tmp = 0;
-    xvm_bytecode_datafield_ascii(byte_code.instructions + i, "\nHello, World!", &tmp);
-    i += tmp;
-
-    program_filename = "hello_world.xbc";
-
-    #elif TEST == 2 //TEST2 (function)
-
-    /*
-    // Computes the first n-th squares: 0, 1, 4, 9, 16 ...
-    int Func(int x) {
-        return x*x
-    }
-    for int i := 0 ; i < 10 ; i++ {
-        Stack.Push(Func(i))
-    }
-    */
-
-    /*
-    00  main:   add sp, 8       ; int i, n
-    01          xor r0, r0      ; i = 0
-    02          mov r1, r0      ; n = 10
-    03  .for0:  cmp r0, r1      ; compare i >= n
-    04          jge .end0       ; if i >= n then goto l_end ; jge (pc) 7
-    05          stw r0 (lb) 0   ; store i
-    06          add r0, 2       ; i += 2
-    07          push r0         ; push i
-    08          call func       ; Stack.Push(func(i)) (actually 'pop i0' after call, but we keep it on stack) ; call (pc) 5
-    09          ldw r0, (lb) 0  ; load i
-    10          inc r0          ; i++
-    11          jmp .for0       ; jmp (pc) -7
-    12  .end0:  stop            ; exit
-    13  func:   ldw r0, (lb) -4 ; load x
-    14          mul r0, r0      ; x *= x
-    15          push r0         ; push x
-    16          ret (1) 1       ; return result ((x*x) = 1 word) and pop arguments (x = 1 word)
-    */
-
-    /*ADD_INSTR(xvm_instr_make_special1   (OPCODE_PUSHC,25                                ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_INVK, TESTPROCID_PRINTINT               ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_SUB1, REG_SP, 4                         ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JMP,  REG_PC, -3                        ))*/
-
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_ADD1, REG_SP, 8                         ))
-    ADD_INSTR(xvm_instr_make_reg2       (OPCODE_XOR2, REG_R0, REG_R0                    ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_MOV1, REG_R1, 20                        ))
-    ADD_INSTR(xvm_instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                    ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JGE,  REG_PC, 8                         ))
-    ADD_INSTR(xvm_instr_make_memoff     (OPCODE_STW,  REG_R0, REG_LB, 0                 ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_ADD1, REG_R0, 2                         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, 5                         ))
-    ADD_INSTR(xvm_instr_make_memoff     (OPCODE_LDW,  REG_R0, REG_LB, 0                 ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_INC,  REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JMP,  REG_PC, -8                        ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_STOP, 0                                 ))
-    ADD_INSTR(xvm_instr_make_memoff     (OPCODE_LDW,  REG_R0, REG_LB, (unsigned int)(-4)))
-    ADD_INSTR(xvm_instr_make_reg2       (OPCODE_MUL2, REG_R0, REG_R0                    ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_special2   (OPCODE_RET,  1, 1                              ))
-
-    #elif TEST == 3 //TEST3 (addresses)
-
-    /*
-    Print(Pow(3, 5))
-    */
-
-    /*
-    00  lda r0, flt_lit_0
-    01  ldw r1, (r0) 0
-    02  ldw r2, (r0) 4
-    03  push r2
-    04  push r1
-    05  call Intr.Pow
-    06  call Intr.PrintFloat
-    07  invk TESTPROCID_HELLO_WORLD
-    08  stop
-    09  flt_lit_0: .float 3.0
-    10  flt_lit_1: .float 5.0
-    */
-
-    float flt_lit0 = 3.0f;
-    float flt_lit1 = 5.0f;
-    
-    ADD_INSTR(xvm_instr_make_mem        (OPCODE_LDA,  REG_R0, 9                 ))
-    ADD_INSTR(xvm_instr_make_memoff     (OPCODE_LDW,  REG_R1, REG_R0, 0         ))
-    ADD_INSTR(xvm_instr_make_memoff     (OPCODE_LDW,  REG_R2, REG_R0, 4         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R2, 0                 ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R1, 0                 ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_POW          ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_FLOAT  ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_INVK, TESTPROCID_HELLO_WORLD    ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_STOP, 0                         ))
-    ADD_INSTR(FLT_TO_INT_REINTERPRET(flt_lit0))
-    ADD_INSTR(FLT_TO_INT_REINTERPRET(flt_lit1))
-
-    #elif TEST == 4 //TEST4 (fibonacci)
-
-    /*
-    int fib(int n) {
-        if n <= 2 {
-            return 1
-        }
-        return fib(n - 1) + fib(n - 2)
-    }
-    int n := Intr.InputInt()
-    while n > 0 {
-        Intr.PrintInt(fib(n))
-        Intr.PrintLn("")
-        n--
-    }
-    */
-
-    /*
-    00          call    Intr.InputInt
-    01          pop     $r0
-    02  .loop:  xor     $r1, $r1
-    03          cmp     $r0, $r1
-    04          jle     ($pc), 11       ; while begin
-    05          push    $r0
-    06          push    $r0             ; fib argument
-    07          call    ($pc), 9
-    08          call    Intr.PrintInt   ; print result
-    09          lda     $r0, 37
-    10          push    $r0
-    11          call    Intr.PrintLn
-    12          pop     $r0
-    13          dec     $r0
-    14          jmp     ($pc), -12      ; while end
-    15  .end:   stop
-    16  fib:    ldw     $r0, ($lb) -4   ; get argument
-    17          mov     $r1, 2
-    18          cmp     $r0, $r1
-    19          jg      .else
-    20          push    1
-    21          ret     (1) 1
-    22  .else:  dec     $r0
-    23          push    $r0             ; push t0 = (n-1)
-    24          push    $r0             ; fib argument (n-1)
-    25          call    fib
-    26          pop     $r0             ; fib result
-    27          pop     $r1             ; pop t0
-    28          dec     $r1
-    29          push    $r0             ; push t1 = result
-    30          push    $r1             ; fib argument (n-2)
-    31          call    fib
-    32          pop     $r0             ; fib result
-    33          pop     $r1             ; pop t1
-    34          add     $r0, $r1
-    35          push    $r0             ; push result
-    36          ret     (1) 1
-    37  str0:   .ascii  ""
-    */
-
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_INPUT_INT            ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_POP,  REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg2       (OPCODE_XOR2, REG_R1, REG_R1                    ))
-    ADD_INSTR(xvm_instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                    ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JLE,  REG_PC, 11                        ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, 9                         )) // call fib
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_INT            )) // call Intr.PrintInt
-    ADD_INSTR(xvm_instr_make_mem        (OPCODE_LDA,  REG_R0, 37                        )) // addr := &str0
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, INTR_PRINT_LN             )) // call Intr.PrintLn
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_POP,  REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_DEC,  REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JMP,  REG_PC, (unsigned int)(-12)       ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_STOP, 0                                 ))
-    ADD_INSTR(xvm_instr_make_memoff     (OPCODE_LDW,  REG_R0, REG_LB, (unsigned int)(-4))) // fib:
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_MOV1, REG_R1, 2                         ))
-    ADD_INSTR(xvm_instr_make_reg2       (OPCODE_CMP,  REG_R0, REG_R1                    ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_JG,   REG_PC, 3                         ))
-    ADD_INSTR(xvm_instr_make_special1   (OPCODE_PUSHC,1                                 ))
-    ADD_INSTR(xvm_instr_make_special2   (OPCODE_RET,  1, 1                              )) // ret (1) 1
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_DEC,  REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, (unsigned int)(-9)        )) // call fib
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_POP,  REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_POP,  REG_R1, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_DEC,  REG_R1, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R1, 0                         ))
-    ADD_INSTR(xvm_instr_make_jump       (OPCODE_CALL, REG_PC, (unsigned int)(-15)       )) // call fib
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_POP,  REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_POP,  REG_R1, 0                         ))
-    ADD_INSTR(xvm_instr_make_reg2       (OPCODE_ADD2, REG_R0, REG_R1                    ))
-    ADD_INSTR(xvm_instr_make_reg1       (OPCODE_PUSH, REG_R0, 0                         ))
-    ADD_INSTR(xvm_instr_make_special2   (OPCODE_RET,  1, 1                              )) // ret (1) 1
-    ADD_INSTR(0)                                                                           // str0: .ascii ""
-
-    program_filename = "fibonacci.xbc";
-
-    #endif
-    
-    FINISH_INSTR
-
-    #undef ADD_INSTR
-    #undef FINISH_INSTR
-
-    // Execute the virtual program
-    xvm_bytecode_bind_invocation(&byte_code, "TestInvokeExtern", TestInvokeExtern);
-
-    const xvm_exit_codes exitCode = xvm_execute_program(&byte_code, &stack);
-
-    if (exitCode != EXITCODE_SUCCESS)
-        printf("\nProgram terminated with error code: %i\n\n", exitCode);
-
-    // Show stack output for the 20th first values
-    printf("\n\n");
-
-    #if 1
-    xvm_log_println("-- Stack content: --");
-    //xvm_stack_debug(&stack, 2, 20);
-    xvm_stack_debug_float(&stack, 0, 10);
-    #endif
-
-    xvm_bytecode_write_to_file(&byte_code, program_filename, XBC_FORMAT_VERSION_1_13);
-
-    xvm_stack_free(&stack);
-    xvm_bytecode_free(&byte_code);
-
-    system("pause");
-
-    #endif
-
-    return 0;
-}
-
-#endif // /_REMOVE_XVM_TESTSUITE_
 
 #ifdef __cplusplus
 }

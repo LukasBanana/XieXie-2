@@ -55,8 +55,7 @@ fib:
 		call fib
 		pop $r0
 		
-		add $sp, $sp, 4
-		stw $r0, ($lb) 0
+		push $r0
 		
 		ldw $r0, ($lb) -4
 		sub $r0, $r0, 2
@@ -65,8 +64,8 @@ fib:
 		call fib
 		pop $r0
 		
-		ldw $r1, ($lb) 0
-		sub $sp, $sp, 4
+		pop $r1
+		
 		add $r0, $r0, $r1
 		
 		push $r0

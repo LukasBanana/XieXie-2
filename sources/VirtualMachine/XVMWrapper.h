@@ -12,8 +12,8 @@
 #include <string>
 #include <vector>
 
-#ifndef _REMOVE_XVM_TESTSUITE_
-#   define _REMOVE_XVM_TESTSUITE_
+#ifndef _DISABLE_SHELL_
+#   define _DISABLE_SHELL_
 #endif
 #include "xvm.c"
 
