@@ -48,24 +48,6 @@
 \definecolor{weakOrange}{rgb}{0.8, 0.5, 0.1}
 \definecolor{weakRed}{rgb}{0.9, 0.1, 0.1}
 
-\lstset{
-	language = C++,
-	basicstyle = \footnotesize\ttfamily,
-	commentstyle = \itshape\color{brightBlueColor},
-	keywordstyle = \bfseries\color{darkBlueColor},
-	stringstyle = \color{red},
-	frame = single,
-	tabsize = 4,
-	numbers=left
-}
-
-\lstset{
-	morekeywords = {
-		var, super, foreach, forever, init, release, and, or, not, null,
-		import, module
-	}
-}
-
 \def\xiexie{\textsc{Xi\`eXie}\xspace}
 \def\xxlang{\xiexie programming language\xspace}
 \def\cpp{\textsc{C++}\xspace}
@@ -93,6 +75,46 @@
 	\end{array}
 	\let\arraystretch\savearraystretch
 }
+
+\newcommand\SetLanguageXX{
+	\lstset{
+		language = C++,
+		basicstyle = \footnotesize\ttfamily,
+		commentstyle = \itshape\color{brightBlueColor},
+		keywordstyle = \bfseries\color{darkBlueColor},
+		stringstyle = \color{red},
+		frame = single,
+		tabsize = 4,
+		numbers=left
+	}
+	\lstset{
+		morekeywords = {
+			var, super, foreach, forever, init, release, and, or, not, null, import, module
+		}
+	}
+}
+
+\newcommand\SetLanguageXASM{
+	\lstset{
+		language = {[Motorola68k]Assembler},
+		basicstyle = \footnotesize\ttfamily,
+		commentstyle = \itshape\color{brightBlueColor},
+		keywordstyle = \bfseries\color{darkBlueColor},
+		stringstyle = \color{red},
+		frame = single,
+		tabsize = 4,
+		numbers=left
+	}
+	\lstset{
+		morekeywords = {
+			MOV, AND, OR, XOR, SLL, SLR, ADD, SUB, MUL, DIV, MOD, ADDF, SUBF, MULF, DIVF, PUSH, POP, STOP,
+			CALL, INVK, JMP, JE, JNE, JG, JL, JGE, JLE, CMP, CMPF, RET, LDB, STB, LDW, STW, LDA, INC, DEC,
+			NOT, ITF, FTI, $r0, $r1, $r2, $r3, $r4, $r5, $r6, $r7, $r8, $r9, $tr, $gp, $sp, $lb, $pc
+		}
+	}
+}
+
+\SetLanguageXX
 
 
 %----------------------------------------------------------------------------------------
@@ -1118,8 +1140,6 @@ are all `real' pointers to the memory in your operating system.
 Each instruction stores its mnemonic (Greek `memory'$\equalhat$instruction identifier) in the first 6 bits.
 This provides a maximum of 64 instructions. However, only 52 mnemonics are currently in use.
 
-\clearpage % !!!
-
 {\footnotesize
 \begin{center}
 \begin{tabular}[ht]{
@@ -1370,8 +1390,6 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 \end{center}
 }
 
-\clearpage % !!!
-
 {\footnotesize
 \begin{center}
 \begin{tabular}[ht]{
@@ -1465,6 +1483,39 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 %----------------------------------------------------------------------------------------
 
 \section{Calling Convention}
+
+In XASM, the calling convention provides that the \textit{callee} removes the procedure arguments from the stack.
+After any procedure call, the \textit{dynamic link} is stored at the beginning of the \textit{stack frame}
+and reserves the first 8 bytes.
+\begin{quote}
+\textbf{dynamic link} \par
+Consists of two words: 32-bit value of the \texttt{\$lb} register \textit{before} the procedure call
+and 32-bit value of the \texttt{\$pc} register \textit{before} the procedure call.
+\end{quote}
+Local variables can be store by increasing the \textit{stack pointer} (\texttt{\$sp}) and load/store instructions at the
+\textit{local base pointer} (\texttt{\$lb}) plus 8 bytes (after the \textit{dynamic link}). Here is an example:
+\SetLanguageXASM
+\begin{lstlisting}
+; void proc() { ... }
+proc:
+  ADD $sp, $sp, 8   ; Allocate memory on the stack for two words (2*4 bytes)
+  MOV $r0, 42       ; Store value 42 in register $r0
+  STW $r0, ($lb) 8  ; Store register $r0 in local scope at first position (after dynamic link)
+  ADD $r0, $r0, 10  ; Increment value of register $r0
+  STW $r0, ($lb) 12 ; Store register $r0 in local scope at second position
+  ...
+\end{lstlisting}
+The arguments for a procedure call are meant to be pushed onto the stack from \textit{right-to-left}.
+In this way the arguments can be accessed from \textit{left-to-right}. Here is an example:
+\begin{lstlisting}
+; int proc(int x, int y) { return x+y }
+proc:
+  LDW $r0, ($lb) -4 ; Fetch first argument (x) from stack
+  LDW $r1, ($lb) -8 ; Fetch second argument (y) from stack
+  ADD $r0, $r0, $r1 ; Calculate x := x + y
+  PUSH $r0          ; Push result onto stack
+  RET (1) 2         ; Return: result size = 1 word, argument size = 2 words
+\end{lstlisting}
 
 
 
