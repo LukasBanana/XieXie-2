@@ -1127,7 +1127,7 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 	| p{0.065 \textwidth} | p{0.235 \textwidth} | p{0.2 \textwidth} |
 }
 	\hline
-	\multicolumn{7}{|c|}{\texttt{3-Register OpCodes (00....)}} \\
+	\multicolumn{7}{|c|}{\texttt{3-Register Instruction OpCodes (00....)}} \\
 	\hline \hline
 	
 	\multirow{2}{*}{\texttt{Mnemonic}} & \texttt{OpCode} & \texttt{Dest.} & \texttt{LSource} & \texttt{RSource} &
@@ -1202,7 +1202,7 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 	| p{0.305 \textwidth} | p{0.22 \textwidth} |
 }
 	\hline
-	\multicolumn{6}{|c|}{\texttt{2-Register OpCodes (01....)}} \\
+	\multicolumn{6}{|c|}{\texttt{2-Register Instruction OpCodes (01....)}} \\
 	\hline \hline
 	
 	\multirow{2}{*}{\texttt{Mnemonic}} & \texttt{OpCode} & \texttt{Dest.} & \texttt{Source} &
@@ -1272,6 +1272,188 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 	
 	\texttt{CMPF} & \texttt{0 1 1 1 1 1} & \texttt{X X X X} & \texttt{Y Y Y Y} &
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float comparison ($\rightarrow$ \texttt{\$cf}). \\
+	\hline
+\end{tabular}
+\end{center}
+}
+
+{\footnotesize
+\begin{center}
+\begin{tabular}[ht]{
+	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.065 \textwidth} | p{0.375 \textwidth} | p{0.24 \textwidth} |
+}
+	\hline
+	\multicolumn{5}{|c|}{\texttt{1-Register Instruction OpCodes (100...)}} \\
+	\hline \hline
+	
+	\multirow{2}{*}{\texttt{Mnemonic}} & \texttt{OpCode} & \texttt{Reg.} &
+		\texttt{Unused, Value, or Offset} & \multirow{2}{*}{\texttt{Description}} \\
+	& \texttt{31.......26} & \texttt{25...22} & \texttt{21........................................0} & \\
+	\hline
+	
+	\texttt{PUSH} & \texttt{1 0 0 0 0 0} & \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Push register onto stack. \\
+	\hline
+	
+	\texttt{POP} & \texttt{1 0 0 0 0 1} & \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Pop register from stack. \\
+	\hline
+	
+	\texttt{INC} & \texttt{1 0 0 0 1 0} & \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Increment integer (D++). \\
+	\hline
+	
+	\texttt{DEC} & \texttt{1 0 0 0 1 1} & \texttt{R R R R} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Decrement integer (D--). \\
+	\hline
+	
+	\texttt{MOV} & \texttt{1 0 0 1 0 0} & \texttt{R R R R} &
+		\texttt{V V V V V V V V V V V V V V V V V V V V V V} & Move integer (D := V). \\
+	\hline
+	
+	\multirow{2}{*}{\texttt{LDA}} & \multirow{2}{*}{\texttt{1 0 0 1 0 1}} & \multirow{2}{*}{\texttt{R R R R}} &
+		\multirow{2}{*}{\texttt{O O O O O O O O O O O O O O O O O O O O O O}} & Load address from program \\
+		& & & & (D := ByteCode + $\text{R}_{\text{word}}$ + $\text{O}_{\text{byte}}$). \\
+	\hline
+\end{tabular}
+\end{center}
+}
+
+{\footnotesize
+\begin{center}
+\begin{tabular}[ht]{
+	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.065 \textwidth} | p{0.375 \textwidth} | p{0.24 \textwidth} |
+}
+	\hline
+	\multicolumn{5}{|c|}{\texttt{Jump Instruction OpCodes (101...)}} \\
+	\hline \hline
+	
+	\multirow{2}{*}{\texttt{Mnemonic}} & \texttt{OpCode} & \texttt{Reg.} &
+		\texttt{Offset} & \multirow{2}{*}{\texttt{Description}} \\
+	& \texttt{31.......26} & \texttt{25...22} & \texttt{21........................................0} & \\
+	\hline
+	
+	\texttt{JMP} & \texttt{1 0 1 0 0 0} & \texttt{R R R R} &
+		\texttt{O O O O O O O O O O O O O O O O O O O O O O} & Jump. \\
+	\hline
+	
+	\texttt{JE} & \texttt{1 0 1 0 0 1} & \texttt{R R R R} &
+		\texttt{O O O O O O O O O O O O O O O O O O O O O O} & Jump if equal. \\
+	\hline
+	
+	\texttt{JNE} & \texttt{1 0 1 0 1 0} & \texttt{R R R R} &
+		\texttt{O O O O O O O O O O O O O O O O O O O O O O} & Jump if not-equal. \\
+	\hline
+	
+	\texttt{JG} & \texttt{1 0 1 0 1 1} & \texttt{R R R R} &
+		\texttt{O O O O O O O O O O O O O O O O O O O O O O} & Jump if greater. \\
+	\hline
+	
+	\texttt{JL} & \texttt{1 0 1 1 0 0} & \texttt{R R R R} &
+		\texttt{O O O O O O O O O O O O O O O O O O O O O O} & Jump if less. \\
+	\hline
+	
+	\texttt{JGE} & \texttt{1 0 1 1 0 1} & \texttt{R R R R} &
+		\texttt{O O O O O O O O O O O O O O O O O O O O O O} & Jump if greater or equal. \\
+	\hline
+	
+	\texttt{JLE} & \texttt{1 0 1 1 1 0} & \texttt{R R R R} &
+		\texttt{O O O O O O O O O O O O O O O O O O O O O O} & Jump if less or equal. \\
+	\hline
+	
+	\multirow{3}{*}{\texttt{CALL}} & \multirow{3}{*}{\texttt{1 0 1 1 1 1}} & \multirow{3}{*}{\texttt{R R R R}} &
+		\multirow{3}{*}{\texttt{O O O O O O O O O O O O O O O O O O O O O O}} &
+		Push dynamic link (\texttt{\$lb} and \texttt{\$pc}) onto stack; Set \texttt{\$lb} to new stack frame;
+		Jump to address. \\
+	\hline
+\end{tabular}
+\end{center}
+}
+
+\clearpage % !!!
+
+{\footnotesize
+\begin{center}
+\begin{tabular}[ht]{
+	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.065 \textwidth} | p{0.065 \textwidth}
+	| p{0.305 \textwidth} | p{0.22 \textwidth} |
+}
+	\hline
+	\multicolumn{6}{|c|}{\texttt{Load/Store Instruction OpCodes (1100..)}} \\
+	\hline \hline
+	
+	\multirow{2}{*}{\texttt{Mnemonic}} & \texttt{OpCode} & \texttt{Reg.} & \texttt{Addr.} &
+		\texttt{Offset} & \multirow{2}{*}{\texttt{Description}} \\
+	& \texttt{31.......26} & \texttt{25...22} & \texttt{21...18} & \texttt{17................................0} & \\
+	\hline
+	
+	\texttt{LDB} & \texttt{1 1 0 0 0 0} & \texttt{R R R R} & \texttt{A A A A} &
+		\texttt{O O O O O O O O O O O O O O O O O O} & Load byte from memory. \\
+	\hline
+	
+	\texttt{STB} & \texttt{1 1 0 0 0 1} & \texttt{R R R R} & \texttt{A A A A} &
+		\texttt{O O O O O O O O O O O O O O O O O O} & Store byte to memory. \\
+	\hline
+	
+	\texttt{LDW} & \texttt{1 1 0 0 1 0} & \texttt{R R R R} & \texttt{A A A A} &
+		\texttt{O O O O O O O O O O O O O O O O O O} & Load word from memory. \\
+	\hline
+	
+	\texttt{STW} & \texttt{1 1 0 0 1 1} & \texttt{R R R R} & \texttt{A A A A} &
+		\texttt{O O O O O O O O O O O O O O O O O O} & Store word to memory. \\
+	\hline
+\end{tabular}
+\end{center}
+}
+
+{\footnotesize
+\begin{center}
+\begin{tabular}[ht]{
+	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.445 \textwidth} | p{0.26 \textwidth} |
+}
+	\hline
+	\multicolumn{4}{|c|}{\texttt{Special-1 Instruction OpCodes}} \\
+	\hline \hline
+	
+	\multirow{2}{*}{\texttt{Mnemonic}} & \texttt{OpCode} &
+		\texttt{Unused or Value} & \multirow{2}{*}{\texttt{Description}} \\
+	& \texttt{31.......26} & \texttt{25................................................0} & \\
+	\hline
+	
+	\texttt{STOP} & \texttt{0 0 0 0 0 0} &
+		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Stop program execution. \\
+	\hline
+	
+	\texttt{PUSH} & \texttt{1 1 1 0 0 0} &
+		\texttt{V V V V V V V V V V V V V V V V V V V V V V V V V V} & Push integer onto stack. \\
+	\hline
+	
+	\texttt{INVK} & \texttt{1 1 1 0 0 1} &
+		\texttt{V V V V V V V V V V V V V V V V V V V V V V V V V V} & Invoke external procedure. \\
+	\hline
+\end{tabular}
+\end{center}
+}
+
+{\footnotesize
+\begin{center}
+\begin{tabular}[ht]{
+	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.135 \textwidth} | p{0.305 \textwidth} | p{0.24 \textwidth} |
+}
+	\hline
+	\multicolumn{5}{|c|}{\texttt{Special-2 Instruction OpCodes}} \\
+	\hline \hline
+	
+	\multirow{2}{*}{\texttt{Mnemonic}} & \texttt{OpCode} & \texttt{Result Size} &
+		\texttt{Argument Size} & \multirow{2}{*}{\texttt{Description}} \\
+	& \texttt{31.......26} & \texttt{25...........18} & \texttt{17................................0} & \\
+	\hline
+	
+	\multirow{6}{*}{\texttt{RET}} & \multirow{6}{*}{\texttt{1 1 1 0 1 0}} & \multirow{6}{*}{\texttt{R R R R R R R R}} &
+		\multirow{6}{*}{\texttt{A A A A A A A A A A A A A A A A A A}} &
+		Pop R wrods from stack and buffer them; Pop current stack frame;
+		Pop A words from stack; Push stored R words back onto stack;
+		Restore dynamic link (\texttt{\$lb} and \texttt{\$pc}) \\
 	\hline
 \end{tabular}
 \end{center}
