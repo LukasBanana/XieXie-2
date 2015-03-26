@@ -1436,9 +1436,10 @@ Invocation procedure signature. This is the signature for external procedure inv
 */
 typedef void (*XVM_INVOCATION_PROC)(xvm_env env);
 
-STATIC void xvm_invocation_dummy(xvm_env env)
+//! Null invocation procedure -> throws EXITCODE_INVOCATION_VIOLATION.
+STATIC void _xvm_null_invocation(xvm_env env)
 {
-    // dummy
+    _xvm_exception_throw("invocation of unbound external procedure", EXITCODE_INVOCATION_VIOLATION);
 }
 
 //! Returns the argument as integer, specified by the parameter index (beginning with 1).
@@ -1654,7 +1655,7 @@ STATIC int xvm_bytecode_create_invocations(xvm_bytecode* byte_code, unsigned int
         // Create and initialize invocation bindings
         byte_code->invoke_bindings      = (XVM_INVOCATION_PROC*)malloc(sizeof(XVM_INVOCATION_PROC)*num_invoke_idents);
         for (unsigned int i = 0; i < num_invoke_idents; ++i)
-            byte_code->invoke_bindings[i] = xvm_invocation_dummy;
+            byte_code->invoke_bindings[i] = _xvm_null_invocation;
         return 1;
     }
     return 0;
@@ -1681,7 +1682,7 @@ STATIC int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ide
 
         // Bind invocation
         if (proc == NULL)
-            proc = xvm_invocation_dummy;
+            proc = _xvm_null_invocation;
 
         byte_code->invoke_bindings[i] = proc;
 

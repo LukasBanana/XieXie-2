@@ -1,0 +1,23 @@
+
+; XASM Link Test (Part B)
+; 26/03/2015
+
+.export "_EXPproc_a" @proc_a
+.export "_EXPproc_b" @proc_b
+
+; int proc_a(int x, int y) { return x*y }
+proc_a:
+	ldw $r0, ($lb) -4
+	ldw $r1, ($lb) -8
+	mul $r0, $r0, $r1
+	push $r0
+	ret (1) 2
+
+; int proc_b(int x, int y) { return x+y }
+proc_b:
+	ldw $r0, ($lb) -4
+	ldw $r1, ($lb) -8
+	add $r0, $r0, $r1
+	push $r0
+	ret (1) 2
+

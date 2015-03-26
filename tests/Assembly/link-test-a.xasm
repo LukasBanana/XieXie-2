@@ -1,0 +1,55 @@
+
+; XASM Link Test (Part A)
+; 26/03/2015
+
+call main
+stop
+
+; void print(byte* str, int x)
+print:
+	ldw $r1, ($lb) -4
+	ldw $r0, ($lb) -8
+	push $r1
+	call <Print>
+	push $r0
+	call <PrintInt>
+	lda $r1, @str_null
+	push $r1
+	call <PrintLn>
+	ret (0) 2
+
+; void main()
+main:
+	; int x := proc_a(7, 10)
+	push 10
+	push 7
+	call proc_a
+	pop $r0
+	
+	; print(x)
+	lda $r1, @str_1
+	push $r0
+	push $r1
+	call print
+	
+	; int y := proc_b(7, 10)
+	push 10
+	push 7
+	call proc_b
+	pop $r0
+	
+	; print(y)
+	lda $r1, @str_2
+	push $r0
+	push $r1
+	call print
+	
+	ret (0) 0
+
+.extern "_EXPproc_a" proc_a
+.extern "_EXPproc_b" proc_b
+
+str_1: .ascii "7*10 = "
+str_2: .ascii "7+10 = "
+str_null: .ascii ""
+
