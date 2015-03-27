@@ -38,6 +38,7 @@ class TACInst
             Modify,         //!< x := y + z; x := y - z; x := y * z; ...
             Jump,           //!< jump to basic block
             CondJump,       //!< conditional jump to basic block, if y = z, y != z, y < z, ...
+            Switch,         //!< switch to basic block
             DirectCall,     //!< jump and link
             IndirectCall,   //!< jump register and link
             Return,         //!< procedure return
@@ -83,6 +84,8 @@ class TACInst
 
             FTI,
             ITF,
+
+            SWITCH,
 
             RETURN,
         };

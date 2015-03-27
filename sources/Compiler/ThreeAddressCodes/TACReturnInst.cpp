@@ -25,7 +25,7 @@ TACInst::Types TACReturnInst::Type() const
 
 std::string TACReturnInst::ToString() const
 {
-    std::string str = "RETURN | ";
+    std::string str = "return | ";
 
     if (inSize > 0)
         str += "in(" + ToStr(inSize) + ")";

@@ -981,8 +981,12 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
     }
     else if (opcode >= OPCODE_JMP && opcode <= OPCODE_JLE)
     {
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
+
+        const char* reg0name = xvm_register_get_name(reg0);
+
         int addr_offset = _xvm_instr_get_sgn_value22(instr);
-        printf("%i", addr_offset);
+        printf("(%s), %i", reg0name, addr_offset);
     }
     else if (opcode >= OPCODE_LDB && opcode <= OPCODE_STW)
     {
@@ -1008,7 +1012,11 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
         else if (addr_offset >= INTR_RESERVED_MIN)
             printf("%s  <intrinsic>", xvm_intrinsic_get_ident((intrinsic_addr)addr_offset));
         else
-            printf("%i", addr_offset);
+        {
+            reg_t reg0 = _xvm_instr_get_reg0(instr);
+            const char* reg0name = xvm_register_get_name(reg0);
+            printf("(%s), %i", reg0name, addr_offset);
+        }
     }
     else if (opcode >= OPCODE_PUSH && opcode <= OPCODE_DEC)
     {

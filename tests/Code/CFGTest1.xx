@@ -52,6 +52,19 @@ class Test {
 		}
 		i := 42
 		
+		switch j {
+			case 1:
+				i += 2
+			case 2:
+				i -= 3
+			case 3, 4, 5:
+				if i > 5 {
+					break
+				}
+				i := 4
+		}
+		i := 0
+		
 		/*for i : 1 .. 10 {
 			a += i
 			b,c := 2

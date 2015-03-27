@@ -56,7 +56,7 @@ class BasicBlock
         {
             enum
             {
-                IsCtrlTransform = (1 << 0), //!< This basic block is a control transfer ('break' or 'continue').
+                IsCtrlTransfer = (1 << 0), //!< This basic block is a control transfer ('break' or 'continue').
             };
         };
 

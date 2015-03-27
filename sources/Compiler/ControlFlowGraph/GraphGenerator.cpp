@@ -7,12 +7,14 @@
 
 #include "GraphGenerator.h"
 #include "ASTImport.h"
+#include "CodeGenerators/NameMangling.h"
+#include "CompilerMessage.h"
+
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
 #include "TACCondJumpInst.h"
 #include "TACReturnInst.h"
-#include "CodeGenerators/NameMangling.h"
-#include "CompilerMessage.h"
+#include "TACSwitchInst.h"
 
 
 namespace ControlFlowGraph
@@ -65,7 +67,10 @@ std::vector<std::unique_ptr<ClassTree>> GraphGenerator::GenerateCFG(const Progra
 
 void GraphGenerator::Error(const std::string& msg, const AST* ast)
 {
-    throw ;
+    if (ast)
+        throw InternalError(ast->sourceArea, msg);
+    else
+        throw InternalError(msg);
 }
 
 /* --- Common AST nodes --- */
@@ -155,6 +160,9 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
 
 DEF_VISIT_PROC(GraphGenerator, SwitchCase)
 {
+    auto caseBlock = VisitAndLink(ast->stmnts);
+    caseBlock.in->label = "SwitchCase";
+    RETURN_BLOCK_REF(caseBlock);
 }
 
 /* --- Statements --- */
@@ -214,7 +222,7 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
         condCFG.out->AddSucc(*thenBranch.in, "true");
         condCFG.outAlt->AddSucc(*elseBranchIn, "false");
 
-        if (!thenBranch.out->flags(BasicBlock::Flags::IsCtrlTransform))
+        if (!thenBranch.out->flags(BasicBlock::Flags::IsCtrlTransfer))
             thenBranch.out->AddSucc(*out);
 
         RETURN_BLOCK_REF(BlockRef(in, out));
@@ -228,6 +236,31 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, SwitchStmnt)
 {
+    /* Generate CFG for switch-statement */
+    auto in = MakeBlock("Switch");
+    auto out = MakeBlock("EndSwitch");
+    
+    PushBB(in);
+    {
+        Visit(ast->expr);
+        auto var = Var();
+        in->MakeInst<TACSwitchInst>(var);
+        PopVar();
+    }
+    PopBB();
+
+    PushBreakBB(out);
+    {
+        for (auto& switchCase : ast->cases)
+        {
+            auto caseBlock = VisitAndLink(switchCase);
+            in->AddSucc(*caseBlock.in);
+            caseBlock.out->AddSucc(*out);
+        }
+    }
+    PopBreakBB();
+
+    RETURN_BLOCK_REF(BlockRef(in, out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, DoWhileStmnt)
@@ -763,12 +796,12 @@ void GraphGenerator::GenerateBreakCtrlTransferStmnt(CtrlTransferStmnt* ast, void
         auto bb = MakeBlock();
         
         bb->AddSucc(*BreakBB(), "break");
-        bb->flags << BasicBlock::Flags::IsCtrlTransform;
+        bb->flags << BasicBlock::Flags::IsCtrlTransfer;
 
         RETURN_BLOCK_REF(bb);
     }
     else
-        Error("missing loop exit point", ast);
+        Error("missing exit point for 'break' statement", ast);
 }
 
 void GraphGenerator::GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args)

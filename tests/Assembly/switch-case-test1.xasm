@@ -1,0 +1,73 @@
+
+; XASM Switch-Case Test 1
+; 27/03/2015
+
+root:
+
+call main
+stop
+
+; void main()
+main:
+	; Print(str_info)
+	lda $r0, @str_info
+	push $r0
+	call <Print>
+	
+	; int x := InputInt()
+	call <InputInt>
+	pop $r1
+	
+	; x := proc(x)
+	push $r1
+	call proc
+	pop $r1
+	
+	; PrintInt(x)
+	push $r1
+	call <PrintInt>
+	
+	; PrintLn("")
+	lda $r0, @str_null
+	push $r0
+	call <PrintLn>
+	
+	ret (0) 0
+
+; int proc(int)
+proc:
+	ldw $r0, ($lb) -4
+	
+	lda $r1, @switch0_labels0	; load address where the switch jump addresses are stored
+	sll $r0, $r0, 2				; multiply by 4
+	add $r1, $r1, $r0			; get address where the desired switch jump address is stored
+	ldw $r2, ($r1) 0			; load desired address for switch jump
+	lda $r3, @root				; > work around for indirect jump
+	sll $r2, $r2, 2				; multiply by 4
+	add $r2, $r2, $r3			; > work around for indirect jump
+	jmp ($r2) 0					; jump to the desired switch case
+	
+	switch0_case0:
+		mov $r4, 42
+		jmp switch_end
+	switch0_case1:
+		mov $r4, 7
+		jmp switch_end
+	switch0_case2:
+		mov $r4, -3
+		jmp switch_end
+	switch0_case3:
+		mov $r4, 19
+	switch_end:
+	
+	push $r4
+	ret (1) 1
+
+switch0_labels0: ; i in [0 .. 3]
+	.word @switch0_case0
+	.word @switch0_case1
+	.word @switch0_case2
+	.word @switch0_case3
+
+str_info: .ascii "enter switch index [0 .. 3]: "
+str_null: .ascii ""
