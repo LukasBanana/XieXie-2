@@ -14,7 +14,7 @@ void AssembleCommand::Execute(StreamParser& input, Log& output)
     XieXie::Assembler assembler(output);
 
     /* Parse input filenames */
-    while (input.Get() == "-f")
+    while (input.Get() == "-f" || input.Get() == "--file")
     {
         input.Accept();
         auto filename = input.Accept();

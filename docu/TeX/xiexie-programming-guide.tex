@@ -525,10 +525,10 @@ const cb := ci > cj // cb is a constant bool with value 'false'
 
 
 %----------------------------------------------------------------------------------------
-%	STATEMENTS AND EXPRESSIONS
+%	STATEMENTS
 %----------------------------------------------------------------------------------------
 
-\section{Statements and Expressions}
+\section{Statements}
 
 Unlike \cpp and \java, there are no semicolons in \xiexie to terminate statements.
 Only the regular \texttt{for}-statement has two semicolons, to separate the initializer statement,
@@ -668,6 +668,26 @@ do {
     doSomething()
 } while magicFunction()
 \end{lstlisting}
+
+
+%----------------------------------------------------------------------------------------
+%	EXPRESSIONS
+%----------------------------------------------------------------------------------------
+
+\section{Expressions}
+
+\subsection{Macros}
+
+\xiexie does not support the declaration of macros. However, there are a few built-in macros, which represent additional
+reserved identifiers:
+\begin{itemize}
+	\item \texttt{\_\_FILE\_\_} String which contains the current filename.
+	\item \texttt{\_\_CLASS\_\_} String which contains the current class name.
+	\item \texttt{\_\_PROC\_\_} String which contains the current procedure name.
+	\item \texttt{\_\_LINE\_\_} String which contains the current line number.
+	\item \texttt{\_\_DATE\_\_} String which contains the current date and time.
+\end{itemize}
+
 
 
 %----------------------------------------------------------------------------------------

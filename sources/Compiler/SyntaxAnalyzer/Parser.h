@@ -39,6 +39,15 @@ class Parser
 
     private:
         
+        /* === Structure === */
+
+        struct StateContainer
+        {
+            std::string     filename;               //!< Current filename.
+            ClassDeclStmnt* classDecl   = nullptr;  //!< Reference to the current class declaration.
+            std::string     procIdent;              //!< Identifier of the current procedure declaration.
+        };
+
         /* === Functions === */
 
         using Tokens = Token::Types;
@@ -60,6 +69,7 @@ class Parser
         TokenPtr AcceptIt();
 
         TokenPtr AcceptAnyIdent();
+        TokenPtr InlineMacro(const Token& macro);
         
         std::string AcceptIdent();
         std::string AcceptBaseClassIdent();
@@ -251,7 +261,7 @@ class Parser
         */
         std::stack<bool>    procHasReturnTypeStack_;
 
-        ClassDeclStmnt*     class_          = nullptr;  //!< Reference to the current class declaration.
+        StateContainer      state_;
 
 };
 

@@ -12,12 +12,12 @@ void LogCommand::Execute(StreamParser& input, Log& output)
 {
     auto msg = input.Accept();
 
-    if (input.Get() == "-warn")
+    if (input.Get() == "-W" || input.Get() == "--warn")
     {
         output.Warning(msg);
         input.Accept();
     }
-    else if (input.Get() == "-err")
+    else if (input.Get() == "-E" || input.Get() == "--error")
     {
         output.Error(msg);
         input.Accept();

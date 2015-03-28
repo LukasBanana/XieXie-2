@@ -200,6 +200,15 @@ std::string Token::TypeToString(const Types type)
 
         case Types::Import:
             return "import";
+
+        case Types::Macro:
+            return "<macro>";
+
+        case Types::Reserved:
+            return "<reserved-keyword>";
+
+        case Types::EndOfFile:
+            return "<end-of-file>";
     }
     return "";
 }

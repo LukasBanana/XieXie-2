@@ -12,6 +12,8 @@
 #include "BuiltinTypeDenoter.h"
 
 #include <algorithm>
+#include <chrono>
+#include <iomanip>
 
 
 namespace SyntaxAnalyzer
@@ -50,7 +52,9 @@ ProgramPtr Parser::ParseSource(const std::string& filename, ErrorReporter& error
         /* Initialize parser */
         errorReporter_ = &errorReporter;
 
+        state_.filename = filename;
         source_ = std::make_shared<SourceFile>(filename);
+
         scanner_.ScanSource(source_, errorReporter);
         AcceptIt();
 
@@ -148,6 +152,8 @@ TokenPtr Parser::AcceptIt()
     tkn_ = scanner_.Next();
     if (!tkn_)
         Error("unexpected end of file");
+    if (tkn_->Type() == Tokens::Macro)
+        tkn_ = InlineMacro(*tkn_);
     return prevToken;
 }
 
@@ -156,6 +162,35 @@ TokenPtr Parser::AcceptAnyIdent()
     if (!Is(Tokens::Ident) && !Is(Tokens::ObjectIdent))
         ErrorUnexpected("expected identifier of object identifier");
     return AcceptIt();
+}
+
+/*
+Replaces the specified built-in macro by its content,
+e.g. __FILE__ -> "CurrentFile.xx"
+*/
+TokenPtr Parser::InlineMacro(const Token& macro)
+{
+    const auto& spell = macro.Spell();
+    std::string content;
+
+    if (spell == "__FILE__")
+        content = state_.filename;
+    else if (spell == "__CLASS__")
+        content = (state_.classDecl != nullptr ? state_.classDecl->ident : "");
+    else if (spell == "__PROC__")
+        content = state_.procIdent;
+    else if (spell == "__LINE__")
+        content = ToStr(macro.PosStart().Row());
+    else if (spell == "__DATE__")
+    {
+        auto timePoint = std::chrono::system_clock::now();
+        auto localTime = std::chrono::system_clock::to_time_t(timePoint);
+        std::stringstream sstr;
+        sstr << std::put_time(std::localtime(&localTime), "%Y-%m-%d %X");
+        content = sstr.str();
+    }
+
+    return std::make_shared<Token>(macro.Area(), Tokens::StringLiteral, content);
 }
 
 std::string Parser::AcceptIdent()
@@ -989,7 +1024,7 @@ ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
 ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
-    class_ = ast.get();
+    state_.classDecl = ast.get();
 
     ast->attribPrefix = attribPrefix;
     ast->sourceArea.start = Accept(Tokens::Class)->Area().start;
@@ -1013,7 +1048,7 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
 ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
-    class_ = ast.get();
+    state_.classDecl = ast.get();
 
     ast->isExtern = true;
     ast->attribPrefix = attribPrefix;
@@ -1144,7 +1179,7 @@ FlagsDeclStmntPtr Parser::ParseFlagsDeclStmnt()
 ProcDeclStmntPtr Parser::ParseProcDeclStmnt(bool isExtern, AttribPrefixPtr attribPrefix)
 {
     auto ast = Make<ProcDeclStmnt>();
-    ast->parentRef = class_;
+    ast->parentRef = state_.classDecl;
 
     if (attribPrefix)
         ast->attribPrefix = attribPrefix;
@@ -1152,6 +1187,7 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(bool isExtern, AttribPrefixPtr attri
         ast->attribPrefix = ParseAttribPrefix();
 
     ast->procSignature = ParseProcSignature();
+    state_.procIdent = ast->procSignature->ident;
 
     if (!isExtern)
     {
@@ -1170,9 +1206,10 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(bool isExtern, AttribPrefixPtr attri
 ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic)
 {
     auto ast = Make<ProcDeclStmnt>();
-    ast->parentRef = class_;
+    ast->parentRef = state_.classDecl;
 
     ast->procSignature = ParseProcSignature(typeDenoter, identTkn, isStatic);
+    state_.procIdent = ast->procSignature->ident;
 
     PushProcHasReturnType(!ast->procSignature->returnTypeDenoter->IsVoid());
     {
@@ -1189,6 +1226,7 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, c
 InitDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 {
     auto ast = Make<InitDeclStmnt>();
+    state_.procIdent = "init";
 
     if (Is(Tokens::LDParen))
         ast->attribPrefix = ParseAttribPrefix();

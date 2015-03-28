@@ -30,7 +30,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     SyntaxAnalyzer::Parser parser;
     
     /* Parse input filenames */
-    while (input.Get() == "-f")
+    while (input.Get() == "-f" || input.Get() == "--file")
     {
         input.Accept();
         auto filename = input.Accept();
@@ -56,7 +56,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             input.Accept();
             showCFG = true;
         }
-        else if (input.Get() == "-O" && !optimize)
+        else if ( ( input.Get() == "-O" || input.Get() == "--optimize" ) && !optimize)
         {
             input.Accept();
             optimize = true;

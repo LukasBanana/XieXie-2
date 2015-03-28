@@ -123,6 +123,9 @@ class Token
 
             Import,         //!< import
 
+            // Macros
+            Macro,          //!< __FILE__, __CLASS__, __PROC__, __LINE__, __DATE__
+
             // Reserved keywords (for later use)
             Reserved,
 

@@ -66,6 +66,12 @@ static KeywordMapType GenerateKeywordMap()
 
         { "import",     Ty::Import         },
 
+        { "__FILE__",   Ty::Macro          },
+        { "__CLASS__",  Ty::Macro          },
+        { "__PROC__",   Ty::Macro          },
+        { "__LINE__",   Ty::Macro          },
+        { "__DATE__",   Ty::Macro          },
+
         { "abstract",   Ty::Reserved       },
         { "package",    Ty::Reserved       },
         { "alias",      Ty::Reserved       },
