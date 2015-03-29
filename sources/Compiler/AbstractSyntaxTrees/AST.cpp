@@ -335,12 +335,14 @@ ClassDeclStmnt::ClassDeclStmnt(const SourceCodePtr& source) :
     source_{ source }
 {
     thisTypeDenoter_.declRef = this;
+    privateSegment.visibility = ClassBodySegment::Visibilities::Private;
 }
 ClassDeclStmnt::ClassDeclStmnt(const SourceArea& area, const SourceCodePtr& source) :
     ScopedStmnt { area   },
     source_     { source }
 {
     thisTypeDenoter_.declRef = this;
+    privateSegment.visibility = ClassBodySegment::Visibilities::Private;
 }
 
 const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const

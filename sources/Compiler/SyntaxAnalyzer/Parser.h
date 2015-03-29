@@ -81,6 +81,7 @@ class Parser
         /* --- Common AST nodes --- */
 
         void                    ParseProgram(Program& ast);
+        void                    ParseClassBodySegment(ClassDeclStmnt& ast);
 
         CodeBlockPtr            ParseCodeBlock();
         VarNamePtr              ParseVarName(TokenPtr identTkn = nullptr, bool hasArrayAccess = false);
@@ -92,7 +93,6 @@ class Parser
         AttribPrefixPtr         ParseAttribPrefix();
         AttribPtr               ParseAttrib();
         //EnumEntryPtr            ParseEnumEntry();
-        ClassBodySegmentPtr     ParseClassBodySegment();
         ArrayAccessPtr          ParseArrayAccess(bool hasArrayAccess = false);
         ProcCallPtr             ParseProcCall(const VarNamePtr& varName = nullptr);
         SwitchCasePtr           ParseSwitchCase();
@@ -206,7 +206,6 @@ class Parser
         std::vector<StmntPtr>               ParseStmntList(const Tokens terminatorToken = Tokens::RCurly);
         std::vector<StmntPtr>               ParseDeclStmntList();
         std::vector<StmntPtr>               ParseExternDeclStmntList(const Tokens terminatorToken = Tokens::RCurly);
-        std::vector<ClassBodySegmentPtr>    ParseClassBodySegmentList();
         std::vector<SwitchCasePtr>          ParseSwitchCaseList();
         std::vector<StmntPtr>               ParseSwitchCaseStmntList();
         std::vector<VarNamePtr>             ParseVarNameList(const Tokens separatorToken = Tokens::Comma);

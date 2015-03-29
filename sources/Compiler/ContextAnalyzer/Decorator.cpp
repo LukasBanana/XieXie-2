@@ -377,7 +377,8 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
         case States::RegisterMemberSymbols:
             PushSymTab(*ast);
             {
-                Visit(ast->bodySegments);
+                Visit(&(ast->publicSegment));
+                Visit(&(ast->privateSegment));
             }
             PopSymTab();
             break;
@@ -385,7 +386,8 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
         case States::AnalyzeCode:
             PushSymTab(*ast);
             {
-                Visit(ast->bodySegments);
+                Visit(&(ast->publicSegment));
+                Visit(&(ast->privateSegment));
             }
             PopSymTab();
             break;

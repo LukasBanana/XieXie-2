@@ -476,19 +476,27 @@ EnumEntryPtr Parser::ParseEnumEntry()
 // class_body_segment: class_visibility? decl_stmnt_list?;
 // class_visibility: class_visibility_type ':';
 // class_visibility_type: 'public' | 'private';
-ClassBodySegmentPtr Parser::ParseClassBodySegment()
+void Parser::ParseClassBodySegment(ClassDeclStmnt& ast)
 {
-    auto ast = Make<ClassBodySegment>();
+    /* Parse segment visibility */
+    auto vis = ClassBodySegment::Visibilities::Public;
 
     if (Is(Tokens::Visibility))
     {
-        ast->visibility = ClassBodySegment::GetVisibility(AcceptIt()->Spell());
+        vis = ClassBodySegment::GetVisibility(AcceptIt()->Spell());
         Accept(Tokens::Colon);
     }
 
-    ast->declStmnts = ParseDeclStmntList();
+    /* Parse declaration statements */
+    auto declStmnts = ParseDeclStmntList();
 
-    return ast;
+    /* Insert declaration statements into class body segment */
+    auto segment = &(ast.publicSegment);
+
+    if (vis == ClassBodySegment::Visibilities::Private)
+        segment = &(ast.privateSegment);
+
+    segment->declStmnts.insert(segment->declStmnts.end(), declStmnts.begin(), declStmnts.end());
 }
 
 // array_access: '[' expr ']' array_access?;
@@ -1037,8 +1045,8 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
         ast->baseClassIdent = AcceptBaseClassIdent();
     
     Accept(Tokens::LCurly);
-    if (!Is(Tokens::RCurly))
-        ast->bodySegments = ParseClassBodySegmentList();
+    while (!Is(Tokens::RCurly))
+        ParseClassBodySegment(*ast);
     Accept(Tokens::RCurly);
 
     return ast;
@@ -1061,13 +1069,7 @@ ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attri
     
     Accept(Tokens::LCurly);
     if (!Is(Tokens::RCurly))
-    {
-        auto bodySegment = Make<ClassBodySegment>();
-
-        bodySegment->declStmnts = ParseExternDeclStmntList();
-
-        ast->bodySegments.push_back(bodySegment);
-    }
+        ast->publicSegment.declStmnts = ParseExternDeclStmntList();
     Accept(Tokens::RCurly);
 
     return ast;
@@ -1807,11 +1809,6 @@ std::vector<StmntPtr> Parser::ParseDeclStmntList()
 std::vector<StmntPtr> Parser::ParseExternDeclStmntList(const Tokens terminatorToken)
 {
     return ParseList<StmntPtr>(std::bind(&Parser::ParseExternDeclStmnt, this), terminatorToken);
-}
-
-std::vector<ClassBodySegmentPtr> Parser::ParseClassBodySegmentList()
-{
-    return ParseList<ClassBodySegmentPtr>(std::bind(&Parser::ParseClassBodySegment, this), Tokens::RCurly);
 }
 
 std::vector<SwitchCasePtr> Parser::ParseSwitchCaseList()

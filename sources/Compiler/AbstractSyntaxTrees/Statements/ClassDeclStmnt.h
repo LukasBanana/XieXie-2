@@ -13,6 +13,7 @@
 #include "PointerTypeDenoter.h"
 #include "Attrib.h"
 #include "SourceCode.h"
+#include "ClassBodySegment.h"
 
 
 namespace AbstractSyntaxTrees
@@ -46,11 +47,12 @@ class ClassDeclStmnt : public ScopedStmnt
             return source_.get();
         }
 
-        bool                                isExtern = false;
-        AttribPrefixPtr                     attribPrefix;       // may be null
-        std::string                         ident;
-        std::string                         baseClassIdent;     // may be empty
-        std::vector<ClassBodySegmentPtr>    bodySegments;
+        bool                isExtern = false;
+        AttribPrefixPtr     attribPrefix;       // may be null
+        std::string         ident;
+        std::string         baseClassIdent;     // may be empty
+        ClassBodySegment    publicSegment;
+        ClassBodySegment    privateSegment;
 
     private:
         

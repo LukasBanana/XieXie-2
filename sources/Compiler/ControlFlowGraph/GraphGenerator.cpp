@@ -613,7 +613,8 @@ DEF_VISIT_PROC(GraphGenerator, ForEverStmnt)
 DEF_VISIT_PROC(GraphGenerator, ClassDeclStmnt)
 {
     CreateClassTree();
-    Visit(ast->bodySegments);
+    Visit(&(ast->publicSegment));
+    Visit(&(ast->privateSegment));
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarDeclStmnt)

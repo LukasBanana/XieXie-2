@@ -232,7 +232,8 @@ DEF_VISIT_PROC(ASTViewer, ClassDeclStmnt)
     Visit(ast->attribPrefix);
     AST_STRING(ident);
     AST_STRING(baseClassIdent);
-    Visit(ast->bodySegments);
+    Visit(&(ast->publicSegment));
+    Visit(&(ast->privateSegment));
 }
 
 DEF_VISIT_PROC(ASTViewer, VarDeclStmnt)
