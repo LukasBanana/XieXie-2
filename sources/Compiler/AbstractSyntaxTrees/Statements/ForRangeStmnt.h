@@ -28,7 +28,7 @@ class ForRangeStmnt : public Stmnt
         std::string     varIdent;
         int             rangeStart  = 0;
         int             rangeEnd    = 0;
-        unsigned int    rangeStep   = 1; // may be empty
+        unsigned int    rangeStep   = 1;
         CodeBlockPtr    codeBlock;
 
 };

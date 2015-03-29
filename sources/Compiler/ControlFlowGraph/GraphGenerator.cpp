@@ -275,19 +275,62 @@ DEF_VISIT_PROC(GraphGenerator, ForStmnt)
 {
 }
 
-//TODO: incomplete
+/*
+       ForRange
+      /  \    ^
+      |   v   |
+      |  Body |
+ false|   |   |
+      |   v   |
+      |  Inc  |
+      |   \___/
+      v
+ EndForRange
+*/
 DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
 {
-    /* Create new basic block */
-    auto bb = MakeBlock();
-    
-    PushBB(bb);
-    {
-        Visit(ast->codeBlock);
-    }
-    PopBB();
+    auto in = MakeBlock("ForRange");
+    auto out = MakeBlock("EndForRange");
 
-    RETURN_BLOCK_REF(bb);
+    auto cond = MakeBlock("ForRangeCond");
+    in->AddSucc(*cond);
+
+    /* Loop initialization */
+    auto idxVar = LocalVar(ast);
+    in->MakeInst<TACCopyInst>(idxVar, ToStr(ast->rangeStart));
+
+    /* Loop condition */
+    bool isForwards = (ast->rangeStart <= ast->rangeEnd);
+    auto condInst = cond->MakeInst<TACCondJumpInst>(idxVar, ToStr(ast->rangeEnd));
+
+    if (isForwards)
+        condInst->opcode = TACInst::OpCodes::CMPLE;
+    else
+        condInst->opcode = TACInst::OpCodes::CMPGE;
+
+    /* Create loop body */
+    PushBreakBB(out);
+    {
+        auto body = VisitAndLink(ast->codeBlock);
+
+        if (body.in && body.out)
+        {
+            cond->AddSucc(*body.in, "true");
+            body.out->AddSucc(*cond, "loop");
+
+            /* Add instruction to increment the iterator */
+            auto incInst = body.out->MakeInst<TACModifyInst>(idxVar, idxVar, ToStr(ast->rangeStep));
+            if (isForwards)
+                incInst->opcode = TACInst::OpCodes::ADD;
+            else
+                incInst->opcode = TACInst::OpCodes::SUB;
+        }
+    }
+    PopBreakBB();
+
+    cond->AddSucc(*out, "false");
+
+    RETURN_BLOCK_REF(BlockRef(in, out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
@@ -295,19 +338,19 @@ DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
 }
 
 /*
-   ForEver
-    |   ^
-    v   |
-  Body  |
-  /  \__/
-  |
-  v
-Break
+       ForEver
+        |   ^
+        v   |
+      Body  |
+      /  \__/
+ break|
+      v
+  EndForEver
 */
 DEF_VISIT_PROC(GraphGenerator, ForEverStmnt)
 {
-    auto in = MakeBlock();
-    auto out = MakeBlock();
+    auto in = MakeBlock("ForEver");
+    auto out = MakeBlock("EndForEver");
 
     PushBreakBB(out);
     {

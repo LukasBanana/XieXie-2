@@ -22,6 +22,9 @@ class TACModifyInst : public TACInst
     
     public:
         
+        TACModifyInst();
+        TACModifyInst(const TACVar& dest, const TACVar& srcLhs, const TACVar& srcRhs);
+
         Types Type() const override;
         std::string ToString() const override;
 

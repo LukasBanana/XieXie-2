@@ -13,6 +13,18 @@ namespace ThreeAddressCodes
 {
 
 
+TACModifyInst::TACModifyInst() :
+    TACInst{ OpCodes::ADD }
+{
+}
+TACModifyInst::TACModifyInst(const TACVar& dest, const TACVar& srcLhs, const TACVar& srcRhs) :
+    TACInst { OpCodes::ADD },
+    dest    { dest         },
+    srcLhs  { srcLhs       },
+    srcRhs  { srcRhs       }
+{
+}
+
 TACInst::Types TACModifyInst::Type() const
 {
     return Types::Modify;

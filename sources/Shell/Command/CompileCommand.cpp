@@ -46,12 +46,12 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     /* Parse options */
     while (true)
     {
-        if (input.Get() == "-show-ast" && !showAST)
+        if (input.Get() == "--show-ast" && !showAST)
         {
             input.Accept();
             showAST = true;
         }
-        else if (input.Get() == "-show-cfg" && !showCFG)
+        else if (input.Get() == "--show-cfg" && !showCFG)
         {
             input.Accept();
             showCFG = true;
