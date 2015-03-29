@@ -263,8 +263,50 @@ DEF_VISIT_PROC(GraphGenerator, SwitchStmnt)
     RETURN_BLOCK_REF(BlockRef(in, out));
 }
 
+/*
+      DoWhile
+       v   ^
+     Body  |
+       v   |true
+      Cond |
+      /  \_/
+ false|
+      v
+  EndDoWhile
+*/
 DEF_VISIT_PROC(GraphGenerator, DoWhileStmnt)
 {
+    auto in = MakeBlock("DoWhile");
+    auto out = MakeBlock("EndDoWhile");
+
+    PushBB(in);
+    {
+        /* Build condition CFG */
+        auto condCFG = VisitAndLink(ast->condExpr);
+
+        /* Build loop body CFG */
+        PushBreakBB(out);
+        {
+            auto body = VisitAndLink(ast->codeBlock);
+
+            if (body.in && body.out)
+            {
+                in->AddSucc(*body.in);
+
+                if (!body.out->flags(BasicBlock::Flags::IsCtrlTransfer))
+                {
+                    body.out->AddSucc(*condCFG.in);
+                    condCFG.out->AddSucc(*in, "true");
+                }
+            }
+        }
+        PopBreakBB();
+
+        condCFG.outAlt->AddSucc(*out, "false");
+    }
+    PopBB();
+
+    RETURN_BLOCK_REF(BlockRef(in, out));
 }
 
 /*

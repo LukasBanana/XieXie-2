@@ -91,11 +91,19 @@ class Test {
 		i := 29*/
 		
 		// --- while loop ---
-		i := 0
+		/*i := 0
 		while i < 10 {
 			i += 6
 		}
-		i := 17
+		i := 17*/
+		
+		// --- do-while loop ---
+		i := 3
+		do {
+			i <<= 1
+			//if i = 7 { break }
+		} while i < 22
+		i := 3
 		
 	}
 	
