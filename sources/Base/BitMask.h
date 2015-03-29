@@ -38,6 +38,7 @@ class BitMask
         {
             return Has(flag);
         }
+
         BitMask& operator << (int flag)
         {
             Add(flag);
@@ -46,6 +47,17 @@ class BitMask
         BitMask& operator >> (int flag)
         {
             Remove(flag);
+            return *this;
+        }
+
+        BitMask& operator << (const BitMask& rhs)
+        {
+            Add(rhs.Mask());
+            return *this;
+        }
+        BitMask& operator >> (const BitMask& rhs)
+        {
+            Remove(rhs.Mask());
             return *this;
         }
 

@@ -189,17 +189,17 @@ DEF_VISIT_PROC(GraphGenerator, ProcCallStmnt)
 }
 
 /*
-    If               If
-   /  \             /  \
- Then Else   or   Then  |
-   \  /             \  /
-   EndIf            EndIf
+      If                   If
+true /  \ false      true /  \ false
+   Then Else     or    Then  |
+     \  /                 \  /
+     EndIf                EndIf
 */
 DEF_VISIT_PROC(GraphGenerator, IfStmnt)
 {
     if (ast->condExpr)
     {
-        /* Generate CFG for if-statement */
+        /* Build CFG for if-statement */
         auto in = MakeBlock("If");
         auto out = MakeBlock("EndIf");
 
@@ -236,7 +236,7 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, SwitchStmnt)
 {
-    /* Generate CFG for switch-statement */
+    /* Build CFG for switch-statement */
     auto in = MakeBlock("Switch");
     auto out = MakeBlock("EndSwitch");
     
@@ -267,8 +267,47 @@ DEF_VISIT_PROC(GraphGenerator, DoWhileStmnt)
 {
 }
 
+/*
+        While
+      /  |   ^
+      |  |   |
+ false|  v   |
+      | Body |
+      |  \___/
+      v
+   EndWhile
+*/
 DEF_VISIT_PROC(GraphGenerator, WhileStmnt)
 {
+    auto in = MakeBlock("While");
+    auto out = MakeBlock("EndWhile");
+
+    PushBB(in);
+    {
+        /* Build condition CFG */
+        auto condCFG = VisitAndLink(ast->condExpr);
+        in->AddSucc(*condCFG.in);
+
+        /* Build loop body CFG */
+        PushBreakBB(out);
+        {
+            auto body = VisitAndLink(ast->codeBlock);
+
+            if (body.in && body.out)
+            {
+                condCFG.out->AddSucc(*body.in, "true");
+
+                if (!body.out->flags(BasicBlock::Flags::IsCtrlTransfer))
+                    body.out->AddSucc(*condCFG.in, "loop");
+            }
+        }
+        PopBreakBB();
+
+        condCFG.outAlt->AddSucc(*out, "false");
+    }
+    PopBB();
+
+    RETURN_BLOCK_REF(BlockRef(in, out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, ForStmnt)
@@ -308,7 +347,7 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
     else
         condInst->opcode = TACInst::OpCodes::CMPGE;
 
-    /* Create loop body */
+    /* Build loop body CFG */
     PushBreakBB(out);
     {
         auto body = VisitAndLink(ast->codeBlock);
@@ -384,7 +423,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     
     auto root = CT()->CreateRootBasicBlock(procIdent);
 
-    /* Generate sub-CFG for this procedure */
+    /* Build sub-CFG for this procedure */
     auto graph = VisitAndLink(ast->codeBlock);
     if (graph.in)
         root->AddSucc(*graph.in);
@@ -884,6 +923,10 @@ template <typename T> GraphGenerator::BlockRef GraphGenerator::VisitAndLink(cons
 
         /* Store previous block */
         prev = bb;
+
+        /* Check if control transfer cancels further statements in current basic block */
+        if (bb.out->flags(BasicBlock::Flags::IsCtrlTransfer))
+            break;
     }
 
     return { first, prev.out };

@@ -90,9 +90,22 @@ void BasicBlock::RemoveSucc(BasicBlock& block)
 void BasicBlock::Clean()
 {
     std::set<const BasicBlock*> visitSet;
-    Merge(visitSet);
-    visitSet.clear();
-    Purge(visitSet);
+    bool hasChanged = false;
+
+    //do
+    {
+        hasChanged = false;
+
+        visitSet.clear();
+        Merge(visitSet, hasChanged);
+
+        visitSet.clear();
+        Purge(visitSet, hasChanged);
+
+        visitSet.clear();
+        Unify(visitSet, hasChanged);
+    }
+    //while (hasChanged);
 }
 
 
@@ -114,7 +127,7 @@ Cleans the entire basic block hierarchy for unecessary basic blocks.
 A successor is merged into its predecessor if they are the only links,
 i.e. when a basic block B has only a single successor, whose only predecessor is B.
 */
-void BasicBlock::Merge(std::set<const BasicBlock*>& visitSet)
+void BasicBlock::Merge(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
 {
     /* Check if this basic block has already been visited */
     if (HasVisited(visitSet))
@@ -132,6 +145,9 @@ void BasicBlock::Merge(std::set<const BasicBlock*>& visitSet)
                 insts.push_back(std::move(inst));
             next->insts.clear();
 
+            /* Add flags from successor to this basic block */
+            flags << next->flags;
+
             /* Move successor list */
             succ_ = next->succ_;
 
@@ -142,6 +158,8 @@ void BasicBlock::Merge(std::set<const BasicBlock*>& visitSet)
                 if (it != bb->pred_.end())
                     *it = this;
             }
+
+            hasChanged = true;
         }
         else
             break;
@@ -149,10 +167,10 @@ void BasicBlock::Merge(std::set<const BasicBlock*>& visitSet)
 
     /* Visit successors */
     for (auto bb : succ_)
-        bb->Merge(visitSet);
+        bb->Merge(visitSet, hasChanged);
 }
 
-void BasicBlock::Purge(std::set<const BasicBlock*>& visitSet)
+void BasicBlock::Purge(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
 {
     /* Check if this basic block has already been visited */
     if (HasVisited(visitSet))
@@ -160,15 +178,44 @@ void BasicBlock::Purge(std::set<const BasicBlock*>& visitSet)
 
     /* Visit successors */
     for (auto bb : succ_)
-        bb->Purge(visitSet);
+        bb->Purge(visitSet, hasChanged);
 
     /* Resolve empty basic blocks */
     auto origSucc = succ_;
     for (auto bb : origSucc)
     {
         if (bb->insts.empty() && bb->succ_.size() == 1)
+        {
             RemoveSucc(*bb);
+            hasChanged = true;
+        }
     }
+}
+
+void BasicBlock::Unify(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
+{
+    /* Check if this basic block has already been visited */
+    if (HasVisited(visitSet))
+        return;
+    
+    /* Make successor list unique */
+    auto last = std::unique(
+        succ_.begin(), succ_.end(),
+        [](const Edge& lhs, const Edge& rhs){ return lhs.succ == rhs.succ; }
+    );
+
+    if (last != succ_.end())
+    {
+        succ_.erase(last, succ_.end());
+        hasChanged = true;
+    }
+
+    /* Make predecessor list unique */
+    pred_.erase(std::unique(pred_.begin(), pred_.end()), pred_.end());
+
+    /* Visit successors */
+    for (auto bb : succ_)
+        bb->Purge(visitSet, hasChanged);
 }
 
 

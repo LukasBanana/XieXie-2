@@ -105,8 +105,9 @@ class BasicBlock
         
         bool HasVisited(std::set<const BasicBlock*>& visitSet) const;
 
-        void Merge(std::set<const BasicBlock*>& visitSet);
-        void Purge(std::set<const BasicBlock*>& visitSet);
+        void Merge(std::set<const BasicBlock*>& visitSet, bool& hasChanged);
+        void Purge(std::set<const BasicBlock*>& visitSet, bool& hasChanged);
+        void Unify(std::set<const BasicBlock*>& visitSet, bool& hasChanged);
 
         PredListType pred_; //!< Predecessor reference list.
         SuccListType succ_; //!< Successor reference list.
