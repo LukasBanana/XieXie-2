@@ -193,7 +193,12 @@ void BasicBlock::Purge(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
     auto origSucc = succ_;
     for (auto bb : origSucc)
     {
-        if (bb->insts.empty() && bb->succ_.size() == 1)
+        /*
+        Instruction list must be empty,
+        successor list must have only a single element,
+        and this successor must not be the current basic block
+        */
+        if (bb->insts.empty() && bb->succ_.size() == 1 && bb->succ_.front() != bb.succ)
         {
             RemoveSucc(*bb);
             hasChanged = true;
@@ -201,6 +206,7 @@ void BasicBlock::Purge(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
     }
 }
 
+//!INCOMPLETE!
 void BasicBlock::Unify(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
 {
     /* Check if this basic block has already been visited */
@@ -233,11 +239,18 @@ bool BasicBlock::VerifyProcReturn(std::set<const BasicBlock*>& visitSet) const
     if (HasVisited(visitSet))
         return true;
     
-    /* Check if this is a leaf node and the last instruction is a return statement */
-    if (succ_.empty() && !insts.empty() && insts.back()->Type() == TACInst::Types::Return)
+    /* Check if this is a leaf node */
+    if (succ_.empty())
     {
-        auto returnInst = static_cast<TACReturnInst*>(insts.back().get());
-        return returnInst->hasVar;
+        /* Check if the last instruction is a return statement */
+        if (!insts.empty() && insts.back()->Type() == TACInst::Types::Return)
+        {
+            /* Check if return instruction has a variable */
+            auto returnInst = static_cast<TACReturnInst*>(insts.back().get());
+            return returnInst->hasVar;
+        }
+        else
+            return false;
     }
 
     /* Visit successors */

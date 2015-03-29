@@ -100,7 +100,7 @@ class Test {
 		i := 17*/
 		
 		// --- do-while loop ---
-		i := 3
+		/*i := 3
 		do {
 			//if i = 3 { continue }
 			p <<= 1
@@ -112,7 +112,26 @@ class Test {
 			i <<= 2
 			//if i = 7 { break }
 		} while i < 22
-		i := 3
+		i := 3*/
+		
+		// --- for loop ---
+		for int i := -2 ; i < 10 ; i += 4 {
+			if i = 4 {
+				continue
+			} else if i = 6 {
+				break
+			} else if i = 7 {
+				for ;; {}
+				//forever{}
+			}
+			p /= 3
+		}
+		
+		if i = 3 {} else {}
+		
+		p := -1
+		
+		return 0
 		
 	}
 	

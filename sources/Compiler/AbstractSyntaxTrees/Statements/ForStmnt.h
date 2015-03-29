@@ -23,9 +23,9 @@ class ForStmnt : public Stmnt
         
         AST_INTERFACE_EXT(ForStmnt, Stmnt);
 
-        StmntPtr        initStmnt;
-        ExprPtr         condExpr;
-        StmntPtr        assignStmnt;
+        StmntPtr        initStmnt;      // may be null
+        ExprPtr         condExpr;       // may be null
+        StmntPtr        assignStmnt;    // may be null
         CodeBlockPtr    codeBlock;
 
 };

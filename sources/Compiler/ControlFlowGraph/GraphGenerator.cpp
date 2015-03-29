@@ -237,6 +237,9 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
         auto thenBranch = VisitAndLink(ast->codeBlock);
         auto elseBranchIn = out;
 
+        if (!thenBranch.in || !thenBranch.out)
+            thenBranch.in = thenBranch.out = MakeBlock();
+
         if (ast->elseStmnt)
         {
             auto elseBranch = VisitAndLink(ast->elseStmnt);
@@ -259,8 +262,11 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
     }
     else
     {
-        /* Generate CFG for else-statement */
-        RETURN_BLOCK_REF(VisitAndLink(ast->codeBlock));
+        /* Build CFG for else-statement */
+        auto bb = VisitAndLink(ast->codeBlock);
+        if (!bb.in || !bb.out)
+            bb = MakeBlock();
+        RETURN_BLOCK_REF(bb);
     }
 }
 
@@ -326,6 +332,9 @@ DEF_VISIT_PROC(GraphGenerator, DoWhileStmnt)
         /* Build condition CFG */
         auto condCFG = VisitAndLink(ast->condExpr);
 
+        condCFG.out->AddSucc(*in, "true");
+        condCFG.outAlt->AddSucc(*out, "false");
+
         /* Build loop body CFG */
         PushBreakBB(out);
         PushIterBB(condCFG.in);
@@ -340,14 +349,13 @@ DEF_VISIT_PROC(GraphGenerator, DoWhileStmnt)
                 {
                     if (!body.out->flags(BasicBlock::Flags::HasContinueStmnt))
                         body.out->AddSucc(*condCFG.in);
-                    condCFG.out->AddSucc(*in, "true");
                 }
             }
+            else
+                in->AddSucc(*condCFG.in);
         }
         PopIterBB();
         PopBreakBB();
-
-        condCFG.outAlt->AddSucc(*out, "false");
     }
     PopBB();
 
@@ -387,6 +395,8 @@ DEF_VISIT_PROC(GraphGenerator, WhileStmnt)
                 if (!body.out->flags(BasicBlock::Flags::HasBreakStmnt))
                     body.out->AddSucc(*condCFG.in, "loop");
             }
+            else
+                condCFG.out->AddSucc(*condCFG.in, "true");
         }
         PopBreakBB();
 
@@ -397,8 +407,107 @@ DEF_VISIT_PROC(GraphGenerator, WhileStmnt)
     RETURN_BLOCK_REF(BlockRef(in, out));
 }
 
+/*
+        For
+         v
+      Condition
+      /  |   ^
+      |  v   |
+ false| Body |
+      |  v   |
+      | Iter |
+      |   \__/
+      v
+   EndFor
+*/
 DEF_VISIT_PROC(GraphGenerator, ForStmnt)
 {
+    auto in = MakeBlock("For");
+    auto out = MakeBlock("EndFor");
+
+    auto initOut = in;
+
+    /* Build loop initialization */
+    if (ast->initStmnt)
+    {
+        auto initCFG = VisitAndLink(ast->initStmnt);
+        in->AddSucc(*initCFG.in);
+        initOut = initCFG.out;
+    }
+
+    PushBB(in);
+    {
+        /* Build condition CFG */
+        auto loopOut = out;
+        BasicBlock* condIn = nullptr;
+        BasicBlock* condOut = nullptr;
+
+        if (ast->condExpr)
+        {
+            auto condCFG = VisitAndLink(ast->condExpr);
+
+            condIn = condCFG.in;
+            condOut = condCFG.out;
+            loopOut = condCFG.outAlt;
+        }
+
+        /* Build iteration CFG */
+        BasicBlock* iterIn = nullptr;
+        BasicBlock* iterOut = nullptr;
+
+        if (ast->assignStmnt)
+        {
+            auto iterCFG = VisitAndLink(ast->assignStmnt);
+
+            iterIn = iterCFG.in;
+            iterOut = iterCFG.out;
+        }
+
+        /* Build loop body CFG */
+        PushBreakBB(out);
+        PushIterBB(iterIn != nullptr ? iterIn : condIn);
+        {
+            auto body = VisitAndLink(ast->codeBlock);
+
+            if (!body.in || !body.out)
+                body.in = body.out = MakeBlock();
+            
+            if (!condIn)
+                condIn = body.in;
+
+            initOut->AddSucc(*condIn);
+
+            if (condOut)
+                condOut->AddSucc(*body.in, "true");
+
+            if (!body.out->flags(BasicBlock::Flags::HasBreakStmnt))
+            {
+                if (iterIn && iterOut)
+                {
+                    body.out->AddSucc(*iterIn);
+                    if (condIn)
+                        iterOut->AddSucc(*condIn, "loop");
+                    else
+                        iterOut->AddSucc(*body.in, "loop");
+                }
+                else
+                {
+                    if (condIn)
+                        body.out->AddSucc(*condIn, "loop");
+                    else
+                        body.out->AddSucc(*body.in, "loop");
+                }
+            }
+        }
+        PopIterBB();
+        PopBreakBB();
+
+        if (ast->condExpr)
+            loopOut->AddSucc(*out, "false");
+    }
+    PopBB();
+
+    RETURN_BLOCK_REF(BlockRef(in, out));
 }
 
 /*
@@ -451,6 +560,11 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
             else
                 incInst->opcode = TACInst::OpCodes::SUB;
         }
+        else
+        {
+            RETURN_BLOCK_REF(MakeBlock());
+            return;
+        }
     }
     PopBreakBB();
 
@@ -487,6 +601,8 @@ DEF_VISIT_PROC(GraphGenerator, ForEverStmnt)
             in->AddSucc(*body.in);
             body.out->AddSucc(*body.in, "loop");
         }
+        else
+            in->AddSucc(*in);
     }
     PopBreakBB();
 
@@ -521,9 +637,9 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     /* Insert return statement if there is none */
     if (graph.out && !graph.out->flags(BasicBlock::Flags::HasReturnStmnt))
     {
-        auto out = MakeBlock();
-        auto inst = out->MakeInst<TACReturnInst>();
-        graph.out->AddSucc(*out, "return");
+        auto bb = MakeBlock();
+        bb->MakeInst<TACReturnInst>();
+        graph.out->AddSucc(*bb, "return");
     }
 
     /* Verify procedure return statements */
@@ -1019,7 +1135,7 @@ template <typename T> GraphGenerator::BlockRef GraphGenerator::VisitAndLink(cons
         auto bb = VisitAndLink(astList[i]);
 
         /* Store final in/out blocks */
-        if (i == 0)
+        if (!first)
             first = bb.in;
 
         /* Connect current with previous block */

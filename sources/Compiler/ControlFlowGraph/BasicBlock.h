@@ -39,6 +39,11 @@ class BasicBlock
             {
                 return succ == rhs;
             }
+            bool operator != (BasicBlock* rhs) const
+            {
+                return succ != rhs;
+            }
+
             BasicBlock* operator -> () const
             {
                 return succ;
