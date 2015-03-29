@@ -575,6 +575,7 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
 {
+    //TODO ...
 }
 
 /*
@@ -654,6 +655,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, InitDeclStmnt)
 {
+    //TODO ...
 }
 
 DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)

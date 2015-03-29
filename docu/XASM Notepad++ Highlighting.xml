@@ -25,7 +25,7 @@
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
             <Keywords name="Keywords1">MOV NOT AND OR XOR ADD SUB MUL DIV MOD SLL SLR CMP FTI ITF INC DEC PUSH POP JMP JE JNE JL JLE JG JGE CALL RET STOP LDB STB LDW STW INVK ADDF SUBF MULF DIVF CMPF LDA</Keywords>
-            <Keywords name="Keywords2">ascii word float export extern</Keywords>
+            <Keywords name="Keywords2">ascii word float export import</Keywords>
             <Keywords name="Keywords3">r0 r1 r2 r3 r4 r5 r6 r7 r8 r9&#x000D;&#x000A;tr gp cf lb sp pc</Keywords>
             <Keywords name="Keywords4"></Keywords>
             <Keywords name="Keywords5"></Keywords>

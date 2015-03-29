@@ -46,8 +46,8 @@ main:
 	
 	ret (0) 0
 
-.extern "_EXPproc_a" proc_a
-.extern "_EXPproc_b" proc_b
+.import proc_a
+.import proc_b
 
 str_1: .ascii "7*10 = "
 str_2: .ascii "7+10 = "

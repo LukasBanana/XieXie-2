@@ -131,6 +131,9 @@ class Test {
 		
 		p := -1
 		
+		// --- foreach loop ---
+		//...
+		
 		return 0
 		
 	}
