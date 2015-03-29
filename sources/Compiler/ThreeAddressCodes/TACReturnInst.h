@@ -23,12 +23,13 @@ class TACReturnInst : public TACInst
     public:
         
         TACReturnInst();
+        TACReturnInst(const TACVar& src);
 
         Types Type() const override;
         std::string ToString() const override;
 
-        unsigned int inSize     = 0;
-        unsigned int outSize    = 0;
+        TACVar  src;
+        bool    hasVar = false;
 
 };
 

@@ -14,7 +14,13 @@ namespace ThreeAddressCodes
 
 
 TACReturnInst::TACReturnInst() :
-    TACInst{ OpCodes::RETURN }
+    TACInst { OpCodes::RETURN }
+{
+}
+TACReturnInst::TACReturnInst(const TACVar& src) :
+    TACInst { OpCodes::RETURN },
+    src     { src             },
+    hasVar  { true            }
 {
 }
 
@@ -27,17 +33,9 @@ std::string TACReturnInst::ToString() const
 {
     std::string str = "return | ";
 
-    if (inSize > 0)
-        str += "in(" + ToStr(inSize) + ")";
-    
-    if (outSize > 0)
-    {
-        if (inSize > 0)
-            str += ", ";
-        str += "out(" + ToStr(outSize) + ")";
-    }
-
-    if (inSize == 0 && outSize == 0)
+    if (hasVar)
+        str += src.ToString();
+    else
         str += "<none>";
 
     return str;

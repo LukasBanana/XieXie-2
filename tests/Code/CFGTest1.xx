@@ -6,7 +6,7 @@ extern class Object {}
 
 class Test {
 	
-	void main(int p) {
+	int main(int p) {
 		
 		int x, y, i, j, a, b, c, d
 		float e, f
@@ -104,6 +104,9 @@ class Test {
 		do {
 			//if i = 3 { continue }
 			p <<= 1
+			if p = 3 {
+				return i - 5
+			}
 			//continue
 			//break
 			i <<= 2
@@ -112,6 +115,14 @@ class Test {
 		i := 3
 		
 	}
+	
+	/*int test1(int x) {
+		if x > 10 {
+			return x + 2
+		} else {
+			return 3
+		}
+	}*/
 	
 }
 

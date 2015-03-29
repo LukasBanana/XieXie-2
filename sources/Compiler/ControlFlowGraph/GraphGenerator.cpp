@@ -38,14 +38,14 @@ static bool IsVarFloat(const VarName& ast)
  * GraphGenerator class
  */
 
-std::vector<std::unique_ptr<ClassTree>> GraphGenerator::GenerateCFG(const Program& program, ErrorReporter& errorReporter)
+std::vector<std::unique_ptr<ClassTree>> GraphGenerator::GenerateCFG(Program& program, ErrorReporter& errorReporter)
 {
-    /* Cast program AST node to non-const; we don't modify the AST here at all! */
     programClassTrees_.clear();
     
     try
     {
-        Visit(const_cast<Program*>(&program));
+        errorReporter_ = &errorReporter;
+        Visit(&program);
     }
     catch (const CompilerMessage& err)
     {
@@ -65,12 +65,20 @@ std::vector<std::unique_ptr<ClassTree>> GraphGenerator::GenerateCFG(const Progra
     if (args)                                           \
         *reinterpret_cast<BlockRef*>(args) = _result
 
-void GraphGenerator::Error(const std::string& msg, const AST* ast)
+void GraphGenerator::ErrorIntern(const std::string& msg, const AST* ast)
 {
     if (ast)
         throw InternalError(ast->sourceArea, msg);
     else
         throw InternalError(msg);
+}
+
+void GraphGenerator::Error(const std::string& msg, const AST* ast)
+{
+    if (ast)
+        errorReporter_->Add(CodeGenError(ast->sourceArea, msg));
+    else
+        errorReporter_->Add(CodeGenError(msg));
 }
 
 /* --- Common AST nodes --- */
@@ -169,6 +177,28 @@ DEF_VISIT_PROC(GraphGenerator, SwitchCase)
 
 DEF_VISIT_PROC(GraphGenerator, ReturnStmnt)
 {
+    auto bb = MakeBlock("return");
+
+    if (ast->expr)
+    {
+        PushBB(bb);
+        {
+            Visit(ast->expr);
+            auto var = Var();
+
+            /* Make instruction */
+            auto inst = bb->MakeInst<TACReturnInst>(var);
+
+            PopVar();
+        }
+        PopBB();
+    }
+    else
+        bb->MakeInst<TACReturnInst>();
+
+    bb->flags << BasicBlock::Flags::HasReturnStmnt;
+
+    RETURN_BLOCK_REF(bb);
 }
 
 DEF_VISIT_PROC(GraphGenerator, CtrlTransferStmnt)
@@ -485,15 +515,23 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     if (graph.in)
         root->AddSucc(*graph.in);
     
-    if (graph.out)
+    /* Clean local CFG of this procedure */
+    root->Clean();
+
+    /* Insert return statement if there is none */
+    if (graph.out && !graph.out->flags(BasicBlock::Flags::HasReturnStmnt))
     {
         auto out = MakeBlock();
         auto inst = out->MakeInst<TACReturnInst>();
         graph.out->AddSucc(*out, "return");
     }
 
-    /* Clean local CFG of this procedure */
-    root->Clean();
+    /* Verify procedure return statements */
+    if (!ast->procSignature->returnTypeDenoter->IsVoid())
+    {
+        if (!root->VerifyProcReturn())
+            Error("not all execution paths in \"" + ast->procSignature->ident + "\" end with a valid procedure return", ast);
+    }
 
     RETURN_BLOCK_REF(BlockRef(root, graph.out));
 }
@@ -940,7 +978,7 @@ void GraphGenerator::GenerateBreakCtrlTransferStmnt(CtrlTransferStmnt* ast, void
         RETURN_BLOCK_REF(bb);
     }
     else
-        Error("missing exit point for 'break' statement", ast);
+        ErrorIntern("missing exit point for 'break' statement", ast);
 }
 
 void GraphGenerator::GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args)
@@ -955,7 +993,7 @@ void GraphGenerator::GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, v
         RETURN_BLOCK_REF(bb);
     }
     else
-        Error("missing iteration point for 'continue' statement", ast);
+        ErrorIntern("missing iteration point for 'continue' statement", ast);
 }
 
 #undef RETURN_BLOCK_REF

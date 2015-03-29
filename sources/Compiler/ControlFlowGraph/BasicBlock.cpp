@@ -6,6 +6,7 @@
  */
 
 #include "BasicBlock.h"
+#include "TACReturnInst.h"
 
 #include <algorithm>
 
@@ -13,6 +14,8 @@
 namespace ControlFlowGraph
 {
 
+
+using namespace ThreeAddressCodes;
 
 /*
  * Edge structure
@@ -106,6 +109,12 @@ void BasicBlock::Clean()
         Unify(visitSet, hasChanged);
     }
     //while (hasChanged);
+}
+
+bool BasicBlock::VerifyProcReturn() const
+{
+    std::set<const BasicBlock*> visitSet;
+    return VerifyProcReturn(visitSet);
 }
 
 
@@ -216,6 +225,29 @@ void BasicBlock::Unify(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
     /* Visit successors */
     for (auto bb : succ_)
         bb->Purge(visitSet, hasChanged);
+}
+
+bool BasicBlock::VerifyProcReturn(std::set<const BasicBlock*>& visitSet) const
+{
+    /* Check if this basic block has already been visited */
+    if (HasVisited(visitSet))
+        return true;
+    
+    /* Check if this is a leaf node and the last instruction is a return statement */
+    if (succ_.empty() && !insts.empty() && insts.back()->Type() == TACInst::Types::Return)
+    {
+        auto returnInst = static_cast<TACReturnInst*>(insts.back().get());
+        return returnInst->hasVar;
+    }
+
+    /* Visit successors */
+    for (auto bb : succ_)
+    {
+        if (!bb->VerifyProcReturn(visitSet))
+            return false;
+    }
+
+    return true;
 }
 
 

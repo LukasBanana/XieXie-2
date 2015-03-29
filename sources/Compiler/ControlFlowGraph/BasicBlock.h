@@ -86,6 +86,12 @@ class BasicBlock
         //! Cleans the local CFG recursively.
         void Clean();
 
+        /**
+        Returns true if all execution paths, beginning from this basic block,
+        end with a return statement, which has a variable.
+        */
+        bool VerifyProcReturn() const;
+
         //! Returns the predecessor list.
         inline const PredListType& GetPred() const
         {
@@ -113,6 +119,8 @@ class BasicBlock
         void Merge(std::set<const BasicBlock*>& visitSet, bool& hasChanged);
         void Purge(std::set<const BasicBlock*>& visitSet, bool& hasChanged);
         void Unify(std::set<const BasicBlock*>& visitSet, bool& hasChanged);
+
+        bool VerifyProcReturn(std::set<const BasicBlock*>& visitSet) const;
 
         PredListType pred_; //!< Predecessor reference list.
         SuccListType succ_; //!< Successor reference list.

@@ -33,7 +33,7 @@ class GraphGenerator final : private Visitor
     
     public:
         
-        std::vector<std::unique_ptr<ClassTree>> GenerateCFG(const Program& program, ErrorReporter& errorReporter);
+        std::vector<std::unique_ptr<ClassTree>> GenerateCFG(Program& program, ErrorReporter& errorReporter);
 
     private:
         
@@ -53,6 +53,7 @@ class GraphGenerator final : private Visitor
 
         /* === Functions === */
 
+        void ErrorIntern(const std::string& msg, const AST* ast = nullptr);
         void Error(const std::string& msg, const AST* ast = nullptr);
 
         /* --- AST Interface --- */
@@ -117,6 +118,8 @@ class GraphGenerator final : private Visitor
         TACVar LocalVarFromVarName(const VarName& ast);
 
         /* === Members === */
+
+        ErrorReporter*                          errorReporter_      = nullptr;
 
         std::vector<std::unique_ptr<ClassTree>> programClassTrees_;
         ClassTree*                              classTree_          = nullptr;  //!< Reference to the current class tree.

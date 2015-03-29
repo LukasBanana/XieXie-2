@@ -7,6 +7,7 @@
 
 #include "VariableClean.h"
 #include "TACCondJumpInst.h"
+#include "TACReturnInst.h"
 
 #include <algorithm>
 
@@ -45,7 +46,10 @@ void VariableClean::TransformInst(std::unique_ptr<TACInst>& inst)
             TransformModifyInst(inst);
             break;
         case TACInst::Types::CondJump:
-            TransformCondJump(inst);
+            TransformCondJumpInst(inst);
+            break;
+        case TACInst::Types::Return:
+            TransformReturnInst(inst);
             break;
     }
 }
@@ -79,13 +83,21 @@ void VariableClean::TransformModifyInst(std::unique_ptr<TACInst>& inst)
         inst = nullptr;
 }
 
-void VariableClean::TransformCondJump(std::unique_ptr<TACInst>& inst)
+void VariableClean::TransformCondJumpInst(std::unique_ptr<TACInst>& inst)
 {
     auto jumpInst = static_cast<TACCondJumpInst*>(inst.get());
 
     /* Propagate variable usage */
     ReadVar(jumpInst->srcLhs);
     ReadVar(jumpInst->srcRhs);
+}
+
+void VariableClean::TransformReturnInst(std::unique_ptr<TACInst>& inst)
+{
+    auto returnInst = static_cast<TACReturnInst*>(inst.get());
+
+    /* Propagate variabel usage */
+    ReadVar(returnInst->src);
 }
 
 void VariableClean::ReadVar(const TACVar& var)

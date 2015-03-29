@@ -7,6 +7,7 @@
 
 #include "VariableReduction.h"
 #include "TACCondJumpInst.h"
+#include "TACReturnInst.h"
 
 #include <algorithm>
 
@@ -42,7 +43,10 @@ void VariableReduction::TransformInst(std::unique_ptr<TACInst>& inst)
             TransformModifyInst(inst);
             break;
         case TACInst::Types::CondJump:
-            TransformCondJump(inst);
+            TransformCondJumpInst(inst);
+            break;
+        case TACInst::Types::Return:
+            TransformReturnInst(inst);
             break;
     }
 }
@@ -66,13 +70,21 @@ void VariableReduction::TransformModifyInst(std::unique_ptr<TACInst>& inst)
     ReadVar(modifyInst->srcRhs, *inst);
 }
 
-void VariableReduction::TransformCondJump(std::unique_ptr<TACInst>& inst)
+void VariableReduction::TransformCondJumpInst(std::unique_ptr<TACInst>& inst)
 {
     auto jumpInst = static_cast<TACCondJumpInst*>(inst.get());
 
     /* Propagate variable usage */
     ReadVar(jumpInst->srcLhs, *inst);
     ReadVar(jumpInst->srcRhs, *inst);
+}
+
+void VariableReduction::TransformReturnInst(std::unique_ptr<TACInst>& inst)
+{
+    auto returnInst = static_cast<TACReturnInst*>(inst.get());
+
+    /* Propagate variabel usage */
+    ReadVar(returnInst->src, *inst);
 }
 
 void VariableReduction::ReadVar(const TACVar& var, TACInst& inst)

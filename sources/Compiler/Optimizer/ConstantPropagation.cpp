@@ -8,6 +8,7 @@
 #include "ConstantPropagation.h"
 #include "StringModifier.h"
 #include "TACCondJumpInst.h"
+#include "TACReturnInst.h"
 
 
 namespace Optimization
@@ -37,7 +38,10 @@ void ConstantPropagation::TransformInst(std::unique_ptr<TACInst>& inst)
             TransformModifyInst(inst);
             break;
         case TACInst::Types::CondJump:
-            TransformCondJump(inst);
+            TransformCondJumpInst(inst);
+            break;
+        case TACInst::Types::Return:
+            TransformReturnInst(inst);
             break;
     }
 }
@@ -77,13 +81,21 @@ void ConstantPropagation::TransformModifyInst(std::unique_ptr<TACInst>& inst)
     }
 }
 
-void ConstantPropagation::TransformCondJump(std::unique_ptr<TACInst>& inst)
+void ConstantPropagation::TransformCondJumpInst(std::unique_ptr<TACInst>& inst)
 {
     auto jumpInst = static_cast<TACCondJumpInst*>(inst.get());
 
     /* Propagate constant */
     FetchConst(jumpInst->srcLhs);
     FetchConst(jumpInst->srcRhs);
+}
+
+void ConstantPropagation::TransformReturnInst(std::unique_ptr<TACInst>& inst)
+{
+    auto returnInst = static_cast<TACReturnInst*>(inst.get());
+
+    /* Propagate constant */
+    FetchConst(returnInst->src);
 }
 
 std::unique_ptr<TACCopyInst> ConstantPropagation::ConstantFolding(const TACModifyInst& inst)
