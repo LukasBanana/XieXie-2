@@ -222,7 +222,7 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
         condCFG.out->AddSucc(*thenBranch.in, "true");
         condCFG.outAlt->AddSucc(*elseBranchIn, "false");
 
-        if (!thenBranch.out->flags(BasicBlock::Flags::IsCtrlTransfer))
+        if (!thenBranch.out->flags(BasicBlock::Flags::HasCtrlTransfer))
             thenBranch.out->AddSucc(*out);
 
         RETURN_BLOCK_REF(BlockRef(in, out));
@@ -234,11 +234,23 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
     }
 }
 
+//TODO -> default branch is incorrect when "default" case is defined!!!
+/*
+       Switch
+      /   |  \
+ Default ... ...
+      \   |   /
+       \  |  /
+        v v v
+      EndSwitch
+*/
 DEF_VISIT_PROC(GraphGenerator, SwitchStmnt)
 {
     /* Build CFG for switch-statement */
     auto in = MakeBlock("Switch");
     auto out = MakeBlock("EndSwitch");
+
+    in->AddSucc(*out, "default");
     
     PushBB(in);
     {
@@ -286,6 +298,7 @@ DEF_VISIT_PROC(GraphGenerator, DoWhileStmnt)
 
         /* Build loop body CFG */
         PushBreakBB(out);
+        PushIterBB(condCFG.in);
         {
             auto body = VisitAndLink(ast->codeBlock);
 
@@ -293,13 +306,15 @@ DEF_VISIT_PROC(GraphGenerator, DoWhileStmnt)
             {
                 in->AddSucc(*body.in);
 
-                if (!body.out->flags(BasicBlock::Flags::IsCtrlTransfer))
+                if (!body.out->flags(BasicBlock::Flags::HasBreakStmnt))
                 {
-                    body.out->AddSucc(*condCFG.in);
+                    if (!body.out->flags(BasicBlock::Flags::HasContinueStmnt))
+                        body.out->AddSucc(*condCFG.in);
                     condCFG.out->AddSucc(*in, "true");
                 }
             }
         }
+        PopIterBB();
         PopBreakBB();
 
         condCFG.outAlt->AddSucc(*out, "false");
@@ -339,7 +354,7 @@ DEF_VISIT_PROC(GraphGenerator, WhileStmnt)
             {
                 condCFG.out->AddSucc(*body.in, "true");
 
-                if (!body.out->flags(BasicBlock::Flags::IsCtrlTransfer))
+                if (!body.out->flags(BasicBlock::Flags::HasBreakStmnt))
                     body.out->AddSucc(*condCFG.in, "loop");
             }
         }
@@ -920,7 +935,7 @@ void GraphGenerator::GenerateBreakCtrlTransferStmnt(CtrlTransferStmnt* ast, void
         auto bb = MakeBlock();
         
         bb->AddSucc(*BreakBB(), "break");
-        bb->flags << BasicBlock::Flags::IsCtrlTransfer;
+        bb->flags << BasicBlock::Flags::HasBreakStmnt;
 
         RETURN_BLOCK_REF(bb);
     }
@@ -930,12 +945,22 @@ void GraphGenerator::GenerateBreakCtrlTransferStmnt(CtrlTransferStmnt* ast, void
 
 void GraphGenerator::GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args)
 {
-    //todo...
+    if (IterBB())
+    {
+        auto bb = MakeBlock();
+        
+        bb->AddSucc(*IterBB(), "continue");
+        bb->flags << BasicBlock::Flags::HasContinueStmnt;
+
+        RETURN_BLOCK_REF(bb);
+    }
+    else
+        Error("missing iteration point for 'continue' statement", ast);
 }
 
 #undef RETURN_BLOCK_REF
 
-/* --- Conversion --- */
+/* --- CFG Generation --- */
 
 template <typename T> GraphGenerator::BlockRef GraphGenerator::VisitAndLink(T ast)
 {
@@ -967,7 +992,7 @@ template <typename T> GraphGenerator::BlockRef GraphGenerator::VisitAndLink(cons
         prev = bb;
 
         /* Check if control transfer cancels further statements in current basic block */
-        if (bb.out->flags(BasicBlock::Flags::IsCtrlTransfer))
+        if (bb.out->flags(BasicBlock::Flags::HasCtrlTransfer))
             break;
     }
 
@@ -984,6 +1009,8 @@ BasicBlock* GraphGenerator::MakeBlock(const std::string& label)
 {
     return CT()->CreateBasicBlock(label);
 }
+
+/* --- Basic Block Stack --- */
 
 void GraphGenerator::PushBB(BasicBlock* bb)
 {
@@ -1013,6 +1040,21 @@ void GraphGenerator::PopBreakBB()
 BasicBlock* GraphGenerator::BreakBB() const
 {
     return breakStackBB_.Empty() ? nullptr : breakStackBB_.Top();
+}
+
+void GraphGenerator::PushIterBB(BasicBlock* bb)
+{
+    iterStackBB_.Push(bb);
+}
+
+void GraphGenerator::PopIterBB()
+{
+    iterStackBB_.Pop();
+}
+
+BasicBlock* GraphGenerator::IterBB() const
+{
+    return iterStackBB_.Empty() ? nullptr : iterStackBB_.Top();
 }
 
 /* --- Variables --- */

@@ -56,7 +56,12 @@ class BasicBlock
         {
             enum
             {
-                IsCtrlTransfer = (1 << 0), //!< This basic block is a control transfer ('break' or 'continue').
+                HasBreakStmnt       = (1 << 0), //!< This basic block contains a 'break' statement.
+                HasContinueStmnt    = (1 << 1), //!< This basic block contains a 'continue' statement.
+                HasReturnStmnt      = (1 << 2),
+
+                //! This basic block contains any control transfer statement ('break', 'continue', or 'return').
+                HasCtrlTransfer     = (HasBreakStmnt | HasContinueStmnt | HasReturnStmnt),
             };
         };
 

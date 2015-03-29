@@ -72,13 +72,15 @@ class GraphGenerator final : private Visitor
         void GenerateBreakCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args);
         void GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args);
 
-        /* --- Conversion --- */
+        /* --- CFG Generation --- */
 
         template <typename T> BlockRef VisitAndLink(T ast);
         template <typename T> BlockRef VisitAndLink(const std::vector<std::shared_ptr<T>>& astList);
 
         void CreateClassTree();
         BasicBlock* MakeBlock(const std::string& label = "");
+
+        /* --- Basic Block Stack --- */
 
         void PushBB(BasicBlock* bb);
         void PopBB();
@@ -89,6 +91,11 @@ class GraphGenerator final : private Visitor
         void PopBreakBB();
         //! Returns the current basic block for a loop break.
         BasicBlock* BreakBB() const;
+
+        void PushIterBB(BasicBlock* bb);
+        void PopIterBB();
+        //! Returns the current basic block for a loop iteration.
+        BasicBlock* IterBB() const;
 
         //! Returns the current class tree.
         inline ClassTree* CT() const
@@ -116,6 +123,7 @@ class GraphGenerator final : private Visitor
 
         SafeStack<BasicBlock*>                  stackBB_;
         SafeStack<BasicBlock*>                  breakStackBB_;
+        SafeStack<BasicBlock*>                  iterStackBB_;
 
         TACVarManager                           varMngr_;
 

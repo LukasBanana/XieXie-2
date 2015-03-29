@@ -68,6 +68,8 @@ class Test {
 					break
 				}
 				i := 4
+			default:
+				i := 8
 		}
 		i := 0*/
 		
@@ -100,7 +102,11 @@ class Test {
 		// --- do-while loop ---
 		i := 3
 		do {
-			i <<= 1
+			//if i = 3 { continue }
+			p <<= 1
+			//continue
+			//break
+			i <<= 2
 			//if i = 7 { break }
 		} while i < 22
 		i := 3
