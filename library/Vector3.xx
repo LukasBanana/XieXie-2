@@ -11,21 +11,34 @@ Vector3 class with components: x, y, z.
 */
 class Vector3 {
 	
-	init() {
-		x,y,z := 0.0
-	}
+	init() {}
 	init(float xx, float yy, float zz) {
 		x := xx
 		y := yy
 		z := zz
 	}
+	init(Vector3 rhs) {
+		if rhs != null {
+			x := rhs.x
+			y := rhs.y
+			z := rhs.z
+		}
+	}
 	
 	Vector3 add(Vector3 rhs) {
-		return new Vector3(x + rhs.x, y + rhs.y, z + rhs.z)
+		if rhs != null {
+			return new Vector3(x + rhs.x, y + rhs.y, z + rhs.z)
+		} else {
+			return new Vector3(this)
+		}
 	}
 	
 	Vector3 sub(Vector3 rhs) {
-		return new Vector3(x - rhs.x, y - rhs.y, z - rhs.z)
+		if rhs != null {
+			return new Vector3(x - rhs.x, y - rhs.y, z - rhs.z)
+		} else {
+			return new Vector3(this)
+		}
 	}
 	
 	//! Computes the squared length of this vector.
@@ -35,21 +48,29 @@ class Vector3 {
 	
 	//! Computes the length of this vector.
 	float length() {
-		return Math.sqrt(lengthSq())
+		return Intrinsics.sqrt(lengthSq())
 	}
 	
 	//! Computes the scalar product for lhs and rhs.
 	static float dot(Vector3 lhs, Vector3 rhs) {
-		return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z
+		if lhs != null and rhs != null {
+			return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z
+		} else {
+			return 0.0
+		}
 	}
 	
 	//! Computes the cross product for lhs and rhs.
 	static Vector3 cross(Vector3 lhs, Vector3 rhs) {
-		return new Vector3(
-			lhs.y*rhs.z - rhs.y*lhs.z,
-			rhs.x*lhs.z - lhs.x*rhs.z,
-			lhs.x*rhs.y - rhs.x*lhs.y
-		)
+		if lhs != null and rhs != null {
+			return new Vector3(
+				lhs.y*rhs.z - rhs.y*lhs.z,
+				rhs.x*lhs.z - lhs.x*rhs.z,
+				lhs.x*rhs.y - rhs.x*lhs.y
+			)
+		} else {
+			return new Vector3()
+		}
 	}
 	
 	float x, y, z

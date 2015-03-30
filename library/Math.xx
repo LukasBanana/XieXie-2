@@ -22,9 +22,9 @@ class Math {
 		return x*x
 	}
 	
-	//! \todo Not yet implemented!
+	//! Returns the square root of 'x'.
 	static float sqrt(float x) {
-		return x
+		return Intrinsics.sqrt(x)
 	}
 	
 	//! \todo Not yet implemented!

@@ -13,6 +13,6 @@ class OutputStream {
 
 // Input stream interface
 class InputStream {
-	String read() { return  }
-	String readLine() { return  }
+	String read() { return null }
+	String readLine() { return null }
 }

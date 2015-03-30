@@ -12,7 +12,7 @@ public:
 	//! Pushes object 'o' onto the stack.
 	void push(Object o) {
 		container.resize(container.size() + 1)
-		container[container.size() - 1] = o
+		container[container.size() - 1] := o
 	}
 	
 	//! Returns the top most object on the stack.
@@ -26,7 +26,9 @@ public:
 	
 	//! Pops the top most object from the stack.
 	void pop() {
-		container.resize(container.size() - 1)
+		if not container.empty() {
+			container.resize(container.size() - 1)
+		}
 	}
 	
 	//! Returns true if the stack is empty.

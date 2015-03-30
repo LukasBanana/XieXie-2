@@ -32,8 +32,10 @@ public:
 	}
 	
 	static void incIndent() {
-		indentStack.push(new Integer(indent.size()))
-		indentState.add(indent)
+		if indent != null {
+			indentStack.push(new Integer(indent.size()))
+			indentState.add(indent)
+		}
 	}
 	
 	static void decIndent() {
@@ -44,11 +46,11 @@ public:
 		}
 	}
 	
-	static String indent
+	static String indent := "  "
 	
 private:
 	
-	static String indentState
-	static Stack indentStack
+	static String indentState := ""
+	static Stack indentStack := new Stack()
 	
 }

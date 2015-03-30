@@ -233,6 +233,19 @@ CString.Presize,R@String,I:
 	; ...
 	ret (0) 2
 
+; bool String.empty(String this)
+CString.Pempty,R@String:
+	ldw $r0, ($lb) -4	; load this pointer
+	ldw $r1, ($r0) 12	; load member this.size
+	mov $r2, 0
+	cmp $r1, $r2		; compare: this.size = 0
+	je .empty
+		push 0			; return false
+		ret (1) 1
+	.empty:
+	push 1				; return true
+	ret (1) 1
+
 ; String String.add(String this, String rhs)
 CString.Padd,R@String,R@String:
 	; ...
@@ -263,6 +276,7 @@ String.vtable:
 	.word @CString.Pcopy,R@String
 	.word @CString.Psize,R@String
 	.word @CString.Presize,R@String,I
+	.word @CString.Pempty,R@String
 	.word @CString.Padd,R@String,R@String
 	.word @CString.PsetChar,R@String,I,I
 	.word @CString.PgetChar,R@String,I

@@ -9,13 +9,8 @@ import IOStream
 
 class System {
 	
-	static void setup() {
-		System.out := new OutputStream()
-		System.in := new InputStream()
-	}
-	
-	static OutputStream out
-	static InputStream in
+	static OutputStream out := new OutputStream()
+	static InputStream in := new InputStream()
 	
 }
 

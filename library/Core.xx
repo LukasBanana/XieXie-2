@@ -1,0 +1,150 @@
+/*
+ * Core.xx
+ * 
+ * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+// Low-level intrinsic functions.
+extern class Intrinsics {
+	
+	static int allocMem(int size)
+	static void freeMem(int ptr)
+	static void copyMem(int destPtr, int srcPtr, int size)
+	
+	static void sysCall(int commandPtr)
+	static void clearTerm()
+	static void print(int textPtr)
+	static void printLn(int textPtr)
+	static void printInt(int value)
+	static void printFloat(float value)
+	static String input()
+	static int inputInt()
+	static float inputFloat()
+	
+	static int createFile(int filenamePtr)
+	static int deleteFile(int filenamePtr)
+	static int openFile(int filenamePtr)
+	static void closeFile(int handlePtr)
+	static int fileSize(int handlePtr)
+	static void fileSetPos(int handlePtr, int pos)
+	static int fileGetPos(int handlePtr)
+	static int fileEOF(int handlePtr)
+	static void writeByte(int handlePtr, int value)
+	static void writeInt(int handlePtr, int value)
+	static void writeBuffer(int handlePtr, int bufferPtr, int size)
+	static int readByte(int handlePtr)
+	static int readInt(int handlePtr)
+	static void readBuffer(int handlePtr, int bufferPtr, int size)
+	
+	static float sin(float x)
+	static float cos(float x)
+	static float tan(float x)
+	static float asin(float x)
+	static float acos(float x)
+	static float atan(float x)
+	static float pow(float b, float e)
+	static float sqrt(float x)
+	
+	static int randInt()
+	static float randFloat()
+	static int time()
+	static void sleep(int duration)
+	
+}
+
+// Root base object for all classes
+extern class Object {
+	
+	//! Returns the type ID of this object
+	[[final]]
+	int typeID()
+	
+	//! Returns the reference count of this object
+	[[final]]
+	int refCount()
+	
+	bool equals(Object rhs)
+	String toString()
+	
+}
+
+// UTF-8 string class.
+extern class String {
+	
+	bool equals(Object rhs)
+	String toString()
+	
+	String copy()
+	
+	int size()
+	void resize(int size)
+	
+	bool empty()
+	
+	String add(String rhs)
+	
+	void setChar(int pos, int char)
+	int getChar(int pos)
+	
+	/**
+	Returns the raw pointer (as integer) which points to
+	the first character in this null terminated string.
+	*/
+	[[final]]
+	int pointer()
+	
+}
+
+// (Generic) array class.
+extern class Array {
+	
+	bool equals(Object rhs)
+	String toString()
+	
+	Array copy()
+	
+	int size()
+	void resize(int s)
+	
+	bool empty()
+	
+	void add(Object o)
+	void remove(Object o)
+	
+	bool contains(Object o)
+	
+	//! Returns the raw pointer (as integer) of this array.
+	[[final]]
+	int pointer()
+	
+}
+
+//! General purpose buffer. This class manages a pointer.
+extern class Buffer {
+	
+	bool equals(Object rhs)
+	
+	Buffer copy()
+	
+	int size()
+	void resize(int s)
+	
+	void writeByte(int offset, int value)
+	int readByte(int offset)
+	
+	void writeInt(int offset, int value)
+	int readInt(int offset)
+	
+	void writeFloat(int offset, float value)
+	float readFloat(int offset)
+	
+	//! Writes the specified sub buffer into this buffer.
+	void writeBuffer(int offset, int size, Buffer subBuffer)
+	//! Reads this buffer into the specified sub buffer.
+	void readBuffer(int offset, int size, Buffer subBuffer)
+	
+	//! Returns the raw pointer (as integer) of this buffer.
+	int pointer()
+	
+}

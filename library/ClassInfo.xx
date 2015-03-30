@@ -1,0 +1,13 @@
+/*
+ * ClassInfo.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+class ClassInfo {
+	
+	int		typeID	//!< Class type ID
+	String	name	//!< Class name (or rather identifier)
+	
+}
