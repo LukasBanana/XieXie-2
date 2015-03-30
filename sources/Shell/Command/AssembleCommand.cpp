@@ -23,7 +23,8 @@ void AssembleCommand::Execute(StreamParser& input, Log& output)
             output.Message("assemble file \"" + filename + "\" ...");
 
         /* Assemble source file */
-        assembler.Assemble(filename, filename + ".xbc");
+        if (assembler.Assemble(filename, filename + ".xbc"))
+            output.Success("assembly successful");
     }
 }
 
