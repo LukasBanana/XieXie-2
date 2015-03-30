@@ -56,6 +56,7 @@ extern class Intrinsics {
 // Root base object for all classes
 extern class Object {
 	
+	bool equals(Object rhs)
 	Object copy()
 	String toString()
 	
@@ -64,6 +65,7 @@ extern class Object {
 // UTF-8 string class.
 extern class String {
 	
+	bool equals(Object rhs)
 	Object copy()
 	String toString()
 	
@@ -81,6 +83,7 @@ extern class String {
 // (Generic) array class.
 extern class Array {
 	
+	bool equals(Object rhs)
 	Object copy()
 	String toString()
 	
@@ -100,6 +103,7 @@ extern class Array {
 //! General purpose buffer. This class manages a pointer.
 extern class Buffer {
 	
+	bool equals(Object rhs)
 	Object copy()
 	
 	int size()

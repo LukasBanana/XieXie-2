@@ -115,6 +115,7 @@ class Token
             Visibility,     //!< public, private
             Static,         //!< static
             Init,           //!< init
+            Release,        //!< release
 
             //Enum,           //!< enum
             //Flags,          //!< flags

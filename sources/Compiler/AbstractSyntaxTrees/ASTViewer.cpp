@@ -259,6 +259,12 @@ DEF_VISIT_PROC(ASTViewer, InitDeclStmnt)
     Visit(ast->codeBlock);
 }
 
+DEF_VISIT_PROC(ASTViewer, ReleaseDeclStmnt)
+{
+    AST_INFO_COLOR("ReleaseDeclStmnt", colorStmnt);
+    Visit(ast->codeBlock);
+}
+
 DEF_VISIT_PROC(ASTViewer, CopyAssignStmnt)
 {
     AST_INFO_COLOR("CopyAssignStmnt", colorStmnt);

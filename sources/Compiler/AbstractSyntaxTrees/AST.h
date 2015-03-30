@@ -97,6 +97,7 @@ class AST
             FlagsDeclStmnt,
             ProcDeclStmnt,
             InitDeclStmnt,
+            ReleaseDeclStmnt,
 
             CopyAssignStmnt,
             ModifyAssignStmnt,

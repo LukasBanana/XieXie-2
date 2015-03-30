@@ -620,6 +620,8 @@ StmntPtr Parser::ParseDeclStmnt()
             return ParseFlagsDeclStmnt();*/
         case Tokens::Init:
             return ParseInitDeclStmnt();
+        case Tokens::Release:
+            return ParseReleaseDeclStmnt();
         case Tokens::LDParen:
             return ParseClassDeclOrProcDeclStmnt();
         case Tokens::Var:
@@ -1260,6 +1262,17 @@ InitDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 
     if (!isExtern)
         ast->codeBlock = ParseCodeBlock();
+
+    return ast;
+}
+
+// release_decl_stmnt: 'release' code_block;
+ReleaseDeclStmntPtr Parser::ParseReleaseDeclStmnt()
+{
+    auto ast = Make<ReleaseDeclStmnt>();
+
+    Accept(Tokens::Release);
+    ast->codeBlock = ParseCodeBlock();
 
     return ast;
 }

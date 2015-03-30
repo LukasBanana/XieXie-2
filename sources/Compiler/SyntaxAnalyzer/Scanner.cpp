@@ -387,14 +387,17 @@ TokenPtr Scanner::ScanToken()
     {
         spell += TakeIt();
 
-        if (Is(']') && allowRDParenStack_.Top())
+        if (!allowRDParenStack_.Empty())
         {
-            /* Pop previous state and return special case token */
+            if (Is(']') && allowRDParenStack_.Top())
+            {
+                /* Pop previous state and return special case token */
+                allowRDParenStack_.Pop();
+                return Make(Tokens::RDParen, spell, true);
+            }
             allowRDParenStack_.Pop();
-            return Make(Tokens::RDParen, spell, true);
         }
 
-        allowRDParenStack_.Pop();
         return Make(Tokens::RParen, spell);
     }
 

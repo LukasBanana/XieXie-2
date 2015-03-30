@@ -18,14 +18,18 @@ class Test {
 	init(float x) { // ok, overloading
 		this.x := (int)x
 	}
-	/*release {
+	release {
 		x, y := -1
-	}*/
+	}
+	release {} // error, already defined
 	
 	static void main() {
 		var a := new Test
 		var b := new Test()
 		var c := new Test(1, 2) // error, not defined
+		//call deref(c)
+		//call deref(b)
+		//call deref(a)
 	}
 	
 	private int x, y

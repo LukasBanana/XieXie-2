@@ -28,6 +28,9 @@ class AllocExpr : public Expr
         TypeDenoterPtr      typeDenoter;
         std::vector<ArgPtr> ctorArgs;
 
+        // dast
+        InitDeclStmnt*      declStmntRef = nullptr; // reference to the constructor declaration statement
+
 };
 
 

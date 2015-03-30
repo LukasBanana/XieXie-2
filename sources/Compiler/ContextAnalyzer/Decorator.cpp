@@ -408,6 +408,7 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
         {
             case AST::Types::ProcDeclStmnt:
             case AST::Types::InitDeclStmnt:
+            case AST::Types::ReleaseDeclStmnt:
                 /* Declaration statement for local variables */
                 for (auto& varDecl : ast->varDecls)
                 {
@@ -480,6 +481,18 @@ DEF_VISIT_PROC(Decorator, InitDeclStmnt)
         {
             Visit(ast->attribPrefix);
             Visit(ast->params);
+            Visit(ast->codeBlock);
+        }
+        PopSymTab();
+    }
+}
+
+DEF_VISIT_PROC(Decorator, ReleaseDeclStmnt)
+{
+    if (IsAnalyzeCode())
+    {
+        PushSymTab(*ast);
+        {
             Visit(ast->codeBlock);
         }
         PopSymTab();

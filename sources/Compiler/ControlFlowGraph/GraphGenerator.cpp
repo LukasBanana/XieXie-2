@@ -659,6 +659,11 @@ DEF_VISIT_PROC(GraphGenerator, InitDeclStmnt)
     //TODO ...
 }
 
+DEF_VISIT_PROC(GraphGenerator, ReleaseDeclStmnt)
+{
+    //TODO ...
+}
+
 DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
 {
     /* Make basic block */

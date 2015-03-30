@@ -194,6 +194,8 @@ std::string Token::TypeToString(const Types type)
             return "static";
         case Types::Init:
             return "init";
+        case Types::Release:
+            return "release";
 
         case Types::New:
             return "new";
