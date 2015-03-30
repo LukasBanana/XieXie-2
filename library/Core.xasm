@@ -29,15 +29,27 @@ new:
 	push $r0			; return object reference
 	ret (1) 1
 
-; void deref(Object obj)
-deref:
+; void inc_ref(Object obj)
+inc_ref:
 	; check for null pointer
 	ldw $r0, ($lb) -4		; load object reference 'obj'
 	mov $r1, 0
-	cmp $r0, $r1			; compare: obj != null
-	jne .not_null
-		ret (0) 1
-	.not_null:
+	cmp $r0, $r1			; compare: obj = null
+	je .end
+		; increment reference
+		ldw $r1, ($r0) 0	; load reference counter from object
+		inc $r1				; increment reference counter
+		stw $r1, ($r0) 0	; write reference counter back to object
+	.end:
+	ret (0) 1
+
+; void dec_ref(Object obj)
+dec_ref:
+	; check for null pointer
+	ldw $r0, ($lb) -4		; load object reference 'obj'
+	mov $r1, 0
+	cmp $r0, $r1			; compare: obj = null
+	jne .end
 	
 	; check: ref-count = 1
 	ldw $r1, ($r0) 0		; load reference counter from object
@@ -63,19 +75,17 @@ deref:
 	;push $r0				; push this pointer again as argument onto stack
 	call <FreeMem>			; delete object 'FreeMem(this)'
 	
+	.end:
 	ret (0) 1
 
-; Object downcast(Object obj, int baseTypeID, int numSubClasses)
-downcast:
+; Object dynamic_cast(Object obj, int baseTypeID, int numSubClasses)
+dynamic_cast:
 	ldw $r0, ($lb) -4	; load object reference 'obj'
 	
 	; check for null pointer
 	mov $r1, 0
-	cmp $r0, $r1		; check for null pointer
-	jne .not_null
-		push 0			; return null pointer
-		ret (1) 3
-	.not_null:
+	cmp $r0, $r1		; compare: obj = null
+	je .return_null
 	
 	; load type ids
 	ldw $r1, ($r0) 4	; load type-id of 'obj'
@@ -85,14 +95,14 @@ downcast:
 	
 	; compare type-ids
 	cmp $r2, $r1		; compare: baseClass.typeID > obj.typeID
-	jg .castexcept
+	jg .return_null
 		cmp $r1, $r3	; compare: obj.typeID > (baseClass.typeID + obj.numSubClasses)
-		jg .castexcept
+		jg .return_null
 			push $r0	; return object reference
 			ret (1) 3
 			
 	; class-cast exception
-	.castexcept:
+	.return_null:
 	push 0				; return null pointer
 	ret (1) 3
 
@@ -318,9 +328,9 @@ CArray.Prelease,R@Object:
 		push $r1
 		push $r2
 		
-		; de-reference object
+		; decrement reference counter
 		push $r0
-		call deref
+		call dec_ref
 		
 		; restore registers
 		pop $r2
