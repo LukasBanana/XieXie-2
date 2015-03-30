@@ -1,0 +1,34 @@
+
+// Init and Release Test
+// 30/03/2015
+
+class Object {}
+
+class Test {
+	
+	init() {
+		x, y := 0
+	}
+	init(int x) {
+		this.x := x
+	}
+	init(int x) { // error, already defined
+		this.y := x+2
+	}
+	init(float x) { // ok, overloading
+		this.x := (int)x
+	}
+	/*release {
+		x, y := -1
+	}*/
+	
+	static void main() {
+		var a := new Test
+		var b := new Test()
+		var c := new Test(1, 2) // error, not defined
+	}
+	
+	private int x, y
+	public int z
+	
+}
