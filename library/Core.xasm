@@ -18,13 +18,13 @@ new:
 	pop $r0				; get object reference
 	
 	mov $r1, 1			; initialize reference counter to 1
-	stw $r1, ($r0), 0	; write reference counter to object
+	stw $r1, ($r0) 0	; write reference counter to object
 	
 	ldw $r1, ($lb) -8	; load argument 'typeID'
-	stw $r1, ($r0), 4	; write type-id to object
+	stw $r1, ($r0) 4	; write type-id to object
 	
 	ldw $r1, ($lb) -12	; load argument 'vtableAddr' (address to vtable for the object)
-	stw $r1, ($r0), 8	; write vtable address to object
+	stw $r1, ($r0) 8	; write vtable address to object
 	
 	push $r0			; return object reference
 	ret (1) 1
@@ -32,20 +32,20 @@ new:
 ; void deref(Object obj)
 deref:
 	ldw $r0, ($lb) -4		; load object reference 'obj'
-	ldw $r1, ($r0), 0		; load reference counter from object
+	ldw $r1, ($r0) 0		; load reference counter from object
 	
 	; check: ref-count = 1
 	mov $r2, 1
 	cmp $r1, $r2			; check if reference is 1
 	je .rel					; release object
 		dec $r1				; decrement reference counter
-		stw $r1, ($r0), 0	; write reference counter back to object
+		stw $r1, ($r0) 0	; write reference counter back to object
 		ret (0) 1
-	.ref:
+	.rel:
 	
 	; load d'tor address
-	ldw $r2, ($r0), 8		; load vtable address
-	ldw $r3, ($r2), 0		; load release procedure address
+	ldw $r2, ($r0) 8		; load vtable address
+	ldw $r3, ($r2) 0		; load release procedure address
 	
 	; call d'tor
 	push $r0				; push this pointer as argument onto stack
@@ -70,7 +70,7 @@ downcast:
 	.not_null:
 	
 	; load type ids
-	ldw $r1, ($r0), 4	; load type-id of 'obj'
+	ldw $r1, ($r0) 4	; load type-id of 'obj'
 	ldw $r2, ($lb) -8	; load type-id 'baseTypeID'
 	ldw $r3, ($lb) -12	; load number of sub classes 'numSubClasses'
 	add $r3, $r3, $r2	; calculate: baseClass.typeID + obj.numSubClasses
@@ -167,7 +167,7 @@ Object.vtable:
 CString.Prelease,R@Object:
 	; free string buffer
 	ldw $r0, ($lb) -4	; load this pointer
-	ldw $r1, ($r0), 20	; load pointer to string buffer
+	ldw $r1, ($r0) 20	; load pointer to string buffer
 	push $r1
 	call <FreeMem>		; delete string buffer
 	ret (0) 1
@@ -238,6 +238,16 @@ CString.Padd,R@String,R@String:
 	; ...
 	ret (1) 2
 
+; void String.setChar(String this, int pos, int char)
+CString.PsetChar,R@String,I,I:
+	; ...
+	ret (0) 3
+
+; int String.getChar(String this, int pos)
+CString.PgetChar,R@String,I:
+	; ...
+	ret (1) 2
+
 ; int String.pointer(String this)
 CString.Ppointer,R@String:
 	ldw $r0, ($lb) -4	; load this pointer
@@ -254,6 +264,8 @@ String.vtable:
 	.word @CString.Psize,R@String
 	.word @CString.Presize,R@String,I
 	.word @CString.Padd,R@String,R@String
+	.word @CString.PsetChar,R@String,I,I
+	.word @CString.PgetChar,R@String,I
 
 
 

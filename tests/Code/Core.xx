@@ -82,6 +82,9 @@ extern class String {
 	
 	String add(String rhs)
 	
+	void setChar(int pos, int char)
+	int getChar(int pos)
+	
 	/**
 	Returns the raw pointer (as integer) which points to
 	the first character in this null terminated string.
