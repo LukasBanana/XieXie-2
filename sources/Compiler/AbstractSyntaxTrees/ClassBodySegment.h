@@ -30,6 +30,7 @@ class ClassBodySegment : public AST
         AST_INTERFACE(ClassBodySegment);
 
         static Visibilities GetVisibility(const std::string& spell);
+        static std::string GetVisibilitySpell(const Visibilities vis);
 
         Visibilities            visibility = Visibilities::Public;
         std::vector<StmntPtr>   declStmnts;

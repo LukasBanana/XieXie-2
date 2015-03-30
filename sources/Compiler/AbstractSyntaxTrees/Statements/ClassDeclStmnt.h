@@ -58,11 +58,11 @@ class ClassDeclStmnt : public ScopedStmnt
         
         std::string HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const;
 
-        SourceCodePtr                       source_;            // Reference to the source where this class is declared.
+        SourceCodePtr       source_;            // Reference to the source where this class is declared.
 
         // dast
-        PointerTypeDenoter                  thisTypeDenoter_;   // type denoter for this class declaration
-        ClassDeclStmnt*                     baseClassRef_ = nullptr;
+        PointerTypeDenoter  thisTypeDenoter_;   // type denoter for this class declaration
+        ClassDeclStmnt*     baseClassRef_ = nullptr;
 
 };
 

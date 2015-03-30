@@ -476,26 +476,40 @@ EnumEntryPtr Parser::ParseEnumEntry()
 // class_body_segment: class_visibility? decl_stmnt_list?;
 // class_visibility: class_visibility_type ':';
 // class_visibility_type: 'public' | 'private';
-void Parser::ParseClassBodySegment(ClassDeclStmnt& ast)
+void Parser::ParseClassBodySegment(ClassDeclStmnt& ast, ClassBodySegment::Visibilities& vis)
 {
-    /* Parse segment visibility */
-    auto vis = ClassBodySegment::Visibilities::Public;
+    auto segmentVis = vis;
 
+    auto GetSegment = [&segmentVis, &ast]()
+    {
+        return (segmentVis == ClassBodySegment::Visibilities::Private) ? &(ast.privateSegment) : &(ast.publicSegment);
+    };
+
+    /* Parse segment visibility */
     if (Is(Tokens::Visibility))
     {
-        vis = ClassBodySegment::GetVisibility(AcceptIt()->Spell());
-        Accept(Tokens::Colon);
+        segmentVis = ClassBodySegment::GetVisibility(AcceptIt()->Spell());
+
+        /* Check if visibility is for all following statements */
+        if (Is(Tokens::Colon))
+        {
+            /* Set new visibility */
+            Accept(Tokens::Colon);
+            vis = segmentVis;
+        }
+        else
+        {
+            /* Parse only a single statement with the current segment visibility */
+            GetSegment()->declStmnts.push_back(ParseDeclStmnt());
+            return;
+        }
     }
 
     /* Parse declaration statements */
     auto declStmnts = ParseDeclStmntList();
 
     /* Insert declaration statements into class body segment */
-    auto segment = &(ast.publicSegment);
-
-    if (vis == ClassBodySegment::Visibilities::Private)
-        segment = &(ast.privateSegment);
-
+    auto segment = GetSegment();
     segment->declStmnts.insert(segment->declStmnts.end(), declStmnts.begin(), declStmnts.end());
 }
 
@@ -1034,9 +1048,11 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
     auto ast = Make<ClassDeclStmnt>(source_);
     state_.classDecl = ast.get();
 
+    /* Setup attribute prefix */
     ast->attribPrefix = attribPrefix;
     ast->sourceArea.start = Accept(Tokens::Class)->Area().start;
 
+    /* Parse class signature */
     auto identTkn = Accept(Tokens::Ident);
     ast->ident = identTkn->Spell();
     ast->sourceArea.end = identTkn->Area().end;
@@ -1044,9 +1060,12 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
     if (Is(Tokens::Colon))
         ast->baseClassIdent = AcceptBaseClassIdent();
     
+    /* Parse class body segments */
+    auto vis = ClassBodySegment::Visibilities::Public;
+
     Accept(Tokens::LCurly);
     while (!Is(Tokens::RCurly))
-        ParseClassBodySegment(*ast);
+        ParseClassBodySegment(*ast, vis);
     Accept(Tokens::RCurly);
 
     return ast;

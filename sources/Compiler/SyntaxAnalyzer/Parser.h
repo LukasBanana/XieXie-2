@@ -12,6 +12,7 @@
 #include "Scanner.h"
 #include "ASTDeclarations.h"
 #include "BinaryExpr.h"
+#include "ClassBodySegment.h"
 
 #include <string>
 #include <stack>
@@ -81,7 +82,7 @@ class Parser
         /* --- Common AST nodes --- */
 
         void                    ParseProgram(Program& ast);
-        void                    ParseClassBodySegment(ClassDeclStmnt& ast);
+        void                    ParseClassBodySegment(ClassDeclStmnt& ast, ClassBodySegment::Visibilities& vis);
 
         CodeBlockPtr            ParseCodeBlock();
         VarNamePtr              ParseVarName(TokenPtr identTkn = nullptr, bool hasArrayAccess = false);

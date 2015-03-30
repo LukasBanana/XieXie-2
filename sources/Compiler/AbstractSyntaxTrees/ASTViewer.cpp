@@ -119,7 +119,7 @@ DEF_VISIT_PROC(ASTViewer, Attrib)
 DEF_VISIT_PROC(ASTViewer, ClassBodySegment)
 {
     AST_INFO("ClassBodySegment");
-    //ast->visibility!!!
+    String("visibility", ClassBodySegment::GetVisibilitySpell(ast->visibility));
     Visit(ast->declStmnts);
 }
 

@@ -636,16 +636,26 @@ bool BinaryExpr::HasBoolCompatibleOperator() const
 
 /* --- ClassBodySegment --- */
 
+static std::map<std::string, ClassBodySegment::Visibilities> MapClassVisibility()
+{
+    using Ty = ClassBodySegment::Visibilities;
+    return std::map<std::string, Ty>
+    {
+        { "private", Ty::Private },
+        { "public",  Ty::Public  },
+    };
+}
+
 ClassBodySegment::Visibilities ClassBodySegment::GetVisibility(const std::string& spell)
 {
     return MapSpellToType<Visibilities>(
-        spell,
-        {
-            { "private", Visibilities::Private },
-            { "public",  Visibilities::Public  },
-        },
-        "invalid class visibility \"" + spell + "\""
+        spell, MapClassVisibility(), "invalid class visibility \"" + spell + "\""
     );
+}
+
+std::string ClassBodySegment::GetVisibilitySpell(const Visibilities vis)
+{
+    return MapTypeToSpell<Visibilities>(vis, MapClassVisibility());
 }
 
 

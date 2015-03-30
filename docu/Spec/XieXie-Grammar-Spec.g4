@@ -123,7 +123,7 @@ extern_class_decl_stmnt:	'class' class_name base_class_ident? extern_class_body;
 class_body:					'{' class_body_segment_list '}';
 class_body_segment_list:	class_body_segment*;
 class_body_segment:			class_visibility? decl_stmnt_list?;
-class_visibility:			class_visibility_type ':';
+class_visibility:			class_visibility_type (':')?;
 class_visibility_type:		'public' | 'private';
 extern_class_body:			'{' extern_decl_stmnt_list? '}';
 class_name:					IDENT;
@@ -159,7 +159,7 @@ param:			type_denoter IDENT (':=' expr)?;
 
 // ARGUMENTS
 arg_list:	arg (',' arg)*;
-arg:		(expr | IDENT ':' expr);
+arg:		(IDENT ':')? expr;
 
 // EXPRESSIONS
 expr_list:	expr (',' expr)*;
