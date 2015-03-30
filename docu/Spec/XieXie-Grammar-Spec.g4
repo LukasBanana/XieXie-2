@@ -30,16 +30,17 @@ var_name_stmnt	: var_decl_stmnt
 
 decl_stmnt	: var_decl_stmnt
 			| class_decl_stmnt
-			| enum_decl_stmnt
-			| flags_decl_stmnt
+			/*| enum_decl_stmnt
+			| flags_decl_stmnt*/
 			| proc_decl_stmnt
-			| init_decl_stmnt;
+			| init_decl_stmnt
+			| release_decl_stmnt;
 
 extern_decl_stmnt	: extern_class_decl_stmnt
 					| extern_proc_decl_stmnt
 					| extern_init_decl_stmnt
-					| enum_decl_stmnt
-					| flags_decl_stmnt;
+					/*| enum_decl_stmnt
+					| flags_decl_stmnt*/;
 
 branch_stmnt	: if_stmnt
 				| switch_stmnt;
@@ -129,6 +130,7 @@ extern_class_body:			'{' extern_decl_stmnt_list? '}';
 class_name:					IDENT;
 base_class_ident:			':' ident;
 
+/*
 // ENUMERATIONS
 enum_decl_stmnt:	'enum' IDENT enum_body;
 enum_body:			'{' enum_entry_list? '}';
@@ -142,6 +144,7 @@ flags_body:					'{' flags_entry_list? '}';
 flags_entry_list:			flags_entry (',' flags_entry)*;
 flags_entry:				IDENT;
 base_flags_varname_list:	':' var_name (',' var_name)*;
+*/
 
 // PROCEDURES
 proc_decl_stmnt:			attrib_prefix? proc_signature code_block;
@@ -152,6 +155,8 @@ storage_modifier:			'static';
 init_decl_stmnt:			attrib_prefix? init_head code_block;
 extern_init_decl_stmnt:		attrib_prefix? init_head;
 init_head:					'init' '(' param_list? ')';
+
+release_decl_stmnt:			'release' code_block;
 
 // PARAMETERS:
 param_list:		param (',' param)*;
