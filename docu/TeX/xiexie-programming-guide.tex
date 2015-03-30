@@ -82,7 +82,7 @@
 		stringstyle = \color{red},
 		frame = single,
 		tabsize = 4,
-		numbers=left
+		numbers=none
 	}
 	\lstset{
 		morekeywords = {
@@ -221,6 +221,8 @@ may change over time. Here is a rough ToDo-list:
 	\hline
 	Common CFG and TAC Generation from DAST & \incompl \\
 	\hline
+	CFG Simplification & \almdone \\
+	\hline
 	If Statement & \done \\
 	\hline
 	Switch Statement & \incompl \\
@@ -236,6 +238,17 @@ may change over time. Here is a rough ToDo-list:
 	While Loop & \done \\
 	\hline
 	Do-While Loop & \done \\
+	
+	\hline \hline
+	\multicolumn{2}{|c|}{\textsc{Optimizer}} \\
+	\hline
+	Constant Folding & \done \\
+	\hline
+	Local Constant Propagation & \almdone \\
+	\hline
+	Local Variable Clean & \almdone \\
+	\hline
+	Local Variable Reduction & \incompl \\
 	
 	\hline \hline
 	\multicolumn{2}{|c|}{\textsc{XASM Backend}} \\
@@ -721,11 +734,10 @@ in the global scope. That means every procedure must be defined inside a class a
 
 To get started, take a look at the following example program which prints the classical phrase ``Hello, World!''
 onto the standard output:
-\begin{lstlisting}
+\begin{lstlisting}[numbers=left]
 // XieXie Hello World Program
 import System
 class HelloWorld {
-    [[entry]]
     static void main() {
         System.out.writeLine("Hello, World!")
     }
@@ -766,7 +778,7 @@ import "File1.xx"
 
 Line 3 declares the class \texttt{HelloWorld} which implicit inherits from the base class \texttt{Object},
 like it is done in \java:
-\begin{lstlisting}
+\begin{lstlisting}[numbers=left, firstnumber=3]
 class HelloWorld { /* ... */ }
 \end{lstlisting}
 To inherit from other classes, just write a colon and the identifier of the base class:
@@ -775,39 +787,28 @@ class SubClass : BaseClass { /* ... */ }
 \end{lstlisting}
 There is no multiple inheritance like in \cpp or interfaces like in \java!
 
-The next two lines declare the procedure \texttt{main}. In line 4, in \textit{attribute} is defined
-for this procedure. This makes the procedure to the main \textbf{entry point}:
-\begin{lstlisting}
-[[entry]]
-static void main() { /* ... */ }
+The next line declares the procedure \texttt{main}.
+\begin{lstlisting}[numbers=left, firstnumber=4]
+static void main() {
 \end{lstlisting}
-There are several attributes for class-, procedure-, or variable declarations. Currently only two attributes are supported:
+This is the main entry point for the program. There can only be one main entry point, but there are several possible
+signatures for this procedure:
 \begin{lstlisting}
-// class A is marked as 'deprecated'
-[[deprecated]]
-class A {}
+// No return value, no arguments
+static void main() { /* ... */ }
 
-// class B is marked as 'deprecated' with a hint
-[[deprecated("hint...")]]
-class B {
-    // procedure M1 is marked as the main entry point
-    [[entry]]
-    static void M1() {}
-    
-    // procedure M2 with return type is marked as an
-    // alternative entry point named "entryAlt1"
-    [[entry("entryAlt1")]]
-    static int M2() { return 0 }
-    
-    // procedure M3 with arguments 'args' is marked as
-    // an alternative entry point named "entryAlt2"
-    [[entry("entryAlt2")]]
-    static void M3(String[] args) {}
-}
+// No return value, arguments
+static void main(String[] args) { /* ... */ }
+
+// Return value, no arguments
+static int main() { /* ... */ }
+
+// Return value, arguments
+static int main(String[] args) { /* ... */ }
 \end{lstlisting}
 
 The last line of code prints the message to the standard output:
-\begin{lstlisting}
+\begin{lstlisting}[numbers=left, firstnumber=5]
 System.out.writeLine("Hello, World!")
 \end{lstlisting}
 \texttt{System} is a class from the standard \xiexie library, \texttt{out} is a \textit{static} member
@@ -943,6 +944,45 @@ class S : B {
     }
 }
 \end{lstlisting}
+
+
+%----------------------------------------------------------------------------------------
+%	ATTRIBUTES
+%----------------------------------------------------------------------------------------
+
+\section{Attributes}
+
+There are several attributes for class-, procedure-, and variable declarations:
+\begin{lstlisting}
+// Class A is marked as 'deprecated'.
+[[deprecated]]
+class A {
+    // Declare some procedure
+    void p() {}
+}
+
+// Class B is marked as 'deprecated' with a hint.
+// Since B is deprecated as well, the deprecation of A is ignored here.
+[[deprecated("hint...")]]
+class B {
+    // Mark 'p' to override 'A.p'. If 'p' does not match the signature
+    // of procedure 'A.p', the compiler will throw an error message.
+    [[override]]
+    void p() {}
+}
+
+// Class C is 'final', i.e. no class can inherit from C.
+// Because A is deprecated but not C, the compiler will throw a warning.
+[[final]]
+class C : A {}
+\end{lstlisting}
+Here is a summary of all attributes:
+\begin{itemize}
+	\item \textbf{\texttt{deprecated}}, \textbf{\texttt{deprecated(String)}}
+		Marks a class, procedure, or member-variable as deprecated.
+	\item \textbf{\texttt{override}} Overrides a procedure from a class in its inheritance hierarchy.
+	\item \textbf{\texttt{final}} Makes a class final, which disables to inherit from this class.
+\end{itemize}
 
 
 %----------------------------------------------------------------------------------------
