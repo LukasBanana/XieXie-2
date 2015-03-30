@@ -37,11 +37,13 @@ class PointerTypeDenoter : public TypeDenoter
         {
             auto copy = std::make_shared<PointerTypeDenoter>();
             copy->declIdent = declIdent;
-            copy->declRef = declRef;
+            copy->isWeakRef = isWeakRef;
+            copy->declRef   = declRef;
             return copy;
         }
 
         std::string declIdent;          // may be empty (for null pointer literal)
+        bool        isWeakRef = false;
 
         // dast
         AST*        declRef = nullptr; // reference to the declaration AST node (may be null -> for null pointer literal)

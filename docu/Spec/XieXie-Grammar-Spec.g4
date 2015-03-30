@@ -226,7 +226,7 @@ return_type_denoter		: VOID_TYPE_DENOTER
 
 array_type_denoter:		type_denoter '[]';
 
-pointer_type_denoter:	IDENT;
+pointer_type_denoter:	IDENT ('@')?;
 
 auto_type_denoter		: 'var'
 						| 'const';

@@ -664,8 +664,8 @@ StmntPtr Parser::ParseVarNameStmnt(TokenPtr identTkn)
     if (Is(Tokens::LParen))
         return ParseVarNameStmntSub(identTkn);
 
-    /* Check for identifier for variable declaration */
-    if (Is(Tokens::Ident))
+    /* Check for identifier or weak-reference denoter of variable declaration */
+    if (Is(Tokens::Ident) || Is(Tokens::At))
         return ParseVarDeclStmnt(identTkn);
 
     auto varName = ParseVarName(identTkn);
@@ -1757,11 +1757,12 @@ BuiltinTypeDenoterPtr Parser::ParseBuiltinTypeDenoter()
     return ast;
 }
 
-// pointer_type_denoter: var_name;
+// pointer_type_denoter: IDENT ('@')?;
 PointerTypeDenoterPtr Parser::ParsePointerTypeDenoter(const TokenPtr& identTkn)
 {
     auto ast = Make<PointerTypeDenoter>();
 
+    /* Parse type name */
     if (identTkn)
     {
         ast->declIdent = identTkn->Spell();
@@ -1769,6 +1770,13 @@ PointerTypeDenoterPtr Parser::ParsePointerTypeDenoter(const TokenPtr& identTkn)
     }
     else
         ast->declIdent = AcceptIdent();
+
+    /* Parse optional weak-reference denoter '@' */
+    if (Is(Tokens::At))
+    {
+        AcceptIt();
+        ast->isWeakRef = true;
+    }
 
     return ast;
 }
