@@ -1,0 +1,261 @@
+;
+; Core.xasm
+; 
+; Core XieXie assembler file
+; !!! DO NOT EDIT !!!
+;
+; This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
+; See "LICENSE.txt" for license information.
+;
+
+; ------- Common -------
+
+; Object new(int size, int typeID, int vtableAddr)
+new:
+	ldw $r0, ($lb) -4	; load argument 'size' (must include 12 bytes for reference counter, type-id, and vtable)
+	push $r0
+	call <AllocMem>		; allocate memory for object
+	pop $r0				; get object reference
+	
+	mov $r1, 1			; initialize reference counter to 1
+	stw $r1, ($r0), 0	; write reference counter to object
+	
+	ldw $r1, ($lb) -8	; load argument 'typeID'
+	stw $r1, ($r0), 4	; write type-id to object
+	
+	ldw $r1, ($lb) -12	; load argument 'vtableAddr' (address to vtable for the object)
+	stw $r1, ($r0), 8	; write vtable address to object
+	
+	push $r0			; return object reference
+	ret (1) 1
+
+; void deref(Object obj)
+deref:
+	ldw $r0, ($lb) -4		; load object reference 'obj'
+	ldw $r1, ($r0), 0		; load reference counter from object
+	
+	; check: ref-count = 1
+	mov $r2, 1
+	cmp $r1, $r2			; check if reference is 1
+	je .rel					; release object
+		dec $r1				; decrement reference counter
+		stw $r1, ($r0), 0	; write reference counter back to object
+		ret (0) 1
+	.ref:
+	
+	; load d'tor address
+	ldw $r2, ($r0), 8		; load vtable address
+	ldw $r3, ($r2), 0		; load release procedure address
+	
+	; call d'tor
+	push $r0				; push this pointer as argument onto stack
+	call $r3				; call destructor 'release(this)'
+	
+	; free memory
+	push $r0				; push this pointer again as argument onto stack
+	call <FreeMem>			; delete object 'FreeMem(this)'
+	
+	ret (0) 1
+
+; Object downcast(Object obj, int baseTypeID, int numSubClasses)
+downcast:
+	ldw $r0, ($lb) -4	; load object reference 'obj'
+	
+	; check for null pointer
+	mov $r1, 0
+	cmp $r0, $r1		; check for null pointer
+	jne .not_null
+		push 0			; return null pointer
+		ret (1) 3
+	.not_null:
+	
+	; load type ids
+	ldw $r1, ($r0), 4	; load type-id of 'obj'
+	ldw $r2, ($lb) -8	; load type-id 'baseTypeID'
+	ldw $r3, ($lb) -12	; load number of sub classes 'numSubClasses'
+	add $r3, $r3, $r2	; calculate: baseClass.typeID + obj.numSubClasses
+	
+	; compare type-ids
+	cmp $r2, $r1		; compare: baseClass.typeID > obj.typeID
+	jg .castexcept
+		cmp $r1, $r3	; compare: obj.typeID > (baseClass.typeID + obj.numSubClasses)
+		jg .castexcept
+			push $r0	; return object reference
+			ret (1) 3
+			
+	; class-cast exception
+	.castexcept:
+	push 0				; return null pointer
+	ret (1) 3
+
+
+; ------- Object Class -------
+
+; Object:
+;	int refCount	(0)
+;	int typeID		(4)
+;	int vtableAddr	(8)
+
+; void Object.release(Object this)
+CObject.Prelease,R@Object:
+
+; void Object.init(Object this)
+CObject.Pinit,R@Object:
+	ret (0) 1
+
+; int Object.typeID(Object this)
+CObject.PtypeID,R@Object:
+	ldw $r0, ($lb) -4	; load this pointer
+	ldw $r1, ($r0) 4	; load type-id of 'this'
+	push $r1			; return type-id
+	ret (1) 1
+
+; int Object.refCount(Object this)
+CObject.PrefCount,R@Object:
+	ldw $r0, ($lb) -4	; load this pointer
+	ldw $r1, ($r0) 0	; load reference counter of 'this'
+	push $r1			; return reference counter
+	ret (1) 1
+
+; bool Object.equals(Object this, Object rhs)
+CObject.Pequals,R@Object:
+	; load arguments
+	ldw $r0, ($lb) -4	; load this pointer
+	ldw $r1, ($lb) -8	; load object reference 'rhs'
+	
+	; load type ids
+	ldw $r2, ($r0) 4	; load type-id of 'this'
+	ldw $r3, ($r1) 4	; load type-id of 'rhs'
+	
+	; check: this.typeID = rhs.typeID
+	cmp $r2, $r3		; compare type-id of both object references
+	je .equal
+		push 0			; return false
+		ret (1) 2
+	.equal:
+	push 1				; return true
+	ret (1) 2
+
+; Object Object.copy(Object this)
+CObject.Pcopy,R@Object:
+	push @Object.vtable
+	push 12
+	call new				; allocate new empty object
+	ret (1) 1
+
+; TODO: currently returns null pointer !!!
+; String Object.toString(Object this)
+CObject.PtoString,R@Object:
+	push 0		; return null pointer
+	ret (1) 1
+
+Object.vtable:
+	.word @CObject.Prelease,R@Object
+	.word @CObject.Pinit,R@Object
+	.word @CObject.PtoString,R@Object
+
+
+; ------- String Class -------
+
+; String:
+;	Object	base	( 0)
+;	int		size	(12)
+;	int		bufSize	(16)
+;	int		buffer	(20)
+
+; void String.release(Object this)
+CString.Prelease,R@Object:
+	; free string buffer
+	ldw $r0, ($lb) -4	; load this pointer
+	ldw $r1, ($r0), 20	; load pointer to string buffer
+	push $r1
+	call <FreeMem>		; delete string buffer
+	ret (0) 1
+
+; void String.init(Object this)
+CString.Pinit,R@Object:
+	; initialize string with buffer: byte[1] := { '\0' }
+	ldw $r0, ($lb) 4	; load this pointer
+	
+	; this.size := 0
+	mov $r1, 0
+	stw $r1, ($r0) 12
+	
+	; initialize string buffer with 16 elements
+	mov $r2, 16
+	stw $r2, ($r0) 16
+	
+	; allocate string buffer
+	push 16
+	call <AllocMem>		; allocate 16 bytes
+	pop $r2
+	stw $r2, ($r0) 20	; store pointer to buffer in string instance
+	
+	; initialize string buffer with null terminator
+	stw $r1, ($r2) 0	; this.pointer[0] := 0
+	ret (0) 1
+
+; void String.init(String this, String copySource)
+CString.Pinit,R@String,R@String:
+	; ...
+	ret (0) 2
+
+; String String.toString(Object this)
+CString.PtoString,R@Object:
+	ret (0) 0	; just return input argument
+
+; String String.copy(String this)
+CString.Pcopy,R@String:
+	; allocate new String instance
+	push @String.vtable						; push String vtable
+	push 1									; push String type-id
+	push 24									; push String size
+	call new								; allocate new String
+	pop $r1
+	
+	; call String's copy c'tor
+	ldw $r0, ($lb) -4						; load this pointer
+	push $r1								; push first as back-up
+	push $r0								; push this pointer
+	push $r1								; push second as argument
+	call CString.Pinit,R@String,R@String
+	ret (1) 1								; return new String instance (in back-up $r0 on stack)
+
+; int String.size(String this)
+CString.Psize,R@String:
+	ldw $r0, ($lb) -4	; load this pointer
+	ldw $r1, ($r0) 12	; load member this.size
+	push $r1			; return this.size
+	ret (1) 1
+
+; void String.resize(String this, int size)
+CString.Presize,R@String,I:
+	; ...
+	ret (0) 2
+
+; String String.add(String this, String rhs)
+CString.Padd,R@String,R@String:
+	; ...
+	ret (1) 2
+
+; int String.pointer(String this)
+CString.Ppointer,R@String:
+	ldw $r0, ($lb) -4	; load this pointer
+	ldw $r1, ($r0) 20	; load member this.buffer
+	push $r1			; return this.buffer
+	ret (1) 1
+
+String.vtable:
+	.word @CString.Prelease,R@Object
+	.word @CString.Pinit,R@Object
+	.word @CString.PtoString,R@Object
+	.word @CString.Pinit,R@String,R@String
+	.word @CString.Pcopy,R@String
+	.word @CString.Psize,R@String
+	.word @CString.Presize,R@String,I
+	.word @CString.Padd,R@String,R@String
+
+
+
+
+

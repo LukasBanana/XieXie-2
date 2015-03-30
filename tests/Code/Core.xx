@@ -56,8 +56,15 @@ extern class Intrinsics {
 // Root base object for all classes
 extern class Object {
 	
+	//! Returns the type ID of this object
+	[[final]]
+	int typeID()
+	
+	//! Returns the reference count of this object
+	[[final]]
+	int refCount()
+	
 	bool equals(Object rhs)
-	Object copy()
 	String toString()
 	
 }
@@ -66,16 +73,20 @@ extern class Object {
 extern class String {
 	
 	bool equals(Object rhs)
-	Object copy()
 	String toString()
 	
+	String copy()
+	
 	int size()
+	void resize(int size)
+	
 	String add(String rhs)
 	
 	/**
 	Returns the raw pointer (as integer) which points to
 	the first character in this null terminated string.
 	*/
+	[[final]]
 	int pointer()
 	
 }
@@ -84,8 +95,9 @@ extern class String {
 extern class Array {
 	
 	bool equals(Object rhs)
-	Object copy()
 	String toString()
+	
+	Array copy()
 	
 	int size()
 	void resize(int s)
@@ -96,6 +108,7 @@ extern class Array {
 	bool contains(Object o)
 	
 	//! Returns the raw pointer (as integer) of this array.
+	[[final]]
 	int pointer()
 	
 }
@@ -104,7 +117,8 @@ extern class Array {
 extern class Buffer {
 	
 	bool equals(Object rhs)
-	Object copy()
+	
+	Buffer copy()
 	
 	int size()
 	void resize(int s)
