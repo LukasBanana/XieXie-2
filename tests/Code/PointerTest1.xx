@@ -1,0 +1,91 @@
+
+// Pointer Test 1
+// 30/03/2015
+
+class Object {}
+class Array {}
+
+class Node {
+	
+private:
+	
+	Node childA		// strong reference
+	Node childB		// strong reference
+	Node@ parent	// weak reference
+	
+public:
+	
+	Node getChildA() { return childA }
+	Node getChildB() { return childB }
+	Node@ getParent() { return parent }
+	
+	init() {}
+	init(Node@ parent := null) {
+		this.parent := parent
+	}
+	
+	void createChildren() {
+		childA := new Node(this)
+		childB := new Node(this)
+	}
+	
+	static void createTree(Node@ node, int depth) {
+		if depth > 0 {
+			node.createChildren()
+			Node.createTree(node.getChildA(), depth - 1)
+			Node.createTree(node.getChildB(), depth - 1)
+		}
+	}
+	
+}
+
+class Widget {
+	int x
+}
+
+class Test {
+	
+	static Widget wid := null
+	
+	static Widget getWidget() {
+		return Test.wid
+	}
+	
+	static Widget@ getWidgetRef() {
+		return Test.wid
+	}
+	
+	static void f(Widget a, Widget@ b) {
+		a.x += b.x
+	}
+	
+	static void main() {
+		
+		// Copies between strong- and weak references
+		Widget a := new Widget()
+		
+		Widget@ aRef := a
+		
+		Widget b := aRef
+		var aRef2 := aRef
+		
+		var w := Test.getWidget()
+		var wRef := Test.getWidgetRef()
+		
+		// Procedure calls with strong- and weak references
+		Test.f(a, a)
+		Test.f(a, aRef)
+		Test.f(aRef, aRef)
+		Test.f(aRef, a)
+		
+		// Create tree hierarchy with weak reference to the children parent's
+		Node root := new Node()
+		Node.createTree(root, 3)
+		
+		// Reference arrays
+		Node[] list1 := new Node[](10)
+		Node@[] list2 := new Node@[](10)
+		
+	}
+	
+}
