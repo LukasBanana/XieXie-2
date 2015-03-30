@@ -5,6 +5,7 @@
 class A {
 	String[][] s
 }
+
 class B {
 	A[] a
 	C getC() {
@@ -14,6 +15,7 @@ class B {
 		return { new C() }
 	}
 }
+
 class C {
 	B b
 	static void test() {
@@ -84,13 +86,12 @@ class ProcTest : Base {
 		float[]	c := this.f(2.5)
 		String	d := f(1, 2)
 		int[] 	e := super.f(0, 1, 2)
-		float[] f := g(0.0)
+		float[] f := g(0.0) // note: variable f overrides the procedure f -> this.f is required now
 		
 		a := x + super.x
 		
-		//!!!
-	//	int		a := f(p*2) + ProcTest.f(p+3)
-	//	float	b := f((float)p*4.0)
+		int		g := this.f(p*2) + ProcTest.f(p+3)
+		float	h := this.f((float)p*4.0)[0]
 		
 	}
 	

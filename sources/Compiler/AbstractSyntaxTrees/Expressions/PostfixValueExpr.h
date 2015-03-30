@@ -27,8 +27,8 @@ class PostfixValueExpr : public Expr
 
         ExprPtr         primaryValueExpr;
         ArrayAccessPtr  arrayAccess;        // may be null
-        ProcCallPtr     procCall;           // may be null
-        VarNamePtr      varName;            // may be null
+        ProcCallPtr     procCall;           // may be null (either procCall ...)
+        VarNamePtr      varName;            // may be null (... or varName)
 
 };
 

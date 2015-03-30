@@ -99,20 +99,28 @@ extern class String {
 // (Generic) array class.
 extern class Array {
 	
+	init()
+	init(int size)
+	
 	bool equals(Object rhs)
-	String toString()
 	
 	Array copy()
 	
+	//! Returns the number of elements in the array
 	int size()
-	void resize(int s)
+	void resize(int size)
 	
 	bool empty()
 	
-	void add(Object o)
-	void remove(Object o)
+	void add(Object entry)
+	void remove(int pos)
 	
-	bool contains(Object o)
+	void setEntry(int pos, Object entry)
+	Object getEntry(int pos)
+	
+	//! Returns the index (beginning from 0) for the entry or -1, if the array does not contain it
+	int find(Object entry, int startPos := 0)
+	bool contains(Object entry)
 	
 	//! Returns the raw pointer (as integer) of this array.
 	[[final]]

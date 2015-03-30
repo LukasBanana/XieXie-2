@@ -31,10 +31,16 @@ new:
 
 ; void deref(Object obj)
 deref:
+	; check for null pointer
 	ldw $r0, ($lb) -4		; load object reference 'obj'
-	ldw $r1, ($r0) 0		; load reference counter from object
+	mov $r1, 0
+	cmp $r0, $r1			; compare: obj != null
+	jne .not_null
+		ret (0) 1
+	.not_null:
 	
 	; check: ref-count = 1
+	ldw $r1, ($r0) 0		; load reference counter from object
 	mov $r2, 1
 	cmp $r1, $r2			; check if reference is 1
 	je .rel					; release object
@@ -48,11 +54,13 @@ deref:
 	ldw $r3, ($r2) 0		; load release procedure address
 	
 	; call d'tor
+	push $r0				; store $r0
 	push $r0				; push this pointer as argument onto stack
-	call $r3				; call destructor 'release(this)'
+	call $r3				; call d'tor 'release(this)'
+	;pop $r0				; restore $r0
 	
 	; free memory
-	push $r0				; push this pointer again as argument onto stack
+	;push $r0				; push this pointer again as argument onto stack
 	call <FreeMem>			; delete object 'FreeMem(this)'
 	
 	ret (0) 1
@@ -159,8 +167,8 @@ Object.vtable:
 
 ; String:
 ;	Object	base	( 0)
-;	int		size	(12)
-;	int		bufSize	(16)
+;	int		size	(12) <- number of characters (bytes)
+;	int		bufSize	(16) <- actual number of characters (bytes)
 ;	int		buffer	(20)
 
 ; void String.release(Object this)
@@ -282,6 +290,134 @@ String.vtable:
 	.word @CString.PgetChar,R@String,I
 
 
+; ------- Array Class -------
+; built-in array for objects
+
+; Array:
+;	Object	base	( 0)
+;	int		size	(12) <- number of entries
+;	int		bufSize	(16) <- actual number of entries
+;	int		buffer	(20)
+
+; void Array.release(Object this)
+CArray.Prelease,R@Object:
+	; load object members
+	ldw $r0, ($lb) -4	; load this pointer
+	ldw $r1, ($r0) 12	; load this.size
+	ldw $r2, ($r0) 20	; load pointer to string buffer
+	
+	; de-reference all objects in array
+	mov $r0, $r2		; set iterator to pointer: it := this.buffer
+	sll $r1, $r1, 2		; calculate: size := this.size * 4
+	add $r1, $r1, $r0	; determine end iterator: itEnd := it + size
+	.loop:
+	cmp $r0, $r1		; compare: it >= itEnd
+	jge .end
+		; store registers
+		push $r0
+		push $r1
+		push $r2
+		
+		; de-reference object
+		push $r0
+		call deref
+		
+		; restore registers
+		pop $r2
+		pop $r1
+		pop $r0
+	add $r3, $r3, 4		; it += 4
+	jmp .loop
+	.end:
+	
+	; free array buffer
+	push $r2
+	call <FreeMem>		; delete string buffer
+	ret (0) 1
+
+; void Array.init(Object this)
+CArray.Pinit,R@Object:
+	; ...
+	ret (0) 1
+
+; void Array.init(Array this, int size)
+CArray.Pinit,R@Array,I:
+	; ...
+	ret (0) 2
+
+Array.vtable:
+	.word @CArray.Prelease,R@Object
+	.word @CArray.Pinit,R@Object
+	.word @CObject.PtoString,R@Object
+	.word @CArray.Pinit,R@Array,I
 
 
+; ------- PrimArray Class -------
+; built-in array for built-in types 'int' and 'float' and for all arrays of 'weak-references'
+
+; PrimArray:
+;	Object	base	( 0)
+;	int		size	(12) <- number of entries
+;	int		bufSize	(16) <- actual number of entries
+;	int		buffer	(20)
+
+
+; ------- BoolArray Class -------
+; built-in array for 'bool'
+
+; BoolArray:
+;	Object	base	( 0)
+;	int		size	(12) <- number of entries
+;	int		bufSize	(16) <- actual number of entries
+;	int		buffer	(20)
+
+; void BoolArray.release(Object this)
+CBoolArray.Prelease,R@Object:
+	; free string buffer
+	ldw $r0, ($lb) -4	; load this pointer
+	ldw $r1, ($r0) 20	; load pointer to array buffer
+	push $r1
+	call <FreeMem>		; delete array buffer
+	ret (0) 1
+
+; void BoolArray.init(Object this)
+CBoolArray.Pinit,R@Object:
+	; ...
+	ret (0) 1
+
+; void BoolArray.init(BoolArray this, int size)
+CBoolArray.Pinit,R@BoolArray,I:
+	; initialize array members
+	ldw $r0, ($lb) -4		; load this pointer
+	ldw $r1, ($lb) -8		; load 'size'
+	stw $r1, ($r0) 12		; write: this.size := size
+	stw $r1, ($r0) 16		; write: this.bufSize := size
+	
+	; determine buffer size (in bytes): numBytes := (size + 7) >> 3
+	add $r1, $r1, 7
+	slr $r1, $r1, 3
+	
+	; allocate array buffer
+	push $r1
+	call <AllocMem>			; allocate buffer
+	pop $r2
+	stw $r2, ($r0) 20		; store pointer to buffer in array instance
+	
+	; initialize buffer with zeros
+	mov $r3, 0
+	.loop:
+	cmp $r1, $r3			; compare: numBytes < 0
+	jl .end
+		stw $r3, ($r2) 0	; store zero at (*buffer)
+		inc $r2				; buffer++
+	dec $r1					; numBytes--
+	jmp .loop
+	.end:
+	ret (0) 2
+
+BoolArray.vtable:
+	.word @CBoolArray.Prelease,R@Object
+	.word @CBoolArray.Pinit,R@Object
+	.word @CObject.PtoString,R@Object
+	.word @CBoolArray.Pinit,R@BoolArray,I
 
