@@ -12,22 +12,20 @@
 
 ; Object new(int size, int typeID, int vtableAddr)
 new:
-	ldw $r0, ($lb) -4	; load argument 'size' (must include 12 bytes for reference counter, type-id, and vtable)
-	push $r0
-	call <AllocMem>		; allocate memory for object
-	pop $r0				; get object reference
+	ldw $ar, ($lb) -4	; load argument 'size' (must include 12 bytes for reference counter, type-id, and vtable)
+	push $ar
+	insc AllocMem		; allocate memory for object and get object reference (ar)
 	
 	mov $r1, 1			; initialize reference counter to 1
-	stw $r1, ($r0) 0	; write reference counter to object
+	stw $r1, ($ar) 0	; write reference counter to object
 	
 	ldw $r1, ($lb) -8	; load argument 'typeID'
-	stw $r1, ($r0) 4	; write type-id to object
+	stw $r1, ($ar) 4	; write type-id to object
 	
 	ldw $r1, ($lb) -12	; load argument 'vtableAddr' (address to vtable for the object)
-	stw $r1, ($r0) 8	; write vtable address to object
+	stw $r1, ($ar) 8	; write vtable address to object
 	
-	push $r0			; return object reference
-	ret (1) 1
+	ret 1				; return object reference (ar)
 
 ; void inc_ref(Object obj)
 inc_ref:
@@ -40,7 +38,7 @@ inc_ref:
 		inc $r1				; increment reference counter
 		stw $r1, ($r0) 0	; write reference counter back to object
 	.end:
-	ret (0) 1
+	ret 1
 
 ; void dec_ref(Object obj)
 dec_ref:
@@ -55,7 +53,7 @@ dec_ref:
 	je .rel					; release object
 		dec $r1				; decrement reference counter
 		stw $r1, ($r0) 0	; write reference counter back to object
-		ret (0) 1
+		ret 1
 	.rel:
 	
 	; load d'tor address
@@ -70,37 +68,36 @@ dec_ref:
 	
 	; free memory
 	;push $r0				; push this pointer again as argument onto stack
-	call <FreeMem>			; delete object 'FreeMem(this)'
+	insc FreeMem			; delete object 'FreeMem(this)'
 	
 	.end:
-	ret (0) 1
+	ret 1
 
 ; Object dynamic_cast(Object obj, int baseTypeID, int numSubClasses)
 dynamic_cast:
-	ldw $r0, ($lb) -4	; load object reference 'obj'
+	ldw $cf, ($lb) -4		; load object reference 'obj'
 	
 	; check for null pointer
-	mov $cf, $r0		; compare: obj = null
-	je .end
+	je .end					; compare: obj = null
 	
 	; load type ids
-	ldw $r1, ($r0) 4	; load type-id of 'obj'
-	ldw $r2, ($lb) -8	; load type-id 'baseTypeID'
-	ldw $r3, ($lb) -12	; load number of sub classes 'numSubClasses'
-	add $r3, $r3, $r2	; calculate: baseClass.typeID + obj.numSubClasses
+	mov $ar, $cf
+	ldw $r1, ($ar) 4		; load type-id of 'obj'
+	ldw $r2, ($lb) -8		; load type-id 'baseTypeID'
+	ldw $r3, ($lb) -12		; load number of sub classes 'numSubClasses'
+	add $r3, $r3, $r2		; calculate: baseClass.typeID + obj.numSubClasses
 	
 	; compare type-ids
-	cmp $r2, $r1		; compare: baseClass.typeID > obj.typeID
+	cmp $r2, $r1			; compare: baseClass.typeID > obj.typeID
 	jg .end
-		cmp $r1, $r3	; compare: obj.typeID > (baseClass.typeID + obj.numSubClasses)
+		cmp $r1, $r3		; compare: obj.typeID > (baseClass.typeID + obj.numSubClasses)
 		jg .end
-			push $r0	; return object reference
-			ret (1) 3
+			ret 3			; return object reference (ar)
 			
 	; class-cast exception
 	.end:
-	push 0				; return null pointer
-	ret (1) 3
+	mov $ar, 0				; return null pointer
+	ret 3
 
 
 ; ------- Object Class -------
@@ -115,21 +112,19 @@ CObject.Prelease,R@Object:
 
 ; void Object.init(Object this)
 CObject.Pinit,R@Object:
-	ret (0) 1
+	ret 1
 
 ; int Object.typeID(Object this)
 CObject.PtypeID,R@Object:
-	ldw $r0, ($lb) -4	; load this pointer
-	ldw $r1, ($r0) 4	; load type-id of 'this'
-	push $r1			; return type-id
-	ret (1) 1
+	ldw $ar, ($lb) -4	; load this pointer
+	ldw $ar, ($ar) 4	; load and return type-id of 'this'
+	ret 1
 
 ; int Object.refCount(Object this)
 CObject.PrefCount,R@Object:
-	ldw $r0, ($lb) -4	; load this pointer
-	ldw $r1, ($r0) 0	; load reference counter of 'this'
-	push $r1			; return reference counter
-	ret (1) 1
+	ldw $ar, ($lb) -4	; load this pointer
+	ldw $ar, ($ar) 0	; load and return reference counter of 'this'
+	ret 1
 
 ; bool Object.equals(Object this, Object rhs)
 CObject.Pequals,R@Object:
@@ -146,11 +141,11 @@ CObject.Pequals,R@Object:
 	; check: this.typeID = rhs.typeID
 	cmp $r2, $r3		; compare type-id of both object references
 	jne .end
-		push 1			; return true
-		ret (1) 2
+		mov $ar, 1		; return true
+		ret 2
 	.end:
-	push 0				; return false
-	ret (1) 2
+	mov $ar, 0			; return false
+	ret 2
 
 ; Object Object.copy(Object this)
 CObject.Pcopy,R@Object:
@@ -158,13 +153,13 @@ CObject.Pcopy,R@Object:
 	push 0					; push Object type-id
 	push 12					; push Object size
 	call new				; allocate new empty object
-	ret (1) 1
+	ret 1
 
 ; TODO: currently returns null pointer !!!
 ; String Object.toString(Object this)
 CObject.PtoString,R@Object:
-	push 0		; return null pointer
-	ret (1) 1
+	mov $ar, 0	; return null pointer
+	ret 1
 
 Object.vtable:
 	.word @CObject.Prelease,R@Object
@@ -186,8 +181,8 @@ CString.Prelease,R@Object:
 	ldw $r0, ($lb) -4	; load this pointer
 	ldw $r0, ($r0) 20	; load pointer to string buffer
 	push $r0
-	call <FreeMem>		; delete string buffer
-	ret (0) 1
+	insc FreeMem		; delete string buffer
+	ret 1
 
 ; void String.init(Object this)
 CString.Pinit,R@Object:
@@ -204,22 +199,21 @@ CString.Pinit,R@Object:
 	
 	; allocate string buffer
 	push 16
-	call <AllocMem>		; allocate 16 bytes
-	pop $r2
-	stw $r2, ($r0) 20	; store pointer to buffer in string instance
+	insc AllocMem		; allocate 16 bytes
+	stw $ar, ($r0) 20	; store pointer to buffer in string instance
 	
 	; initialize string buffer with null terminator
-	stw $r1, ($r2) 0	; this.pointer[0] := 0
-	ret (0) 1
+	stw $r1, ($ar) 0	; this.pointer[0] := 0
+	ret 1
 
 ; void String.init(String this, String copySource)
 CString.Pinit,R@String,R@String:
 	; ...
-	ret (0) 2
+	ret 2
 
 ; String String.toString(Object this)
 CString.PtoString,R@Object:
-	ret (0) 0	; just return input argument
+	ret 0	; just return input argument
 
 ; String String.copy(String this)
 CString.Pcopy,R@String:
@@ -236,52 +230,51 @@ CString.Pcopy,R@String:
 	push $r0								; push this pointer
 	push $r1								; push second as argument
 	call CString.Pinit,R@String,R@String
-	ret (1) 1								; return new String instance (in back-up $r0 on stack)
+	pop $ar									; return new String instance (from back-up $r0 on stack)
+	ret 1
 
 ; int String.size(String this)
 CString.Psize,R@String:
-	ldw $r0, ($lb) -4	; load this pointer
-	ldw $r0, ($r0) 12	; load member this.size
-	push $r0			; return this.size
-	ret (1) 1
+	ldw $ar, ($lb) -4	; load this pointer
+	ldw $ar, ($ar) 12	; load and return member this.size
+	ret 1
 
 ; void String.resize(String this, int size)
 CString.Presize,R@String,I:
 	; ...
-	ret (0) 2
+	ret 2
 
 ; bool String.empty(String this)
 CString.Pempty,R@String:
 	ldw $cf, ($lb) -4	; load this pointer
 	ldw $cf, ($cf) 12	; load member this.size and compare this.size = 0
 	je .empty
-		push 0			; return false
-		ret (1) 1
+		mov $ar, 0		; return false
+		ret 1
 	.empty:
-	push 1				; return true
-	ret (1) 1
+	mov $ar, 1			; return true
+	ret 1
 
 ; String String.add(String this, String rhs)
 CString.Padd,R@String,R@String:
 	; ...
-	ret (1) 2
+	ret 2
 
 ; void String.setChar(String this, int pos, int char)
 CString.PsetChar,R@String,I,I:
 	; ...
-	ret (0) 3
+	ret 3
 
 ; int String.getChar(String this, int pos)
 CString.PgetChar,R@String,I:
 	; ...
-	ret (1) 2
+	ret 2
 
 ; int String.pointer(String this)
 CString.Ppointer,R@String:
-	ldw $r0, ($lb) -4	; load this pointer
-	ldw $r0, ($r0) 20	; load member this.buffer
-	push $r0			; return this.buffer
-	ret (1) 1
+	ldw $ar, ($lb) -4	; load this pointer
+	ldw $ar, ($ar) 20	; load and return member this.buffer
+	ret 1
 
 String.vtable:
 	.word @CString.Prelease,R@Object
@@ -339,18 +332,18 @@ CArray.Prelease,R@Object:
 	
 	; free array buffer
 	push $r2
-	call <FreeMem>		; delete string buffer
-	ret (0) 1
+	insc FreeMem		; delete string buffer
+	ret 1
 
 ; void Array.init(Object this)
 CArray.Pinit,R@Object:
 	; ...
-	ret (0) 1
+	ret 1
 
 ; void Array.init(Array this, int size)
 CArray.Pinit,R@Array,I:
 	; ...
-	ret (0) 2
+	ret 2
 
 Array.vtable:
 	.word @CArray.Prelease,R@Object
@@ -384,13 +377,13 @@ CBoolArray.Prelease,R@Object:
 	ldw $r0, ($lb) -4	; load this pointer
 	ldw $r0, ($r0) 20	; load pointer to array buffer
 	push $r0
-	call <FreeMem>		; delete array buffer
-	ret (0) 1
+	insc FreeMem		; delete array buffer
+	ret 1
 
 ; void BoolArray.init(Object this)
 CBoolArray.Pinit,R@Object:
 	; ...
-	ret (0) 1
+	ret 1
 
 ; void BoolArray.init(BoolArray this, int size)
 CBoolArray.Pinit,R@BoolArray,I:
@@ -406,20 +399,19 @@ CBoolArray.Pinit,R@BoolArray,I:
 	
 	; allocate array buffer
 	push $cf
-	call <AllocMem>			; allocate buffer
-	pop $r1
-	stw $r1, ($r0) 20		; store pointer to buffer in array instance
+	insc AllocMem			; allocate buffer
+	stw $ar, ($r0) 20		; store pointer to buffer in array instance
 	
 	; initialize buffer with zeros
 	mov $r2, 0
 	.loop:
 	jle .end				; compare: numBytes <= 0
-		stw $r2, ($r1) 0	; store zero at (*buffer)
-		inc $r1				; buffer++
+		stw $r2, ($ar) 0	; store zero at (*buffer)
+		inc $ar				; buffer++
 	dec $cf					; numBytes--
 	jmp .loop
 	.end:
-	ret (0) 2
+	ret 2
 
 BoolArray.vtable:
 	.word @CBoolArray.Prelease,R@Object
