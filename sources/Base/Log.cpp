@@ -95,7 +95,7 @@ static void PrintMessageColored(Log& log, const CompilerMessage& message, const 
         PopColor(log.stream);
 
         /* Print source area */
-        if (message.GetSourceArea().IsValid())
+        //if (message.GetSourceArea().IsValid())
             log.Print(" (" + message.GetSourceArea().ToString() + ")");
 
         /* Print message */
