@@ -121,12 +121,13 @@ INLINE STATIC int xvm_flt2int_signum(float val)
 
 /* ----- Registers ----- */
 
-typedef unsigned char   reg_t;
-typedef int             regi_t;
-typedef float           regf_t;
+typedef unsigned char   reg_t;  //!< Register index type (8-bit unsigned integral type).
+typedef int             regi_t; //!< Integer register type (32-bit signed integral type).
+typedef float           regf_t; //!< Float register type (32-bit IEEE 754 floating-point type).
 
-typedef char            byte_t;
-typedef int             word_t;
+typedef char            byte_t; //!< Byte type (8-bit).
+typedef short           half_t; //!< Half-word type (16-bit).
+typedef int             word_t; //!< Word type (32-bit).
 
 #define NUM_REGISTERS               16
 #define REG_TO_STACK_PTR(r)         ((stack_word_t*)(*(r)))
@@ -229,7 +230,7 @@ FLOATS are 32 bits wide.
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
 | DIV      | 0 0 0 1 1 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic division.                                       |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
-| MOD      | 0 0 1 0 0 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic modulo.                                         |
+| MOD      | 0 0 1 0 0 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic remainder (modulo).                             |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
 | SLL      | 0 0 1 0 0 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Shift logical left.                                        |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
@@ -242,6 +243,8 @@ FLOATS are 32 bits wide.
 | MULF     | 0 0 1 1 0 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float multiplication.                           |
 |----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
 | DIVF     | 0 0 1 1 1 0 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float division.                                 |
+|----------|-------------|---------|---------|---------|-----------------------------|------------------------------------------------------------|
+| MODF     | 0 0 1 1 1 1 | D D D D | L L L L | R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Arithmetic float remainder (modulo).                       |
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -335,7 +338,7 @@ FLOATS are 32 bits wide.
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
-|                                              Load/Store (Offset) Instruction Opcodes (1100..)                                                 |
+|                                              Load/Store (Offset) Instruction Opcodes (110...)                                                 |
 |-----------------------------------------------------------------------------------------------------------------------------------------------|
 |          | Opcode      | Reg.    | Addr.   | Offset                              | Description                                                |
 | Mnemonic |-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
@@ -345,9 +348,13 @@ FLOATS are 32 bits wide.
 |----------|-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
 | STB      | 1 1 0 0 0 1 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Store byte from register (source) to memory.               |
 |----------|-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
-| LDW      | 1 1 0 0 1 0 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Load word from memory to register (destination).           |
+| LDH      | 1 1 0 0 1 0 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Load half-word from memory to register (destination).      |
 |----------|-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
-| STW      | 1 1 0 0 1 1 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Store word from register (source) to memory.               |
+| STH      | 1 1 0 0 1 1 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Store half-word from register (source) to memory.          |
+|----------|-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
+| LDW      | 1 1 0 1 0 0 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Load word from memory to register (destination).           |
+|----------|-------------|---------|---------|-------------------------------------|------------------------------------------------------------|
+| STW      | 1 1 0 1 0 1 | R R R R | A A A A | O O O O O O O O O O O O O O O O O O | Store word from register (source) to memory.               |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -373,10 +380,10 @@ FLOATS are 32 bits wide.
 |----------|-------------|-----------------|-------------------------------------|--------------------------------------------------------------|
 |          | 31.......26 | 25...........18 | 17................................0 |                                                              |
 |----------|-------------|-----------------|-------------------------------------|--------------------------------------------------------------|
-|          |             |                 |                                     | Pop R words from the stack and buffer them.                  |
+|          |             |                 |                                     | Pop R bytes from the stack and buffer them.                  |
 |          |             |                 |                                     | Pop the current stack frame.                                 |
-| RET      | 1 1 1 0 1 0 | R R R R R R R R | A A A A A A A A A A A A A A A A A A | Pop A words from the stack.                                  |
-|          |             |                 |                                     | Push the R words back onto the stack.                        |
+| RET      | 1 1 1 0 1 0 | R R R R R R R R | A A A A A A A A A A A A A A A A A A | Pop A bytes from the stack.                                  |
+|          |             |                 |                                     | Push the R bytes back onto the stack.                        |
 |          |             |                 |                                     | Restore the 'lb' and 'pc' registers.                         |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -412,7 +419,7 @@ typedef enum
     OPCODE_SUBF     = GEN_OPCODE(0x0c), // SUBF reg0, reg1, reg2  ->  reg0 = reg1 - reg2
     OPCODE_MULF     = GEN_OPCODE(0x0d), // MULF reg0, reg1, reg2  ->  reg0 = reg1 * reg2
     OPCODE_DIVF     = GEN_OPCODE(0x0e), // DIVF reg0, reg1, reg2  ->  reg0 = reg1 / reg2
-    //Reserved      = GEN_OPCODE(0x0f),
+    OPCODE_MODF     = GEN_OPCODE(0x0f), // MODF reg0, reg1, reg2  ->  reg0 = fmodf(reg1, reg2)
 
     /* --- 2 register opcodes --- */
     OPCODE_MOV2     = GEN_OPCODE(0x10), // MOV  reg0, reg1     ->  reg0 = reg1
@@ -453,20 +460,20 @@ typedef enum
     OPCODE_CALL     = GEN_OPCODE(0x2f), // CALL addr  ->  PUSH $pc; PUSH $lb; MOV $lb, $sp; JMP addr;
 
     /* --- load/store opcodes --- */
-    OPCODE_LDB      = GEN_OPCODE(0x30), // LDB reg0, (reg1) c  ->  reg0 = dynamicMemoryByteAligned[reg1 + c]
-    OPCODE_STB      = GEN_OPCODE(0x31), // STB reg0, (reg1) c  ->  dynamicMemoryByteAligned[reg1 + c] = reg0
-    OPCODE_LDW      = GEN_OPCODE(0x32), // LDW reg0, (reg1) c  ->  reg0 = dynamicMemoryWordAligned[reg1 + c]
-    OPCODE_STW      = GEN_OPCODE(0x33), // STW reg0, (reg1) c  ->  dynamicMemoryWordAligned[reg1 + c] = reg0
-    //Reserved      = GEN_OPCODE(0x34),
-    //Reserved      = GEN_OPCODE(0x35),
+    OPCODE_LDB      = GEN_OPCODE(0x30), // LDB reg0, (reg1) c  ->  reg0 = globalMemoryByteAligned[reg1 + c] (load byte)
+    OPCODE_STB      = GEN_OPCODE(0x31), // STB reg0, (reg1) c  ->  globalMemoryByteAligned[reg1 + c] = reg0 (store byte)
+    OPCODE_LDH      = GEN_OPCODE(0x32), // LDH reg0, (reg1) c  ->  reg0 = globalMemoryByteAligned[reg1 + c] (load half-word)
+    OPCODE_STH      = GEN_OPCODE(0x33), // STH reg0, (reg1) c  ->  globalMemoryByteAligned[reg1 + c] = reg0 (store half-word)
+    OPCODE_LDW      = GEN_OPCODE(0x34), // LDW reg0, (reg1) c  ->  reg0 = globalMemoryByteAligned[reg1 + c] (load word)
+    OPCODE_STW      = GEN_OPCODE(0x35), // STW reg0, (reg1) c  ->  globalMemoryByteAligned[reg1 + c] = reg0 (store word)
     //Reserved      = GEN_OPCODE(0x36),
     //Reserved      = GEN_OPCODE(0x37),
 
     /* --- special opcodes --- */
     OPCODE_STOP     = GEN_OPCODE(0x00), // STOP          ->  exit(0)
-    OPCODE_PUSHC    = GEN_OPCODE(0x38), // RET  (c0) c1  ->  return
-    OPCODE_INVK     = GEN_OPCODE(0x39), // PUSH value    ->  stack.push(value)
-    OPCODE_RET      = GEN_OPCODE(0x3a), // INVK addr     ->  invoke external procedure
+    OPCODE_PUSHC    = GEN_OPCODE(0x38), // PUSH value    ->  stack.push(value)
+    OPCODE_INVK     = GEN_OPCODE(0x39), // INVK addr     ->  invoke external procedure
+    OPCODE_RET      = GEN_OPCODE(0x3a), // RET  (c0) c1  ->  return
     //Reserved      = GEN_OPCODE(0x3b),
     //Reserved      = GEN_OPCODE(0x3c),
     //Reserved      = GEN_OPCODE(0x3d),
@@ -880,10 +887,13 @@ STATIC const char* xvm_instr_get_mnemonic(const opcode_t opcode)
         case OPCODE_SUBF:   return "subf";
         case OPCODE_MULF:   return "mulf";
         case OPCODE_DIVF:   return "divf";
+        case OPCODE_MODF:   return "modf";
         case OPCODE_CMPF:   return "cmpf";
         case OPCODE_LDA:    return "lda ";
         case OPCODE_LDB:    return "ldb ";
         case OPCODE_STB:    return "stb ";
+        case OPCODE_LDH:    return "ldh ";
+        case OPCODE_STH:    return "sth ";
         case OPCODE_LDW:    return "ldw ";
         case OPCODE_STW:    return "stw ";
         case OPCODE_STOP:   return "stop";
@@ -909,7 +919,7 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
     printf("%*.8i  %s  ", 8, (instr_index >> 2), xvm_instr_get_mnemonic(opcode));
     #endif
 
-    if (opcode >= OPCODE_AND3 && opcode <= OPCODE_DIVF)
+    if (opcode >= OPCODE_AND3 && opcode <= OPCODE_MODF)
     {
         reg_t reg0 = _xvm_instr_get_reg0(instr);
         reg_t reg1 = _xvm_instr_get_reg1(instr);
@@ -2730,15 +2740,22 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
     reg_t           reg1;           // Register1 (LSource)
     reg_t           reg2;           // Register2 (RSource)
 
-    byte_t*         byte_mem_addr;  // Memory address pointer (byte aligned)
-    word_t*         word_mem_addr;  // Memory address pointer (word aligned)
-
-    const byte_t*   cbyte_mem_addr; // Memory address constant pointer (byte aligned)
-    const word_t*   cword_mem_addr; // Memory address constant pointer (word aligned)
-
     int             sgn_value;      // Signed value
     unsigned int    unsgn_value;    // Unsigned value
     int             extra_value;    // Extra value (for 'call' and 'ret' instructions)
+
+    union
+    {
+        byte_t*         byte;       // Memory address pointer (byte aligned)
+        const byte_t*   cbyte;      // Memory address constant pointer (byte aligned)
+
+        half_t*         half;       // Memory address pointer (half-word aligned)
+        const half_t*   chalf;      // Memory address constant pointer (half-word aligned)
+
+        word_t*         word;       // Memory address pointer (word aligned)
+        const word_t*   cword;      // Memory address constant pointer (word aligned)
+    }
+    mem_addr;
 
     /* --- Initialize VM (only reset reserved registers) --- */
     *reg_lb = (regi_t)stack->storage;
@@ -2922,6 +2939,15 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg1 = _xvm_instr_get_reg1(instr);
                 reg2 = _xvm_instr_get_reg2(instr);
                 reg.f[reg0] = reg.f[reg1] / reg.f[reg1];
+            }
+            break;
+
+            case OPCODE_MODF:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                reg2 = _xvm_instr_get_reg2(instr);
+                reg.f[reg0] = fmodf(reg.f[reg1], reg.f[reg1]);
             }
             break;
 
@@ -3110,9 +3136,9 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg0 = _xvm_instr_get_reg0(instr);
                 unsgn_value = _xvm_instr_get_value22(instr);
 
-                cbyte_mem_addr = program_start_ptr + (unsgn_value << 2);
+                mem_addr.cbyte = program_start_ptr + (unsgn_value << 2);
 
-                reg.i[reg0] = (regi_t)(cbyte_mem_addr);
+                reg.i[reg0] = (regi_t)(mem_addr.cbyte);
             }
             break;
 
@@ -3263,10 +3289,10 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg1 = _xvm_instr_get_reg1(instr);
                 sgn_value = _xvm_instr_get_sgn_value18(instr);
 
-                cbyte_mem_addr = (const byte_t*)reg.i[reg1];
-                cbyte_mem_addr += sgn_value;
+                mem_addr.cbyte = (const byte_t*)reg.i[reg1];
+                mem_addr.cbyte += sgn_value;
 
-                reg.i[reg0] = (regi_t)(*cbyte_mem_addr);
+                reg.i[reg0] = (regi_t)(*mem_addr.cbyte);
             }
             break;
 
@@ -3276,10 +3302,36 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg1 = _xvm_instr_get_reg1(instr);
                 sgn_value = _xvm_instr_get_sgn_value18(instr);
 
-                byte_mem_addr = (byte_t*)reg.i[reg1];
-                byte_mem_addr += sgn_value;
+                mem_addr.byte = (byte_t*)reg.i[reg1];
+                mem_addr.byte += sgn_value;
 
-                *byte_mem_addr = (byte_t)(reg.i[reg0]);
+                *mem_addr.byte = (byte_t)(reg.i[reg0]);
+            }
+            break;
+
+            case OPCODE_LDH:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                sgn_value = _xvm_instr_get_sgn_value18(instr);
+
+                mem_addr.cbyte = (const byte_t*)reg.i[reg1];
+                mem_addr.cbyte += sgn_value;
+
+                reg.i[reg0] = (regi_t)(*mem_addr.chalf);
+            }
+            break;
+
+            case OPCODE_STH:
+            {
+                reg0 = _xvm_instr_get_reg0(instr);
+                reg1 = _xvm_instr_get_reg1(instr);
+                sgn_value = _xvm_instr_get_sgn_value18(instr);
+
+                mem_addr.byte = (byte_t*)reg.i[reg1];
+                mem_addr.byte += sgn_value;
+
+                *mem_addr.half = (word_t)(reg.i[reg0]);
             }
             break;
 
@@ -3289,12 +3341,10 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg1 = _xvm_instr_get_reg1(instr);
                 sgn_value = _xvm_instr_get_sgn_value18(instr);
 
-                cbyte_mem_addr = (const byte_t*)reg.i[reg1];
-                cbyte_mem_addr += sgn_value;
+                mem_addr.cbyte = (const byte_t*)reg.i[reg1];
+                mem_addr.cbyte += sgn_value;
 
-                cword_mem_addr = (const word_t*)cbyte_mem_addr;
-
-                reg.i[reg0] = (regi_t)(*cword_mem_addr);
+                reg.i[reg0] = (regi_t)(*mem_addr.cword);
             }
             break;
 
@@ -3304,12 +3354,10 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg1 = _xvm_instr_get_reg1(instr);
                 sgn_value = _xvm_instr_get_sgn_value18(instr);
 
-                byte_mem_addr = (byte_t*)reg.i[reg1];
-                byte_mem_addr += sgn_value;
+                mem_addr.byte = (byte_t*)reg.i[reg1];
+                mem_addr.byte += sgn_value;
 
-                word_mem_addr = (word_t*)byte_mem_addr;
-
-                *word_mem_addr = (word_t)(reg.i[reg0]);
+                *mem_addr.word = (word_t)(reg.i[reg0]);
             }
             break;
 
