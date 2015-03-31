@@ -171,8 +171,8 @@ typedef enum
     REG_R24 = 0x18, // $r24  ->  General purpose register 24.
 
     /* --- Special purpose registers --- */
-    REG_RV  = 0x19, // $rv   ->  Return value: can be used as 32-bit return value.
-    REG_SR  = 0x1a, // $sr   ->  Special register: register for special purposes (e.g. assembler temporary or 'this' pointer).
+    REG_AR  = 0x19, // $ar   ->  Argument return: can be used as 32-bit return value.
+    REG_XR  = 0x1a, // $xr   ->  Extended register: register for special purposes (e.g. assembler temporary or 'this' pointer).
     REG_GP  = 0x1b, // $gp   ->  Global pointer: POINTER to the global variables in the stack.
 
     /* --- Register for internal use --- */
@@ -217,8 +217,8 @@ STATIC const char* xvm_register_get_name(reg_t reg)
         case REG_R23: return "$r23";
         case REG_R24: return "$r24";
 
-        case REG_RV:  return "$rv";
-        case REG_SR:  return "$sr";
+        case REG_AR:  return "$ar";
+        case REG_XR:  return "$xr";
         case REG_GP:  return "$gp";
 
         case REG_CF:  return "$cf";
@@ -505,8 +505,8 @@ typedef enum
     OPCODE_STOP     = GEN_OPCODE(0x00), // STOP          ->  exit(0)
     OPCODE_PUSHC    = GEN_OPCODE(0x38), // PUSH value    ->  stack.push(value)
     OPCODE_INVK     = GEN_OPCODE(0x39), // INVK addr     ->  invoke external procedure
-    OPCODE_RET      = GEN_OPCODE(0x3a), // RET  (c0) c1  ->  return
-    //Reserved      = GEN_OPCODE(0x3b),
+    OPCODE_INSC     = GEN_OPCODE(0x3a), // INSC value    ->  call intrinsic
+    OPCODE_RET      = GEN_OPCODE(0x3b), // RET  (c0) c1  ->  return
     //Reserved      = GEN_OPCODE(0x3c),
     //Reserved      = GEN_OPCODE(0x3d),
     //Reserved      = GEN_OPCODE(0x3e),
@@ -555,6 +555,8 @@ STATIC const char* xvm_exitcode_to_string(const xvm_exit_codes exit_code)
             return "division by zero";
         case EXITCODE_UNKNOWN_ENTRY_POINT:
             return "unknown entry point";
+        case EXITCODE_INVOCATION_VIOLATION:
+            return "invocation violation";
     }
     return NULL;
 }
@@ -610,147 +612,117 @@ STATIC void xvm_file_write_uint(FILE* file, unsigned int value)
 /* ----- Intrinsics ----- */
 
 /*
-
 Calling convention:
 - CALLER pushes all arguments from RIGHT-to-LEFT onto stack.
 - CALLEE pops all arguments from the stack.
-- CALLEE pushes result onto stack.
-
+- CALLEE stores result in '$ar' register.
 */
 
 typedef enum
 {
-    INTR_RESERVED_MIN   = 0x000fff00, // Start address of reserved primitive procedures.
-    INTR_RESERVED_MAX   = 0x000fffff, // End address of reserved primitive procedures.
-
     /* --- Dynamic memory intrinsics --- */
-    INTR_ALLOC_MEM      = 0x000fff00, // void* AllocMem(uint sizeInBytes).
-    INTR_FREE_MEM       = 0x000fff01, // void FreeMem(void* memoryAddr).
-    INTR_COPY_MEM       = 0x000fff02, // void CopyMem(void* dstMemAddr, const void* srcMemAddr, uint sizeInBytes).
+    INSC_ALLOC_MEM = 0, // void* AllocMem(uint sizeInBytes).
+    INSC_FREE_MEM,      // void FreeMem(void* memoryAddr).
+    INSC_COPY_MEM,      // void CopyMem(void* dstMemAddr, const void* srcMemAddr, uint sizeInBytes).
     
     /* --- Console intrinsics --- */
-    INTR_SYS_CALL       = 0x000fff20, // void SysCall(const byte* stringAddr).
-    INTR_CLEAR          = 0x000fff21, // void ClearTerm().
-    INTR_PRINT          = 0x000fff22, // void Print(const byte* stringAddr).
-    INTR_PRINT_LN       = 0x000fff23, // void PrintLn(const byte* stringAddr).
-    INTR_PRINT_INT      = 0x000fff24, // void PrintInt(int value);
-    INTR_PRINT_FLOAT    = 0x000fff25, // void PrintFloat(float value);
-    INTR_INPUT          = 0x000fff26, // void Input(byte* stringAddr, int maxLen);
-    INTR_INPUT_INT      = 0x000fff27, // int InputInt();
-    INTR_INPUT_FLOAT    = 0x000fff28, // float InputFloat();
-
-    /* --- Conditional intrinsics --- */
-    // For easier expression evaluation.
-    // For better performance, make use of conditional jump instructions instead.
-    INTR_CMP_E          = 0x000fff30, // int CmpE(int x, int y)       -> x == y
-    INTR_CMP_NE         = 0x000fff31, // int CmpNE(int x, int y)      -> x != y
-    INTR_CMP_L          = 0x000fff32, // int CmpL(int x, int y)       -> x < y
-    INTR_CMP_LE         = 0x000fff33, // int CmpLE(int x, int y)      -> x <= y
-    INTR_CMP_G          = 0x000fff34, // int CmpG(int x, int y)       -> x > y
-    INTR_CMP_GE         = 0x000fff35, // int CmpGE(int x, int y)      -> x >= y
-    INTR_LOGIC_OR       = 0x000fff36, // int LogicOr(int x, int y)    -> x != 0 || y != 0
-    INTR_LOGIC_AND      = 0x000fff37, // int LogicAnd(int x, int y)   -> x != 0 && y != 0
-    INTR_LOGIC_NOT      = 0x000fff38, // int LogicNot(int x)          -> x == 0
+    INSC_SYS_CALL,      // void SysCall(const byte* stringAddr).
+    INSC_CLEAR,         // void ClearTerm().
+    INSC_PRINT,         // void Print(const byte* stringAddr).
+    INSC_PRINT_LN,      // void PrintLn(const byte* stringAddr).
+    INSC_PRINT_INT,     // void PrintInt(int value);
+    INSC_PRINT_FLOAT,   // void PrintFloat(float value);
+    INSC_INPUT,         // void Input(byte* stringAddr, int maxLen);
+    INSC_INPUT_INT,     // int InputInt();
+    INSC_INPUT_FLOAT,   // float InputFloat();
 
     /* --- File intrinsics --- */
-    INTR_CREATE_FILE    = 0x000fff40, // int CreateFile(const byte* stringAddress).
-    INTR_DELETE_FILE    = 0x000fff41, // int DeleteFile(const byte* stringAddress).
-    INTR_OPEN_FILE      = 0x000fff42, // void* OpenFile(const byte* stringAddress).
-    INTR_CLOSE_FILE     = 0x000fff43, // void CloseFile(void* fileHandle).
-    INTR_FILE_SIZE      = 0x000fff44, // int FileSize(const void* fileHandle).
-    INTR_SET_FILE_POS   = 0x000fff45, // void FileSetPos(const void* fileHandle, int pos).
-    INTR_GET_FILE_POS   = 0x000fff46, // int FileGetPos(const void* fileHandle).
-    INTR_FILE_EOF       = 0x000fff47, // int FileEOF(const void* fileHandle).
-    INTR_WRITE_BYTE     = 0x000fff48, // void WriteByte(const void* fileHandle, const void* memoryAddress).
-    INTR_WRITE_WORD     = 0x000fff49, // void WriteWord(const void* fileHandle, const void* memoryAddress).
-    INTR_READ_BYTE      = 0x000fff4a, // void ReadByte(const void* fileHandle, void* memoryAddress).
-    INTR_READ_WORD      = 0x000fff4b, // void ReadWord(const void* fileHandle, void* memoryAddress).
+    INSC_CREATE_FILE,   // int CreateFile(const byte* stringAddress).
+    INSC_DELETE_FILE,   // int DeleteFile(const byte* stringAddress).
+    INSC_OPEN_FILE,     // void* OpenFile(const byte* stringAddress).
+    INSC_CLOSE_FILE,    // void CloseFile(void* fileHandle).
+    INSC_FILE_SIZE,     // int FileSize(const void* fileHandle).
+    INSC_SET_FILE_POS,  // void FileSetPos(const void* fileHandle, int pos).
+    INSC_GET_FILE_POS,  // int FileGetPos(const void* fileHandle).
+    INSC_FILE_EOF,      // int FileEOF(const void* fileHandle).
+    INSC_WRITE_BYTE,    // void WriteByte(const void* fileHandle, const void* memoryAddress).
+    INSC_WRITE_WORD,    // void WriteWord(const void* fileHandle, const void* memoryAddress).
+    INSC_READ_BYTE,     // void ReadByte(const void* fileHandle, void* memoryAddress).
+    INSC_READ_WORD,     // void ReadWord(const void* fileHandle, void* memoryAddress).
 
     /* --- Math intrinsics --- */
-    INTR_SIN            = 0x000fff80, // float Sin(float x).
-    INTR_COS            = 0x000fff81, // float Cos(float x).
-    INTR_TAN            = 0x000fff82, // float Tan(float x).
-    INTR_ASIN           = 0x000fff83, // float ASin(float x).
-    INTR_ACOS           = 0x000fff84, // float ACos(float x).
-    INTR_ATAN           = 0x000fff85, // float ATan(float x).
-    INTR_POW            = 0x000fff86, // float Pow(float base, float exp).
-    INTR_SQRT           = 0x000fff87, // float Sqrt(float x).
+    INSC_SIN,           // float Sin(float x).
+    INSC_COS,           // float Cos(float x).
+    INSC_TAN,           // float Tan(float x).
+    INSC_ASIN,          // float ASin(float x).
+    INSC_ACOS,          // float ACos(float x).
+    INSC_ATAN,          // float ATan(float x).
+    INSC_POW,           // float Pow(float base, float exp).
+    INSC_SQRT,          // float Sqrt(float x).
 
     /* --- Other intrinsics --- */
-    INTR_RAND_INT       = 0x000fff88, // int RandInt() -> In range [0 .. MAX_INT].
-    INTR_RAND_FLOAT     = 0x000fff89, // float RandFloat() -> In range [0.0 .. 1.0].
-    INTR_TIME           = 0x000fff8a, // int Time() -> Ellapsed time since program start (in ms.).
-    INTR_SLEEP          = 0x000fff8b, // void Sleep(int duration).
+    INSC_RAND_INT,      // int RandInt() -> In range [0 .. MAX_INT].
+    INSC_RAND_FLOAT,    // float RandFloat() -> In range [0.0 .. 1.0].
+    INSC_TIME,          // int Time() -> Ellapsed time since program start (in ms.).
+    INSC_SLEEP,         // void Sleep(int duration).
 }
-intrinsic_addr;
+xvm_intrinsic_id;
 
 //! Returns the identifier of the specified intrinsic.
-STATIC const char* xvm_intrinsic_get_ident(const intrinsic_addr addr)
+STATIC const char* xvm_intrinsic_get_ident(const xvm_intrinsic_id addr)
 {
     switch (addr)
     {
         /* --- Dynamic memory intrinsics --- */
         
-        case INTR_ALLOC_MEM:    return "AllocMem";
-        case INTR_FREE_MEM:     return "FreeMem";
-        case INTR_COPY_MEM:     return "CopyMem";
+        case INSC_ALLOC_MEM:    return "AllocMem";
+        case INSC_FREE_MEM:     return "FreeMem";
+        case INSC_COPY_MEM:     return "CopyMem";
     
         /* --- Console intrinsics --- */
 
-        case INTR_SYS_CALL:     return "SysCall";
-        case INTR_CLEAR:        return "Clear";
-        case INTR_PRINT:        return "Print";
-        case INTR_PRINT_LN:     return "PrintLn";
-        case INTR_PRINT_INT:    return "PrintInt";
-        case INTR_PRINT_FLOAT:  return "PrintFloat";
-        case INTR_INPUT:        return "Input";
-        case INTR_INPUT_INT:    return "InputInt";
-        case INTR_INPUT_FLOAT:  return "InputFloat";
-
-        /* --- Conditional intrinsics --- */
-
-        case INTR_CMP_E:        return "CmpE";
-        case INTR_CMP_NE:       return "CmpNE";
-        case INTR_CMP_L:        return "CmpL";
-        case INTR_CMP_LE:       return "CmpLE";
-        case INTR_CMP_G:        return "CmpG";
-        case INTR_CMP_GE:       return "CmpGE";
-        case INTR_LOGIC_OR:     return "LogicOr";
-        case INTR_LOGIC_AND:    return "LogicAnd";
-        case INTR_LOGIC_NOT:    return "LogicNot";
+        case INSC_SYS_CALL:     return "SysCall";
+        case INSC_CLEAR:        return "Clear";
+        case INSC_PRINT:        return "Print";
+        case INSC_PRINT_LN:     return "PrintLn";
+        case INSC_PRINT_INT:    return "PrintInt";
+        case INSC_PRINT_FLOAT:  return "PrintFloat";
+        case INSC_INPUT:        return "Input";
+        case INSC_INPUT_INT:    return "InputInt";
+        case INSC_INPUT_FLOAT:  return "InputFloat";
 
         /* --- File intrinsics --- */
 
-        case INTR_CREATE_FILE:  return "CreateFile";
-        case INTR_DELETE_FILE:  return "DeleteFile";
-        case INTR_OPEN_FILE:    return "OpenFile";
-        case INTR_CLOSE_FILE:   return "CloseFile";
-        case INTR_FILE_SIZE:    return "FileSize";
-        case INTR_SET_FILE_POS: return "SetFilePos";
-        case INTR_GET_FILE_POS: return "GetFilePos";
-        case INTR_FILE_EOF:     return "FileEOF";
-        case INTR_WRITE_BYTE:   return "WriteByte";
-        case INTR_WRITE_WORD:   return "WriteWord";
-        case INTR_READ_BYTE:    return "ReadByte";
-        case INTR_READ_WORD:    return "ReadWord";
+        case INSC_CREATE_FILE:  return "CreateFile";
+        case INSC_DELETE_FILE:  return "DeleteFile";
+        case INSC_OPEN_FILE:    return "OpenFile";
+        case INSC_CLOSE_FILE:   return "CloseFile";
+        case INSC_FILE_SIZE:    return "FileSize";
+        case INSC_SET_FILE_POS: return "SetFilePos";
+        case INSC_GET_FILE_POS: return "GetFilePos";
+        case INSC_FILE_EOF:     return "FileEOF";
+        case INSC_WRITE_BYTE:   return "WriteByte";
+        case INSC_WRITE_WORD:   return "WriteWord";
+        case INSC_READ_BYTE:    return "ReadByte";
+        case INSC_READ_WORD:    return "ReadWord";
 
         /* --- Math intrinsics --- */
 
-        case INTR_SIN:          return "Sin";
-        case INTR_COS:          return "Cos";
-        case INTR_TAN:          return "Tan";
-        case INTR_ASIN:         return "ASin";
-        case INTR_ACOS:         return "ACos";
-        case INTR_ATAN:         return "ATan";
-        case INTR_POW:          return "Pow";
-        case INTR_SQRT:         return "Sqrt";
+        case INSC_SIN:          return "Sin";
+        case INSC_COS:          return "Cos";
+        case INSC_TAN:          return "Tan";
+        case INSC_ASIN:         return "ASin";
+        case INSC_ACOS:         return "ACos";
+        case INSC_ATAN:         return "ATan";
+        case INSC_POW:          return "Pow";
+        case INSC_SQRT:         return "Sqrt";
 
         /* --- Other intrinsics --- */
 
-        case INTR_RAND_INT:     return "RandInt";
-        case INTR_RAND_FLOAT:   return "RandFloat";
-        case INTR_TIME:         return "Time";
-        case INTR_SLEEP:        return "Sleep";
+        case INSC_RAND_INT:     return "RandInt";
+        case INSC_RAND_FLOAT:   return "RandFloat";
+        case INSC_TIME:         return "Time";
+        case INSC_SLEEP:        return "Sleep";
     }
     return "";
 }
@@ -929,8 +901,9 @@ STATIC const char* xvm_instr_get_mnemonic(const opcode_t opcode)
         case OPCODE_LDW:    return "ldw ";
         case OPCODE_STW:    return "stw ";
         case OPCODE_STOP:   return "stop";
-        case OPCODE_RET:    return "ret ";
         case OPCODE_INVK:   return "invk";
+        case OPCODE_INSC:   return "insc";
+        case OPCODE_RET:    return "ret ";
     }
     return "";
 }
@@ -1045,14 +1018,12 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
     else if (opcode == OPCODE_CALL)
     {
         int addr_offset = _xvm_instr_get_sgn_value21(instr);
-        if (addr_offset == INTR_RESERVED_MAX)
+        if (addr_offset == XVM_SGN_VALUE21_MAX)
         {
             reg_t reg0 = _xvm_instr_get_reg0(instr);
             const char* reg0name = xvm_register_get_name(reg0);
             printf("%s", reg0name);
         }
-        else if (addr_offset >= INTR_RESERVED_MIN)
-            printf("%s  <intrinsic>", xvm_intrinsic_get_ident((intrinsic_addr)addr_offset));
         else
         {
             reg_t reg0 = _xvm_instr_get_reg0(instr);
@@ -1091,6 +1062,11 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
         unsigned int value = _xvm_instr_get_value16(instr);
 
         printf("(%u) %u", extra_value, value);
+    }
+    else if (opcode == OPCODE_INSC)
+    {
+        unsigned int value = _xvm_instr_get_value26(instr);
+        printf("%s  <intrinsic>", xvm_intrinsic_get_ident((xvm_intrinsic_id)value));
     }
     else if (opcode == OPCODE_PUSHC)
         printf("%i", _xvm_instr_get_sgn_value26(instr));
@@ -1863,18 +1839,18 @@ STR:
     WORD:           length
     Byte[length]:   data
 
---- XBC file format spec (Version 1.21): ---
+--- XBC file format spec (Version 1.31): ---
 
 WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 121 for "1.21")
+WORD: version number (Must be 131 for "1.31")
 WORD: number of instructions (n)
 n times:
     WORD: instruction
 
---- XBC file format spec (Version 1.22): ---
+--- XBC file format spec (Version 1.32): ---
 
 WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 122 for "1.22")
+WORD: version number (Must be 132 for "1.32")
 WORD: number of instructions (n1)
 n1 times:
     WORD: instruction
@@ -1883,10 +1859,10 @@ n2 times:
     WORD: address
     STR: name
 
---- XBC file format spec (Version 1.23): ---
+--- XBC file format spec (Version 1.33): ---
 
 WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 123 for "1.23")
+WORD: version number (Must be 133 for "1.33")
 WORD: number of instructions (n1)
 n1 times:
     WORD: instruction
@@ -1901,10 +1877,10 @@ n3 times:
 */
 
 #define XBC_FORMAT_MAGIC            (*((int*)("XBCF")))
-#define XBC_FORMAT_VERSION_1_21     121
-#define XBC_FORMAT_VERSION_1_22     122
-#define XBC_FORMAT_VERSION_1_23     123
-#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_23
+#define XBC_FORMAT_VERSION_1_31     131
+#define XBC_FORMAT_VERSION_1_32     132
+#define XBC_FORMAT_VERSION_1_33     133
+#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_33
 
 /**
 Reads a byte code form file.
@@ -1940,9 +1916,9 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
 
     // Read version number
     unsigned int version = xvm_file_read_uint(file);
-    if (version != XBC_FORMAT_VERSION_1_21 && version != XBC_FORMAT_VERSION_1_22 && version != XBC_FORMAT_VERSION_1_23)
+    if (version != XBC_FORMAT_VERSION_1_31 && version != XBC_FORMAT_VERSION_1_32 && version != XBC_FORMAT_VERSION_1_33)
     {
-        xvm_log_error("invalid version number (must be 1.21, 1.22, or 1.23)");
+        xvm_log_error("invalid version number (must be 1.31, 1.32, or 1.33)");
         fclose(file);
         return 0;
     }
@@ -1960,7 +1936,7 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     fread(byte_code->instructions, sizeof(instr_t), num_instr, file);
 
     // Read export addresses
-    if (version >= XBC_FORMAT_VERSION_1_22)
+    if (version >= XBC_FORMAT_VERSION_1_32)
     {
         unsigned int num_export_addr = xvm_file_read_uint(file);
 
@@ -1987,7 +1963,7 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     }
 
     // Read invocation identifiers
-    if (version >= XBC_FORMAT_VERSION_1_23)
+    if (version >= XBC_FORMAT_VERSION_1_33)
     {
         unsigned int num_invoke_idents = xvm_file_read_uint(file);
 
@@ -2030,9 +2006,9 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
         xvm_log_error("invalid arguments to write byte code");
         return 0;
     }
-    if (version != XBC_FORMAT_VERSION_1_21 && version != XBC_FORMAT_VERSION_1_22 && version != XBC_FORMAT_VERSION_1_23)
+    if (version != XBC_FORMAT_VERSION_1_31 && version != XBC_FORMAT_VERSION_1_32 && version != XBC_FORMAT_VERSION_1_33)
     {
-        xvm_log_error("invalid version number (must be 1.21, 1.22, or 1.23)");
+        xvm_log_error("invalid version number (must be 1.31, 1.32, or 1.33)");
         return 0;
     }
 
@@ -2057,7 +2033,7 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     fwrite(byte_code->instructions, sizeof(instr_t), num_instr, file);
 
     // Write export addresses
-    if (version >= XBC_FORMAT_VERSION_1_22)
+    if (version >= XBC_FORMAT_VERSION_1_32)
     {
         unsigned int num_export_addr = byte_code->num_export_addresses;
         xvm_file_write_uint(file, num_export_addr);
@@ -2072,7 +2048,7 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
     }
 
     // Write invocation identifiers
-    if (version >= XBC_FORMAT_VERSION_1_23)
+    if (version >= XBC_FORMAT_VERSION_1_33)
     {
         unsigned int num_invoke_idents = byte_code->num_invoke_idents;
         xvm_file_write_uint(file, num_invoke_idents);
@@ -2406,23 +2382,23 @@ STATIC xvm_module* xvm_module_iteration_next()
 
 /* ----- Virtual machine ----- */
 
-STATIC void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_t* reg_sp)
+STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, regi_t* const reg_sp, regi_t* const reg_ar)
 {
-    switch (intrinsic_addr)
+    switch (intrsc_id)
     {
         /* --- Dynamic memory intrinsics --- */
 
         // void* AllocMem(uint sizeInBytes)
-        case INTR_ALLOC_MEM:
+        case INSC_ALLOC_MEM:
         {
-            size_t arg0 = (size_t)(xvm_stack_read(*reg_sp, -1));
-            void* result = malloc(arg0);
-            xvm_stack_write(*reg_sp, -1, (stack_word_t)result);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            void* result = malloc((size_t)arg0);
+            *reg_ar = (regi_t)result;
         }
         break;
 
         // void FreeMem(void* memoryAddress)
-        case INTR_FREE_MEM:
+        case INSC_FREE_MEM:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
             if (arg0 != 0)
@@ -2431,7 +2407,7 @@ STATIC void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
         break;
 
         // void CopyMem(void* dstMemAddr, const void* srcMemAddr, uint sizeInBytes)
-        case INTR_COPY_MEM:
+        case INSC_COPY_MEM:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
             int arg1 = xvm_stack_pop(stack, reg_sp);
@@ -2442,261 +2418,174 @@ STATIC void xvm_call_intrinsic(int intrinsic_addr, xvm_stack* const stack, regi_
 
         /* --- Console intrinsics --- */
 
-        case INTR_SYS_CALL:
+        case INSC_SYS_CALL:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
             system(INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
-        case INTR_CLEAR:
+        case INSC_CLEAR:
         {
             //todo...
         }
         break;
 
-        case INTR_PRINT:
+        case INSC_PRINT:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
             printf("%s", INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
-        case INTR_PRINT_LN:
+        case INSC_PRINT_LN:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
             puts(INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
-        case INTR_PRINT_INT:
+        case INSC_PRINT_INT:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
             printf("%i", arg0);
         }
         break;
 
-        case INTR_PRINT_FLOAT:
+        case INSC_PRINT_FLOAT:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
             printf("%f", INT_TO_FLT_REINTERPRET(arg0));
         }
         break;
 
-        case INTR_INPUT:
+        case INSC_INPUT:
         {
             //todo...
         }
         break;
 
-        case INTR_INPUT_INT:
+        case INSC_INPUT_INT:
         {
-            int result;
-            scanf("%i", &result);
-            xvm_stack_push(stack, reg_sp, result);
+            scanf("%i", reg_ar);
         }
         break;
 
-        case INTR_INPUT_FLOAT:
+        case INSC_INPUT_FLOAT:
         {
-            float result;
-            scanf("%f", &result);
-            xvm_stack_push(stack, reg_sp, FLT_TO_INT_REINTERPRET(result));
-        }
-        break;
-
-        /* --- Conditional intrinsics --- */
-
-        case INTR_CMP_E:
-        {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
-            int result = (arg0 == arg1 ? 1 : 0);
-            xvm_stack_push(stack, reg_sp, result);
-        }
-        break;
-
-        case INTR_CMP_NE:
-        {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
-            int result = (arg0 != arg1 ? 1 : 0);
-            xvm_stack_push(stack, reg_sp, result);
-        }
-        break;
-
-        case INTR_CMP_L:
-        {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
-            int result = (arg0 < arg1 ? 1 : 0);
-            xvm_stack_push(stack, reg_sp, result);
-        }
-        break;
-
-        case INTR_CMP_LE:
-        {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
-            int result = (arg0 <= arg1 ? 1 : 0);
-            xvm_stack_push(stack, reg_sp, result);
-        }
-        break;
-
-        case INTR_CMP_G:
-        {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
-            int result = (arg0 > arg1 ? 1 : 0);
-            xvm_stack_push(stack, reg_sp, result);
-        }
-        break;
-
-        case INTR_CMP_GE:
-        {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
-            int result = (arg0 >= arg1 ? 1 : 0);
-            xvm_stack_push(stack, reg_sp, result);
-        }
-        break;
-
-        case INTR_LOGIC_OR:
-        {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
-            int result = (arg0 != 0 || arg1 != 0 ? 1 : 0);
-            xvm_stack_push(stack, reg_sp, result);
-        }
-        break;
-
-        case INTR_LOGIC_AND:
-        {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
-            int result = (arg0 != 0 && arg1 != 0 ? 1 : 0);
-            xvm_stack_push(stack, reg_sp, result);
-        }
-        break;
-
-        case INTR_LOGIC_NOT:
-        {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int result = (arg0 == 0 ? 1 : 0);
-            xvm_stack_push(stack, reg_sp, result);
+            scanf("%f", reg_ar);
         }
         break;
 
         /* --- File intrinsics --- */
 
-        case INTR_CREATE_FILE:
-        case INTR_DELETE_FILE:
-        case INTR_OPEN_FILE:
-        case INTR_CLOSE_FILE:
-        case INTR_FILE_SIZE:
-        case INTR_SET_FILE_POS:
-        case INTR_GET_FILE_POS:
-        case INTR_FILE_EOF:
-        case INTR_WRITE_BYTE:
-        case INTR_WRITE_WORD:
-        case INTR_READ_BYTE:
-        case INTR_READ_WORD:
+        //!!!!!!!!! TODO !!!!!!!!!
+        case INSC_CREATE_FILE:
+        case INSC_DELETE_FILE:
+        case INSC_OPEN_FILE:
+        case INSC_CLOSE_FILE:
+        case INSC_FILE_SIZE:
+        case INSC_SET_FILE_POS:
+        case INSC_GET_FILE_POS:
+        case INSC_FILE_EOF:
+        case INSC_WRITE_BYTE:
+        case INSC_WRITE_WORD:
+        case INSC_READ_BYTE:
+        case INSC_READ_WORD:
         break;
 
         /* --- Math intrinsics --- */
 
-        case INTR_SIN:
+        case INSC_SIN:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             float result = sinf(INT_TO_FLT_REINTERPRET(arg0));
-            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;
 
-        case INTR_COS:
+        case INSC_COS:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             float result = cosf(INT_TO_FLT_REINTERPRET(arg0));
-            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;
 
-        case INTR_TAN:
+        case INSC_TAN:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             float result = tanf(INT_TO_FLT_REINTERPRET(arg0));
-            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;
 
-        case INTR_ASIN:
+        case INSC_ASIN:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             float result = asinf(INT_TO_FLT_REINTERPRET(arg0));
-            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;
 
-        case INTR_ACOS:
+        case INSC_ACOS:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             float result = acosf(INT_TO_FLT_REINTERPRET(arg0));
-            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;
 
-        case INTR_ATAN:
+        case INSC_ATAN:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             float result = atanf(INT_TO_FLT_REINTERPRET(arg0));
-            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;
 
-        case INTR_POW:
+        case INSC_POW:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
-            int arg1 = xvm_stack_read(*reg_sp, -2);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
             float result = powf(INT_TO_FLT_REINTERPRET(arg0), INT_TO_FLT_REINTERPRET(arg1));
-            xvm_stack_pop(stack, reg_sp);
-            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;
 
-        case INTR_SQRT:
+        case INSC_SQRT:
         {
-            int arg0 = xvm_stack_read(*reg_sp, -1);
+            int arg0 = xvm_stack_pop(stack, reg_sp);
             float result = sqrtf(INT_TO_FLT_REINTERPRET(arg0));
-            xvm_stack_write(*reg_sp, -1, FLT_TO_INT_REINTERPRET(result));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;
 
         /* --- Other intrinsics --- */
         
-        case INTR_RAND_INT:
+        case INSC_RAND_INT:
         {
-            int result = rand();
-            xvm_stack_push(stack, reg_sp, result);
+            *reg_ar = rand();
         }
         break;
 
-        case INTR_RAND_FLOAT:
+        case INSC_RAND_FLOAT:
         {
             float result = ((float)rand()) / RAND_MAX;
-            xvm_stack_push(stack, reg_sp, FLT_TO_INT_REINTERPRET(result));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;
 
-        case INTR_TIME:
+        case INSC_TIME:
         {
             clock_t ticks = clock() / (CLOCKS_PER_SEC / 1000);
-            xvm_stack_push(stack, reg_sp, (int)ticks);
+            *reg_ar = (int)ticks;
         }
         break;
 
         #ifdef _ENABLE_OS_FEATURES_
 
-        case INTR_SLEEP:
+        case INSC_SLEEP:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
             #if defined(_WIN32)
@@ -2751,6 +2640,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
     const regi_t instr_ptr_begin    = (regi_t)byte_code->instructions;
     const regi_t instr_ptr_end      = instr_ptr_begin + num_instr*4;
 
+    regi_t* const reg_ar = (reg.i + REG_AR); // Reference to '$ar' register
     regi_t* const reg_cf = (reg.i + REG_CF); // Reference to '$cf' register
     regi_t* const reg_lb = (reg.i + REG_LB); // Reference to '$lb' register
     regi_t* const reg_sp = (reg.i + REG_SP); // Reference to '$sp' register
@@ -3276,40 +3166,26 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             {
                 sgn_value = _xvm_instr_get_sgn_value21(instr);
 
-                // -- Indirect call --
-                if (sgn_value == INTR_RESERVED_MAX)
-                {
-                    // Push dynamic link (lb and pc registers)
-                    extra_value = *reg_lb;
-                    *reg_lb = *reg_sp;
-                    xvm_stack_push(stack, reg_sp, extra_value);
-                    xvm_stack_push(stack, reg_sp, *reg_pc);
+                // Push dynamic link (lb and pc registers)
+                extra_value = *reg_lb;
+                *reg_lb = *reg_sp;
+                xvm_stack_push(stack, reg_sp, extra_value);
+                xvm_stack_push(stack, reg_sp, *reg_pc);
 
-                    // Jump to procedure address (absolute address)
-                    reg0 = _xvm_instr_get_reg0(instr);
+                reg0 = _xvm_instr_get_reg0(instr);
+
+                if (sgn_value == XVM_SGN_VALUE21_MAX)
+                {
+                    // Jump to absolute procedure address (indirect call)
                     *reg_pc = (regi_t)(program_start_ptr + (reg.i[reg0] << 2));
-                    continue;
                 }
-                // -- Direct call ---
-                else if (sgn_value < INTR_RESERVED_MIN)
-                {
-                    // Push dynamic link (lb and pc registers)
-                    extra_value = *reg_lb;
-                    *reg_lb = *reg_sp;
-                    xvm_stack_push(stack, reg_sp, extra_value);
-                    xvm_stack_push(stack, reg_sp, *reg_pc);
-
-                    // Jump to procedure address (relative address)
-                    reg0 = _xvm_instr_get_reg0(instr);
-                    *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
-                    continue;
-                }
-                // -- Intrinsic call --
                 else
                 {
-                    // Call intrinsic procedure
-                    xvm_call_intrinsic(sgn_value, stack, reg_sp);
+                    // Jump to relative procedure address (direct call)
+                    *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
                 }
+
+                continue;
             }
             break;
 
@@ -3441,6 +3317,14 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 }
                 else
                     return EXITCODE_INVOCATION_VIOLATION;
+            }
+            break;
+
+            case OPCODE_INSC:
+            {
+                // Call intrinsic procedure
+                unsgn_value = _xvm_instr_get_value26(instr);
+                _xvm_call_intrinsic(unsgn_value, stack, reg_sp, reg_ar);
             }
             break;
 

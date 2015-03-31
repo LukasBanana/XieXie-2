@@ -83,7 +83,6 @@ class Assembler
             {
                 __Unknown__,
                 Ident,          //!< ( a-zA-Z | '_' | '.' ) ( a-zA-Z | '_' | '.' | '0' - '9' )*
-                Intrinsic,      //!< '<' (a-zA-Z | '_' | '.' )+ '>'
                 IntLiteral,     //!< ( '-' | epsilon ) ( '0' - '9' )+
                 FloatLiteral,   //!< ( '-' | epsilon ) ( '0' - '9' )+ '.' ( '0' - '9' )+
                 StringLiteral,  //!< '"' ( ? )* '"'
@@ -176,7 +175,6 @@ class Assembler
 
         Token NextToken();
         Token ScanStringLiteral();
-        Token ScanIntrinsic();
         Token ScanIdentifier();
         Token ScanNumber();
         Token ScanRegister();
@@ -210,6 +208,7 @@ class Assembler
         void ParseInstrSpecialPUSH();
         void ParseInstrSpecialSTOP();
         void ParseInstrSpecialINVK();
+        void ParseInstrSpecialINSC();
         void ParseInstrSpecialRET();
 
         const VirtualMachine::Register& ParseRegister();
@@ -224,7 +223,7 @@ class Assembler
         int ParseLocalAddress(bool isDataField);
         int ParseGlobalAddress(bool isDataField);
         int ParseAddressPointer(bool isDataField);
-        int ParseIntrinsicAddress();
+        unsigned int ParseIntrinsicID();
 
         /* ------- Assembler ------- */
 

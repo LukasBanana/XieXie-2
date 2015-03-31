@@ -164,8 +164,9 @@ void Assembler::EstablishMnemonicTable()
 
         { "push", { InstrCategory::Categories::Special,   OPCODE_PUSH, OPCODE_PUSHC } },
         { "stop", { InstrCategory::Categories::Special,   OPCODE_STOP, 0u           } },
-        { "ret",  { InstrCategory::Categories::Special,   OPCODE_RET,  0u           } },
         { "invk", { InstrCategory::Categories::Special,   OPCODE_INVK, 0u           } },
+        { "insc", { InstrCategory::Categories::Special,   OPCODE_INSC, 0u           } },
+        { "ret",  { InstrCategory::Categories::Special,   OPCODE_RET,  0u           } },
     });
 }
 
@@ -310,10 +311,6 @@ Assembler::Token Assembler::NextToken()
     if (Is('$'))
         return std::move(ScanRegister());
 
-    /* Scan intrinsic */
-    if (Is('<'))
-        return std::move(ScanIntrinsic());
-
     /* Scan punctuation */
     switch (chr_)
     {
@@ -414,22 +411,6 @@ Assembler::Token Assembler::ScanIdentifier()
     return std::move(Token(Token::Types::Ident, spell));
 }
 
-Assembler::Token Assembler::ScanIntrinsic()
-{
-    /* Scan intrinsic string */
-    std::string spell;
-
-    Take('<');
-
-    while (IsIdentChar(chr_))
-        spell += TakeIt();
-
-    Take('>');
-
-    /* Return intrinsic token */
-    return std::move(Token(Token::Types::Intrinsic, spell));
-}
-
 Assembler::Token Assembler::ScanNumber()
 {
     std::string spell;
@@ -494,6 +475,20 @@ Assembler::Token Assembler::ScanRegister()
             if (!IsDigit(chr_))
                 ErrorUnexpectedChar();
             spell += TakeIt();
+            if (IsDigit(chr_))
+                spell += TakeIt();
+            break;
+        case 'a':
+            spell += TakeIt();
+            spell += Take('r');
+            break;
+        case 'x':
+            spell += TakeIt();
+            spell += Take('r');
+            break;
+        case 'g':
+            spell += TakeIt();
+            spell += Take('p');
             break;
         case 's':
             spell += TakeIt();
@@ -502,14 +497,6 @@ Assembler::Token Assembler::ScanRegister()
         case 'l':
             spell += TakeIt();
             spell += Take('b');
-            break;
-        case 't':
-            spell += TakeIt();
-            spell += Take('r');
-            break;
-        case 'g':
-            spell += TakeIt();
-            spell += Take('p');
             break;
         case 'c':
             spell += TakeIt();
@@ -779,9 +766,9 @@ void Assembler::ParseInstrJump(const InstrCategory& instr)
     /* Check for special case of "CALL" instruction */
     if (instr.opcodePrimary == OPCODE_CALL && tkn_.type == Token::Types::Register)
     {
-        /* Parse single register and set offset to magic number */
+        /* Parse single register and set offset to magic number for indirect call */
         reg = &(ParseRegister());
-        offset = INTR_RESERVED_MAX;
+        offset = XVM_SGN_VALUE21_MAX;
     }
     else
     {
@@ -833,11 +820,14 @@ void Assembler::ParseInstrSpecial(const InstrCategory& instr)
         case OPCODE_STOP:
             ParseInstrSpecialSTOP();
             break;
-        case OPCODE_RET:
-            ParseInstrSpecialRET();
-            break;
         case OPCODE_INVK:
             ParseInstrSpecialINVK();
+            break;
+        case OPCODE_INSC:
+            ParseInstrSpecialINSC();
+            break;
+        case OPCODE_RET:
+            ParseInstrSpecialRET();
             break;
     }
 }
@@ -850,9 +840,7 @@ void Assembler::ParseInstrSpecialPUSH()
         const auto& reg = ParseRegister();
         
         /* Add instruction */
-        byteCode_->AddInstr(
-            Instr::MakeReg1(OPCODE_PUSH, reg, 0)
-        );
+        byteCode_->AddInstr(Instr::MakeReg1(OPCODE_PUSH, reg, 0));
     }
     else
     {
@@ -860,18 +848,14 @@ void Assembler::ParseInstrSpecialPUSH()
         auto value = ParseOperand();
 
         /* Add instruction */
-        byteCode_->AddInstr(
-            Instr::MakeSpecial(OPCODE_PUSHC, int(value))
-        );
+        byteCode_->AddInstr(Instr::MakeSpecial(OPCODE_PUSHC, int(value)));
     }
 }
 
 void Assembler::ParseInstrSpecialSTOP()
 {
     /* Add instruction */
-    byteCode_->AddInstr(
-        Instr::MakeSpecial(OPCODE_STOP, int(0))
-    );
+    byteCode_->AddInstr(Instr::MakeSpecial(OPCODE_STOP, int(0)));
 }
 
 void Assembler::ParseInstrSpecialINVK()
@@ -881,9 +865,16 @@ void Assembler::ParseInstrSpecialINVK()
     auto id = InvokeID(ident);
 
     /* Add instruction */
-    byteCode_->AddInstr(
-        Instr::MakeSpecial(OPCODE_INVK, id)
-    );
+    byteCode_->AddInstr(Instr::MakeSpecial(OPCODE_INVK, id));
+}
+
+void Assembler::ParseInstrSpecialINSC()
+{
+    /* Parse operand */
+    auto id = ParseIntrinsicID();
+
+    /* Add instruction */
+    byteCode_->AddInstr(Instr::MakeSpecial(OPCODE_INSC, id));
 }
 
 void Assembler::ParseInstrSpecialRET()
@@ -903,9 +894,7 @@ void Assembler::ParseInstrSpecialRET()
         argSize = ParseUIntLiteral();
 
     /* Add instruction */
-    byteCode_->AddInstr(
-        Instr::MakeSpecial(OPCODE_RET, resultSize, argSize)
-    );
+    byteCode_->AddInstr(Instr::MakeSpecial(OPCODE_RET, resultSize, argSize));
 }
 
 const Register& Assembler::ParseRegister()
@@ -927,8 +916,6 @@ int Assembler::ParseOperand(bool isDataField)
             return ParseGlobalAddress(isDataField);
         case Token::Types::Pointer:
             return ParseAddressPointer(isDataField);
-        case Token::Types::Intrinsic:
-            return ParseIntrinsicAddress();
         default:
             ErrorUnexpectedToken("expected operand");
             break;
@@ -998,11 +985,11 @@ int Assembler::ParseAddressPointer(bool isDataField)
     return AddressValue(label, BackPatchAddr::InstrUse::Types::Pointer, isDataField);
 }
 
-int Assembler::ParseIntrinsicAddress()
+unsigned int Assembler::ParseIntrinsicID()
 {
     /* Parse intrinsic address label */
-    auto label = Accept(Token::Types::Intrinsic).spell;
-    return static_cast<int>(intrinsics_->AddressByName(label));
+    auto label = Accept(Token::Types::Ident).spell;
+    return intrinsics_->AddressByName(label);
 }
 
 /* ------- Assembler ------- */

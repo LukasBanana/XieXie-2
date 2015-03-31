@@ -99,8 +99,8 @@ class Register
         static const Register r23;  //!< $r23  ->  General purpose register 23.
         static const Register r24;  //!< $r24  ->  General purpose register 24.
 
-        static const Register rv;   //!< $rv   ->  Return value: can be used as return value.
-        static const Register sr;   //!< $sr   ->  Special register: can be used as assembler temporary or 'this' pointer of a class instance.
+        static const Register ar;   //!< $ar   ->  Return value: can be used as return value.
+        static const Register xr;   //!< $xr   ->  Extended register: can be used as assembler temporary or 'this' pointer of a class instance.
         static const Register gp;   //!< $gp   ->  Global pointer: should be used as the stack pointer where all global variables are stored.
 
         static const Register cf;   //!< $cf   ->  Conditional flag register: used for jump conditions.
@@ -156,8 +156,8 @@ class Register
                 case 0x16: return r22;
                 case 0x17: return r23;
                 case 0x18: return r24;
-                case 0x19: return rv;
-                case 0x1a: return sr;
+                case 0x19: return ar;
+                case 0x1a: return xr;
                 case 0x1b: return gp;
                 case 0x1c: return cf;
                 case 0x1d: return lb;
@@ -195,8 +195,8 @@ class Register
                         case '9': return r9;
                     }
                 }
-                else if (name == "$rv") return rv;
-                else if (name == "$sr") return sr;
+                else if (name == "$ar") return ar;
+                else if (name == "$xr") return xr;
                 else if (name == "$gp") return gp;
                 else if (name == "$cf") return cf;
                 else if (name == "$lb") return lb;
@@ -274,8 +274,8 @@ const Register Register::r22(REG_R22);
 const Register Register::r23(REG_R23);
 const Register Register::r24(REG_R24);
 
-const Register Register::rv(REG_RV);
-const Register Register::sr(REG_SR);
+const Register Register::ar(REG_AR);
+const Register Register::xr(REG_XR);
 const Register Register::gp(REG_GP);
 
 const Register Register::cf(REG_CF);
@@ -569,7 +569,7 @@ Instruction Instruction::MakeSpecial(xvm_opcode opcode, int value)
 
 Instruction Instruction::MakeSpecial(xvm_opcode opcode, unsigned int value)
 {
-    OpCodeAssert(opcode == OPCODE_INVK, "invalid opcode for special instruction");
+    OpCodeAssert(opcode == OPCODE_INVK || opcode == OPCODE_INSC, "invalid opcode for special instruction");
     RangeAssert(InRange<26>(value), "'value' is out of range " + RangeStr<Value26>() + " in special instruction");
     return Instruction(xvm_instr_make_special1(opcode, value));
 }
@@ -596,51 +596,42 @@ class Intrinsics
         {
             addresses_ = std::move(AddressMapType
             {
-                { "AllocMem",   INTR_ALLOC_MEM    },
-                { "FreeMem",    INTR_FREE_MEM     },
-                { "CopyMem",    INTR_COPY_MEM     },
-                { "SysCall",    INTR_SYS_CALL     },
-                { "Clear",      INTR_CLEAR        },
-                { "Print",      INTR_PRINT        },
-                { "PrintLn",    INTR_PRINT_LN     },
-                { "PrintInt",   INTR_PRINT_INT    },
-                { "PrintFloat", INTR_PRINT_FLOAT  },
-                { "Input",      INTR_INPUT        },
-                { "InputInt",   INTR_INPUT_INT    },
-                { "InputFloat", INTR_INPUT_FLOAT  },
-                { "CmpE",       INTR_CMP_E        },
-                { "CmpNE",      INTR_CMP_NE       },
-                { "CmpL",       INTR_CMP_L        },
-                { "CmpLE",      INTR_CMP_LE       },
-                { "CmpG",       INTR_CMP_G        },
-                { "CmpGE",      INTR_CMP_GE       },
-                { "LogicOr",    INTR_LOGIC_OR     },
-                { "LogicAnd",   INTR_LOGIC_AND    },
-                { "LogicNot",   INTR_LOGIC_NOT    },
-                { "CreateFile", INTR_CREATE_FILE  },
-                { "DeleteFile", INTR_DELETE_FILE  },
-                { "OpenFile",   INTR_OPEN_FILE    },
-                { "CloseFile",  INTR_CLOSE_FILE   },
-                { "FileSize",   INTR_FILE_SIZE    },
-                { "SetFilePos", INTR_SET_FILE_POS },
-                { "GetFilePos", INTR_GET_FILE_POS },
-                { "FileEOF",    INTR_FILE_EOF     },
-                { "WriteByte",  INTR_WRITE_BYTE   },
-                { "WriteWord",  INTR_WRITE_WORD   },
-                { "ReadByte",   INTR_READ_BYTE    },
-                { "ReadWord",   INTR_READ_WORD    },
-                { "Sin",        INTR_SIN          },
-                { "Cos",        INTR_COS          },
-                { "Tan",        INTR_TAN          },
-                { "ASin",       INTR_ASIN         },
-                { "ACos",       INTR_ACOS         },
-                { "ATan",       INTR_ATAN         },
-                { "Pow",        INTR_POW          },
-                { "Sqrt",       INTR_SQRT         },
-                { "RandInt",    INTR_RAND_INT     },
-                { "RandFloat",  INTR_RAND_FLOAT   },
-                { "Time",       INTR_TIME         },
-                { "Slepp",      INTR_SLEEP        }
+                { "AllocMem",   INSC_ALLOC_MEM    },
+                { "FreeMem",    INSC_FREE_MEM     },
+                { "CopyMem",    INSC_COPY_MEM     },
+                { "SysCall",    INSC_SYS_CALL     },
+                { "Clear",      INSC_CLEAR        },
+                { "Print",      INSC_PRINT        },
+                { "PrintLn",    INSC_PRINT_LN     },
+                { "PrintInt",   INSC_PRINT_INT    },
+                { "PrintFloat", INSC_PRINT_FLOAT  },
+                { "Input",      INSC_INPUT        },
+                { "InputInt",   INSC_INPUT_INT    },
+                { "InputFloat", INSC_INPUT_FLOAT  },
+                { "CreateFile", INSC_CREATE_FILE  },
+                { "DeleteFile", INSC_DELETE_FILE  },
+                { "OpenFile",   INSC_OPEN_FILE    },
+                { "CloseFile",  INSC_CLOSE_FILE   },
+                { "FileSize",   INSC_FILE_SIZE    },
+                { "SetFilePos", INSC_SET_FILE_POS },
+                { "GetFilePos", INSC_GET_FILE_POS },
+                { "FileEOF",    INSC_FILE_EOF     },
+                { "WriteByte",  INSC_WRITE_BYTE   },
+                { "WriteWord",  INSC_WRITE_WORD   },
+                { "ReadByte",   INSC_READ_BYTE    },
+                { "ReadWord",   INSC_READ_WORD    },
+                { "Sin",        INSC_SIN          },
+                { "Cos",        INSC_COS          },
+                { "Tan",        INSC_TAN          },
+                { "ASin",       INSC_ASIN         },
+                { "ACos",       INSC_ACOS         },
+                { "ATan",       INSC_ATAN         },
+                { "Pow",        INSC_POW          },
+                { "Sqrt",       INSC_SQRT         },
+                { "RandInt",    INSC_RAND_INT     },
+                { "RandFloat",  INSC_RAND_FLOAT   },
+                { "Time",       INSC_TIME         },
+                { "Sleep",      INSC_SLEEP        }
             });
         }
 
