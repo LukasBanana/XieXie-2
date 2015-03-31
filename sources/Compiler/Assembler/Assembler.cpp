@@ -156,8 +156,10 @@ void Assembler::EstablishMnemonicTable()
         { "call", { InstrCategory::Categories::Jump,      OPCODE_CALL, 0u           } },
 
         { "ldb",  { InstrCategory::Categories::LoadStore, OPCODE_LDB,  0u           } },
-        { "ldw",  { InstrCategory::Categories::LoadStore, OPCODE_LDW,  0u           } },
         { "stb",  { InstrCategory::Categories::LoadStore, OPCODE_STB,  0u           } },
+        { "ldh",  { InstrCategory::Categories::LoadStore, OPCODE_LDH,  0u           } },
+        { "sth",  { InstrCategory::Categories::LoadStore, OPCODE_STH,  0u           } },
+        { "ldw",  { InstrCategory::Categories::LoadStore, OPCODE_LDW,  0u           } },
         { "stw",  { InstrCategory::Categories::LoadStore, OPCODE_STW,  0u           } },
 
         { "push", { InstrCategory::Categories::Special,   OPCODE_PUSH, OPCODE_PUSHC } },
@@ -888,16 +890,17 @@ void Assembler::ParseInstrSpecialRET()
 {
     unsigned int resultSize = 0, argSize = 0;
 
+    /* Parse optional first operand */
     if (tkn_.type == Token::Types::LBracket)
     {
-        /* Parse first operand */
         Accept(Token::Types::LBracket);
         resultSize = ParseUIntLiteral();
         Accept(Token::Types::RBracket);
-
-        /* Parse second operand */
-        argSize = ParseUIntLiteral();
     }
+
+    /* Parse optional second operand */
+    if (tkn_.type == Token::Types::IntLiteral)
+        argSize = ParseUIntLiteral();
 
     /* Add instruction */
     byteCode_->AddInstr(

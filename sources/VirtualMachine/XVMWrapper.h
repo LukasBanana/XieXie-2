@@ -73,24 +73,40 @@ class Register
     
     public:
         
-        static const Register r0; //!< $r0  ->  General purpose register 0.
-        static const Register r1; //!< $r1  ->  General purpose register 1.
-        static const Register r2; //!< $r2  ->  General purpose register 2.
-        static const Register r3; //!< $r3  ->  General purpose register 3.
-        static const Register r4; //!< $r4  ->  General purpose register 4.
-        static const Register r5; //!< $r5  ->  General purpose register 5.
-        static const Register r6; //!< $r6  ->  General purpose register 6.
-        static const Register r7; //!< $r7  ->  General purpose register 7.
-        static const Register r8; //!< $r8  ->  General purpose register 8.
-        static const Register r9; //!< $r9  ->  General purpose register 9.
+        static const Register r0;   //!< $r0   ->  General purpose register 0.
+        static const Register r1;   //!< $r1   ->  General purpose register 1.
+        static const Register r2;   //!< $r2   ->  General purpose register 2.
+        static const Register r3;   //!< $r3   ->  General purpose register 3.
+        static const Register r4;   //!< $r4   ->  General purpose register 4.
+        static const Register r5;   //!< $r5   ->  General purpose register 5.
+        static const Register r6;   //!< $r6   ->  General purpose register 6.
+        static const Register r7;   //!< $r7   ->  General purpose register 7.
+        static const Register r8;   //!< $r8   ->  General purpose register 8.
+        static const Register r9;   //!< $r9   ->  General purpose register 9.
+        static const Register r10;  //!< $r10  ->  General purpose register 10.
+        static const Register r11;  //!< $r11  ->  General purpose register 11.
+        static const Register r12;  //!< $r12  ->  General purpose register 12.
+        static const Register r13;  //!< $r13  ->  General purpose register 13.
+        static const Register r14;  //!< $r14  ->  General purpose register 14.
+        static const Register r15;  //!< $r15  ->  General purpose register 15.
+        static const Register r16;  //!< $r16  ->  General purpose register 16.
+        static const Register r17;  //!< $r17  ->  General purpose register 17.
+        static const Register r18;  //!< $r18  ->  General purpose register 18.
+        static const Register r19;  //!< $r19  ->  General purpose register 19.
+        static const Register r20;  //!< $r20  ->  General purpose register 20.
+        static const Register r21;  //!< $r21  ->  General purpose register 21.
+        static const Register r22;  //!< $r22  ->  General purpose register 22.
+        static const Register r23;  //!< $r23  ->  General purpose register 23.
+        static const Register r24;  //!< $r24  ->  General purpose register 24.
 
-        static const Register tr; //!< $tr  ->  Assembler temporary register: should be used for assembler specific pseudo instructions.
-        static const Register gp; //!< $gp  ->  Global pointer: should be used as the stack pointer where all global variables are stored.
+        static const Register rv;   //!< $rv   ->  Return value: can be used as return value.
+        static const Register sr;   //!< $sr   ->  Special register: can be used as assembler temporary or 'this' pointer of a class instance.
+        static const Register gp;   //!< $gp   ->  Global pointer: should be used as the stack pointer where all global variables are stored.
 
-        static const Register cf; //!< $cf  ->  Conditional flag register: used for jump conditions.
-        static const Register lb; //!< $lb  ->  Local base pointer: pointer to the current stack frame.
-        static const Register sp; //!< $sp  ->  Stack pointer: pointer to the top of the stack.
-        static const Register pc; //!< $pc  ->  Program counter: pointer to the current instruction.
+        static const Register cf;   //!< $cf   ->  Conditional flag register: used for jump conditions.
+        static const Register lb;   //!< $lb   ->  Local base pointer: pointer to the current stack frame.
+        static const Register sp;   //!< $sp   ->  Stack pointer: pointer to the top of the stack.
+        static const Register pc;   //!< $pc   ->  Program counter: pointer to the current instruction.
 
         Register(const Register&) = delete;
         Register& operator = (const Register&) = delete;
@@ -115,22 +131,38 @@ class Register
         {
             switch (reg)
             {
-                case 0x0: return r0;
-                case 0x1: return r1;
-                case 0x2: return r2;
-                case 0x3: return r3;
-                case 0x4: return r4;
-                case 0x5: return r5;
-                case 0x6: return r6;
-                case 0x7: return r7;
-                case 0x8: return r8;
-                case 0x9: return r9;
-                case 0xa: return tr;
-                case 0xb: return gp;
-                case 0xc: return cf;
-                case 0xd: return lb;
-                case 0xe: return sp;
-                case 0xf: return pc;
+                case 0x00: return r0;
+                case 0x01: return r1;
+                case 0x02: return r2;
+                case 0x03: return r3;
+                case 0x04: return r4;
+                case 0x05: return r5;
+                case 0x06: return r6;
+                case 0x07: return r7;
+                case 0x08: return r8;
+                case 0x09: return r9;
+                case 0x0a: return r10;
+                case 0x0b: return r11;
+                case 0x0c: return r12;
+                case 0x0d: return r13;
+                case 0x0e: return r14;
+                case 0x0f: return r15;
+                case 0x10: return r16;
+                case 0x11: return r17;
+                case 0x12: return r18;
+                case 0x13: return r19;
+                case 0x14: return r20;
+                case 0x15: return r21;
+                case 0x16: return r22;
+                case 0x17: return r23;
+                case 0x18: return r24;
+                case 0x19: return rv;
+                case 0x1a: return sr;
+                case 0x1b: return gp;
+                case 0x1c: return cf;
+                case 0x1d: return lb;
+                case 0x1e: return sp;
+                case 0x1f: return pc;
             }
             throw std::out_of_range("invalid register index (must be in rage: 0x0 - 0xf)");
             return r0;
@@ -139,7 +171,7 @@ class Register
         /**
         Returns the specified register via name.
         \param[in] name Specifies the register name (e.g. "$r0" or "$sp").
-        Valid register names are: "$r0" - "$r9", "$op", "$gp", "$cf", "$lb", "$sp" and "$pc".
+        Valid register names are: "$r0" - "$r25", "$sr", "$gp", "$cf", "$lb", "$sp", and "$pc".
         \throws std::invalid_argument If the register name is invalid.
         \see Name
         */
@@ -163,12 +195,43 @@ class Register
                         case '9': return r9;
                     }
                 }
-                else if (name == "$tr") return tr;
+                else if (name == "$rv") return rv;
+                else if (name == "$sr") return sr;
                 else if (name == "$gp") return gp;
                 else if (name == "$cf") return cf;
                 else if (name == "$lb") return lb;
                 else if (name == "$sp") return sp;
                 else if (name == "$pc") return pc;
+            }
+            else if (name.size() == 4 && name[0] == '$' && name[1] == 'r')
+            {
+                if (name[2] == '1')
+                {
+                    switch (name[3])
+                    {
+                        case '0': return r10;
+                        case '1': return r11;
+                        case '2': return r12;
+                        case '3': return r13;
+                        case '4': return r14;
+                        case '5': return r15;
+                        case '6': return r16;
+                        case '7': return r17;
+                        case '8': return r18;
+                        case '9': return r19;
+                    }
+                }
+                else if (name[2] == '2')
+                {
+                    switch (name[3])
+                    {
+                        case '0': return r20;
+                        case '1': return r21;
+                        case '2': return r22;
+                        case '3': return r23;
+                        case '4': return r24;
+                    }
+                }
             }
             throw std::invalid_argument("invalid register name '" + name + "'");
             return r0;
@@ -195,8 +258,24 @@ const Register Register::r6(REG_R6);
 const Register Register::r7(REG_R7);
 const Register Register::r8(REG_R8);
 const Register Register::r9(REG_R9);
+const Register Register::r10(REG_R10);
+const Register Register::r11(REG_R11);
+const Register Register::r12(REG_R12);
+const Register Register::r13(REG_R13);
+const Register Register::r14(REG_R14);
+const Register Register::r15(REG_R15);
+const Register Register::r16(REG_R16);
+const Register Register::r17(REG_R17);
+const Register Register::r18(REG_R18);
+const Register Register::r19(REG_R19);
+const Register Register::r20(REG_R20);
+const Register Register::r21(REG_R21);
+const Register Register::r22(REG_R22);
+const Register Register::r23(REG_R23);
+const Register Register::r24(REG_R24);
 
-const Register Register::tr(REG_TR);
+const Register Register::rv(REG_RV);
+const Register Register::sr(REG_SR);
 const Register Register::gp(REG_GP);
 
 const Register Register::cf(REG_CF);
@@ -233,18 +312,18 @@ class Instruction
             static const unsigned int min = XVM_VALUE26_MIN;
         };
 
-        //! Unsigned 22-bit value.
-        struct Value22
+        //! Unsigned 21-bit value.
+        struct Value21
         {
-            static const unsigned int max = XVM_VALUE22_MAX;
-            static const unsigned int min = XVM_VALUE22_MIN;
+            static const unsigned int max = XVM_VALUE21_MAX;
+            static const unsigned int min = XVM_VALUE21_MIN;
         };
 
-        //! Unsigned 18-bit value.
-        struct Value18
+        //! Unsigned 16-bit value.
+        struct Value16
         {
-            static const unsigned int max = XVM_VALUE18_MAX;
-            static const unsigned int min = XVM_VALUE18_MIN;
+            static const unsigned int max = XVM_VALUE16_MAX;
+            static const unsigned int min = XVM_VALUE16_MIN;
         };
 
         //! Signed 26-bit value.
@@ -254,18 +333,18 @@ class Instruction
             static const int min = XVM_SGN_VALUE26_MIN;
         };
 
-        //! Signed 22-bit value.
-        struct SgnValue22
+        //! Signed 21-bit value.
+        struct SgnValue21
         {
-            static const int max = XVM_SGN_VALUE22_MAX;
-            static const int min = XVM_SGN_VALUE22_MIN;
+            static const int max = XVM_SGN_VALUE21_MAX;
+            static const int min = XVM_SGN_VALUE21_MIN;
         };
 
-        //! Signed 18-bit value.
-        struct SgnValue18
+        //! Signed 16-bit value.
+        struct SgnValue16
         {
-            static const int max = XVM_SGN_VALUE18_MAX;
-            static const int min = XVM_SGN_VALUE18_MIN;
+            static const int max = XVM_SGN_VALUE16_MAX;
+            static const int min = XVM_SGN_VALUE16_MIN;
         };
 
         /* ------- Templates ------- */
@@ -390,16 +469,21 @@ class Instruction
 
     private:
         
-        static void RangeAssert(bool inRange, const char* err)
+        static void RangeAssert(bool inRange, const std::string& err)
         {
             if (!inRange)
                 throw std::out_of_range(err);
         }
 
-        static void OpCodeAssert(bool inRange, const char* err)
+        static void OpCodeAssert(bool inRange, const std::string& err)
         {
             if (!inRange)
                 throw std::invalid_argument(err);
+        }
+
+        template <class ValueClass> static std::string RangeStr()
+        {
+            return "[" + std::to_string(ValueClass::min) + " .. " + std::to_string(ValueClass::max) + "]";
         }
 
         template <typename OpCode> static void OpCodeAssert(
@@ -418,81 +502,82 @@ template <> bool Instruction::InRange<26>(int value)
 {
     return InBitRange<SgnValue26>(value);
 }
-template <> bool Instruction::InRange<22>(int value)
+template <> bool Instruction::InRange<21>(int value)
 {
-    return InBitRange<SgnValue22>(value);
+    return InBitRange<SgnValue21>(value);
 }
-template <> bool Instruction::InRange<18>(int value)
+template <> bool Instruction::InRange<16>(int value)
 {
-    return InBitRange<SgnValue18>(value);
+    return InBitRange<SgnValue16>(value);
 }
 
 template <> bool Instruction::InRange<26>(unsigned int value)
 {
     return InBitRange<Value26>(value);
 }
-template <> bool Instruction::InRange<22>(unsigned int value)
+template <> bool Instruction::InRange<21>(unsigned int value)
 {
-    return InBitRange<Value22>(value);
+    return InBitRange<Value21>(value);
 }
-template <> bool Instruction::InRange<18>(unsigned int value)
+template <> bool Instruction::InRange<16>(unsigned int value)
 {
-    return InBitRange<Value18>(value);
+    return InBitRange<Value16>(value);
 }
 
 /* ------- Static functions ------- */
 
 Instruction Instruction::MakeReg3(xvm_opcode opcode, const Register& reg0, const Register& reg1, const Register& reg2)
 {
-    OpCodeAssert(opcode, OPCODE_AND3, OPCODE_DIVF, "invalid opcode for 3-register instruction");
+    OpCodeAssert(opcode, OPCODE_AND3, OPCODE_MODF, "invalid opcode for 3-register instruction");
     return Instruction(xvm_instr_make_reg3(opcode, reg0, reg1, reg2));
 }
 
 Instruction Instruction::MakeReg2(xvm_opcode opcode, const Register& reg0, const Register& reg1, int value)
 {
     OpCodeAssert(opcode, OPCODE_MOV2, OPCODE_CMPF, "invalid opcode for 2-register instruction");
+    RangeAssert(InRange<16>(value), "'value' is out of range " + RangeStr<SgnValue16>() + " in 2-register instruction");
     return Instruction(xvm_instr_make_reg2(opcode, reg0, reg1, static_cast<unsigned int>(value)));
 }
 
 Instruction Instruction::MakeReg1(xvm_opcode opcode, const Register& reg, int value)
 {
     OpCodeAssert(opcode, OPCODE_PUSH, OPCODE_LDA, "invalid opcode for 1-register instruction");
-    RangeAssert(InRange<22>(value), "'value' is out of range in 1-register instruction");
+    RangeAssert(InRange<21>(value), "'value' is out of range " + RangeStr<SgnValue21>() + " in 1-register instruction");
     return Instruction(xvm_instr_make_reg1(opcode, reg, static_cast<unsigned int>(value)));
 }
 
 Instruction Instruction::MakeJump(xvm_opcode opcode, const Register& reg, int offset)
 {
     OpCodeAssert(opcode, OPCODE_JMP, OPCODE_CALL, "invalid opcode for jump instruction");
-    RangeAssert(InRange<22>(offset), "'offset' is out of range in jump instruction");
+    RangeAssert(InRange<21>(offset), "'offset' is out of range " + RangeStr<SgnValue21>() + " in jump instruction");
     return Instruction(xvm_instr_make_jump(opcode, reg, static_cast<unsigned int>(offset)));
 }
 
 Instruction Instruction::MakeLoadStore(xvm_opcode opcode, const Register& reg0, const Register& reg1, int offset)
 {
     OpCodeAssert(opcode, OPCODE_LDB, OPCODE_STW, "invalid opcode for memory-offset instruction");
-    RangeAssert(InRange<18>(offset), "'offset' is out of range in memory-offset instruction");
+    RangeAssert(InRange<16>(offset), "'offset' is out of range " + RangeStr<SgnValue16>() + " in memory-offset instruction");
     return Instruction(xvm_instr_make_loadstore(opcode, reg0, reg1, static_cast<unsigned int>(offset)));
 }
 
 Instruction Instruction::MakeSpecial(xvm_opcode opcode, int value)
 {
     OpCodeAssert(opcode == OPCODE_STOP || opcode == OPCODE_PUSHC, "invalid opcode for special instruction");
-    RangeAssert(InRange<26>(value), "'value' is out of range in special instruction");
+    RangeAssert(InRange<26>(value), "'value' is out of range " + RangeStr<SgnValue26>() + " in special instruction");
     return Instruction(xvm_instr_make_special1(opcode, static_cast<unsigned int>(value)));
 }
 
 Instruction Instruction::MakeSpecial(xvm_opcode opcode, unsigned int value)
 {
     OpCodeAssert(opcode == OPCODE_INVK, "invalid opcode for special instruction");
-    RangeAssert(InRange<26>(value), "'value' is out of range in special instruction");
+    RangeAssert(InRange<26>(value), "'value' is out of range " + RangeStr<Value26>() + " in special instruction");
     return Instruction(xvm_instr_make_special1(opcode, value));
 }
 
 Instruction Instruction::MakeSpecial(xvm_opcode opcode, unsigned int resultSize, unsigned int argSize)
 {
     OpCodeAssert(opcode == OPCODE_RET, "invalid opcode for special instruction");
-    RangeAssert(InRange<18>(argSize), "'argSize' is out of range in special instruction");
+    RangeAssert(InRange<16>(argSize), "'argSize' is out of range " + RangeStr<Value16>() + " in special instruction");
     return Instruction(xvm_instr_make_special2(opcode, resultSize, argSize));
 }
 
