@@ -2833,7 +2833,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg0 = _xvm_instr_get_reg0(instr);
                 reg1 = _xvm_instr_get_reg1(instr);
                 reg2 = _xvm_instr_get_reg2(instr);
-                reg.f[reg0] = reg.f[reg1] + reg.f[reg1];
+                reg.f[reg0] = reg.f[reg1] + reg.f[reg2];
             }
             break;
 
@@ -2842,7 +2842,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg0 = _xvm_instr_get_reg0(instr);
                 reg1 = _xvm_instr_get_reg1(instr);
                 reg2 = _xvm_instr_get_reg2(instr);
-                reg.f[reg0] = reg.f[reg1] - reg.f[reg1];
+                reg.f[reg0] = reg.f[reg1] - reg.f[reg2];
             }
             break;
 
@@ -2851,7 +2851,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg0 = _xvm_instr_get_reg0(instr);
                 reg1 = _xvm_instr_get_reg1(instr);
                 reg2 = _xvm_instr_get_reg2(instr);
-                reg.f[reg0] = reg.f[reg1] * reg.f[reg1];
+                reg.f[reg0] = reg.f[reg1] * reg.f[reg2];
             }
             break;
 
@@ -2860,7 +2860,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg0 = _xvm_instr_get_reg0(instr);
                 reg1 = _xvm_instr_get_reg1(instr);
                 reg2 = _xvm_instr_get_reg2(instr);
-                reg.f[reg0] = reg.f[reg1] / reg.f[reg1];
+                reg.f[reg0] = reg.f[reg1] / reg.f[reg2];
             }
             break;
 
@@ -2869,7 +2869,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 reg0 = _xvm_instr_get_reg0(instr);
                 reg1 = _xvm_instr_get_reg1(instr);
                 reg2 = _xvm_instr_get_reg2(instr);
-                reg.f[reg0] = fmodf(reg.f[reg1], reg.f[reg1]);
+                reg.f[reg0] = fmodf(reg.f[reg1], reg.f[reg2]);
             }
             break;
 
