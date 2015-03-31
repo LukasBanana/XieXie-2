@@ -12,25 +12,24 @@ main:
 	; Print(str_info)
 	lda $r0, @str_info
 	push $r0
-	call <Print>
+	insc Print
 	
 	; int x := InputInt()
-	call <InputInt>
-	pop $r1
+	insc InputInt
+	mov $r1, $ar
 	
-	; x := proc(x)
+	; ar := proc(x)
 	push $r1
 	call proc
-	pop $r1
 	
-	; PrintInt(x)
-	push $r1
-	call <PrintInt>
+	; PrintInt(ar)
+	push $ar
+	insc PrintInt
 	
 	; PrintLn("")
 	lda $r0, @str_null
 	push $r0
-	call <PrintLn>
+	insc PrintLn
 	
 	ret (0) 0
 
@@ -60,8 +59,8 @@ proc:
 		mov $r4, 19
 	switch_end:
 	
-	push $r4
-	ret (1) 1
+	mov $ar, $r4
+	ret 1
 
 switch0_labels0: ; i in [0 .. 3]
 	.word @switch0_case0

@@ -16,16 +16,16 @@ main:
 ; print 'str_info'
 lda $r0, @str_info
 push $r0
-call <Print>
+insc Print
 
 ; get float as input
-call <InputFloat>
-pop $r1
+insc InputFloat
+mov $r1, $ar
 
 ; print new line
 lda $r5, @str_null
 push $r5
-call <PrintLn>
+insc PrintLn
 
 ; load 'flt_zero'
 lda $r0, @flt_zero
@@ -45,22 +45,22 @@ jle .end
 
 ; print 'str_flt'
 push $r4
-call <Print>
+insc Print
 
 ; print current float value
 push $r1
-call <PrintFloat>
+insc PrintFloat
 
 ; print new line
 push $r5
-call <PrintLn>
+insc PrintLn
 
 ; r0 -= r3
-subf $r1, $r3
+subf $r1, $r1, $r3
 
 jmp .while
 .end:
 
 ; return from main
-ret (0) 0
+ret
 

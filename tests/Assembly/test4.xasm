@@ -8,11 +8,11 @@ mov $r1, 7
 add $r2, $r0, $r1	; r0 := r1 + r2
 
 push $r2
-call <PrintInt>
+insc PrintInt
 
 lda $r3, @str0
 push $r3
-call <PrintLn>
+insc PrintLn
 
 stop
 

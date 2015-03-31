@@ -13,9 +13,9 @@ mov		$r1, 0
 mov		$r2, 10
 .loop:
 push	$r1
-call	<PrintInt>
+insc	PrintInt
 push	$r0
-call	<PrintLn>
+insc	PrintLn
 inc		$r1
 cmp		$r1, $r2
 jl		.loop

@@ -27,11 +27,11 @@ normalize:
 	mov $r6, $r3
 	
 	; compute sq_len := x*x + y*y + z*z
-	mulf $r1, $r1
-	mulf $r2, $r2
-	mulf $r3, $r3
-	addf $r1, $r2
-	addf $r1, $r3
+	mulf $r1, $r1, $r1
+	mulf $r2, $r2, $r2
+	mulf $r3, $r3, $r3
+	addf $r1, $r1, $r2
+	addf $r1, $r1, $r3
 	
 	; check if vector is normalizable
 	lda $r2, @normalize.floats
@@ -46,16 +46,15 @@ normalize:
 	
 	; compute len := sqrt(sq_len)
 	push $r1
-	call <Sqrt>
-	pop $r1
+	insc Sqrt
 	
 	; compute inv_len := 1.0 / len
-	divf $r3, $r1
+	divf $r3, $r3, $ar
 	
 	; normalize vector (x*inv_len, y*inv_len, z*inv_len)
-	mulf $r4, $r3
-	mulf $r5, $r3
-	mulf $r6, $r3
+	mulf $r4, $r4, $r3
+	mulf $r5, $r4, $r3
+	mulf $r6, $r6, $r3
 	
 	; store x, y, z
 	stw $r4, ($r0) 0
@@ -63,60 +62,54 @@ normalize:
 	stw $r6, ($r0) 8
 	
 	.return:
-	ret (0) 1
+	ret 1
 
 ; float get_num()
 get_num:
 	; print 'enter number' prompt
 	lda $r0, @str_enter
 	push $r0
-	call <Print>
-	
-	; get float number
-	call <InputFloat>
-	
-	ret (1) 0
+	insc Print
+	insc InputFloat
+	ret
 
 ; void print_num(float)
 print_num:
 	; print output info
 	lda $r0, @str_output
 	push $r0
-	call <Print>
+	insc Print
 	
 	; print number
 	ldw $r0, ($lb) -4
 	push $r0
-	call <PrintFloat>
+	insc PrintFloat
 	
 	; print new line
 	lda $r0, @str_null
 	push $r0
-	call <PrintLn>
+	insc PrintLn
 	
-	ret (0) 1
+	ret 1
 
 ; void main()
 main:
 	; allocate vector
-	add $sp, 12
+	add $sp, $sp, 12
 	
 	; get numbers x, y, z
 	call get_num
-	pop $r0
-	stw $r0, ($lb) 8
+	stw $ar, ($lb) 8
 	
 	call get_num
-	pop $r0
-	stw $r0, ($lb) 12
+	stw $ar, ($lb) 12
 	
 	call get_num
-	pop $r0
-	stw $r0, ($lb) 16
+	stw $ar, ($lb) 16
 	
 	; get pointer of vector
 	mov $r0, $lb
-	add $r0, 8
+	add $r0, $r0, 8
 	
 	; normalize vector
 	push $r0

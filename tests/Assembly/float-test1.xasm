@@ -7,35 +7,36 @@ ldw $r1, ($r0) 0	; Load value of 'Math.pi'
 ldw $r7, ($r0) 4	; Load value of 'deg_start'
 ldw $r8, ($r0) 8	; Load value of 'deg_step'
 
-mulf $r1, $r8		; deg *= deg_step
+mulf $r1, $r1, $r8	; deg *= deg_step
 
 lda $r4, @str0
 lda $r5, @str1
 lda $r6, @str2
 
-xor $r2, $r2		; i := 0
+mov $r2, 0			; i := 0
 mov $r3, 10			; n := 10
 while:
 cmp $r2, $r3
 jg end				; while i <= n
 
 push $r4
-call <Print>
+insc Print
 
 push $r7
-call <PrintFloat>
+insc PrintFloat
 
 push $r5
-call <Print>
+insc Print
 
 push $r7
-call <Sin>
-call <PrintFloat>
+insc Sin
+push $ar
+insc PrintFloat
 
-addf $r7, $r1		; deg += step
+addf $r7, $r7, $r1	; deg += step
 
 push $r6
-call <Print>
+insc Print
 
 inc $r2				; i++
 jmp while

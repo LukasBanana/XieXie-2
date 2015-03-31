@@ -4,17 +4,17 @@
 
 lda $r0, @str_enter
 push $r0
-call <Print>
+insc Print
 
-call <InputInt>
-pop $r4
+insc InputInt
+mov $r4, $ar
 
 lda $r5, @str_null
 lda $r6, @str_fib
 lda $r7, @str_eq
 
 push $r5
-call <PrintLn>
+insc PrintLn
 
 mov $r3, 0
 loop:
@@ -23,18 +23,18 @@ loop:
 	
 	push $r4
 	call fib
-	pop $r0
+	mov $r0, $ar
 	
 	push $r6
-	call <Print>
+	insc Print
 	push $r4
-	call <PrintInt>
+	insc PrintInt
 	push $r7
-	call <Print>
+	insc Print
 	push $r0
-	call <PrintInt>
+	insc PrintInt
 	push $r5
-	call <PrintLn>
+	insc PrintLn
 	
 	dec $r4
 	jmp loop
@@ -53,7 +53,7 @@ fib:
 		
 		push $r0
 		call fib
-		pop $r0
+		mov $r0, $ar
 		
 		push $r0
 		
@@ -62,17 +62,17 @@ fib:
 		
 		push $r0
 		call fib
-		pop $r0
+		mov $r0, $ar
 		
 		pop $r1
 		
 		add $r0, $r0, $r1
 		
-		push $r0
-		ret (1) 1
+		mov $ar, $r0
+		ret 1
 	.end:
-	push 1
-	ret (1) 1
+	mov $ar, 1
+	ret 1
 
 
 str_enter: .ascii "enter fibonacci number: "

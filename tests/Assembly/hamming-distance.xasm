@@ -17,16 +17,16 @@ str_pause: .ascii "pause"
 new_line:
 	lda $r1, @str_null
 	push $r1
-	call <PrintLn>
-	ret (0) 0
+	insc PrintLn
+	ret
 
 ; int get_value(char*)
 get_value:
 	ldw $r0, ($lb) -4
 	push $r0
-	call <Print>
-	call <InputInt>
-	ret (1) 1
+	insc Print
+	insc InputInt
+	ret 1
 
 ; void print_bits(int)
 print_bits:
@@ -55,7 +55,7 @@ print_bits:
 		
 		; print "\n"
 		push $r4
-		call <Print>
+		insc Print
 		
 		; r0 <<= 1
 		sll $r0, $r0, 1
@@ -101,9 +101,9 @@ hamming_distance:
 	jmp .for
 	.end:
 	
-	push $r2
+	mov $ar, $r2
 	
-	ret (1) 2
+	ret 2
 
 ; main
 main:
@@ -111,13 +111,13 @@ main:
 	lda $r0, @str_a
 	push $r0
 	call get_value
-	pop $r8
+	mov $r8, $ar
 	
 	; r9 = get_value(str_b)
 	lda $r0, @str_b
 	push $r0
 	call get_value
-	pop $r9
+	mov $r9, $ar
 	
 	; print_bits(r8)  print_bits(r9)
 	push $r8
@@ -129,22 +129,22 @@ main:
 	push $r9
 	push $r8
 	call hamming_distance
-	pop $r0
+	mov $r0, $ar
 	
 	; print str_result + r0
 	lda $r1, @str_result
 	push $r1
-	call <Print>
+	insc Print
 	push $r0
-	call <PrintInt>
+	insc PrintInt
 	call new_line
 	
 	; wait for user input
 	lda $r0, @str_pause
 	push $r0
-	call <SysCall>
+	insc SysCall
 	
-	ret (0) 0
+	ret
 
 
 

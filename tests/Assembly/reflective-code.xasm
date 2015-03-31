@@ -19,11 +19,11 @@ main:	lda		$r1, @main
 		ldw		$r3, ($r2) 12
 		stw		$r3, ($r1) 12
 		call	main
-		ret		(0) 0
+		ret
 func:	lda 	$r0, @str
 		push	$r0
-		call	<PrintLn>
-		ret		(0) 0
+		insc	PrintLn
+		ret
 
 str: .ascii "This is a simple text line"
 
@@ -46,5 +46,5 @@ str: .ascii "This is a simple text line"
 ;func:	ldw		$r0, ($lb) -4	; get argument0
 ;		add		$r0, $r0		; r0 := r0 + r0 (r0 *= 2)
 ;		stw		$r0, ($lb) -4	; write argument0
-;		ret		(0) 0
+;		ret
 

@@ -49,6 +49,6 @@ Main.Main:
 	lda $r0, @CString._vtable
 	ldw $r0, ($r0) 8
 	call $r0
-	call <PrintInt>
+	insc PrintInt
 	ret
 

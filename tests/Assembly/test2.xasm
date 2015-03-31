@@ -19,10 +19,10 @@ Main:	mov		$r1, *lng0		; load value of 'lng0' ($r1 = 999)
 .for0:	cmp		$r0, $r1		; while i < 10
 		jge		.end0
 		push	$r2
-		call	<PrintLn>		; print str0 with new-line
+		insc	PrintLn			; print str0 with new-line
 		inc		$r0				; i++
 		jmp		.for0			; alternative: "jmp ($pc) .for0" or "jmp ($r0) 0"
-.end0:	ret		(0) 0			; return
+.end0:	ret						; return
 str0:	.ascii	"Hello, World!"
 lng0:	.word	999
 lng1:	.word	0;0x00ffabcd
@@ -31,22 +31,21 @@ Math.Sq:
 		ldw		$r0, ($lb) -4
 		mul		$r0, $r0, $r0
 		stw		$r0, ($lb) -4
-		ret		(0) 0			; Optimize return value by writing it back to the argument
+		ret						; Optimize return value by writing it back to the argument
 
 ; Dynamic dispatch test
 Object.toString:
 		lda		$r8, @Object._vtable
 		ldw		$r9, ($r8) 4	; Load address of Procedure "Object.equals"
 		call	($r9) 0			; Indirect call
-		ret		(0) 0
+		ret
 
 Object.equals:
-		ret		(0) 0
+		ret
 
 Object._vtable:
 		.word @Object.toString	; Procedure-ID 0
 		.word @Object.equals	; Procedure-ID 1
-		.word <CmpE>			; Procedure-ID 2
 
 ; Export function addresses
 .export "_ZN@Main" @Main
