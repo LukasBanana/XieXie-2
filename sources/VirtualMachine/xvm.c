@@ -402,6 +402,8 @@ FLOATS are 32 bits wide.
 | PUSH     | 1 1 1 0 0 0 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Push value 'V' onto stack.                                     |
 |----------|-------------|-----------------------------------------------------|----------------------------------------------------------------|
 | INVK     | 1 1 1 0 0 1 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Invoke external procedure with ID 'V'.                         |
+|----------|-------------|-----------------------------------------------------|----------------------------------------------------------------|
+| INSC     | 1 1 1 0 1 0 | V V V V V V V V V V V V V V V V V V V V V V V V V V | Call intrinsic with ID 'V'.                                    |
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -414,7 +416,7 @@ FLOATS are 32 bits wide.
 |----------|-------------|---------------------|---------------------------------|--------------------------------------------------------------|
 |          |             |                     |                                 | Pop R words from the stack and buffer them.                  |
 |          |             |                     |                                 | Pop the current stack frame.                                 |
-| RET      | 1 1 1 0 1 0 | R R R R R R R R R R | A A A A A A A A A A A A A A A A | Pop A words from the stack.                                  |
+| RET      | 1 1 1 0 1 1 | R R R R R R R R R R | A A A A A A A A A A A A A A A A | Pop A words from the stack.                                  |
 |          |             |                     |                                 | Push the R words back onto the stack.                        |
 |          |             |                     |                                 | Restore the 'lb' and 'pc' registers.                         |
 -------------------------------------------------------------------------------------------------------------------------------------------------
