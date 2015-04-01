@@ -37,14 +37,17 @@ main:
 proc:
 	ldw $r0, ($lb) -4
 	
+	mov $cf, $r0
+	jl proc_invalid
+	mov $r1, 3
+	cmp $r0, $r1
+	jg proc_invalid
+	
 	lda $r1, @switch0_labels0	; load address where the switch jump addresses are stored
 	sll $r0, $r0, 2				; multiply by 4
 	add $r1, $r1, $r0			; get address where the desired switch jump address is stored
 	ldw $r2, ($r1) 0			; load desired address for switch jump
-	lda $r3, @root				; > work around for indirect jump
-	sll $r2, $r2, 2				; multiply by 4
-	add $r2, $r2, $r3			; > work around for indirect jump
-	jmp ($r2) 0					; jump to the desired switch case
+	jmp $r2						; jump to the desired switch case
 	
 	switch0_case0:
 		mov $r4, 42
@@ -60,6 +63,10 @@ proc:
 	switch_end:
 	
 	mov $ar, $r4
+	ret 1
+	
+	proc_invalid:
+	mov $ar, 0
 	ret 1
 
 switch0_labels0: ; i in [0 .. 3]
