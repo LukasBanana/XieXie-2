@@ -106,8 +106,16 @@ std::string TACInst::OpCodeToString(const OpCodes opcode)
         case OpCodes::ITF:
             return "itf";
 
+        case OpCodes::SWITCH:
+            return "switch";
+
         case OpCodes::RETURN:
             return "return";
+
+        case OpCodes::DIRCALL:
+            return "dircall";
+        case OpCodes::INDCALL:
+            return "indcall";
     }
 
     return "";
@@ -115,7 +123,7 @@ std::string TACInst::OpCodeToString(const OpCodes opcode)
 
 std::string TACInst::OpCodePrefix() const
 {
-    static const size_t maxLen = 6;
+    static const size_t maxLen = 7;
     auto str = TACInst::OpCodeToString(opcode);
     return str + std::string(maxLen - str.size(), ' ');
 }

@@ -31,7 +31,7 @@ TACInst::Types TACReturnInst::Type() const
 
 std::string TACReturnInst::ToString() const
 {
-    std::string str = "return | ";
+    std::string str = OpCodePrefix() + " | ";
 
     if (hasVar)
         str += src.ToString();

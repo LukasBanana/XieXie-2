@@ -88,6 +88,9 @@ class TACInst
             SWITCH,
 
             RETURN,
+
+            DIRCALL,
+            INDCALL,
         };
 
         struct VarFlags
