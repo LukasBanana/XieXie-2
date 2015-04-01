@@ -1,5 +1,5 @@
 /*
- * Version header
+ * Version.h
  * 
  * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -24,7 +24,7 @@ std::string Status();
 std::string AsString();
 
 
-}
+} // /namespace Version
 
 
 #endif

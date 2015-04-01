@@ -29,7 +29,6 @@ int main(int argc, char* argv[])
     }
     else
         shell.Script(std::cin);
-        //std::cout << "enter \"xxc help\" for the man page" << std::endl;
 
     return 0;
 }
