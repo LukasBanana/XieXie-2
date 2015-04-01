@@ -1,33 +1,34 @@
 /*
- * Source file header
+ * SourceStream.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_SOURCE_FILE_H__
-#define __XX_SOURCE_FILE_H__
+#ifndef __XX_SOURCE_STREAM_H__
+#define __XX_SOURCE_STREAM_H__
 
 
 #include "SourceCode.h"
 
-#include <fstream>
+#include <iostream>
 #include <vector>
 #include <string>
+#include <memory>
 
 
 namespace SyntaxAnalyzer
 {
 
 
-//! This class stores the position in a source code file.
-class SourceFile : public SourceCode
+class SourceStream : public SourceCode
 {
     
     public:
         
-        SourceFile() = default;
-        SourceFile(const std::string& filename);
+        SourceStream() = default;
+        SourceStream(std::unique_ptr<std::istream>&& stream);
+        SourceStream(const std::string& filename);
 
         bool ReadFile(const std::string& filename);
         void Close();
@@ -47,9 +48,9 @@ class SourceFile : public SourceCode
 
     private:
         
-        std::ifstream               stream_;
-        std::string                 filename_;
-        std::vector<std::string>    content_;
+        std::unique_ptr<std::istream>   stream_;
+        std::string                     filename_;
+        std::vector<std::string>        content_;
 
 };
 

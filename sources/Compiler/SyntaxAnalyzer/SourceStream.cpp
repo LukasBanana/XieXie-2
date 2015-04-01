@@ -1,45 +1,51 @@
 /*
- * Source file file
+ * SourceStream.cpp
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "SourceFile.h"
+#include "SourceStream.h"
+
+#include <fstream>
 
 
 namespace SyntaxAnalyzer
 {
 
 
-SourceFile::SourceFile(const std::string& filename)
+SourceStream::SourceStream(std::unique_ptr<std::istream>&& stream) :
+    stream_{ std::move(stream) }
+{
+}
+SourceStream::SourceStream(const std::string& filename)
 {
     ReadFile(filename);
 }
 
-bool SourceFile::ReadFile(const std::string& filename)
+bool SourceStream::ReadFile(const std::string& filename)
 {
     /* Open file and store filename */
     filename_ = filename;
-    stream_.open(filename, std::ios_base::in);
-    return stream_.good();
+    stream_ = std::move(std::make_unique<std::ifstream>(filename, std::ios_base::in));
+    return stream_->good();
 }
 
-void SourceFile::Close()
+void SourceStream::Close()
 {
-    stream_.close();
+    stream_.release();
 }
 
-char SourceFile::Next()
+char SourceStream::Next()
 {
-    if (!stream_.is_open())
+    if (!stream_ || !stream_->good())
         return 0;
 
     /* Check if reader is at end-of-line */
     while (pos_.Column() >= line_.size())
     {
         /* Read new line in source file */
-        std::getline(stream_, line_);
+        std::getline(*stream_, line_);
         line_ += '\n';
         pos_.IncRow();
 
@@ -47,7 +53,7 @@ char SourceFile::Next()
         content_.push_back(line_);
 
         /* Check if end-of-file is reached */
-        if (stream_.eof())
+        if (stream_->eof())
             return 0;
     }
 
@@ -79,12 +85,12 @@ static bool FinalizeMarker(
     return true;
 }
 
-std::string SourceFile::FetchLine(size_t lineNumber) const
+std::string SourceStream::FetchLine(size_t lineNumber) const
 {
     return lineNumber < content_.size() ? content_[lineNumber] : "";
 }
 
-bool SourceFile::FetchLineMarker(const SourceArea& area, std::string& line, std::string& marker, char markerChar) const
+bool SourceStream::FetchLineMarker(const SourceArea& area, std::string& line, std::string& marker, char markerChar) const
 {
     if (!area.IsValid() || area.start.Row() != area.end.Row())
         return false;

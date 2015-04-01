@@ -8,7 +8,7 @@
 #include "Parser.h"
 #include "ASTImport.h"
 #include "StringModifier.h"
-#include "SourceFile.h"
+#include "SourceStream.h"
 #include "BuiltinTypeDenoter.h"
 
 #include <algorithm>
@@ -53,7 +53,7 @@ ProgramPtr Parser::ParseSource(const std::string& filename, ErrorReporter& error
         errorReporter_ = &errorReporter;
 
         state_.filename = filename;
-        source_ = std::make_shared<SourceFile>(filename);
+        source_ = std::make_shared<SourceStream>(filename);
 
         scanner_.ScanSource(source_, errorReporter);
         AcceptIt();

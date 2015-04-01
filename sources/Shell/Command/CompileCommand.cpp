@@ -6,7 +6,7 @@
  */
 
 #include "CommandFactory.h"
-#include "SourceFile.h"
+#include "SourceStream.h"
 #include "Parser.h"
 #include "Decorator.h"
 #include "GraphGenerator.h"
@@ -39,7 +39,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             output.Message("parse file \"" + filename + "\" ...");
 
         /* Parse source file */
-        if (!parser.ParseSource(program, std::make_shared<SyntaxAnalyzer::SourceFile>(filename), errorReporter))
+        if (!parser.ParseSource(program, std::make_shared<SyntaxAnalyzer::SourceStream>(filename), errorReporter))
             hasError = true;
     }
 

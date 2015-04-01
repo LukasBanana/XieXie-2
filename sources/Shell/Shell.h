@@ -22,7 +22,10 @@ class Shell
     
     public:
         
+        //! Executes all commands passed through the input stream parser.
         void Execute(StreamParser parser);
+        //! Runs the script from the specified stream.
+        void Script(std::istream& stream);
 
     private:
         

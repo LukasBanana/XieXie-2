@@ -13,6 +13,8 @@
 
 int main(int argc, char* argv[])
 {
+    Shell shell;
+
     /* Execute all program arguments as shell commands */
     if (argc > 1)
     {
@@ -23,11 +25,11 @@ int main(int argc, char* argv[])
             stream << argv[i] << std::endl;
 
         /* Execute argument stream */
-        Shell shell;
         shell.Execute(stream);
     }
     else
-        std::cout << "enter \"xxc help\" for the man page" << std::endl;
+        shell.Script(std::cin);
+        //std::cout << "enter \"xxc help\" for the man page" << std::endl;
 
     return 0;
 }
