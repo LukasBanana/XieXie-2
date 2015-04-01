@@ -3093,7 +3093,18 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 // Set program counter to (address + offset)
                 reg0 = _xvm_instr_get_reg0(instr);
                 sgn_value = _xvm_instr_get_sgn_value21(instr);
-                *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
+
+                if (sgn_value == XVM_SGN_VALUE21_MAX)
+                {
+                    // Jump to absolute procedure address (indirect jump)
+                    *reg_pc = (regi_t)(program_start_ptr + (reg.i[reg0] << 2));
+                }
+                else
+                {
+                    // Jump to relative procedure address (direct jump)
+                    *reg_pc = JUMP_ADDRESS(reg0, sgn_value);
+                }
+
                 continue;
             }
             break;

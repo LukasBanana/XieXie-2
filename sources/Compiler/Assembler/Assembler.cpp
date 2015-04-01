@@ -786,8 +786,8 @@ void Assembler::ParseInstrJump(const InstrCategory& instr)
     const auto* reg = &(Register::pc);
     int offset = 0;
 
-    /* Check for special case of "CALL" instruction */
-    if (instr.opcodePrimary == OPCODE_CALL && tkn_.type == Token::Types::Register)
+    /* Check for special case of indirect jump in "CALL" and "JMP" instructions */
+    if ( ( instr.opcodePrimary == OPCODE_CALL || instr.opcodePrimary == OPCODE_JMP ) && tkn_.type == Token::Types::Register)
     {
         /* Parse single register and set offset to magic number for indirect call */
         reg = &(ParseRegister());
