@@ -541,7 +541,7 @@ Instruction Instruction::MakeReg2(xvm_opcode opcode, const Register& reg0, const
 
 Instruction Instruction::MakeReg1(xvm_opcode opcode, const Register& reg, int value)
 {
-    OpCodeAssert(opcode, OPCODE_PUSH, OPCODE_LDA, "invalid opcode for 1-register instruction");
+    OpCodeAssert(opcode, OPCODE_PUSH, OPCODE_MOVI, "invalid opcode for 1-register instruction");
     RangeAssert(InRange<21>(value), "'value' is out of range " + RangeStr<SgnValue21>() + " in 1-register instruction");
     return Instruction(xvm_instr_make_reg1(opcode, reg, static_cast<unsigned int>(value)));
 }

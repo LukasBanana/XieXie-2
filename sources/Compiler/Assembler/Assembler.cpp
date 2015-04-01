@@ -675,9 +675,7 @@ void Assembler::ParseInstrReg3(const InstrCategory& instr)
             const auto& reg2 = ParseRegister();
 
             /* Add instruction */
-            byteCode_->AddInstr(
-                Instr::MakeReg3(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, reg2)
-            );
+            byteCode_->AddInstr(Instr::MakeReg3(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, reg2));
         }
         else if (instr.opcodeSecondary != 0)
         {
@@ -685,9 +683,7 @@ void Assembler::ParseInstrReg3(const InstrCategory& instr)
             auto value = ParseOperand();
             
             /* Add instruction */
-            byteCode_->AddInstr(
-                Instr::MakeReg2(static_cast<xvm_opcode>(instr.opcodeSecondary), reg0, reg1, value)
-            );
+            byteCode_->AddInstr(Instr::MakeReg2(static_cast<xvm_opcode>(instr.opcodeSecondary), reg0, reg1, value));
         }
         else
             Error("invalid third operand for 3-register instruction (expected register)");
@@ -711,19 +707,48 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
             const auto& reg1 = ParseRegister();
 
             /* Add instruction */
-            byteCode_->AddInstr(
-                Instr::MakeReg2(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, 0)
-            );
+            byteCode_->AddInstr(Instr::MakeReg2(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, 0));
         }
         else if (instr.opcodeSecondary != 0)
         {
-            /* Parse second operand */
-            auto value = ParseOperand();
-            
-            /* Add instruction */
-            byteCode_->AddInstr(
-                Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodeSecondary), reg0, value)
-            );
+            /* Check if special MOV instruction for large-integer or floating-point values is required */
+            if (instr.opcodeSecondary == OPCODE_MOV1)
+            {
+                if (tkn_.type == Token::Types::FloatLiteral)
+                {
+                    /* Parse second operand */
+                    auto value = ParseFloatLiteral();
+
+                    /* Add primary- and secondary instruction */
+                    byteCode_->AddInstr(Instr::MakeReg1(OPCODE_MOVI, reg0, 0));
+                    byteCode_->AddDataField(value);
+                }
+                else
+                {
+                    /* Parse second operand */
+                    auto value = ParseOperand();
+                    
+                    if (Instr::InRange<21>(value))
+                    {
+                        /* Add single instruction */
+                        byteCode_->AddInstr(Instr::MakeReg1(OPCODE_MOV1, reg0, value));
+                    }
+                    else
+                    {
+                        /* Add primary- and secondary instruction */
+                        byteCode_->AddInstr(Instr::MakeReg1(OPCODE_MOVI, reg0, 0));
+                        byteCode_->AddDataField(value);
+                    }
+                }
+            }
+            else
+            {
+                /* Parse second operand */
+                auto value = ParseOperand();
+                
+                /* Add instruction */
+                byteCode_->AddInstr(Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodeSecondary), reg0, value));
+            }
         }
         else
             Error("invalid second operand for 2-register instruction (expected register)");
@@ -753,9 +778,7 @@ void Assembler::ParseInstrReg1LDA(const InstrCategory& instr)
     auto address = ParseOperand();
 
     /* Add instruction */
-    byteCode_->AddInstr(
-        Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodePrimary), reg, address)
-    );
+    byteCode_->AddInstr(Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodePrimary), reg, address));
 }
 
 void Assembler::ParseInstrJump(const InstrCategory& instr)
@@ -785,9 +808,7 @@ void Assembler::ParseInstrJump(const InstrCategory& instr)
     }
 
     /* Add instruction */
-    byteCode_->AddInstr(
-        Instr::MakeJump(static_cast<xvm_opcode>(instr.opcodePrimary), *reg, offset)
-    );
+    byteCode_->AddInstr(Instr::MakeJump(static_cast<xvm_opcode>(instr.opcodePrimary), *reg, offset));
 }
 
 void Assembler::ParseInstrLoadStore(const InstrCategory& instr)
@@ -805,9 +826,7 @@ void Assembler::ParseInstrLoadStore(const InstrCategory& instr)
     auto offset = ParseOperand();
 
     /* Add instruction */
-    byteCode_->AddInstr(
-        Instr::MakeLoadStore(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, offset)
-    );
+    byteCode_->AddInstr(Instr::MakeLoadStore(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, offset));
 }
 
 void Assembler::ParseInstrSpecial(const InstrCategory& instr)

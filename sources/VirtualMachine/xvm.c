@@ -339,6 +339,8 @@ FLOATS are 32 bits wide.
 | MOV      | 1 0 0 1 0 0 | R R R R R | V V V V V V V V V V V V V V V V V V V V V | Move value to register.                                        |
 |----------|-------------|-----------|-------------------------------------------|----------------------------------------------------------------|
 | LDA      | 1 0 0 1 0 1 | R R R R R | O O O O O O O O O O O O O O O O O O O O O | Load address from program pointer (word aligned) + offset 'V'. |
+|----------|-------------|-----------|-------------------------------------------|----------------------------------------------------------------|
+| MOV      | 1 0 0 1 1 0 | R R R R R | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | Move next instruction as word to register. Increment $pc.      |
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -480,7 +482,7 @@ typedef enum
     OPCODE_DEC      = GEN_OPCODE(0x23), // DEC  reg        ->  --reg
     OPCODE_MOV1     = GEN_OPCODE(0x24), // MOV  reg, c     ->  reg = c
     OPCODE_LDA      = GEN_OPCODE(0x25), // LDA  reg, addr  ->  reg = programMemoryStartWorldAligned[addr]
-    //Reserved      = GEN_OPCODE(0x26),
+    OPCODE_MOVI     = GEN_OPCODE(0x26), // MOVI reg        ->  reg = programMemoryStartWorldAligned[pc + 1]; ++pc
     //Reserved      = GEN_OPCODE(0x27),
 
     /* --- jump opcodes --- */
@@ -850,6 +852,7 @@ STATIC const char* xvm_instr_get_mnemonic(const opcode_t opcode)
 {
     switch (opcode)
     {
+        case OPCODE_MOVI:
         case OPCODE_MOV1:
         case OPCODE_MOV2:   return "mov ";
         case OPCODE_NOT:    return "not ";
@@ -999,10 +1002,10 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
     else if (opcode >= OPCODE_JMP && opcode <= OPCODE_JLE)
     {
         reg_t reg0 = _xvm_instr_get_reg0(instr);
-
         const char* reg0name = xvm_register_get_name(reg0);
 
         int addr_offset = _xvm_instr_get_sgn_value21(instr);
+
         printf("(%s), %i", reg0name, addr_offset);
     }
     else if (opcode >= OPCODE_LDB && opcode <= OPCODE_STW)
@@ -1024,19 +1027,20 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
         {
             reg_t reg0 = _xvm_instr_get_reg0(instr);
             const char* reg0name = xvm_register_get_name(reg0);
+
             printf("%s", reg0name);
         }
         else
         {
             reg_t reg0 = _xvm_instr_get_reg0(instr);
             const char* reg0name = xvm_register_get_name(reg0);
+            
             printf("(%s), %i", reg0name, addr_offset);
         }
     }
     else if (opcode >= OPCODE_PUSH && opcode <= OPCODE_DEC)
     {
         reg_t reg0 = _xvm_instr_get_reg0(instr);
-
         const char* reg0name = xvm_register_get_name(reg0);
 
         printf("%s            (%s = %i)", reg0name, reg0name, reg_ptr[reg0]);
@@ -1050,10 +1054,16 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
 
         printf("%s, %i         (%s = %i)", reg0name, value, reg0name, reg_ptr[reg0]);
     }
+    else if (opcode == OPCODE_MOVI)
+    {
+        reg_t reg0 = _xvm_instr_get_reg0(instr);
+        const char* reg0name = xvm_register_get_name(reg0);
+
+        printf("%s, %i         (%s = %i)", reg0name, reg_ptr[reg0], reg0name, reg_ptr[reg0]);
+    }
     else if (opcode == OPCODE_LDA)
     {
         reg_t reg0 = _xvm_instr_get_reg0(instr);
-
         const char* reg0name = xvm_register_get_name(reg0);
 
         printf("%s            (%s = %i)", reg0name, reg0name, reg_ptr[reg0]);
@@ -3063,6 +3073,15 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 mem_addr.cbyte = program_start_ptr + (unsgn_value << 2);
 
                 reg.i[reg0] = (regi_t)(mem_addr.cbyte);
+            }
+            break;
+
+            case OPCODE_MOVI:
+            {
+                // Load WORD from next instruction
+                reg0 = _xvm_instr_get_reg0(instr);
+                *reg_pc += 4;
+                reg.i[reg0] = (regi_t)*((instr_t*)(*reg_pc));
             }
             break;
 
