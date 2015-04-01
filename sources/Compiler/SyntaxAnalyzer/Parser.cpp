@@ -10,10 +10,9 @@
 #include "StringModifier.h"
 #include "SourceStream.h"
 #include "BuiltinTypeDenoter.h"
+#include "Timer.h"
 
 #include <algorithm>
-#include <chrono>
-#include <iomanip>
 
 
 namespace SyntaxAnalyzer
@@ -182,13 +181,7 @@ TokenPtr Parser::InlineMacro(const Token& macro)
     else if (spell == "__LINE__")
         content = ToStr(macro.PosStart().Row());
     else if (spell == "__DATE__")
-    {
-        auto timePoint = std::chrono::system_clock::now();
-        auto localTime = std::chrono::system_clock::to_time_t(timePoint);
-        std::stringstream sstr;
-        sstr << std::put_time(std::localtime(&localTime), "%Y-%m-%d %X");
-        content = sstr.str();
-    }
+        content = Timer::CurrentTime();
 
     return std::make_shared<Token>(macro.Area(), Tokens::StringLiteral, content);
 }
