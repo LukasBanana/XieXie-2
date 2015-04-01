@@ -97,6 +97,9 @@ class BasicBlock
         */
         bool VerifyProcReturn() const;
 
+        //! Returns true if 'succ' is a successor of this basic block.
+        bool IsSuccessor(const BasicBlock& succ) const;
+
         //! Returns the predecessor list.
         inline const PredListType& GetPred() const
         {
@@ -126,6 +129,8 @@ class BasicBlock
         void Unify(std::set<const BasicBlock*>& visitSet, bool& hasChanged);
 
         bool VerifyProcReturn(std::set<const BasicBlock*>& visitSet) const;
+
+        bool IsSuccessor(const BasicBlock* succ, std::set<const BasicBlock*>& visitSet) const;
 
         PredListType pred_; //!< Predecessor reference list.
         SuccListType succ_; //!< Successor reference list.

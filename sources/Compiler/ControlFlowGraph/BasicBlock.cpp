@@ -117,6 +117,12 @@ bool BasicBlock::VerifyProcReturn() const
     return VerifyProcReturn(visitSet);
 }
 
+bool BasicBlock::IsSuccessor(const BasicBlock& succ) const
+{
+    std::set<const BasicBlock*> visitSet;
+    return IsSuccessor(&succ, visitSet);
+}
+
 
 /*
  * ======= Private: =======
@@ -261,6 +267,29 @@ bool BasicBlock::VerifyProcReturn(std::set<const BasicBlock*>& visitSet) const
     }
 
     return true;
+}
+
+bool BasicBlock::IsSuccessor(const BasicBlock* succ, std::set<const BasicBlock*>& visitSet) const
+{
+    /* Check if this basic block has already been visited */
+    if (HasVisited(visitSet))
+        return false;
+    
+    /* Check if 'succ' is a successor of this basic block */
+    for (const auto& edge : succ_)
+    {
+        if (edge.succ == succ)
+            return true;
+    }
+
+    /* Visit successors */
+    for (auto bb : succ_)
+    {
+        if (bb->IsSuccessor(succ, visitSet))
+            return true;
+    }
+
+    return false;
 }
 
 
