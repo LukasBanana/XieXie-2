@@ -16,6 +16,11 @@ namespace ControlFlowGraph
 {
 
 
+ClassTree::ClassTree(AbstractSyntaxTrees::ClassDeclStmnt& classDeclAST) :
+    classDeclAST_( classDeclAST )
+{
+}
+
 BasicBlock* ClassTree::CreateBasicBlock(const std::string& label)
 {
     /* Create new basic block */
@@ -25,7 +30,7 @@ BasicBlock* ClassTree::CreateBasicBlock(const std::string& label)
     return bb;
 }
 
-BasicBlock* ClassTree::CreateRootBasicBlock(const std::string& ident)
+BasicBlock* ClassTree::CreateRootBasicBlock(const std::string& ident, const std::string& label)
 {
     /* Check if identifier has already been used */
     if (rootBasicBlocks_.find(ident) != rootBasicBlocks_.end())
@@ -36,6 +41,7 @@ BasicBlock* ClassTree::CreateRootBasicBlock(const std::string& ident)
     
     /* Register identifier */
     auto bb = basicBlocks_.back().get();
+    bb->label = label;
     rootBasicBlocks_[ident] = bb;
 
     return bb;

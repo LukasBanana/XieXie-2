@@ -10,6 +10,7 @@
 
 
 #include "BasicBlock.h"
+#include "ClassDeclStmnt.h"
 
 #include <map>
 
@@ -24,9 +25,11 @@ class ClassTree
     
     public:
         
+        ClassTree(AbstractSyntaxTrees::ClassDeclStmnt& classDeclAST);
+
         BasicBlock* CreateBasicBlock(const std::string& label = "");
         //! \throws std::invalid_argument If "ident" has already been used.
-        BasicBlock* CreateRootBasicBlock(const std::string& ident);
+        BasicBlock* CreateRootBasicBlock(const std::string& ident, const std::string& label = "");
 
         void DeleteBasicBlock(BasicBlock* basicBlock);
 
@@ -39,7 +42,15 @@ class ClassTree
             return rootBasicBlocks_;
         }
 
+        //! Returns the reference to the class declaration in the AST.
+        inline AbstractSyntaxTrees::ClassDeclStmnt* GetClassDeclAST() const
+        {
+            return &classDeclAST_;
+        }
+
     private:
+
+        AbstractSyntaxTrees::ClassDeclStmnt&        classDeclAST_;
 
         //! List of all basic blocks in this class CFG.
         std::vector<std::unique_ptr<BasicBlock>>    basicBlocks_;
