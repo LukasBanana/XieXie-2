@@ -78,7 +78,7 @@ class GraphGenerator final : private Visitor
         template <typename T> BlockRef VisitAndLink(T ast);
         template <typename T> BlockRef VisitAndLink(const std::vector<std::shared_ptr<T>>& astList);
 
-        void CreateClassTree();
+        void CreateClassTree(ClassDeclStmnt& ast);
         BasicBlock* MakeBlock(const std::string& label = "");
 
         /* --- Basic Block Stack --- */

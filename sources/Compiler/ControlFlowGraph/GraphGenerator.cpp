@@ -15,11 +15,14 @@
 #include "TACCondJumpInst.h"
 #include "TACReturnInst.h"
 #include "TACSwitchInst.h"
+#include "TACDirectCallInst.h"
 
 
 namespace ControlFlowGraph
 {
 
+
+using namespace CodeGenerator::NameMangling;
 
 using OpCodes = TACInst::OpCodes;
 
@@ -155,15 +158,34 @@ DEF_VISIT_PROC(GraphGenerator, Attrib)
 
 DEF_VISIT_PROC(GraphGenerator, ClassBodySegment)
 {
-    RETURN_BLOCK_REF(VisitAndLink(ast->declStmnts));
+    Visit(ast->declStmnts);
 }
 
 DEF_VISIT_PROC(GraphGenerator, ArrayAccess)
 {
 }
 
+//!!!INCOMPLETE!!!
 DEF_VISIT_PROC(GraphGenerator, ProcCall)
 {
+    /* Build CFG for procedure call */
+    auto in = MakeBlock("ProcCall");
+    //auto out = MakeBlock("EndProcCall");
+    auto out = in;
+    
+    /* Get procedure identifier */
+    if (!ast->declStmntRef)
+        ErrorIntern("missing reference for procedure declaration", ast);
+
+    auto procSig = ast->declStmntRef->procSignature;
+    auto procClass = ast->declStmntRef->parentRef;
+    auto procIdent = UniqueLabel(procClass->ident, *procSig);
+
+    in->MakeInst<TACDirectCallInst>(procIdent);
+
+    //...
+
+    RETURN_BLOCK_REF(BlockRef(in, out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, SwitchCase)
@@ -216,6 +238,7 @@ DEF_VISIT_PROC(GraphGenerator, CtrlTransferStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ProcCallStmnt)
 {
+    RETURN_BLOCK_REF(VisitAndLink(ast->procCall));
 }
 
 /*
@@ -612,7 +635,7 @@ DEF_VISIT_PROC(GraphGenerator, ForEverStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ClassDeclStmnt)
 {
-    CreateClassTree();
+    CreateClassTree(*ast);
     Visit(&(ast->publicSegment));
     Visit(&(ast->privateSegment));
 }
@@ -624,9 +647,11 @@ DEF_VISIT_PROC(GraphGenerator, VarDeclStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 {
-    auto procIdent = CodeGenerator::NameMangling::UniqueLabel(*ast->procSignature);
+    /* Generate name mangling for procedure signature */
+    auto procIdent = UniqueLabel(CT()->GetClassDeclAST()->ident, *ast->procSignature);
+    auto procDisplay = DisplayLabel(procIdent);
     
-    auto root = CT()->CreateRootBasicBlock(procIdent);
+    auto root = CT()->CreateRootBasicBlock(procIdent, procDisplay);
 
     /* Build sub-CFG for this procedure */
     auto graph = VisitAndLink(ast->codeBlock);
@@ -1161,9 +1186,9 @@ template <typename T> GraphGenerator::BlockRef GraphGenerator::VisitAndLink(cons
     return { first, prev.out };
 }
 
-void GraphGenerator::CreateClassTree()
+void GraphGenerator::CreateClassTree(ClassDeclStmnt& ast)
 {
-    programClassTrees_.emplace_back(MakeUnique<ClassTree>());
+    programClassTrees_.emplace_back(MakeUnique<ClassTree>(ast));
     classTree_ = programClassTrees_.back().get();
 }
 

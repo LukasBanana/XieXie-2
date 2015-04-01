@@ -27,6 +27,19 @@ Returns the unique label for the specified procedure signature (excluding the id
 */
 std::string UniqueLabel(const AbstractSyntaxTrees::ProcSignature& procSignature);
 
+/**
+Returns the unique label for the specified procedure signature including the identifier of its namespace 'classIdent'.
+\throws std::invalid_argument If name mangling failed.
+*/
+std::string UniqueLabel(const std::string& classIdent, const AbstractSyntaxTrees::ProcSignature& procSignature);
+
+/**
+Converts the specified label into a string for display,
+e.g. "CWidget.PdoSomething,I,A@R@String" -> "Widget.doSomething(int, String[])".
+\throws std::invalid_argument If 'label' is invalid.
+*/
+std::string DisplayLabel(const std::string& label);
+
 
 } // /namespace NameMangling
 

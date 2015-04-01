@@ -14,6 +14,8 @@
 #include "StringModifier.h"
 #include "VarName.h"
 
+#include <exception>
+
 
 using namespace AbstractSyntaxTrees;
 
@@ -23,6 +25,8 @@ namespace CodeGenerator
 namespace NameMangling
 {
 
+
+/* --- UniqueLabel --- */
 
 static std::string GenerateAbstractTypeLabel(const TypeDenoter* typeDenoter);
 
@@ -98,6 +102,188 @@ std::string UniqueLabel(const ProcSignature& procSignature)
     }
 
     return label;
+}
+
+std::string UniqueLabel(const std::string& classIdent, const AbstractSyntaxTrees::ProcSignature& procSignature)
+{
+    return "C" + classIdent + "." + UniqueLabel(procSignature);
+}
+
+/* --- DisplayLabel --- */
+
+static void ExtractClass(const std::string& label, size_t& pos, std::string& str)
+{
+    if (++pos >= label.size())
+        return;
+    if (pos > 1)
+        str += '.';
+
+    auto end = label.find('.', pos);
+
+    if (end == std::string::npos)
+    {
+        str += label.substr(pos);
+        pos = label.size();
+    }
+    else
+    {
+        str += label.substr(pos, end - pos);
+        pos = end + 1;
+    }
+}
+
+static void ExtractProcedure(const std::string& label, size_t& pos, std::string& str)
+{
+    if (++pos >= label.size())
+        return;
+    if (pos > 1)
+        str += '.';
+
+    auto end = label.find(',', pos);
+
+    if (end == std::string::npos)
+    {
+        str += label.substr(pos);
+        pos = label.size();
+    }
+    else
+    {
+        str += label.substr(pos, end - pos);
+        pos = end + 1;
+    }
+
+    str += '(';
+}
+
+static void ExtractParamBuiltin(const std::string& label, size_t& pos, std::string& str)
+{
+    switch (label[pos])
+    {
+        case 'V':
+            str += "void";
+            break;
+        case 'B':
+            str += "bool";
+            break;
+        case 'I':
+            str += "int";
+            break;
+        case 'F':
+            str += "float";
+            break;
+    }
+    ++pos;
+}
+
+static void ExtractParam(const std::string& label, size_t& pos, std::string& str, bool* hasParam = nullptr);
+
+static void ExtractParamArray(const std::string& label, size_t& pos, std::string& str)
+{
+    if (label[pos] != '@')
+        throw std::invalid_argument("expected '@' after array type denoter in label \"" + label + "\"");
+
+    ++pos;
+    ExtractParam(label, pos, str);
+
+    str += "[]";
+}
+
+static void ExtractParamPointer(const std::string& label, size_t& pos, std::string& str)
+{
+    if (label[pos] != '@')
+        throw std::invalid_argument("expected '@' after pointer type denoter in label \"" + label + "\"");
+
+    ++pos;
+    auto end = label.find(',', pos);
+
+    if (end == std::string::npos)
+    {
+        str += label.substr(pos);
+        pos = label.size();
+    }
+    else
+    {
+        str += label.substr(pos, end - pos);
+        pos = end;
+    }
+}
+
+static void ExtractParam(const std::string& label, size_t& pos, std::string& str, bool* hasParam)
+{
+    if (hasParam)
+    {
+        if (*hasParam)
+            str += ", ";
+        *hasParam = true;
+    }
+
+    switch (label[pos])
+    {
+        case 'V':
+        case 'B':
+        case 'I':
+        case 'F':
+            ExtractParamBuiltin(label, pos, str);
+            break;
+        case 'A':
+            ++pos;
+            ExtractParamArray(label, pos, str);
+            break;
+        case 'R':
+            ++pos;
+            ExtractParamPointer(label, pos, str);
+            break;
+    }
+}
+
+/*
+example conversion:
+    "CWidget.PdoSomething,I,A@R@String"
+                    |
+                    v
+    "Widget.doSomething(int, String[])"
+*/
+std::string DisplayLabel(const std::string& label)
+{
+    std::string str;
+    size_t pos = 0;
+
+    bool hasProc = false;
+    bool hasParam = false;
+
+    while (pos < label.size())
+    {
+        switch (label[pos])
+        {
+            case 'C':
+                ExtractClass(label, pos, str);
+                break;
+            case 'P':
+                ExtractProcedure(label, pos, str);
+                hasProc = true;
+                break;
+            case 'V':
+            case 'B':
+            case 'I':
+            case 'F':
+            case 'A':
+            case 'R':
+                ExtractParam(label, pos, str, &hasParam);
+                ++pos;
+                break;
+            default:
+                throw std::invalid_argument(
+                    "unknown type denoter '" + std::string(1, label[pos]) +
+                    "' in label \"" + label + "\""
+                );
+                break;
+        }
+    }
+
+    if (hasProc)
+        str += ')';
+
+    return str;
 }
 
 
