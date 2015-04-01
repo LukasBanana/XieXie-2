@@ -12,10 +12,27 @@
 #include <algorithm>
 #include <fstream>
 
+//!!!
+#define _DEB_CFG_TRAVERSER_
+#ifdef _DEB_CFG_TRAVERSER_
+#include "CFGTopDownTraverser.h"
+#endif
+
 
 namespace ControlFlowGraph
 {
 
+
+#ifdef _DEB_CFG_TRAVERSER_//!!!
+class Traverser : public CFGTopDownTraverser
+{
+    private:
+        void OnVisit(BasicBlock& bb) override
+        {
+            std::cout << bb.label << std::endl;
+        }
+};
+#endif
 
 void CFGViewer::ViewGraph(
     const BasicBlock& entryPoint, std::ostream& stream,
@@ -34,6 +51,11 @@ void CFGViewer::ViewGraph(
     WriteLine("}");
 
     blockIDs_.clear();
+
+    #ifdef _DEB_CFG_TRAVERSER_//!!!
+    Traverser traverser;
+    traverser.TraverseCFG(const_cast<BasicBlock&>(entryPoint));
+    #endif
 }
 
 void CFGViewer::ViewGraph(
@@ -42,7 +64,7 @@ void CFGViewer::ViewGraph(
 {
     for (const auto& block : classTree.GetRootBasicBlocks())
     {
-        auto filename = path + "." + block.first + ".vg";
+        auto filename = path + block.second->label + ".vg";
         std::ofstream file(filename);
         ViewGraph(*block.second, file, fontName, fontSize);
 
@@ -83,9 +105,13 @@ void CFGViewer::DefineBlock(const BasicBlock& block)
     auto blockLabel = "<" + blockID + ">";
 
     if (!block.label.empty())
-        blockLabel += " (" + block.label + ")";
+        blockLabel += "\\n" + block.label;
 
     WriteLine(blockID + " [label=\"" + blockLabel + "\\n" + instrList + "\"];");
+
+    #ifdef _DEB_CFG_TRAVERSER_//!!!
+    const_cast<BasicBlock&>(block).label = blockID;
+    #endif
 
     /* Travers sucessors */
     for (const auto& succ : block.GetSucc())

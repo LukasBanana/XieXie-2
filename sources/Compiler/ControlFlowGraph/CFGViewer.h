@@ -36,7 +36,7 @@ class CFGViewer
             const std::string& fontName = "courier new", const int fontSize = 10
         );
         void ViewGraph(
-            const ClassTree& classTree, const std::string& path,
+            const ClassTree& classTree, const std::string& path = "",
             const std::string& fontName = "courier new", const int fontSize = 10
         );
 

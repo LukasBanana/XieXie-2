@@ -10,6 +10,7 @@
 #include "Version.h"
 #include "ConsoleManip.h"
 #include "StringModifier.h"
+#include "MakeUnique.h"
 
 #include "SourceStream.h"
 #include "Parser.h"
@@ -59,7 +60,7 @@ void Shell::Script(std::istream& stream)
 
     /* Read and print each line from input stream */
     std::string line;
-    auto source = std::make_unique<std::stringstream>();
+    auto source = MakeUnique<std::stringstream>();
 
     size_t lineNum = 0;
 
