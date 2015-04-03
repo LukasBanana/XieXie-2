@@ -7,6 +7,8 @@
 
 #include "CFGTopDownTraverser.h"
 
+#include <iostream>//!!!
+
 
 namespace ControlFlowGraph
 {
@@ -57,7 +59,7 @@ void CFGTopDownTraverser::TraverseQueue()
             {
                 /* Visit this block, remove it from the queue, and append its successors to the queue */
                 VisitBlock(*bb);
-                it = queue_.erase(it);
+                queue_.erase(it);
                 AppendSuccessorsToQueue(*bb);
                 break;
             }
@@ -72,10 +74,15 @@ void CFGTopDownTraverser::VisitBlock(BasicBlock& bb)
     OnVisit(bb);
 }
 
+bool CFGTopDownTraverser::IsBlockInQueue(BasicBlock::BlockList& queue, const BasicBlock& bb) const
+{
+    return std::find(queue.begin(), queue.end(), &bb) != queue.end();
+}
+
 void CFGTopDownTraverser::AppendToQueue(BasicBlock::BlockList& queue, BasicBlock& bb)
 {
     /* Append to queue, if not already contained and if not already visited */
-    if (!HasVisited(bb) && std::find(queue_.begin(), queue_.end(), &bb) == queue_.end())
+    if (!HasVisited(bb) && !IsBlockInQueue(queue_, bb) && !IsBlockInQueue(queue, bb))
         queue.push_back(&bb);
 }
 

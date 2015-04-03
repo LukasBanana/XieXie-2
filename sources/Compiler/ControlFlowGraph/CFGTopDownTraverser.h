@@ -53,6 +53,8 @@ class CFGTopDownTraverser
         //! Visits the specified block and returns true if visitation succeeded.
         void VisitBlock(BasicBlock& bb);
 
+        //! Returns true if the specified block is in the specified queue.
+        bool IsBlockInQueue(BasicBlock::BlockList& queue, const BasicBlock& bb) const;
         //! Appends the specified block to the queue, if it's not already contained.
         void AppendToQueue(BasicBlock::BlockList& queue, BasicBlock& bb);
         //! Appends all successors of the specified block to the queue.
