@@ -170,7 +170,7 @@ Object.vtable:
 ; ------- String Class -------
 
 ; String:
-;	Object	base	( 0)
+;	Object	super	( 0)
 ;	int		size	(12) <- number of characters (bytes)
 ;	int		bufSize	(16) <- actual number of characters (bytes)
 ;	int		buffer	(20)
@@ -294,7 +294,7 @@ String.vtable:
 ; built-in array for objects
 
 ; Array:
-;	Object	base	( 0)
+;	Object	super	( 0)
 ;	int		size	(12) <- number of entries
 ;	int		bufSize	(16) <- actual number of entries
 ;	int		buffer	(20)
@@ -356,7 +356,7 @@ Array.vtable:
 ; built-in array for built-in types 'int' and 'float' and for all arrays of 'weak-references'
 
 ; PrimArray:
-;	Object	base	( 0)
+;	Object	super	( 0)
 ;	int		size	(12) <- number of entries
 ;	int		bufSize	(16) <- actual number of entries
 ;	int		buffer	(20)
@@ -366,7 +366,7 @@ Array.vtable:
 ; built-in array for 'bool'
 
 ; BoolArray:
-;	Object	base	( 0)
+;	Object	super	( 0)
 ;	int		size	(12) <- number of entries
 ;	int		bufSize	(16) <- actual number of entries
 ;	int		buffer	(20)
