@@ -86,7 +86,7 @@
 	}
 	\lstset{
 		morekeywords = {
-			var, super, foreach, forever, init, release, and, or, not, null, import, module
+			var, super, foreach, repeat, init, release, and, or, not, null, import, module
 		}
 	}
 }
@@ -237,7 +237,7 @@ may change over time. Here is a rough ToDo-list:
 	\hline
 	Range-Based For Loop & \done \\
 	\hline
-	ForEver Loop & \done \\
+	Repeat Loop & \done \\
 	\hline
 	While Loop & \done \\
 	\hline
@@ -257,9 +257,11 @@ may change over time. Here is a rough ToDo-list:
 	\hline \hline
 	\multicolumn{2}{|c|}{\textsc{XASM Backend}} \\
 	\hline
-	Final code generation for XASM & \notimpl \\
+	Final code generation for XASM & \incompl \\
 	\hline
-	Core assembly file & \incompl \\
+	Register Allocator & \incompl \\
+	\hline
+	Core Assembly File & \incompl \\
 	\hline
 \end{tabular}
 \end{center}
@@ -644,11 +646,6 @@ for i : 0 .. 4 {
 for i : 10 .. -10 -> 3 {
     print(i)
 }
-
-// Do something 10 times (with invisible index variable)
-for 10 {
-    doSomething()
-}
 \end{lstlisting}
 
 \subsubsection{\texttt{foreach} Loop}
@@ -670,16 +667,23 @@ foreach list : superList {
 }
 \end{lstlisting}
 
-\subsubsection{\texttt{forever} Loop}
+\subsubsection{\texttt{repeat} Loop}
 
 \begin{lstlisting}
-// Infinite loop
-forever {
+// Repeat for unconditional iterations
+// (This is internally a "ForEver"-loop)
+repeat {
     // Condition to break the loop
     if magicFunction() {
-        // Break infinite loop
+        // Break loop
         break
     }
+}
+
+// Do something 10 times (with invisible index variable)
+// (This is internally a "ForRange"-loop)
+repeat 10 {
+    doSomething()
 }
 \end{lstlisting}
 
