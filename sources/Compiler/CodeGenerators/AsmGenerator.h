@@ -39,10 +39,20 @@ class AsmGenerator
         virtual ~AsmGenerator();
 
         //! Throws an CodeGenError exception.
-        void Error(const std::string& msg);
+        void Error(const std::string& msg) const;
+        //! Throws an InternalError exception.
+        void ErrorIntern(const std::string& msg) const;
 
+        //! Starts a new line.
+        void StartLine();
+        //! Ends the current line.
+        void EndLine();
+        
+        //! Append text to the current line.
+        void L(const std::string& text);
         //! Write a new line of code.
         void Line(const std::string& line);
+
         //! Writes a blank line.
         void Blank();
         //! Writes 'num' blank lines.

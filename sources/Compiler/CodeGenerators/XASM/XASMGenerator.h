@@ -18,6 +18,8 @@
 #include "TACCondJumpInst.h"
 #include "TACReturnInst.h"
 
+#include <stack>
+
 
 namespace CodeGenerator
 {
@@ -56,6 +58,50 @@ class XASMGenerator final : public AsmGenerator
 
         void WriteHeader();
 
+        /* --- Register Allocation --- */
+
+        std::string Reg(const TACVar& var);
+
+        /* --- Block References --- */
+
+        //! Returns the local label for the specified basic block.
+        std::string Label(const BasicBlock& bb) const;
+
+        //! Returns the current basic block.
+        inline const BasicBlock* BB() const
+        {
+            return *currentBlock_;
+        }
+
+        //! Returns the predecessor list of the current basic block.
+        inline const BasicBlock::BlockList& Pred() const
+        {
+            return BB()->GetPred();
+        }
+        //! Returns the predecessor of the current basic block at the specified index.
+        const BasicBlock& Pred(size_t index) const;
+
+        //! Returns the successor list of the current basic block.
+        inline const BasicBlock::EdgeList& Succ() const
+        {
+            return BB()->GetSucc();
+        }
+        //! Returns the successor of the current basic block at the specified index.
+        const BasicBlock& Succ(size_t index) const;
+
+        //! Verifies the assertion that the current number of successors are equal to 'num'.
+        void AssertSucc(size_t num, const char* desc = nullptr) const;
+
+        //! Returns true if the specified block is the next basic block in the list.
+        bool IsNextBlock(const BasicBlock& bb) const;
+        //! Returns true if the specified block is in the generation queue, i.e. it has not yet been generated.
+        bool IsBlockInQueue(const BasicBlock& bb) const;
+
+        //! Pushes the specified block onto the indentation-block stack.
+        void PushIndentBlock(const BasicBlock& bb);
+        //! Pops the top-level block from the indentation-block stack, if the it matches the specified block.
+        void PopIndentBlock(const BasicBlock& bb);
+
         /* --- Code Generation --- */
 
         void GenerateClassTree(const ClassTree& classTree);
@@ -68,9 +114,16 @@ class XASMGenerator final : public AsmGenerator
         void GenerateCondJumpInst(const TACCondJumpInst& inst);
         void GenerateReturnInst(const TACReturnInst& inst);
 
+        void GenerateDirectJump(const BasicBlock& bb);
+
         /* === Members === */
 
-        //...
+        BasicBlock::BlockList                   basicBlocks_;
+
+        BasicBlock::BlockList::const_iterator   currentBlock_;
+        const BasicBlock*                       nextBlock_    = nullptr;
+
+        std::stack<const BasicBlock*>           blockIndentStack_;
 
 };
 

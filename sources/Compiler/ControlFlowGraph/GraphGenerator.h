@@ -68,7 +68,8 @@ class GraphGenerator final : private Visitor
         void GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args);
 
         void GenerateLogicNotUnaryExpr(UnaryExpr* ast, void* args);
-        void GenerateArithmeticUnaryExpr(UnaryExpr* ast, void* args);
+        void GenerateBitwiseNotUnaryExpr(UnaryExpr* ast, void* args);
+        void GenerateNegateUnaryExpr(UnaryExpr* ast, void* args);
 
         void GenerateBreakCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args);
         void GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args);

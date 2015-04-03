@@ -128,6 +128,26 @@ std::string TACInst::OpCodePrefix() const
     return str + std::string(maxLen - str.size(), ' ');
 }
 
+bool TACInst::IsFloatOp() const
+{
+    switch (opcode)
+    {
+        case OpCodes::FADD:
+        case OpCodes::FSUB:
+        case OpCodes::FMUL:
+        case OpCodes::FDIV:
+        case OpCodes::FMOD:
+        case OpCodes::FCMPE:
+        case OpCodes::FCMPNE:
+        case OpCodes::FCMPL:
+        case OpCodes::FCMPLE:
+        case OpCodes::FCMPG:
+        case OpCodes::FCMPGE:
+            return true;
+    }
+    return false;
+}
+
 
 } // /namespace ThreeAddressCodes
 

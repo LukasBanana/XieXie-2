@@ -22,20 +22,45 @@ AsmGenerator::~AsmGenerator()
 {
 }
 
-void AsmGenerator::Error(const std::string& msg)
+void AsmGenerator::Error(const std::string& msg) const
 {
     throw CodeGenError(msg);
 }
 
+void AsmGenerator::ErrorIntern(const std::string& msg) const
+{
+    throw InternalError(msg);
+}
+
+void AsmGenerator::StartLine()
+{
+    stream_ << indent_;
+}
+
+void AsmGenerator::EndLine()
+{
+    stream_ << std::endl;
+}
+
+void AsmGenerator::L(const std::string& text)
+{
+    stream_ << text;
+}
+
 void AsmGenerator::Line(const std::string& line)
 {
-    stream_ << indent_ << line << std::endl;
+    StartLine();
+    L(line);
+    EndLine();
 }
 
 void AsmGenerator::Blank()
 {
     if (config.blanks)
-        stream_ << indent_ << std::endl;
+    {
+        StartLine();
+        EndLine();
+    }
 }
 
 void AsmGenerator::Blanks(size_t num)

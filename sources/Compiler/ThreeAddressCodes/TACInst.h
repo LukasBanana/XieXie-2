@@ -32,6 +32,8 @@ class TACInst
     
     public:
         
+        /* === Enumerations === */
+
         //! TAC instruction class types.
         enum class Types
         {
@@ -52,11 +54,11 @@ class TACInst
 
             /* Copy */
             MOV,
+            NOT,
             FTI,
             ITF,
 
             /* Modify */
-            NOT,
             AND,
             OR,
             XOR,
@@ -73,6 +75,7 @@ class TACInst
             FSUB,
             FMUL,
             FDIV,
+            FMOD,
 
             /* CondJump */
             CMPE,
@@ -102,6 +105,8 @@ class TACInst
             INDCALL,
         };
 
+        /* === Structures === */
+
         struct VarFlags
         {
             enum
@@ -111,6 +116,8 @@ class TACInst
                 TempOnly    = (1 << 2),
             };
         };
+
+        /* === Functions === */
 
         virtual ~TACInst()
         {
@@ -141,6 +148,12 @@ class TACInst
         */
         std::string OpCodePrefix() const;
 
+        //! Returns true if this is a floating-point operation.
+        bool IsFloatOp() const;
+
+        /* === Members === */
+
+        //! TAC instruction op-code.
         OpCodes opcode = OpCodes::NOP;
 
     protected:

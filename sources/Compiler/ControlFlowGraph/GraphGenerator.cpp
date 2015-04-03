@@ -562,9 +562,9 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
     auto condInst = cond->MakeInst<TACCondJumpInst>(idxVar, ToStr(ast->rangeEnd));
 
     if (isForwards)
-        condInst->opcode = TACInst::OpCodes::CMPLE;
+        condInst->opcode = OpCodes::CMPLE;
     else
-        condInst->opcode = TACInst::OpCodes::CMPGE;
+        condInst->opcode = OpCodes::CMPGE;
 
     /* Build loop body CFG */
     PushBreakBB(out);
@@ -579,9 +579,9 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
             /* Add instruction to increment the iterator */
             auto incInst = body.out->MakeInst<TACModifyInst>(idxVar, idxVar, ToStr(ast->rangeStep));
             if (isForwards)
-                incInst->opcode = TACInst::OpCodes::ADD;
+                incInst->opcode = OpCodes::ADD;
             else
-                incInst->opcode = TACInst::OpCodes::SUB;
+                incInst->opcode = OpCodes::SUB;
         }
         else
         {
@@ -857,8 +857,10 @@ DEF_VISIT_PROC(GraphGenerator, UnaryExpr)
             GenerateLogicNotUnaryExpr(ast, args);
             break;
         case Ty::BitwiseNot:
+            GenerateBitwiseNotUnaryExpr(ast, args);
+            break;
         case Ty::Negate:
-            GenerateArithmeticUnaryExpr(ast, args);
+            GenerateNegateUnaryExpr(ast, args);
             break;
     }
 }
@@ -977,7 +979,7 @@ static OpCodes OperatorToOpCode(const BinaryExpr::Operators op, bool isFloat)
             return isFloat ? OpCodes::FDIV : OpCodes::DIV;
 
         case Ty::Mod:
-            return OpCodes::MOD;
+            return isFloat ? OpCodes::FMOD : OpCodes::MOD;
         case Ty::LShift:
             return OpCodes::SLL;
         case Ty::RShift:
@@ -1097,7 +1099,23 @@ void GraphGenerator::GenerateLogicNotUnaryExpr(UnaryExpr* ast, void* args)
     RETURN_BLOCK_REF(BlockRef(expr.in, falseBranch, trueBranch));
 }
 
-void GraphGenerator::GenerateArithmeticUnaryExpr(UnaryExpr* ast, void* args)
+void GraphGenerator::GenerateBitwiseNotUnaryExpr(UnaryExpr* ast, void* args)
+{
+    Visit(ast->expr);
+    auto src = Var();
+
+    /* Make instruction */
+    auto inst = BB()->MakeInst<TACCopyInst>();
+    
+    inst->opcode    = OpCodes::NOT;
+    inst->dest      = TempVar();
+    inst->src       = src;
+
+    PopVar();
+    PushVar(inst->dest);
+}
+
+void GraphGenerator::GenerateNegateUnaryExpr(UnaryExpr* ast, void* args)
 {
     Visit(ast->expr);
     auto src = Var();
@@ -1106,10 +1124,10 @@ void GraphGenerator::GenerateArithmeticUnaryExpr(UnaryExpr* ast, void* args)
     auto isFloat = ast->GetTypeDenoter()->IsFloat();
     auto inst = BB()->MakeInst<TACModifyInst>();
     
+    inst->opcode    = OperatorToOpCode(ast->unaryOperator, isFloat);
     inst->dest      = TempVar();
     inst->srcLhs    = TACVar("0");
     inst->srcRhs    = src;
-    inst->opcode    = OperatorToOpCode(ast->unaryOperator, isFloat);
 
     PopVar();
     PushVar(inst->dest);

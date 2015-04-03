@@ -50,6 +50,12 @@ class TACVar
         bool IsConst() const;
         //! Returns ture if this is a temporary variable.
         bool IsTemp() const;
+        /**
+        Returns true if the ID of this variable is valid.
+        \see id
+        \see invalidID
+        */
+        bool IsValid() const;
 
         //! Returns the value as integer.
         int Int() const;

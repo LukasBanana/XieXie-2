@@ -66,6 +66,11 @@ bool TACVar::IsTemp() const
     return type == Types::Temp;
 }
 
+bool TACVar::IsValid() const
+{
+    return id != TACVar::invalidID;
+}
+
 int TACVar::Int() const
 {
     return StrToNum<int>(value);
