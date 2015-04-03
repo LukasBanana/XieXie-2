@@ -43,6 +43,8 @@ class TACVar
         TACVar(const std::string& value);
         TACVar(const char* value);
 
+        TACVar& operator = (const TACVar&) = default;
+
         //! Returns this variable as string representation (for debugging).
         std::string ToString() const;
 

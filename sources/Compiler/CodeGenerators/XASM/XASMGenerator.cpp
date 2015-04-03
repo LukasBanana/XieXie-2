@@ -33,7 +33,8 @@ XASMGenerator::XASMGenerator(std::ostream& outputStream, const std::string& inde
     regAlloc_{
         XASMRegList(),
         std::bind(&XASMGenerator::SaveReg, this, _1, _2),
-        std::bind(&XASMGenerator::LoadReg, this, _1, _2)
+        std::bind(&XASMGenerator::LoadReg, this, _1, _2),
+        std::bind(&XASMGenerator::MoveReg, this, _1, _2)
     }
 {
 }
@@ -113,14 +114,19 @@ std::string XASMGenerator::Reg(const TACVar& var)
     return regAlloc_.Reg(var);
 }
 
-void XASMGenerator::SaveReg(const RegisterAllocator::RegIdent& reg, int location)
+void XASMGenerator::SaveReg(const RegisterAllocator::RegIdent& reg, RegisterAllocator::LocationType location)
 {
-    //...
+    Line("stw " + reg + ", ($lb) " + std::to_string(8 + location*4));
 }
 
-void XASMGenerator::LoadReg(const RegisterAllocator::RegIdent& reg, int location)
+void XASMGenerator::LoadReg(const RegisterAllocator::RegIdent& reg, RegisterAllocator::LocationType location)
 {
-    //...
+    Line("ldw " + reg + ", ($lb) " + std::to_string(8 + location*4));
+}
+
+void XASMGenerator::MoveReg(const RegisterAllocator::RegIdent& dest, const RegisterAllocator::RegIdent& source)
+{
+    Line("mov " + dest + ", " + source);
 }
 
 /* --- Block References --- */
@@ -277,6 +283,9 @@ void XASMGenerator::GenerateInst(const TACInst& inst)
 
 void XASMGenerator::GenerateCopyInst(const TACCopyInst& inst)
 {
+    auto reg0 = Reg(inst.dest);
+    auto reg1 = Reg(inst.src);
+
     StartLine();
     {
         switch (inst.opcode)
@@ -295,7 +304,7 @@ void XASMGenerator::GenerateCopyInst(const TACCopyInst& inst)
                 break;
         }
 
-        L(" " + Reg(inst.dest) + ", " + Reg(inst.src));
+        L(" " + reg0 + ", " + reg1);
     }
     EndLine();
 }
@@ -322,6 +331,16 @@ void XASMGenerator::GenerateModifyInst(const TACModifyInst& inst)
                 Line("inc " + Reg(inst.dest));
             return;
         }
+    }
+
+    auto reg0 = Reg(inst.dest);
+    auto reg1 = Reg(inst.srcLhs);
+    auto reg2 = Reg(inst.srcRhs);
+
+    if (inst.srcLhs.IsConst())
+    {
+        Line("mov " + reg0 + ", " + reg1);
+        reg1 = reg0;
     }
 
     StartLine();
@@ -377,7 +396,7 @@ void XASMGenerator::GenerateModifyInst(const TACModifyInst& inst)
                 break;
         }
 
-        L(" " + Reg(inst.dest) + ", " + Reg(inst.srcLhs) + ", " + Reg(inst.srcRhs));
+        L(" " + reg0 + ", " + reg1 + ", " + reg2);
     }
     EndLine();
 }
@@ -386,17 +405,27 @@ void XASMGenerator::GenerateCondJumpInst(const TACCondJumpInst& inst)
 {
     AssertSucc(2, "conditional jump instructions");
 
-    if (inst.srcRhs.Int() == 0)
+    if (inst.srcLhs.IsConst() && inst.srcRhs.IsConst())
+    {
+        if (inst.IsFloatOp())
+            Line("mov $cf, " + std::to_string(inst.srcLhs.Float() - inst.srcRhs.Float()));
+        else
+            Line("mov $cf, " + std::to_string(inst.srcLhs.Int() - inst.srcRhs.Int()));
+    }
+    else if (!inst.IsFloatOp() && inst.srcRhs.IsConst() && inst.srcRhs.Int() == 0)
         Line("mov $cf, " + Reg(inst.srcLhs));
     else
     {
+        auto reg0 = Reg(inst.srcLhs);
+        auto reg1 = Reg(inst.srcRhs);
+
         StartLine();
         {
             if (inst.IsFloatOp())
                 L("cmpf ");
             else
                 L("cmp ");
-            L(Reg(inst.srcLhs) + ", " + Reg(inst.srcRhs));
+            L(reg0 + ", " + reg1);
         }
         EndLine();
     }

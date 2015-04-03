@@ -63,8 +63,9 @@ class XASMGenerator final : public AsmGenerator
 
         std::string Reg(const TACVar& var);
 
-        void SaveReg(const RegisterAllocator::RegIdent& reg, int location);
-        void LoadReg(const RegisterAllocator::RegIdent& reg, int location);
+        void SaveReg(const RegisterAllocator::RegIdent& reg, RegisterAllocator::LocationType location);
+        void LoadReg(const RegisterAllocator::RegIdent& reg, RegisterAllocator::LocationType location);
+        void MoveReg(const RegisterAllocator::RegIdent& dest, const RegisterAllocator::RegIdent& source);
 
         /* --- Block References --- */
 
