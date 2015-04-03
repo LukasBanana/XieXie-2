@@ -41,22 +41,6 @@ class XASMGenerator final : public AsmGenerator
 
         /* === Functions === */
 
-        /* --- Comfort Templates --- */
-
-        template <typename Arg> std::string ArgStr(Arg arg);
-        template <> std::string ArgStr<std::string>(std::string arg);
-        template <> std::string ArgStr<const char*>(const char* arg);
-        template <> std::string ArgStr<char>(char arg);
-
-        template <typename... Args> std::string ConcatStr(Args... args);
-        template <> std::string ConcatStr();
-
-        template <typename Arg0, typename... NextArgs> std::string ConcatStrSub(Arg0 arg0, NextArgs... nextArgs);
-        template <typename Arg0> std::string ConcatStrSub(Arg0 arg0);
-
-        //! Writes a single line of code with the specified arguments as concatenated string.
-        template <typename... Args> void L(Args... args);
-
         /* --- Writing --- */
 
         //! Writes a comment line, e.g. "; comment".

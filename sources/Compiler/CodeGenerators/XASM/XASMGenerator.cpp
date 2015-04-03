@@ -33,7 +33,7 @@ bool XASMGenerator::GenerateAsm(const std::vector<ClassTreePtr>& classTrees, Err
             GenerateClassTree(*ct);
 
         /* Write last empty line, so that assembler parser works correct */
-        L("");
+        Line("");
 
         return true;
     }
@@ -49,60 +49,12 @@ bool XASMGenerator::GenerateAsm(const std::vector<ClassTreePtr>& classTrees, Err
  * ======= Private: =======
  */
 
-/* --- Comfort Templates --- */
-
-template <typename Arg> std::string XASMGenerator::ArgStr(Arg arg)
-{
-    return std::to_string(arg);
-}
-
-template <> std::string XASMGenerator::ArgStr<std::string>(std::string arg)
-{
-    return arg;
-}
-
-template <> std::string XASMGenerator::ArgStr<const char*>(const char* arg)
-{
-    return std::string(arg);
-}
-
-template <> std::string XASMGenerator::ArgStr<char>(char arg)
-{
-    return std::string(1, arg);
-}
-
-template <typename... Args> std::string XASMGenerator::ConcatStr(Args... args)
-{
-    return ConcatStrSub<Args...>(std::forward<Args>(args)...);
-}
-
-template <> std::string XASMGenerator::ConcatStr()
-{
-    return "";
-}
-
-template <typename Arg0, typename... NextArgs> std::string XASMGenerator::ConcatStrSub(Arg0 arg0, NextArgs... nextArgs)
-{
-    return ArgStr<Arg0>(std::forward<Arg0>(arg0)) + ' ' + ConcatStr<NextArgs...>(std::forward<NextArgs>(nextArgs)...);
-}
-
-template <typename Arg0> std::string XASMGenerator::ConcatStrSub(Arg0 arg0)
-{
-    return ArgStr<Arg0>(std::forward<Arg0>(arg0));
-}
-
-//! Writes a single line of code with the specified arguments as concatenated string.
-template <typename... Args> void XASMGenerator::L(Args... args)
-{
-    Line(ConcatStr<Args...>(std::forward<Args>(args)...));
-}
-
 /* --- Writing --- */
 
 void XASMGenerator::Comment(const std::string& line)
 {
     if (config.comments)
-        L(';', line);
+        Line("; " + line);
 }
 
 void XASMGenerator::GlobalLabel(const std::string& label)
@@ -207,13 +159,13 @@ void XASMGenerator::GenerateCopyInst(const TACCopyInst& inst)
     switch (inst.opcode)
     {
         case OpCodes::MOV:
-            L("mov", "$r0,", "$r1");
+            Line("mov $r0, $r1");
             break;
         case OpCodes::FTI:
-            L("fti");
+            Line("fti");
             break;
         case OpCodes::ITF:
-            L("itf");
+            Line("itf");
             break;
     }
 }
@@ -245,14 +197,14 @@ void XASMGenerator::GenerateModifyInst(const TACModifyInst& inst)
 
 void XASMGenerator::GenerateCondJumpInst(const TACCondJumpInst& inst)
 {
-    L("cmp", "$r0,", "$r1");
-    L("jge", ".bb1");
-    L("jmp", ".bb2");
+    Line("cmp $r0, $r1");
+    Line("jge .bb1");
+    Line("jmp .bb2");
 }
 
 void XASMGenerator::GenerateReturnInst(const TACReturnInst& inst)
 {
-    L("ret");
+    Line("ret");
 }
 
 
