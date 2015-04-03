@@ -1,5 +1,5 @@
 /*
- * MsgBox.h
+ * MsgBox.c
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -16,16 +16,16 @@
 // INVOCATIONS
 
 // int messageBox(String title, String text, int bitFlags)
-void messageBox(xvm_env env)
+void messageBox(XVM_Env env)
 {
-    int result = MessageBox(NULL, xvm_param_string(env, 2), xvm_param_string(env, 1), xvm_param_int(env, 3));
-    XVM_RETURN_INT(3, result);
+    int result = MessageBox(NULL, XVM_ParamString(env, 2), XVM_ParamString(env, 1), XVM_ParamInt(env, 3));
+    XVM_ReturnInt(env, 3, result);
 }
 
 
 // EXPORT
 
-static xvm_invocation procList[] =
+static XVM_Invocation procList[] =
 {
     { "messageBox", messageBox },
 };
