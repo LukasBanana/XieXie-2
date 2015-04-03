@@ -29,6 +29,8 @@ class BasicBlock
     
     public:
         
+        /* === Structures === */
+
         //! Edge of the directed control flow graph.
         struct Edge
         {
@@ -70,8 +72,13 @@ class BasicBlock
             };
         };
 
-        using PredListType = std::vector<BasicBlock*>;
-        using SuccListType = std::vector<Edge>;
+        /* === Types === */
+
+        using BlockList = std::vector<BasicBlock*>;
+        using EdgeList  = std::vector<Edge>;
+        using VisitSet  = std::set<const BasicBlock*>;
+
+        /* === Functions === */
 
         template <typename T, typename... Args> T* MakeInst(Args&&... args)
         {
@@ -97,19 +104,26 @@ class BasicBlock
         */
         bool VerifyProcReturn() const;
 
-        //! Returns true if 'succ' is a successor of this basic block.
-        bool IsSuccessor(const BasicBlock& succ) const;
+        /**
+        Returns true if 'succ' is a successor of this basic block.
+        \param[in] succ Specifies the basic block, which is to be tested as a successor of this basic block.
+        \param[in] ignoreSet Optional pointer to a visit-set of basic blocks, which are to be ignored.
+        If the search algorithm finds any of the blocks in 'ignoreSet', the algorithm terminates and returns false.
+        */
+        bool IsSuccessor(const BasicBlock& succ, const VisitSet* ingoreSet = nullptr) const;
 
         //! Returns the predecessor list.
-        inline const PredListType& GetPred() const
+        inline const BlockList& GetPred() const
         {
             return pred_;
         }
         //! Returns the successor list.
-        inline const SuccListType& GetSucc() const
+        inline const EdgeList& GetSucc() const
         {
             return succ_;
         }
+
+        /* === Members === */
 
         //! Basic block label.
         std::string label;
@@ -122,18 +136,18 @@ class BasicBlock
 
     private:
         
-        bool HasVisited(std::set<const BasicBlock*>& visitSet) const;
+        bool HasVisited(VisitSet& visitSet) const;
 
-        void Merge(std::set<const BasicBlock*>& visitSet, bool& hasChanged);
-        void Purge(std::set<const BasicBlock*>& visitSet, bool& hasChanged);
-        void Unify(std::set<const BasicBlock*>& visitSet, bool& hasChanged);
+        void Merge(VisitSet& visitSet, bool& hasChanged);
+        void Purge(VisitSet& visitSet, bool& hasChanged);
+        void Unify(VisitSet& visitSet, bool& hasChanged);
 
-        bool VerifyProcReturn(std::set<const BasicBlock*>& visitSet) const;
+        bool VerifyProcReturn(VisitSet& visitSet) const;
 
-        bool IsSuccessor(const BasicBlock* succ, std::set<const BasicBlock*>& visitSet) const;
+        bool IsSuccessor(const BasicBlock* succ, VisitSet& visitSet, const VisitSet* ingoreSet) const;
 
-        PredListType pred_; //!< Predecessor reference list.
-        SuccListType succ_; //!< Successor reference list.
+        BlockList pred_;    //!< Predecessor reference list.
+        EdgeList succ_;     //!< Successor reference list.
 
 };
 

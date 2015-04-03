@@ -11,9 +11,6 @@
 
 #include "BasicBlock.h"
 
-#include <set>
-#include <vector>
-
 
 namespace ControlFlowGraph
 {
@@ -25,25 +22,53 @@ class CFGTopDownTraverser
     
     public:
         
+        //! Search algorithm modes.
+        enum class SearchModes
+        {
+            DepthFirstSearch,   //!< Depth-first-search (DFS).
+            BreadthFirstSearch, //!< Bredth-first-search (BFS).
+        };
+
         virtual ~CFGTopDownTraverser();
 
-        void TraverseCFG(BasicBlock& cfg);
+        /**
+        Traverses the entire connected control-flow-graph and calls 'OnVisit' when a basic block is visited.
+        \param[in] cfg Specifies the entry point of the control-flow-graph.
+        \param[in] searchMode Specifies the mode for the search algorithm. By default depth-first-search (DFS).
+        \see OnVisit
+        */
+        void TraverseCFG(BasicBlock& cfg, const SearchModes searchMode = SearchModes::DepthFirstSearch);
 
     protected:
         
+        //! Callback when a basic block is visited.
         virtual void OnVisit(BasicBlock& bb);
 
     private:
         
-        void TraverseBlock(BasicBlock& bb);
+        /* === Functions === */
+
+        //! Traverses the next block in the queue and returns false if the queue is empty.
+        void TraverseQueue();
+        //! Visits the specified block and returns true if visitation succeeded.
+        void VisitBlock(BasicBlock& bb);
+
+        //! Appends the specified block to the queue, if it's not already contained.
+        void AppendToQueue(BasicBlock::BlockList& queue, BasicBlock& bb);
+        //! Appends all successors of the specified block to the queue.
+        void AppendSuccessorsToQueue(const BasicBlock& bb);
+
+        //! Returns true if the specified basic block is not a successor of any other block in the queue.
+        bool CanBeVisited(BasicBlock& bb) const;
+        //! Returns true if the specified block has already been visited
+        bool HasVisited(const BasicBlock& bb) const;
 
         /* === Members === */
 
-        using BlockQueue = std::vector<BasicBlock*>;
+        BasicBlock::VisitSet    visited_;
+        BasicBlock::BlockList   queue_;
 
-        std::set<const BasicBlock*> visitSet_;
-        std::vector<BlockQueue>     waitingQueue_;
-        //std::set<BasicBlock*>       pausedQueue_;
+        SearchModes             searchMode_ = SearchModes::DepthFirstSearch;
 
 };
 

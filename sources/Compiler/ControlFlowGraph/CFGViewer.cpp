@@ -15,24 +15,13 @@
 //!!!
 #define _DEB_CFG_TRAVERSER_
 #ifdef _DEB_CFG_TRAVERSER_
-#include "CFGTopDownTraverser.h"
+#include "CFGTopDownCollector.h"
 #endif
 
 
 namespace ControlFlowGraph
 {
 
-
-#ifdef _DEB_CFG_TRAVERSER_//!!!
-class Traverser : public CFGTopDownTraverser
-{
-    private:
-        void OnVisit(BasicBlock& bb) override
-        {
-            std::cout << bb.label << std::endl;
-        }
-};
-#endif
 
 void CFGViewer::ViewGraph(
     const BasicBlock& entryPoint, std::ostream& stream,
@@ -53,8 +42,10 @@ void CFGViewer::ViewGraph(
     blockIDs_.clear();
 
     #ifdef _DEB_CFG_TRAVERSER_//!!!
-    Traverser traverser;
-    traverser.TraverseCFG(const_cast<BasicBlock&>(entryPoint));
+    CFGTopDownCollector traverser;
+    auto list = traverser.CollectOrderedCFG(const_cast<BasicBlock&>(entryPoint));
+    for (auto bb : list)
+        std::cout << bb->label << std::endl;
     #endif
 }
 

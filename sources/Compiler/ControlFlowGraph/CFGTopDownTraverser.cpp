@@ -16,11 +16,18 @@ CFGTopDownTraverser::~CFGTopDownTraverser()
 {
 }
 
-void CFGTopDownTraverser::TraverseCFG(BasicBlock& cfg)
+void CFGTopDownTraverser::TraverseCFG(BasicBlock& cfg, const SearchModes searchMode)
 {
-    TraverseBlock(cfg);
-    visitSet_.clear();
-    waitingQueue_.clear();
+    /* Store configuration */
+    searchMode_ = searchMode;
+    
+    /* Append first basic block to the queue and start traversing the queue */
+    AppendToQueue(queue_, cfg);
+    TraverseQueue();
+
+    /* Clear containers */
+    visited_.clear();
+    queue_.clear();
 }
 
 
@@ -38,54 +45,78 @@ void CFGTopDownTraverser::OnVisit(BasicBlock& bb)
  * ======= Private: =======
  */
 
-void CFGTopDownTraverser::TraverseBlock(BasicBlock& bb)
+void CFGTopDownTraverser::TraverseQueue()
 {
-    /* Check if this basic block has already been visited */
-    if (visitSet_.find(&bb) != visitSet_.end())
-        return;
-
-    /* Check if current block can not yet be visited */
-    if (!waitingQueue_.empty())
+    while (!queue_.empty())
     {
-        /* Check if current block is a successor of any of the top-level waiting blocks */
-        for (const auto block : waitingQueue_.back())
+        for (auto it = queue_.begin(); it != queue_.end(); ++it)
         {
-            if (visitSet_.find(block) == visitSet_.end() && block->IsSuccessor(bb))
-                return;
+            /* Traverse right-most entry in the queue and remove it from the queue */
+            auto bb = *it;
+            if (CanBeVisited(*bb))
+            {
+                /* Visit this block, remove it from the queue, and append its successors to the queue */
+                VisitBlock(*bb);
+                it = queue_.erase(it);
+                AppendSuccessorsToQueue(*bb);
+                break;
+            }
         }
     }
+}
 
+void CFGTopDownTraverser::VisitBlock(BasicBlock& bb)
+{
     /* Visit this basic block */
-    visitSet_.insert(&bb);
+    visited_.insert(&bb);
     OnVisit(bb);
+}
 
-    /* Setup waiting queue */
-    size_t num = bb.GetSucc().size();
-    BlockQueue blockQueue(num);
+void CFGTopDownTraverser::AppendToQueue(BasicBlock::BlockList& queue, BasicBlock& bb)
+{
+    /* Append to queue, if not already contained and if not already visited */
+    if (!HasVisited(bb) && std::find(queue_.begin(), queue_.end(), &bb) == queue_.end())
+        queue.push_back(&bb);
+}
 
-    while (num-- > 0)
-        blockQueue[num] = bb.GetSucc()[num].succ;
-
-    if (!waitingQueue_.empty())
+void CFGTopDownTraverser::AppendSuccessorsToQueue(const BasicBlock& bb)
+{
+    switch (searchMode_)
     {
-        /* Add new and previous block queue into current waiting queue */
-        waitingQueue_.push_back(waitingQueue_.back());
-        auto& topQueue = waitingQueue_.back();
-        topQueue.insert(topQueue.end(), blockQueue.begin(), blockQueue.end());
-    }
-    else
-        waitingQueue_.push_back(blockQueue);
+        case SearchModes::BreadthFirstSearch:
+        {
+            /* Append all successors to the end of the queue */
+            for (auto succ : bb.GetSucc())
+                AppendToQueue(queue_, *succ);
+        }
+        break;
 
-    /* Visit successors */
-    for (size_t n = blockQueue.size(); n > 0; --n)
+        case SearchModes::DepthFirstSearch:
+        {
+            /* Append all successors to the beginning of the queue */
+            BasicBlock::BlockList tempQueue;
+            for (auto succ : bb.GetSucc())
+                AppendToQueue(tempQueue, *succ);
+            queue_.insert(queue_.begin(), tempQueue.begin(), tempQueue.end());
+        }
+    }
+}
+
+bool CFGTopDownTraverser::CanBeVisited(BasicBlock& bb) const
+{
+    /* Check if this block is a successor of any block in the queue (except itself) */
+    for (const auto block : queue_)
     {
-        auto block = waitingQueue_.back().back();
-        waitingQueue_.back().pop_back();
-        TraverseBlock(*block);
+        if (block != &bb && block->IsSuccessor(bb, &visited_))
+            return false;
     }
+    return true;
+}
 
-    /* Pop current waiting queue */
-    waitingQueue_.pop_back();
+bool CFGTopDownTraverser::HasVisited(const BasicBlock& bb) const
+{
+    /* Check if this basic block has already been visited */
+    return visited_.find(&bb) != visited_.end();
 }
 
 

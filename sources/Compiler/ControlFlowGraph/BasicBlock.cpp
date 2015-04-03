@@ -92,7 +92,7 @@ void BasicBlock::RemoveSucc(BasicBlock& block)
 
 void BasicBlock::Clean()
 {
-    std::set<const BasicBlock*> visitSet;
+    VisitSet visitSet;
     bool hasChanged = false;
 
     //do
@@ -113,14 +113,14 @@ void BasicBlock::Clean()
 
 bool BasicBlock::VerifyProcReturn() const
 {
-    std::set<const BasicBlock*> visitSet;
+    VisitSet visitSet;
     return VerifyProcReturn(visitSet);
 }
 
-bool BasicBlock::IsSuccessor(const BasicBlock& succ) const
+bool BasicBlock::IsSuccessor(const BasicBlock& succ, const VisitSet* ingoreSet) const
 {
-    std::set<const BasicBlock*> visitSet;
-    return IsSuccessor(&succ, visitSet);
+    VisitSet visitSet;
+    return IsSuccessor(&succ, visitSet, ingoreSet);
 }
 
 
@@ -128,7 +128,7 @@ bool BasicBlock::IsSuccessor(const BasicBlock& succ) const
  * ======= Private: =======
  */
 
-bool BasicBlock::HasVisited(std::set<const BasicBlock*>& visitSet) const
+bool BasicBlock::HasVisited(VisitSet& visitSet) const
 {
     if (visitSet.find(this) != visitSet.end())
         return true;
@@ -142,7 +142,7 @@ Cleans the entire basic block hierarchy for unecessary basic blocks.
 A successor is merged into its predecessor if they are the only links,
 i.e. when a basic block B has only a single successor, whose only predecessor is B.
 */
-void BasicBlock::Merge(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
+void BasicBlock::Merge(VisitSet& visitSet, bool& hasChanged)
 {
     /* Check if this basic block has already been visited */
     if (HasVisited(visitSet))
@@ -185,7 +185,7 @@ void BasicBlock::Merge(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
         bb->Merge(visitSet, hasChanged);
 }
 
-void BasicBlock::Purge(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
+void BasicBlock::Purge(VisitSet& visitSet, bool& hasChanged)
 {
     /* Check if this basic block has already been visited */
     if (HasVisited(visitSet))
@@ -213,7 +213,7 @@ void BasicBlock::Purge(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
 }
 
 //!INCOMPLETE!
-void BasicBlock::Unify(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
+void BasicBlock::Unify(VisitSet& visitSet, bool& hasChanged)
 {
     /* Check if this basic block has already been visited */
     if (HasVisited(visitSet))
@@ -239,7 +239,7 @@ void BasicBlock::Unify(std::set<const BasicBlock*>& visitSet, bool& hasChanged)
         bb->Purge(visitSet, hasChanged);
 }
 
-bool BasicBlock::VerifyProcReturn(std::set<const BasicBlock*>& visitSet) const
+bool BasicBlock::VerifyProcReturn(VisitSet& visitSet) const
 {
     /* Check if this basic block has already been visited */
     if (HasVisited(visitSet))
@@ -269,10 +269,14 @@ bool BasicBlock::VerifyProcReturn(std::set<const BasicBlock*>& visitSet) const
     return true;
 }
 
-bool BasicBlock::IsSuccessor(const BasicBlock* succ, std::set<const BasicBlock*>& visitSet) const
+bool BasicBlock::IsSuccessor(const BasicBlock* succ, VisitSet& visitSet, const VisitSet* ingoreSet) const
 {
+    /* Check if this block is contained in the ignore set */
+    if (ingoreSet != nullptr && ingoreSet->find(this) != ingoreSet->end())
+        return false;
+
     /* Check if this basic block has already been visited */
-    if (HasVisited(visitSet))
+    if (/*this == succ || */HasVisited(visitSet))
         return false;
     
     /* Check if 'succ' is a successor of this basic block */
@@ -285,7 +289,7 @@ bool BasicBlock::IsSuccessor(const BasicBlock* succ, std::set<const BasicBlock*>
     /* Visit successors */
     for (auto bb : succ_)
     {
-        if (bb->IsSuccessor(succ, visitSet))
+        if (bb->IsSuccessor(succ, visitSet, ingoreSet))
             return true;
     }
 
