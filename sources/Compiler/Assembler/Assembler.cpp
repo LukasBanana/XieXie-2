@@ -750,6 +750,24 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
                 byteCode_->AddInstr(Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodeSecondary), reg0, value));
             }
         }
+        else if (instr.opcodePrimary == OPCODE_CMP)
+        {
+            /* Parse second operand */
+            auto value = ParseOperand();
+
+            /* Add instruction */
+            byteCode_->AddInstr(Instr::MakeReg2(OPCODE_SUB2, Register::cf, reg0, value));
+        }
+        else if (instr.opcodePrimary == OPCODE_CMPF)
+        {
+            /* Parse second operand */
+            auto value = ParseFloatLiteral();
+            
+            /* Add instructions */
+            byteCode_->AddInstr(Instr::MakeReg1(OPCODE_MOVI, Register::cf, 0));
+            byteCode_->AddDataField(value);
+            byteCode_->AddInstr(Instr::MakeReg3(OPCODE_SUBF, Register::cf, reg0, Register::cf));
+        }
         else
             Error("invalid second operand for 2-register instruction (expected register)");
     }

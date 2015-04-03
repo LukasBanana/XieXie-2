@@ -133,29 +133,12 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
 
         if (errorReporter.HasErrors())
             hasError = true;
-        else
+        else if (optimize)
         {
-            /* Optimize */
-            if (optimize)
-            {
-                if (output.verbose)
-                    output.Message("optimize CFG ...");
-                Optimization::Optimizer::OptimizeProgram(classTrees);
-            }
-
-            /* Show flow graph */
-            if (showCFG)
-            {
-                ControlFlowGraph::CFGViewer viewer;
-
-                size_t i = 0;
-                for (const auto& tree : classTrees)
-                {
-                    if (output.verbose)
-                        output.Message("dump CFG class tree \"" + tree->GetClassDeclAST()->ident + "\"");
-                    viewer.ViewGraph(*tree);
-                }
-            }
+            /* Optimize CFG */
+            if (output.verbose)
+                output.Message("optimize CFG ...");
+            Optimization::Optimizer::OptimizeProgram(classTrees);
         }
 
         #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!!!
@@ -210,6 +193,20 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
         #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!!!
         }
         #endif
+    }
+
+    /* Show flow graph */
+    if (showCFG)
+    {
+        ControlFlowGraph::CFGViewer viewer;
+
+        size_t i = 0;
+        for (const auto& tree : classTrees)
+        {
+            if (output.verbose)
+                output.Message("dump CFG class tree \"" + tree->GetClassDeclAST()->ident + "\"");
+            viewer.ViewGraph(*tree);
+        }
     }
 
     /* Print out errors */

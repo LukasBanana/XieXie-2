@@ -12,12 +12,6 @@
 #include <algorithm>
 #include <fstream>
 
-//!!!
-//#define _DEB_CFG_TRAVERSER_
-#ifdef _DEB_CFG_TRAVERSER_
-#include "CFGTopDownCollector.h"
-#endif
-
 
 namespace ControlFlowGraph
 {
@@ -27,8 +21,7 @@ void CFGViewer::ViewGraph(
     const BasicBlock& entryPoint, std::ostream& stream,
     const std::string& fontName, const int fontSize)
 {
-    stream_     = &stream;
-    idCounter_  = 0;
+    stream_ = &stream;
 
     WriteLine("digraph G {");
     WriteLine("node [shape=\"box\", fontname=\"" + fontName + "\", fontsize=\"" + ToStr(fontSize) + "\"];");
@@ -39,14 +32,7 @@ void CFGViewer::ViewGraph(
 
     WriteLine("}");
 
-    blockIDs_.clear();
-
-    #ifdef _DEB_CFG_TRAVERSER_//!!!
-    CFGTopDownCollector traverser;
-    auto list = traverser.CollectOrderedCFG(const_cast<BasicBlock&>(entryPoint));
-    for (auto bb : list)
-        std::cout << bb->label << std::endl;
-    #endif
+    blockLinks_.clear();
 }
 
 void CFGViewer::ViewGraph(
@@ -79,30 +65,25 @@ void CFGViewer::WriteLine(const std::string& line)
 void CFGViewer::DefineBlock(const BasicBlock& block)
 {
     /* Check if block has already been traversed (for defining) */
-    auto it = blockIDs_.find(&block);
-    if (it != blockIDs_.end())
+    auto it = blockLinks_.find(&block);
+    if (it != blockLinks_.end())
         return;
 
     /* Build label string for this block node */
-    auto id = ++idCounter_;
-    blockIDs_[&block].id = id;
+    blockLinks_[&block] = false;
 
     std::string instrList;
     for (const auto& inst : block.insts)
         instrList += inst->ToString() + "\\l";
 
     /* Write graph node for this block */
-    auto blockID = "bb" + ToStr(id);
+    auto blockID = GetBlockID(block);
     auto blockLabel = "<" + blockID + ">";
 
     if (!block.label.empty())
         blockLabel += "\\n" + block.label;
 
     WriteLine(blockID + " [label=\"" + blockLabel + "\\n" + instrList + "\"];");
-
-    #ifdef _DEB_CFG_TRAVERSER_//!!!
-    const_cast<BasicBlock&>(block).label = blockID;
-    #endif
 
     /* Travers sucessors */
     for (const auto& succ : block.GetSucc())
@@ -112,13 +93,13 @@ void CFGViewer::DefineBlock(const BasicBlock& block)
 void CFGViewer::LinkBlock(const BasicBlock& block)
 {
     /* Check if block has already been traversed (for linking) */
-    auto it = blockIDs_.find(&block);
-    if (it == blockIDs_.end())
+    auto it = blockLinks_.find(&block);
+    if (it == blockLinks_.end())
         return;
 
-    if (it->second.linked)
+    if (it->second)
         return;
-    it->second.linked = true;
+    it->second = true;
 
     if (!block.GetSucc().empty())
     {
@@ -142,8 +123,7 @@ void CFGViewer::LinkBlock(const BasicBlock& block)
 
 std::string CFGViewer::GetBlockID(const BasicBlock& block) const
 {
-    auto it = blockIDs_.find(&block);
-    return it != blockIDs_.end() ? "bb" + ToStr(it->second.id) : "bb";
+    return "bb" + ToStr(block.id);
 }
 
 

@@ -145,22 +145,23 @@ bool XASMGenerator::IsBlockInQueue(const BasicBlock& bb) const
     return false;
 }
 
+//!!! Automatic Indentation is INCOMPLETE!!!
 void XASMGenerator::PushIndentBlock(const BasicBlock& bb)
 {
-    if (IsBlockInQueue(bb))
+    /*if ( ( blockIndentStack_.empty() || blockIndentStack_.top() != &bb ) && IsBlockInQueue(bb) )
     {
         IncIndent();
         blockIndentStack_.push(&bb);
-    }
+    }*/
 }
 
 void XASMGenerator::PopIndentBlock(const BasicBlock& bb)
 {
-    if (!blockIndentStack_.empty() && blockIndentStack_.top() == &bb)
+    /*if (!blockIndentStack_.empty() && blockIndentStack_.top() == &bb)
     {
         DecIndent();
         blockIndentStack_.pop();
-    }
+    }*/
 }
 
 /* --- Code Generation --- */
@@ -195,7 +196,7 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const std::string& ident)
         /* Assign ID number to all basic blocks in the current CFG */
         size_t id = 0;
         for (auto bb : basicBlocks_)
-            bb->id = ++id;
+            bb->id = id++;
 
         /* Generate code for each block */
         for (auto it = basicBlocks_.begin(), itNext = it; it != basicBlocks_.end(); it = itNext)
@@ -216,6 +217,7 @@ void XASMGenerator::GenerateBlock(const BasicBlock& bb)
 {
     PopIndentBlock(bb);
 
+    /* Write local label for this block */
     LocalLabel("bb" + std::to_string(bb.id));
 
     /* Generate code for each instruction */
@@ -414,6 +416,8 @@ void XASMGenerator::GenerateCondJumpInst(const TACCondJumpInst& inst)
 
 void XASMGenerator::GenerateReturnInst(const TACReturnInst& inst)
 {
+    if (inst.hasVar)
+        Line("mov $ar, " + Reg(inst.src));
     Line("ret");
 }
 
