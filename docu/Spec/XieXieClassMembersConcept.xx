@@ -1,0 +1,27 @@
+
+class A {
+	void f(D obj) {
+		obj.procPublic() // ok, D.procPublic is public
+		obj.procPrivate() // ok, A is a member of D
+	}
+}
+class B : A {
+	void g(D obj) {
+		obj.procPublic() // ok, D.procPublic is public
+		obj.procPrivate() // ok, B is a member of D
+	}
+}
+class C : A {
+	void h(D obj) {
+		obj.procPublic() // ok, D.procPublic is public
+		obj.procPrivate() // error, C is not a member of D, although C inherits from A
+	}
+}
+
+class D {
+public:
+	void procPublic() {}
+private:
+	member A, B
+	void procPrivate() {}
+}
