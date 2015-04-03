@@ -11,6 +11,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #ifndef _DISABLE_SHELL_
 #   define _DISABLE_SHELL_
@@ -703,8 +704,14 @@ class ByteCode
         //! Export address structure.
         struct ExportAddress
         {
-            std::string name;
-            unsigned int address;
+            std::string     label;
+            unsigned int    address;
+        };
+
+        //! Import address structure.
+        struct ImportAddress
+        {
+            std::vector<size_t> indices;
         };
 
         ByteCode(const ByteCode&) = delete;
@@ -790,9 +797,23 @@ class ByteCode
         }
 
         //! Adds a new export address.
-        void AddExportAddress(const std::string& name, unsigned int address)
+        void AddExportAddress(const std::string& label, unsigned int address)
         {
-            exportAddresses_.push_back({ name, address });
+            exportAddresses_.push_back({ label, address });
+        }
+
+        //! Adds a new import address.
+        void AddImportAddress(const std::string& label)
+        {
+            importAddresses_[label];
+        }
+
+        //! Assigns the specified instruction index to the import address specified by 'label'.
+        void AssignImportAddress(const std::string& label, size_t index)
+        {
+            auto it = importAddresses_.find(label);
+            if (it != importAddresses_.end())
+                it->second.indices.push_back(index);
         }
 
         //! Adds a new invocation identifier.
@@ -852,7 +873,7 @@ class ByteCode
                     xvm_export_address_setup(
                         exportAddr,
                         addr.address,
-                        xvm_string_create_from(addr.name.c_str())
+                        xvm_string_create_from(addr.label.c_str())
                     );
                 }
             }
@@ -880,16 +901,19 @@ class ByteCode
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack);
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const std::string& entryPoint);
 
-        xvm_bytecode                byteCode_;
+        xvm_bytecode                            byteCode_;
 
         //! Array list of all instructions.
-        std::vector<Instruction>    instructions_;
+        std::vector<Instruction>                instructions_;
 
         //! Array list of all export addresses.
-        std::vector<ExportAddress>  exportAddresses_;
+        std::vector<ExportAddress>              exportAddresses_;
+
+        //! Map of all import addresses.
+        std::map<std::string, ImportAddress>    importAddresses_;
 
         //! Array list of all invocation identifiers.
-        std::vector<std::string>    invokeIdentifiers_;
+        std::vector<std::string>                invokeIdentifiers_;
 
 };
 

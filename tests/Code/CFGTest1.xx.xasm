@@ -1,6 +1,6 @@
 ; XieXie Assembler File (XASM)
 ; XieXie Compiler Version 2.0 Alpha
-; Generated at 2015-04-03 18:13:22
+; Generated at 2015-04-03 21:42:18
 
 ; <------- CLASS "Object" ------->
 
@@ -18,175 +18,50 @@ CTest.Pmain,I:
 	mov $r5, 0
 	mov $r6, 0
 	mov $r7, 0
-	mov $r8, 0
-	mov $r9, 0
+	mov $r8, $r9
 	mov $r10, 0
-	mov $r11, 0
-	mov $r12, 2
-	mov $r13, 8
-	mov $r14, 20
-	mov $r15, 3.5
-	mov $r16, 8.35
-	mov $r17, 4
-	mov $r18, $r19
-	mov $r20, 0
-	mov $cf, -5
-	jle .bb5
 	.bb1:
-	cmpf $r16, 10.0
-	jge .bb5
-	.bb2:
-	cmp $r18, 2
-	je .bb5
-	.bb3:
-	cmp $r18, 3
-	jne .bb6
-	.bb4:
-	mov $r20, 1
-	jmp .bb6
-	.bb5:
-	mov $r20, 2
-	.bb6:
-	cmp $r18, 5
-	jle .bb7
-	jmp .bb10
-	.bb7:
-	cmp $r18, 10
-	jge .bb9
-	.bb8:
-	mod $r21, $r20, $r19
-	add $r22, $r21, 2
-	mov $r21, 4
-	mul $r21, $r21, $r19
-	cmp $r22, $r21
-	jne .bb10
-	.bb9:
-	mov $r20, 2
-	jmp .bb11
-	.bb10:
-	mov $r20, 1
-	.bb11:
-	inc $r20
-	.bb12:
 	add $r0, $r0, 4
 	cmp $r0, 100
-	jle .bb42
-	.bb13:
+	jle .bb12
+	.bb2:
 	mov $r0, 42
-	mov $r23, 1
-	.bb14:
-	cmp $r23, 5
-	jg .bb16
-	.bb15:
-	sub $r0, $r0, 333
-	inc $r23
-	jmp .bb14
-	.bb16:
-	mov $r0, -6
-	stw $r18, ($lb) 8
-	mov $r18, 1
-	.bb17:
-	cmp $r18, 10
-	jg .bb25
-	.bb18:
-	add $r1, $r1, $r18
-	stw $r21, ($lb) 12
-	mov $r21, 2
-	mov $r20, 2
-	stw $r21, ($lb) 16
-	mov $r21, 3
-	.bb19:
-	cmp $r21, -4
-	jl .bb21
-	.bb20:
+	mov $r11, 1
+	.bb3:
+	cmp $r11, 10
+	jg .bb11
+	.bb4:
+	add $r1, $r1, $r11
+	mov $r8, 2
+	mov $r10, 2
+	mov $r12, 3
+	.bb5:
+	cmp $r12, -4
+	jl .bb7
+	.bb6:
 	inc $r0
-	sub $r21, $r21, 2
-	jmp .bb19
-	.bb21:
-	stw $r20, ($lb) 20
-	mov $r20, 0
-	.bb22:
-	cmp $r20, 4
-	jg .bb24
-	.bb23:
+	sub $r12, $r12, 2
+	jmp .bb5
+	.bb7:
+	mov $r13, 0
+	.bb8:
+	cmp $r13, 4
+	jg .bb10
+	.bb9:
 	dec $r0
-	inc $r20
-	jmp .bb22
-	.bb24:
-	inc $r18
-	jmp .bb17
-	.bb25:
-	mov $r0, 0
-	.bb26:
-	cmp $r0, 10
-	jge .bb28
-	.bb27:
-	add $r0, $r0, 6
-	jmp .bb26
-	.bb28:
-	mov $r0, 3
-	.bb29:
-	sll $r19, $r19, 1
-	cmp $r19, 3
-	jne .bb31
-	.bb30:
-	stw $r0, ($lb) 24
-	stw $r0, ($lb) 28
-	sub $r0, $r0, 5
-	ldw $r24, ($lb) 24
-	stw $r0, ($lb) 24
-	mov $r0, $r24
-	mov $ar, $r0
-	ret
-	.bb31:
-	sll $r0, $r0, 2
-	cmp $r0, 22
-	jge .bb32
-	jmp .bb29
-	.bb32:
-	mov $r0, 3
-	stw $r0, ($lb) 32
-	mov $r0, -2
-	.bb33:
-	cmp $r0, 10
-	jge .bb40
-	.bb34:
-	cmp $r0, 4
-	jne .bb39
-	.bb35:
-	cmp $r0, 6
-	jne .bb40
-	.bb36:
-	cmp $r0, 7
-	jne .bb38
-	.bb37:
-	div $r19, $r19, 3
-	jmp .bb39
-	.bb38:
-	jmp .bb38
-	.bb39:
-	add $r0, $r0, 4
-	jmp .bb33
-	.bb40:
-	ldw $r24, ($lb) 28
-	stw $r0, ($lb) 28
-	mov $r0, $r24
-	cmp $r0, 3
-	jne .bb41
-	.bb41:
-	mov $r19, -1
+	inc $r13
+	jmp .bb8
+	.bb10:
+	inc $r11
+	jmp .bb3
+	.bb11:
+	mov $r0, 29
 	mov $ar, 0
 	ret
-	.bb42:
-	ldw $r24, ($lb) 28
-	stw $r0, ($lb) 28
-	mov $r0, $r24
+	.bb12:
 	add $r1, $r1, $r0
-	ldw $r24, ($lb) 28
-	stw $r0, ($lb) 28
-	mov $r0, $r24
 	inc $r0
-	jmp .bb12
+	jmp .bb1
 
 
 

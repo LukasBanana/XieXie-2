@@ -7,7 +7,7 @@ lda $r0, @msg
 push $r0
 lda $r1, @title
 push $r1
-invk messageBox
+invk MsgBox.messageBox
 
 pop $r2
 mov $r3, 2
@@ -18,7 +18,7 @@ je .cancel
 	lda $r0, @msg_ok
 	push $r0
 	push $r1
-	invk messageBox
+	invk MsgBox.messageBox
 jmp .end
 .cancel:
 	; CANCEL button pressed
@@ -26,7 +26,7 @@ jmp .end
 	lda $r0, @msg_cancel
 	push $r0
 	push $r1
-	invk messageBox
+	invk MsgBox.messageBox
 .end:
 
 stop

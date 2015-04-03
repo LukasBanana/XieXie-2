@@ -27,7 +27,7 @@ void messageBox(XVM_Env env)
 
 static XVM_Invocation procList[] =
 {
-    { "messageBox", messageBox },
+    { "MsgBox.messageBox", messageBox },
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);

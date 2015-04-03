@@ -10,13 +10,13 @@ print:
 	ldw $r1, ($lb) -4
 	ldw $r0, ($lb) -8
 	push $r1
-	call <Print>
+	insc Print
 	push $r0
-	call <PrintInt>
+	insc PrintInt
 	lda $r1, @str_null
 	push $r1
-	call <PrintLn>
-	ret (0) 2
+	insc PrintLn
+	ret 2
 
 ; void main()
 main:
@@ -24,11 +24,10 @@ main:
 	push 10
 	push 7
 	call proc_a
-	pop $r0
 	
 	; print(x)
 	lda $r1, @str_1
-	push $r0
+	push $ar
 	push $r1
 	call print
 	
@@ -36,15 +35,14 @@ main:
 	push 10
 	push 7
 	call proc_b
-	pop $r0
 	
 	; print(y)
 	lda $r1, @str_2
-	push $r0
+	push $ar
 	push $r1
 	call print
 	
-	ret (0) 0
+	ret
 
 .import proc_a
 .import proc_b

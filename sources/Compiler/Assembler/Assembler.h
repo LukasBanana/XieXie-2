@@ -95,6 +95,8 @@ class Assembler
                 Pointer,        //!< '*'
                 Data,           //!< ( '.ascii' | '.word' | '.float' )
                 Export,         //!< '.export'
+                Import,         //!< '.import'
+                Pragma,         //!< '.pragma'
                 Mnemonic,       //!< ( 'mov' | 'call' | ... )
             };
 
@@ -145,6 +147,11 @@ class Assembler
             unsigned int    opcodeSecondary;
         };
 
+        struct Pragma
+        {
+            bool exportAll = false;
+        };
+
         /* === Functions === */
 
         void EstablishMnemonicTable();
@@ -190,6 +197,8 @@ class Assembler
         void ParseMnemonic();
         void ParseLabel();
         void ParseExportField();
+        void ParseImportField();
+        void ParsePragmaField();
 
         void ParseDataField();
         void ParseDataFieldWord();
@@ -223,6 +232,7 @@ class Assembler
         int ParseLocalAddress(bool isDataField);
         int ParseGlobalAddress(bool isDataField);
         int ParseAddressPointer(bool isDataField);
+        std::pair<std::string, unsigned int> ParseExportAddress();
         unsigned int ParseIntrinsicID();
 
         /* ------- Assembler ------- */
@@ -243,12 +253,17 @@ class Assembler
 
         unsigned int InvokeID(const std::string& ident);
 
+        void AcceptPragma(const std::string& cmd);
+
         /* === Members === */
+
+        Log&                                        log_;
+        ErrorReporter                               errorReporter_;
 
         std::string                                 line_;                  //!< Current source line.
         std::string::iterator                       lineIt_;                //!< Source line iterator.
 
-        char                                        chr_ = 0;
+        char                                        chr_                = 0;
         Token                                       tkn_;
 
         SyntaxAnalyzer::SourceArea                  sourceArea_;
@@ -263,16 +278,19 @@ class Assembler
         */
         std::string                                 globalLabel_;
 
-        std::map<std::string, size_t>               labelAddresses_;        //!< [ label name | instruction index ].
-        std::map<std::string, BackPatchAddr>        backPatchAddresses_;    //!< [ label name | back patch address ].
-        
+        //! [ label name | instruction index ].
+        std::map<std::string, size_t>               labelAddresses_;
+        //! [ label name | back patch address ].
+        std::map<std::string, BackPatchAddr>        backPatchAddresses_;
+
+        //! Only used if '.init(export)' was defined.
+        Pragma                                      pragma_;
+        std::vector<std::pair<std::string, size_t>> globalAddresses_;
+
         std::map<std::string, InstrCategory>        mnemonicTable_;
 
-        unsigned int                                invokeIDCounter_ = 0;
+        unsigned int                                invokeIDCounter_    = 0;
         std::map<std::string, unsigned int>         invokeIdents_;
-
-        Log&                                        log_;
-        ErrorReporter                               errorReporter_;
 
 };
 

@@ -21,9 +21,9 @@ namespace XieXie
 using namespace VirtualMachine;
 
 Assembler::Assembler(Log& log) :
+    log_        ( log                              ),
     byteCode_   ( std::make_shared< ByteCode   >() ),
-    intrinsics_ ( std::make_shared< Intrinsics >() ),
-    log_        ( log                              )
+    intrinsics_ ( std::make_shared< Intrinsics >() )
 {
     EstablishMnemonicTable();
 }
@@ -276,8 +276,8 @@ static bool IsIdentChar(char chr)
 static bool IsExtIdentChar(char chr)
 {
     return
-        chr == ',' ||
-        chr == '@' ||
+        chr == ',' || chr == '@' || chr == '~' ||
+        chr == '!' || chr == '?' ||
         IsDigit(chr) ||
         IsIdentChar(chr);
 }
@@ -391,13 +391,15 @@ Assembler::Token Assembler::ScanIdentifier()
     while (IsExtIdentChar(chr_))
         spell += TakeIt();
 
-    /* Check for data field */
+    /* Check for reserved identifiers */
     if (spell == ".ascii" || spell == ".word" || spell == ".float")
         return std::move(Token(Token::Types::Data, spell));
-
-    /* Check for export field */
     if (spell == ".export")
         return std::move(Token(Token::Types::Export, spell));
+    if (spell == ".import")
+        return std::move(Token(Token::Types::Import, spell));
+    if (spell == ".pragma")
+        return std::move(Token(Token::Types::Pragma, spell));
 
     /* Check for mnemonics */
     auto it = mnemonicTable_.find(spell);
@@ -557,6 +559,12 @@ void Assembler::ParseLine()
         case Token::Types::Export:
             ParseExportField();
             break;
+        case Token::Types::Import:
+            ParseImportField();
+            break;
+        case Token::Types::Pragma:
+            ParsePragmaField();
+            break;
         default:
             ErrorUnexpectedToken();
             break;
@@ -591,10 +599,36 @@ void Assembler::ParseExportField()
 {
     Accept(Token::Types::Export);
 
-    auto name = Accept(Token::Types::StringLiteral);
-    auto addr = static_cast<unsigned int>(ParseGlobalAddress(false));
+    auto addr = ParseExportAddress();
+    byteCode_->AddExportAddress(addr.first, addr.second);
+}
 
-    byteCode_->AddExportAddress(name.spell, addr);
+void Assembler::ParseImportField()
+{
+    Accept(Token::Types::Import);
+
+    auto label = ParseIdent();
+    byteCode_->AddImportAddress(label);
+}
+
+void Assembler::ParsePragmaField()
+{
+    Accept(Token::Types::Pragma);
+    Accept(Token::Types::LBracket);
+
+    if (tkn_.type != Token::Types::RBracket)
+    {
+        while (true)
+        {
+            AcceptPragma(ParseStringLiteral());
+            if (tkn_.type == Token::Types::Comma)
+                AcceptIt();
+            else
+                break;
+        }
+    }
+
+    Accept(Token::Types::RBracket);
 }
 
 void Assembler::ParseDataField()
@@ -1022,6 +1056,14 @@ int Assembler::ParseAddressPointer(bool isDataField)
     return AddressValue(label, BackPatchAddr::InstrUse::Types::Pointer, isDataField);
 }
 
+std::pair<std::string, unsigned int> Assembler::ParseExportAddress()
+{
+    /* Parse global address */
+    auto label = ParseIdent();
+    auto addr = AddressValue(label, BackPatchAddr::InstrUse::Types::Global, false);
+    return { label, static_cast<unsigned int>(addr) };
+}
+
 unsigned int Assembler::ParseIntrinsicID()
 {
     /* Parse intrinsic address label */
@@ -1043,9 +1085,16 @@ std::string Assembler::LocalLabel(const std::string& label) const
 
 void Assembler::AddLabel(std::string label)
 {
+    /* Get address for this label */
+    auto addr = byteCode_->NextInstrIndex();
+
     /* Store parent label */
     if (IsGlobalLabel(label))
+    {
         globalLabel_ = label;
+        if (pragma_.exportAll)
+            globalAddresses_.push_back({ label, addr });
+    }
     else
         label = LocalLabel(label);
 
@@ -1054,7 +1103,7 @@ void Assembler::AddLabel(std::string label)
         Error("multiple definitions of label '" + label + "'");
 
     /* Add new label */
-    labelAddresses_[label] = byteCode_->NextInstrIndex();
+    labelAddresses_[label] = addr;
 }
 
 int Assembler::AddressValue(std::string label, const BackPatchAddr::InstrUse::Types type, bool isDataField)
@@ -1150,6 +1199,11 @@ void Assembler::ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr,
 
 bool Assembler::CreateByteCode(const std::string& outFilename)
 {
+    /* Add automatic export addresses */
+    for (const auto addr : globalAddresses_)
+        byteCode_->AddExportAddress(addr.first, addr.second);
+
+    /* Finalize byte code */
     if (!byteCode_->Finalize())
     {
         log_.Error("failed to finalize byte code");
@@ -1170,6 +1224,14 @@ unsigned int Assembler::InvokeID(const std::string& ident)
         return id;
     }
     return it->second;
+}
+
+void Assembler::AcceptPragma(const std::string& cmd)
+{
+    if (cmd == "export all")
+        pragma_.exportAll = true;
+    else if (cmd == "export none")
+        pragma_.exportAll = false;
 }
 
 

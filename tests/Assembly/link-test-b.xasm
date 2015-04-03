@@ -9,15 +9,13 @@
 proc_a:
 	ldw $r0, ($lb) -4
 	ldw $r1, ($lb) -8
-	mul $r0, $r0, $r1
-	push $r0
-	ret (1) 2
+	mul $ar, $r0, $r1
+	ret 2
 
 ; int proc_b(int x, int y) { return x+y }
 proc_b:
 	ldw $r0, ($lb) -4
 	ldw $r1, ($lb) -8
-	add $r0, $r0, $r1
-	push $r0
-	ret (1) 2
+	add $ar, $r0, $r1
+	ret 2
 
