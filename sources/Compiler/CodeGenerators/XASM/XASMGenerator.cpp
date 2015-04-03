@@ -16,8 +16,25 @@ namespace CodeGenerator
 {
 
 
+using namespace std::placeholders;
+
+static RegisterAllocator::RegList XASMRegList()
+{
+    return RegisterAllocator::RegList
+    {
+        "$r0", "$r1", "$r2", "$r3", "$r4", "$r5", "$r6", "$r7", "$r8", "$r9",
+        "$r10", "$r11", "$r12", "$r13", "$r14", "$r15", "$r16", "$r17", "$r18", "$r19",
+        "$r20", "$r21", "$r22", "$r23", "$r24"
+    };
+}
+
 XASMGenerator::XASMGenerator(std::ostream& outputStream, const std::string& indentStr) :
-    AsmGenerator{ outputStream, indentStr }
+    AsmGenerator{ outputStream, indentStr },
+    regAlloc_{
+        XASMRegList(),
+        std::bind(&XASMGenerator::SaveReg, this, _1, _2),
+        std::bind(&XASMGenerator::LoadReg, this, _1, _2)
+    }
 {
 }
 
@@ -93,9 +110,17 @@ std::string XASMGenerator::Reg(const TACVar& var)
         return var.ToString();
     if (!var.IsValid())
         ErrorIntern("invalid ID for TAC variable");
+    return regAlloc_.Reg(var);
+}
 
-    //!!!!!!!!
-    return "$r" + std::to_string(var.id - 1);
+void XASMGenerator::SaveReg(const RegisterAllocator::RegIdent& reg, int location)
+{
+    //...
+}
+
+void XASMGenerator::LoadReg(const RegisterAllocator::RegIdent& reg, int location)
+{
+    //...
 }
 
 /* --- Block References --- */
@@ -185,6 +210,8 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
 
 void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const std::string& ident)
 {
+    regAlloc_.Reset();
+
     Comment(NameMangling::DisplayLabel(ident));
 
     GlobalLabel(ident);

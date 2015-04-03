@@ -11,6 +11,7 @@
 
 #include "ClassTree.h"
 #include "../AsmGenerator.h"
+#include "CodeGenerators/RegisterAllocator.h"
 #include "ErrorReporter.h"
 
 #include "TACCopyInst.h"
@@ -61,6 +62,9 @@ class XASMGenerator final : public AsmGenerator
         /* --- Register Allocation --- */
 
         std::string Reg(const TACVar& var);
+
+        void SaveReg(const RegisterAllocator::RegIdent& reg, int location);
+        void LoadReg(const RegisterAllocator::RegIdent& reg, int location);
 
         /* --- Block References --- */
 
@@ -117,6 +121,8 @@ class XASMGenerator final : public AsmGenerator
         void GenerateDirectJump(const BasicBlock& bb);
 
         /* === Members === */
+
+        RegisterAllocator                       regAlloc_;
 
         BasicBlock::BlockList                   basicBlocks_;
 
