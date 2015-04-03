@@ -15,7 +15,7 @@ namespace Optimization
 {
 
 
-void Optimizer::OptimizeProgram(std::vector<std::unique_ptr<ClassTree>>& classTrees)
+void Optimizer::OptimizeProgram(std::vector<ClassTreePtr>& classTrees)
 {
     for (auto& ct : classTrees)
     {

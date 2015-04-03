@@ -45,6 +45,8 @@ class AsmGenerator
         void Line(const std::string& line);
         //! Writes a blank line.
         void Blank();
+        //! Writes 'num' blank lines.
+        void Blanks(size_t num);
 
         //! Increments the indentation.
         void IncIndent();

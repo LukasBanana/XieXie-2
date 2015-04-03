@@ -65,7 +65,7 @@ void ClassTree::DeleteBasicBlock(BasicBlock* basicBlock)
     /* Remove basic block from main list */
     auto it = std::find_if(
         basicBlocks_.begin(), basicBlocks_.end(),
-        [&basicBlock](const std::unique_ptr<BasicBlock>& bb)
+        [&basicBlock](const BasicBlockPtr& bb)
         {
             return bb.get() == basicBlock;
         }

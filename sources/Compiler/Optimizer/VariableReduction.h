@@ -31,11 +31,11 @@ class VariableReduction : public Optimizer
 
     private:
         
-        void TransformInst(std::unique_ptr<TACInst>& inst);
-        void TransformCopyInst(std::unique_ptr<TACInst>& inst);
-        void TransformModifyInst(std::unique_ptr<TACInst>& inst);
-        void TransformCondJumpInst(std::unique_ptr<TACInst>& inst);
-        void TransformReturnInst(std::unique_ptr<TACInst>& inst);
+        void TransformInst(TACInstPtr& inst);
+        void TransformCopyInst(TACInstPtr& inst);
+        void TransformModifyInst(TACInstPtr& inst);
+        void TransformCondJumpInst(TACInstPtr& inst);
+        void TransformReturnInst(TACInstPtr& inst);
 
         void ReadVar(const TACVar& var, TACInst& inst);
         void WriteVar(TACVar var, TACInst& inst);

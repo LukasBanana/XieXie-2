@@ -13,7 +13,7 @@
 #include <fstream>
 
 //!!!
-#define _DEB_CFG_TRAVERSER_
+//#define _DEB_CFG_TRAVERSER_
 #ifdef _DEB_CFG_TRAVERSER_
 #include "CFGTopDownCollector.h"
 #endif

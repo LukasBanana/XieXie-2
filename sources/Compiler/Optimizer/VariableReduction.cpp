@@ -32,7 +32,7 @@ void VariableReduction::Transform(BasicBlock& basicBlock)
  * ======= Private: =======
  */
 
-void VariableReduction::TransformInst(std::unique_ptr<TACInst>& inst)
+void VariableReduction::TransformInst(TACInstPtr& inst)
 {
     switch (inst->Type())
     {
@@ -51,7 +51,7 @@ void VariableReduction::TransformInst(std::unique_ptr<TACInst>& inst)
     }
 }
 
-void VariableReduction::TransformCopyInst(std::unique_ptr<TACInst>& inst)
+void VariableReduction::TransformCopyInst(TACInstPtr& inst)
 {
     auto copyInst = static_cast<TACCopyInst*>(inst.get());
 
@@ -60,7 +60,7 @@ void VariableReduction::TransformCopyInst(std::unique_ptr<TACInst>& inst)
     ReadVar(copyInst->src, *inst);
 }
 
-void VariableReduction::TransformModifyInst(std::unique_ptr<TACInst>& inst)
+void VariableReduction::TransformModifyInst(TACInstPtr& inst)
 {
     auto modifyInst = static_cast<TACModifyInst*>(inst.get());
 
@@ -70,7 +70,7 @@ void VariableReduction::TransformModifyInst(std::unique_ptr<TACInst>& inst)
     ReadVar(modifyInst->srcRhs, *inst);
 }
 
-void VariableReduction::TransformCondJumpInst(std::unique_ptr<TACInst>& inst)
+void VariableReduction::TransformCondJumpInst(TACInstPtr& inst)
 {
     auto jumpInst = static_cast<TACCondJumpInst*>(inst.get());
 
@@ -79,7 +79,7 @@ void VariableReduction::TransformCondJumpInst(std::unique_ptr<TACInst>& inst)
     ReadVar(jumpInst->srcRhs, *inst);
 }
 
-void VariableReduction::TransformReturnInst(std::unique_ptr<TACInst>& inst)
+void VariableReduction::TransformReturnInst(TACInstPtr& inst)
 {
     auto returnInst = static_cast<TACReturnInst*>(inst.get());
 

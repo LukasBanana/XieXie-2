@@ -125,14 +125,17 @@ class BasicBlock
 
         /* === Members === */
 
+        //! Basic block ID number. Valid IDs begin with 1.
+        size_t                                      id = 0;
+
         //! Basic block label.
-        std::string label;
+        std::string                                 label;
 
         //! TAC instructions.
-        std::vector<std::unique_ptr<ThreeAddressCodes::TACInst>> insts;
+        std::vector<ThreeAddressCodes::TACInstPtr>  insts;
 
         //! Bit mask of the basic block flags.
-        BitMask flags;
+        BitMask                                     flags;
 
     private:
         
@@ -150,6 +153,9 @@ class BasicBlock
         EdgeList succ_;     //!< Successor reference list.
 
 };
+
+//! Unique pointer to BasicBlock.
+using BasicBlockPtr = std::unique_ptr<BasicBlock>;
 
 
 } // /namespace ControlFlowGraph

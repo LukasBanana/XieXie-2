@@ -33,7 +33,7 @@ class Optimizer
 
         virtual void Transform(BasicBlock& basicBlock) = 0;
 
-        static void OptimizeProgram(std::vector<std::unique_ptr<ClassTree>>& classTrees);
+        static void OptimizeProgram(std::vector<ClassTreePtr>& classTrees);
 
 };
 

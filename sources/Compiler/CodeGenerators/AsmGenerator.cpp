@@ -38,6 +38,12 @@ void AsmGenerator::Blank()
         stream_ << indent_ << std::endl;
 }
 
+void AsmGenerator::Blanks(size_t num)
+{
+    while (num-- > 0)
+        Blank();
+}
+
 void AsmGenerator::IncIndent()
 {
     if (config.indentation)

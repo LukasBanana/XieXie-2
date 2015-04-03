@@ -33,10 +33,12 @@ class ClassTree
 
         void DeleteBasicBlock(BasicBlock* basicBlock);
 
-        const std::vector<std::unique_ptr<BasicBlock>>& GetBasicBlocks() const
+        //! Returns the list of all basic blocks.
+        const std::vector<BasicBlockPtr>& GetBasicBlocks() const
         {
             return basicBlocks_;
         }
+        //! Returns the list of all root basic blocks, i.e. the entry points of all procedures in this class tree.
         const std::map<std::string, BasicBlock*> GetRootBasicBlocks() const
         {
             return rootBasicBlocks_;
@@ -49,16 +51,20 @@ class ClassTree
         }
 
     private:
-
-        AbstractSyntaxTrees::ClassDeclStmnt&        classDeclAST_;
+        
+        //! Reference to the class declaration in the AST.
+        AbstractSyntaxTrees::ClassDeclStmnt&    classDeclAST_;
 
         //! List of all basic blocks in this class CFG.
-        std::vector<std::unique_ptr<BasicBlock>>    basicBlocks_;
+        std::vector<BasicBlockPtr>              basicBlocks_;
 
         //! References to the root of a basic block graph (e.g. for each procedure declaration).
-        std::map<std::string, BasicBlock*>          rootBasicBlocks_;
+        std::map<std::string, BasicBlock*>      rootBasicBlocks_;
 
 };
+
+//! Unique pointer to ClassTree.
+using ClassTreePtr = std::unique_ptr<ClassTree>;
 
 
 } // /namespace ControlFlowGraph

@@ -27,7 +27,7 @@ void ConstantPropagation::Transform(BasicBlock& basicBlock)
  * ======= Private: =======
  */
 
-void ConstantPropagation::TransformInst(std::unique_ptr<TACInst>& inst)
+void ConstantPropagation::TransformInst(TACInstPtr& inst)
 {
     switch (inst->Type())
     {
@@ -46,7 +46,7 @@ void ConstantPropagation::TransformInst(std::unique_ptr<TACInst>& inst)
     }
 }
 
-void ConstantPropagation::TransformCopyInst(std::unique_ptr<TACInst>& inst)
+void ConstantPropagation::TransformCopyInst(TACInstPtr& inst)
 {
     auto copyInst = static_cast<TACCopyInst*>(inst.get());
 
@@ -55,7 +55,7 @@ void ConstantPropagation::TransformCopyInst(std::unique_ptr<TACInst>& inst)
     PropagateConst(copyInst->dest, copyInst->src);
 }
 
-void ConstantPropagation::TransformModifyInst(std::unique_ptr<TACInst>& inst)
+void ConstantPropagation::TransformModifyInst(TACInstPtr& inst)
 {
     auto modifyInst = static_cast<TACModifyInst*>(inst.get());
 
@@ -81,7 +81,7 @@ void ConstantPropagation::TransformModifyInst(std::unique_ptr<TACInst>& inst)
     }
 }
 
-void ConstantPropagation::TransformCondJumpInst(std::unique_ptr<TACInst>& inst)
+void ConstantPropagation::TransformCondJumpInst(TACInstPtr& inst)
 {
     auto jumpInst = static_cast<TACCondJumpInst*>(inst.get());
 
@@ -90,7 +90,7 @@ void ConstantPropagation::TransformCondJumpInst(std::unique_ptr<TACInst>& inst)
     FetchConst(jumpInst->srcRhs);
 }
 
-void ConstantPropagation::TransformReturnInst(std::unique_ptr<TACInst>& inst)
+void ConstantPropagation::TransformReturnInst(TACInstPtr& inst)
 {
     auto returnInst = static_cast<TACReturnInst*>(inst.get());
 

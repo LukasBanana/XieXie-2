@@ -25,7 +25,7 @@ void VariableClean::Transform(BasicBlock& basicBlock)
     /* Remove all empty instructions */
     auto itEnd = std::remove_if(
         basicBlock.insts.begin(), basicBlock.insts.end(),
-        [](std::unique_ptr<TACInst>& inst) -> bool { return !inst; }
+        [](TACInstPtr& inst) -> bool { return !inst; }
     );
     basicBlock.insts.erase(itEnd, basicBlock.insts.end());
 }
@@ -35,7 +35,7 @@ void VariableClean::Transform(BasicBlock& basicBlock)
  * ======= Private: =======
  */
 
-void VariableClean::TransformInst(std::unique_ptr<TACInst>& inst)
+void VariableClean::TransformInst(TACInstPtr& inst)
 {
     switch (inst->Type())
     {
@@ -54,7 +54,7 @@ void VariableClean::TransformInst(std::unique_ptr<TACInst>& inst)
     }
 }
 
-void VariableClean::TransformCopyInst(std::unique_ptr<TACInst>& inst)
+void VariableClean::TransformCopyInst(TACInstPtr& inst)
 {
     auto copyInst = static_cast<TACCopyInst*>(inst.get());
 
@@ -68,7 +68,7 @@ void VariableClean::TransformCopyInst(std::unique_ptr<TACInst>& inst)
         inst = nullptr;
 }
 
-void VariableClean::TransformModifyInst(std::unique_ptr<TACInst>& inst)
+void VariableClean::TransformModifyInst(TACInstPtr& inst)
 {
     auto modifyInst = static_cast<TACModifyInst*>(inst.get());
 
@@ -83,7 +83,7 @@ void VariableClean::TransformModifyInst(std::unique_ptr<TACInst>& inst)
         inst = nullptr;
 }
 
-void VariableClean::TransformCondJumpInst(std::unique_ptr<TACInst>& inst)
+void VariableClean::TransformCondJumpInst(TACInstPtr& inst)
 {
     auto jumpInst = static_cast<TACCondJumpInst*>(inst.get());
 
@@ -92,7 +92,7 @@ void VariableClean::TransformCondJumpInst(std::unique_ptr<TACInst>& inst)
     ReadVar(jumpInst->srcRhs);
 }
 
-void VariableClean::TransformReturnInst(std::unique_ptr<TACInst>& inst)
+void VariableClean::TransformReturnInst(TACInstPtr& inst)
 {
     auto returnInst = static_cast<TACReturnInst*>(inst.get());
 

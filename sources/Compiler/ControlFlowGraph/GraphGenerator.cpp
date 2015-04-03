@@ -41,7 +41,7 @@ static bool IsVarFloat(const VarName& ast)
  * GraphGenerator class
  */
 
-std::vector<std::unique_ptr<ClassTree>> GraphGenerator::GenerateCFG(Program& program, ErrorReporter& errorReporter)
+std::vector<ClassTreePtr> GraphGenerator::GenerateCFG(Program& program, ErrorReporter& errorReporter)
 {
     programClassTrees_.clear();
     

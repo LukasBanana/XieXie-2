@@ -33,7 +33,7 @@ class GraphGenerator final : private Visitor
     
     public:
         
-        std::vector<std::unique_ptr<ClassTree>> GenerateCFG(Program& program, ErrorReporter& errorReporter);
+        std::vector<ClassTreePtr> GenerateCFG(Program& program, ErrorReporter& errorReporter);
 
     private:
         
@@ -119,16 +119,16 @@ class GraphGenerator final : private Visitor
 
         /* === Members === */
 
-        ErrorReporter*                          errorReporter_      = nullptr;
+        ErrorReporter*              errorReporter_      = nullptr;
 
-        std::vector<std::unique_ptr<ClassTree>> programClassTrees_;
-        ClassTree*                              classTree_          = nullptr;  //!< Reference to the current class tree.
+        std::vector<ClassTreePtr>   programClassTrees_;
+        ClassTree*                  classTree_          = nullptr;  //!< Reference to the current class tree.
 
-        SafeStack<BasicBlock*>                  stackBB_;
-        SafeStack<BasicBlock*>                  breakStackBB_;
-        SafeStack<BasicBlock*>                  iterStackBB_;
+        SafeStack<BasicBlock*>      stackBB_;
+        SafeStack<BasicBlock*>      breakStackBB_;
+        SafeStack<BasicBlock*>      iterStackBB_;
 
-        TACVarManager                           varMngr_;
+        TACVarManager               varMngr_;
 
 };
 

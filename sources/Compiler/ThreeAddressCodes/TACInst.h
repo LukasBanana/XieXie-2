@@ -14,6 +14,7 @@
 
 #include <string>
 #include <set>
+#include <memory>
 
 
 namespace ThreeAddressCodes
@@ -49,7 +50,12 @@ class TACInst
         {
             NOP,
 
+            /* Copy */
             MOV,
+            FTI,
+            ITF,
+
+            /* Modify */
             NOT,
             AND,
             OR,
@@ -62,12 +68,13 @@ class TACInst
             MOD,
             SLL,
             SLR,
-            
+
             FADD,
             FSUB,
             FMUL,
             FDIV,
-            
+
+            /* CondJump */
             CMPE,
             CMPNE,
             CMPL,
@@ -82,14 +89,16 @@ class TACInst
             FCMPG,
             FCMPGE,
 
-            FTI,
-            ITF,
-
+            /* Switch */
             SWITCH,
 
+            /* Return */
             RETURN,
 
+            /* DirectCall */
             DIRCALL,
+
+            /* IndirectCall */
             INDCALL,
         };
 
@@ -143,6 +152,9 @@ class TACInst
         }
 
 };
+
+//! Unique pointer to TACInst.
+using TACInstPtr = std::unique_ptr<TACInst>;
 
 
 } // /namespace ThreeAddressCodes

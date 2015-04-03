@@ -13,12 +13,18 @@
 #include "../AsmGenerator.h"
 #include "ErrorReporter.h"
 
+#include "TACCopyInst.h"
+#include "TACModifyInst.h"
+#include "TACCondJumpInst.h"
+#include "TACReturnInst.h"
+
 
 namespace CodeGenerator
 {
 
 
 using namespace ControlFlowGraph;
+using namespace ThreeAddressCodes;
 
 class XASMGenerator final : public AsmGenerator
 {
@@ -27,11 +33,29 @@ class XASMGenerator final : public AsmGenerator
         
         XASMGenerator(std::ostream& outputStream, const std::string& indentStr = "\t");
 
-        bool GenerateAsm(const std::vector<std::unique_ptr<ClassTree>>& classTrees, ErrorReporter& errorReporter);
+        bool GenerateAsm(const std::vector<ClassTreePtr>& classTrees, ErrorReporter& errorReporter);
 
     private:
         
+        using OpCodes = TACInst::OpCodes;
+
         /* === Functions === */
+
+        /* --- Comfort Templates --- */
+
+        template <typename Arg> std::string ArgStr(Arg arg);
+        template <> std::string ArgStr<std::string>(std::string arg);
+        template <> std::string ArgStr<const char*>(const char* arg);
+        template <> std::string ArgStr<char>(char arg);
+
+        template <typename... Args> std::string ConcatStr(Args... args);
+        template <> std::string ConcatStr();
+
+        template <typename Arg0, typename... NextArgs> std::string ConcatStrSub(Arg0 arg0, NextArgs... nextArgs);
+        template <typename Arg0> std::string ConcatStrSub(Arg0 arg0);
+
+        //! Writes a single line of code with the specified arguments as concatenated string.
+        template <typename... Args> void L(Args... args);
 
         /* --- Writing --- */
 
@@ -50,7 +74,15 @@ class XASMGenerator final : public AsmGenerator
 
         /* --- Code Generation --- */
 
-        //...
+        void GenerateClassTree(const ClassTree& classTree);
+        void GenerateProcedure(BasicBlock& cfg, const std::string& ident);
+        void GenerateBlock(const BasicBlock& bb);
+
+        void GenerateInst(const TACInst& inst);
+        void GenerateCopyInst(const TACCopyInst& inst);
+        void GenerateModifyInst(const TACModifyInst& inst);
+        void GenerateCondJumpInst(const TACCondJumpInst& inst);
+        void GenerateReturnInst(const TACReturnInst& inst);
 
         /* === Members === */
 
