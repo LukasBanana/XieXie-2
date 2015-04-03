@@ -39,7 +39,7 @@ static KeywordMapType GenerateKeywordMap()
         { "while",      Ty::While          },
         { "for",        Ty::For            },
         { "foreach",    Ty::ForEach        },
-        { "forever",    Ty::ForEver        },
+        { "repeat",     Ty::Repeat         },
 
         { "if",         Ty::If             },
         { "else",       Ty::Else           },

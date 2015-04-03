@@ -581,8 +581,8 @@ StmntPtr Parser::ParseStmnt()
             return ParseForOrForRangeStmnt();
         case Tokens::ForEach:
             return ParseForEachStmnt();
-        case Tokens::ForEver:
-            return ParseForEverStmnt();
+        case Tokens::Repeat:
+            return ParseRepeatStmnt();
         case Tokens::While:
             return ParseWhileStmnt();
         case Tokens::Do:
@@ -875,12 +875,6 @@ StmntPtr Parser::ParseForOrForRangeStmnt()
         return ParseForStmnt(false, ident);
     }
 
-    if (Is(Tokens::IntLiteral) || Is(Tokens::SubOp))
-    {
-        /* parse range-based for-loop */
-        return ParseForRangeStmnt(false);
-    }
-
     /* Parse regular for-loop */
     return ParseForStmnt(false);
 }
@@ -986,12 +980,20 @@ ForEachStmntPtr Parser::ParseForEachStmnt()
     return ast;
 }
 
-// for_ever_stmnt: 'forever' code_block;
-ForEverStmntPtr Parser::ParseForEverStmnt()
+// repeat_stmnt: 'repeat' INT_LITERAL? code_block;
+StmntPtr Parser::ParseRepeatStmnt()
 {
+    Accept(Tokens::Repeat);
+
+    if (Is(Tokens::IntLiteral))
+    {
+        /* parse range-based for-loop */
+        return ParseForRangeStmnt(false);
+    }
+
+    /* Parse for-ever statement */
     auto ast = Make<ForEverStmnt>();
 
-    Accept(Tokens::ForEver);
     ast->codeBlock = ParseCodeBlock();
 
     return ast;

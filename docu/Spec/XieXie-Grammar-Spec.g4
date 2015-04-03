@@ -47,8 +47,8 @@ branch_stmnt	: if_stmnt
 
 loop_stmnt	: for_stmnt
 			| for_each_stmnt
-			| for_ever_stmnt
 			| for_range_stmnt
+			| repeat_stmnt
 			| while_stmnt
 			| do_while_stmnt;
 
@@ -87,10 +87,10 @@ return_stmnt:	'return' expr?;
 
 // LOOP STATEMENTS
 for_stmnt:			'for' var_name_stmnt? ';' expr? ';' assign_stmnt? code_block;
-for_range_stmnt:	'for' (INT_LITERAL | IDENT ':' for_range '..' for_range ('->' INT_LITERAL)?) code_block;
+for_range_stmnt:	'for' IDENT ':' for_range '..' for_range ('->' INT_LITERAL)? code_block;
 for_each_stmnt:		'foreach' IDENT ':' expr code_block;
-for_ever_stmnt:		'forever' code_block;
 for_range:			NEGATION? INT_LITERAL;
+repeat_stmnt:		'repeat' INT_LITERAL? code_block;
 while_stmnt:		'while' expr code_block;
 do_while_stmnt:		'do' code_block 'while' expr;
 

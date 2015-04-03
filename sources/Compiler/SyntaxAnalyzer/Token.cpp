@@ -162,8 +162,8 @@ std::string Token::TypeToString(const Types type)
             return "for";
         case Types::ForEach:
             return "foreach";
-        case Types::ForEver:
-            return "forever";
+        case Types::Repeat:
+            return "repeat";
             
         case Types::If:
             return "if";

@@ -57,7 +57,7 @@ class Test {
 		y++*/
 		
 		// --- infinite loop ---
-		forever {
+		repeat {
 			i += 4
 			if i > 100 {
 				break
@@ -97,7 +97,7 @@ class Test {
 			for idx2 : 3 .. -4 -> 2 {
 				i++
 			}
-			for 5 {
+			repeat 5 {
 				i--
 			}
 		}

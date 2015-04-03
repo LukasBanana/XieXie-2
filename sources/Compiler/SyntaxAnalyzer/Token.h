@@ -97,7 +97,7 @@ class Token
             While,          //!< while
             For,            //!< for
             ForEach,        //!< foreach
-            ForEver,        //!< forever
+            Repeat,         //!< repeat
             
             If,             //!< if
             Else,           //!< else

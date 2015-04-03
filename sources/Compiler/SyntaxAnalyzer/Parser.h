@@ -122,7 +122,7 @@ class Parser
         ForStmntPtr             ParseForStmnt(bool parseComplete = true, const TokenPtr& identTkn = nullptr);
         ForRangeStmntPtr        ParseForRangeStmnt(bool parseComplete = true, const TokenPtr& identTkn = nullptr);
         ForEachStmntPtr         ParseForEachStmnt();
-        ForEverStmntPtr         ParseForEverStmnt();
+        StmntPtr                ParseRepeatStmnt();
         WhileStmntPtr           ParseWhileStmnt();
         DoWhileStmntPtr         ParseDoWhileStmnt();
 
