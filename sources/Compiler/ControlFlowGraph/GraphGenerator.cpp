@@ -12,7 +12,7 @@
 
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
-#include "TACCondJumpInst.h"
+#include "TACRelationInst.h"
 #include "TACReturnInst.h"
 #include "TACSwitchInst.h"
 #include "TACDirectCallInst.h"
@@ -559,7 +559,7 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
 
     /* Loop condition */
     bool isForwards = (ast->rangeStart <= ast->rangeEnd);
-    auto condInst = cond->MakeInst<TACCondJumpInst>(idxVar, ToStr(ast->rangeEnd));
+    auto condInst = cond->MakeInst<TACRelationInst>(idxVar, ToStr(ast->rangeEnd));
 
     if (isForwards)
         condInst->opcode = OpCodes::CMPLE;
@@ -1036,7 +1036,7 @@ void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
 
         /* Make instruction */
         auto isFloat = ast->lhsExpr->GetTypeDenoter()->IsFloat();
-        auto inst = BB()->MakeInst<TACCondJumpInst>();
+        auto inst = BB()->MakeInst<TACRelationInst>();
 
         inst->srcLhs = srcLhs;
         inst->srcRhs = srcRhs;

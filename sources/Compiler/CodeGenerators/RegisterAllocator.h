@@ -73,6 +73,7 @@ class RegisterAllocator
 
         /* === Members === */
 
+        RegList         regsOrig_;      //!< Original register list.
         RegList         regs_;          //!< List of all currently available registers.
 
         RegCallback     saveReg_;       //!< Callback to save a register onto stack (spill).

@@ -2,6 +2,8 @@
 ; XASM Link Test (Part A)
 ; 26/03/2015
 
+;.code
+
 call main
 stop
 
@@ -43,6 +45,8 @@ main:
 	call print
 	
 	ret
+
+;.data
 
 .import proc_a
 .import proc_b

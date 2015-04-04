@@ -6,7 +6,7 @@ extern class Object {}
 
 class Test {
 	
-	/*int pow2(int x) {
+	int pow2(int x) {
 		if x = 0 {
 			return 1
 		} else {
@@ -15,7 +15,7 @@ class Test {
 	}
 	float pow2(float x) {
 		return x*x
-	}*/
+	}
 	
 	int main(int p) {
 		
@@ -56,7 +56,7 @@ class Test {
 		}
 		y++*/
 		
-		// --- infinite loop ---
+		// --- unconditional loop ---
 		repeat {
 			i += 4
 			if i > 100 {
@@ -90,7 +90,7 @@ class Test {
 		}
 		i := -6*/
 		
-		for idx1 : 1 .. 10 {
+		/*for idx1 : 1 .. 10 {
 			j += idx1
 			x,y := 2
 			
@@ -101,7 +101,7 @@ class Test {
 				i--
 			}
 		}
-		i := 29
+		i := 29*/
 		
 		// --- while loop ---
 		/*i := 0
@@ -145,8 +145,8 @@ class Test {
 		// --- direct procedure call ---
 		//a := pow2(3)
 		//f := pow2(5.2)
-		//pow2(5)
-		//pow2(2.3)
+		pow2(5)
+		pow2(2.3)
 		
 		// --- foreach loop ---
 		//...

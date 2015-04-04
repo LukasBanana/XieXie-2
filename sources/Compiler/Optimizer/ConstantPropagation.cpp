@@ -7,7 +7,7 @@
 
 #include "ConstantPropagation.h"
 #include "StringModifier.h"
-#include "TACCondJumpInst.h"
+#include "TACRelationInst.h"
 #include "TACReturnInst.h"
 
 
@@ -37,8 +37,8 @@ void ConstantPropagation::TransformInst(TACInstPtr& inst)
         case TACInst::Types::Modify:
             TransformModifyInst(inst);
             break;
-        case TACInst::Types::CondJump:
-            TransformCondJumpInst(inst);
+        case TACInst::Types::Relation:
+            TransformRelationInst(inst);
             break;
         case TACInst::Types::Return:
             TransformReturnInst(inst);
@@ -81,13 +81,13 @@ void ConstantPropagation::TransformModifyInst(TACInstPtr& inst)
     }
 }
 
-void ConstantPropagation::TransformCondJumpInst(TACInstPtr& inst)
+void ConstantPropagation::TransformRelationInst(TACInstPtr& inst)
 {
-    auto jumpInst = static_cast<TACCondJumpInst*>(inst.get());
+    auto condInst = static_cast<TACRelationInst*>(inst.get());
 
     /* Propagate constant */
-    FetchConst(jumpInst->srcLhs);
-    FetchConst(jumpInst->srcRhs);
+    FetchConst(condInst->srcLhs);
+    FetchConst(condInst->srcRhs);
 }
 
 void ConstantPropagation::TransformReturnInst(TACInstPtr& inst)

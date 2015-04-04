@@ -37,14 +37,15 @@ class TACInst
         //! TAC instruction class types.
         enum class Types
         {
-            Copy,           //!< x := y; x := const; x := "string";
-            Modify,         //!< x := y + z; x := y - z; x := y * z; ...
-            Jump,           //!< jump to basic block
-            CondJump,       //!< conditional jump to basic block, if y = z, y != z, y < z, ...
-            Switch,         //!< switch to basic block
-            DirectCall,     //!< jump and link
-            IndirectCall,   //!< jump register and link
-            Return,         //!< procedure return
+            Copy,           //!< Set: x := y; x := const; x := "string";
+            Modify,         //!< Compute: x := y + z; x := y - z; x := y * z; ...
+            Relation,       //!< Compute relation: y = z, y != z, y < z, ...
+            Switch,         //!< Switch to basic block
+            DirectCall,     //!< Jump and link
+            IndirectCall,   //!< Jump register and link
+            Return,         //!< Procedure return
+            Parameter,      //!< Fetch parameter.
+            Argument,       //!< Assign argument to parameter.
         };
 
         //! TAC instruction opcodes.
@@ -77,7 +78,7 @@ class TACInst
             FDIV,
             FMOD,
 
-            /* CondJump */
+            /* Relation */
             CMPE,
             CMPNE,
             CMPL,

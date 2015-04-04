@@ -16,7 +16,7 @@
 
 #include "TACCopyInst.h"
 #include "TACModifyInst.h"
-#include "TACCondJumpInst.h"
+#include "TACRelationInst.h"
 #include "TACReturnInst.h"
 
 #include <stack>
@@ -116,7 +116,7 @@ class XASMGenerator final : public AsmGenerator
         void GenerateInst(const TACInst& inst);
         void GenerateCopyInst(const TACCopyInst& inst);
         void GenerateModifyInst(const TACModifyInst& inst);
-        void GenerateCondJumpInst(const TACCondJumpInst& inst);
+        void GenerateRelationInst(const TACRelationInst& inst);
         void GenerateReturnInst(const TACReturnInst& inst);
 
         void GenerateDirectJump(const BasicBlock& bb);

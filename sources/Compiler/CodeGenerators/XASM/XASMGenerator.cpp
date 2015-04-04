@@ -272,8 +272,8 @@ void XASMGenerator::GenerateInst(const TACInst& inst)
         case TACInst::Types::Modify:
             GenerateModifyInst(static_cast<const TACModifyInst&>(inst));
             break;
-        case TACInst::Types::CondJump:
-            GenerateCondJumpInst(static_cast<const TACCondJumpInst&>(inst));
+        case TACInst::Types::Relation:
+            GenerateRelationInst(static_cast<const TACRelationInst&>(inst));
             break;
         case TACInst::Types::Return:
             GenerateReturnInst(static_cast<const TACReturnInst&>(inst));
@@ -401,7 +401,7 @@ void XASMGenerator::GenerateModifyInst(const TACModifyInst& inst)
     EndLine();
 }
 
-void XASMGenerator::GenerateCondJumpInst(const TACCondJumpInst& inst)
+void XASMGenerator::GenerateRelationInst(const TACRelationInst& inst)
 {
     AssertSucc(2, "conditional jump instructions");
 

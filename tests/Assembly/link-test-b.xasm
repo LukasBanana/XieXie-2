@@ -2,9 +2,6 @@
 ; XASM Link Test (Part B)
 ; 26/03/2015
 
-.export proc_a
-.export proc_b
-
 ; int proc_a(int x, int y) { return x*y }
 proc_a:
 	ldw $r0, ($lb) -4
@@ -18,4 +15,7 @@ proc_b:
 	ldw $r1, ($lb) -8
 	add $ar, $r0, $r1
 	ret 2
+
+.export proc_a
+.export proc_b
 

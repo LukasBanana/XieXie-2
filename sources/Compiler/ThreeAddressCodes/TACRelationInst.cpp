@@ -1,11 +1,11 @@
 /*
- * TACCondJumpInst.cpp
+ * TACRelationInst.cpp
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "TACCondJumpInst.h"
+#include "TACRelationInst.h"
 #include "StringModifier.h"
 
 
@@ -13,23 +13,23 @@ namespace ThreeAddressCodes
 {
 
 
-TACCondJumpInst::TACCondJumpInst() :
+TACRelationInst::TACRelationInst() :
     TACInst{ OpCodes::CMPE }
 {
 }
-TACCondJumpInst::TACCondJumpInst(const TACVar& lhs, const TACVar& rhs) :
+TACRelationInst::TACRelationInst(const TACVar& lhs, const TACVar& rhs) :
     TACInst { OpCodes::CMPE },
     srcLhs  { lhs           },
     srcRhs  { rhs           }
 {
 }
 
-TACInst::Types TACCondJumpInst::Type() const
+TACInst::Types TACRelationInst::Type() const
 {
-    return Types::CondJump;
+    return Types::Relation;
 }
 
-std::string TACCondJumpInst::ToString() const
+std::string TACRelationInst::ToString() const
 {
     std::string op = "???";
 
@@ -65,12 +65,12 @@ std::string TACCondJumpInst::ToString() const
     return OpCodePrefix() + " | " + srcLhs.ToString() + " " + op + " " + srcRhs.ToString();
 }
 
-bool TACCondJumpInst::ReadsVar(const TACVar& var) const
+bool TACRelationInst::ReadsVar(const TACVar& var) const
 {
     return (srcLhs == var) || (srcRhs == var);
 }
 
-void TACCondJumpInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
+void TACRelationInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
 {
     if (flags(VarFlags::Source))
     {

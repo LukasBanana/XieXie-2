@@ -17,16 +17,19 @@ RegisterAllocator::RegisterAllocator(
     const RegCallback& saveRegCallback,
     const RegCallback& loadRegCallback,
     const MoveCallback& moveCallback) :
-        regs_   { availableRegisters },
-        saveReg_{ saveRegCallback    },
-        loadReg_{ loadRegCallback    },
-        moveReg_{ moveCallback       }
+        regs_       { availableRegisters },
+        saveReg_    { saveRegCallback    },
+        loadReg_    { loadRegCallback    },
+        moveReg_    { moveCallback       }
 {
     if (regs_.size() < 2)
         throw std::invalid_argument("number of available registers must be at least 2");
     if (!saveReg_ || !loadReg_ || !moveReg_)
         throw std::invalid_argument("invalid register callback passed to register allocator");
+
     std::reverse(regs_.begin(), regs_.end());
+
+    regsOrig_ = regs_;
 }
 
 RegisterAllocator::RegIdent RegisterAllocator::Reg(const TACVar& var)
@@ -51,8 +54,7 @@ RegisterAllocator::RegIdent RegisterAllocator::Reg(const TACVar& var)
 
 void RegisterAllocator::Reset()
 {
-    for (auto var : vars_)
-        regs_.push_back(std::move(var.second));
+    regs_ = regsOrig_;
     vars_.clear();
     spilledVars_.clear();
 }

@@ -6,7 +6,7 @@
  */
 
 #include "VariableClean.h"
-#include "TACCondJumpInst.h"
+#include "TACRelationInst.h"
 #include "TACReturnInst.h"
 
 #include <algorithm>
@@ -45,8 +45,8 @@ void VariableClean::TransformInst(TACInstPtr& inst)
         case TACInst::Types::Modify:
             TransformModifyInst(inst);
             break;
-        case TACInst::Types::CondJump:
-            TransformCondJumpInst(inst);
+        case TACInst::Types::Relation:
+            TransformRelationInst(inst);
             break;
         case TACInst::Types::Return:
             TransformReturnInst(inst);
@@ -83,13 +83,13 @@ void VariableClean::TransformModifyInst(TACInstPtr& inst)
         inst = nullptr;
 }
 
-void VariableClean::TransformCondJumpInst(TACInstPtr& inst)
+void VariableClean::TransformRelationInst(TACInstPtr& inst)
 {
-    auto jumpInst = static_cast<TACCondJumpInst*>(inst.get());
+    auto condInst = static_cast<TACRelationInst*>(inst.get());
 
     /* Propagate variable usage */
-    ReadVar(jumpInst->srcLhs);
-    ReadVar(jumpInst->srcRhs);
+    ReadVar(condInst->srcLhs);
+    ReadVar(condInst->srcRhs);
 }
 
 void VariableClean::TransformReturnInst(TACInstPtr& inst)

@@ -1,6 +1,6 @@
 ; XieXie Assembler File (XASM)
 ; XieXie Compiler Version 2.0 Alpha
-; Generated at 2015-04-03 21:49:11
+; Generated at 2015-04-04 14:20:00
 
 ; <------- CLASS "Object" ------->
 
@@ -23,45 +23,35 @@ CTest.Pmain,I:
 	.bb1:
 	add $r0, $r0, 4
 	cmp $r0, 100
-	jle .bb12
+	jle .bb3
 	.bb2:
 	mov $r0, 42
-	mov $r11, 1
-	.bb3:
-	cmp $r11, 10
-	jg .bb11
-	.bb4:
-	add $r1, $r1, $r11
-	mov $r8, 2
-	mov $r10, 2
-	mov $r12, 3
-	.bb5:
-	cmp $r12, -4
-	jl .bb7
-	.bb6:
-	inc $r0
-	sub $r12, $r12, 2
-	jmp .bb5
-	.bb7:
-	mov $r13, 0
-	.bb8:
-	cmp $r13, 4
-	jg .bb10
-	.bb9:
-	dec $r0
-	inc $r13
-	jmp .bb8
-	.bb10:
-	inc $r11
-	jmp .bb3
-	.bb11:
-	mov $r0, 29
 	mov $ar, 0
 	ret
-	.bb12:
+	.bb3:
 	add $r1, $r1, $r0
 	inc $r0
 	jmp .bb1
+
+; Test.pow2(float)
+CTest.Ppow2,F:
+	.bb0:
+	mulf $r0, $r1, $r1
+	mov $ar, $r0
+	ret
+
+; Test.pow2(int)
+CTest.Ppow2,I:
+	.bb0:
+	mov $cf, $r0
+	jne .bb2
+	.bb1:
+	mov $ar, 1
+	ret
+	.bb2:
+	mul $r1, $r0, $r0
+	mov $ar, $r1
+	ret
 
 
 

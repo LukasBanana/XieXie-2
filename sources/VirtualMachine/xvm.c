@@ -1793,6 +1793,36 @@ STATIC const xvm_export_address* xvm_bytecode_find_export_address(const xvm_byte
     return NULL;
 }
 
+#if 0 // !INCOMPLETE!
+
+/**
+Dynamically links the client byte-code to the main byte-code.
+This function will resolve as much import address (from both sides) as possible.
+\note If the program termination of 'byte_code' only works when the program counter
+runs at the end of the code, this may no longer work, when the client code is appended!
+\see xvm_bytecode_create_export_addresses
+\see xvm_bytecode_create_import_addresses
+*/
+STATIC int xvm_bytecode_dynamic_link(xvm_bytecode* byte_code, xvm_bytecode* client_byte_code)
+{
+    if ( byte_code == NULL || byte_code->instructions == NULL ||
+         client_byte_code == NULL || client_byte_code->instructions == NULL )
+    {
+        return 0;
+    }
+
+    // Move instruction indices for client code
+    int offset = (int)byte_code->num_instructions;
+    instr_t* client_instrs = client_byte_code->instructions;
+
+    for (unsigned int i = 0; i < client_byte_code->num_instructions; ++i)
+        client_instrs[i] = _xvm_instr_move(client_instrs[i], offset);
+
+    return 1;
+}
+
+#endif
+
 /**
 Allocates memory for the specified amount of byte code invocation identifiers and bindings.
 \param[in,out] byte_code Pointer to the byte code object.
@@ -2041,8 +2071,8 @@ n4 times:
 #define XBC_FORMAT_VERSION_1_31     131
 #define XBC_FORMAT_VERSION_1_32     132
 #define XBC_FORMAT_VERSION_1_33     133
-#define XBC_FORMAT_VERSION_1_34     134
-#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_34
+#define XBC_FORMAT_VERSION_1_34     134//!INCOMPLETE!
+#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_33
 
 /**
 Reads a byte code form file.
