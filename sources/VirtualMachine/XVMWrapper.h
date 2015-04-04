@@ -711,7 +711,7 @@ class ByteCode
         //! Import address structure.
         struct ImportAddress
         {
-            std::vector<size_t> indices;
+            std::vector<unsigned int> indices;
         };
 
         ByteCode(const ByteCode&) = delete;
@@ -809,7 +809,7 @@ class ByteCode
         }
 
         //! Assigns the specified instruction index to the import address specified by 'label'.
-        void AssignImportAddress(const std::string& label, size_t index)
+        void AssignImportAddress(const std::string& label, unsigned int index)
         {
             auto it = importAddresses_.find(label);
             if (it != importAddresses_.end())
@@ -827,7 +827,7 @@ class ByteCode
         \param[in] ident Specifies the invocation identifier.
         \param[in] proc Specifies the procedure callback. If this is null, the default dummy procedure is used.
         */
-        bool BindInvocation(const std::string& ident, XVM_INVOCATION_PROC proc)
+        bool BindInvocation(const std::string& ident, xvm_invocation_proc proc)
         {
             return xvm_bytecode_bind_invocation(&byteCode_, ident.c_str(), proc) != 0;
         }
@@ -877,6 +877,9 @@ class ByteCode
                     );
                 }
             }
+
+            /* Copy import-addresses into XVM byte code */
+            //...
 
             /* Coyp invocation identifiers into XVM byte code */
             size_t numInvokeIdents = invokeIdentifiers_.size();

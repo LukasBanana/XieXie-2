@@ -1472,13 +1472,15 @@ _xvm_env_internal;
 Invocation procedure signature. This is the signature for external procedure invocations in ANSI C.
 \param[in] env Environment handle to access the program state (e.g. the virtual stack).
 */
-typedef void (*XVM_INVOCATION_PROC)(xvm_env env);
+typedef void (*xvm_invocation_proc)(xvm_env env);
 
 //! Null invocation procedure -> throws EXITCODE_INVOCATION_VIOLATION.
 STATIC void _xvm_null_invocation(xvm_env env)
 {
     _xvm_exception_throw("invocation of unbound external procedure", EXITCODE_INVOCATION_VIOLATION);
 }
+
+#if 0
 
 //! Returns the argument as integer, specified by the parameter index (beginning with 1).
 STATIC int xvm_env_param_int(xvm_env env, unsigned int param_index)
@@ -1549,8 +1551,10 @@ STATIC void xvm_env_return_float(xvm_env env, unsigned int arg_size, float value
 #define XVM_RETURN_INT(value) xvm_env_push_int(env, value)
 #define XVM_RETURN_FLOAT(value) xvm_env_push_float(env, value)
 
+#endif
 
-/* ----- Byte code ----- */
+
+/* ----- Export Address ----- */
 
 //! XVM export procedure address structure.
 typedef struct
@@ -1565,9 +1569,106 @@ typedef struct
     Procedure ID name. This depends on the 'name mangling' of
     the high-level compiler (e.g. "main" or "_ZN@main"). By default empty.
     */
-    xvm_string      name;
+    xvm_string      label;
 }
 xvm_export_address;
+
+//! Initializes the export address with its default values.
+STATIC int xvm_export_address_init(xvm_export_address* export_address)
+{
+    if (export_address != NULL)
+    {
+        export_address->addr    = 0;
+        export_address->label   = xvm_string_init();
+        return 1;
+    }
+    return 0;
+}
+
+//! Initializes the export address with the specified startup values.
+STATIC int xvm_export_address_setup(xvm_export_address* export_address, unsigned int addr, xvm_string label)
+{
+    if (export_address != NULL)
+    {
+        export_address->addr    = addr;
+        export_address->label   = label;
+        return 1;
+    }
+    return 0;
+}
+
+//! Frees the memory for the specified export address object.
+STATIC int xvm_export_address_free(xvm_export_address* export_address)
+{
+    if (export_address != NULL)
+    {
+        export_address->addr = 0;
+        xvm_string_free(&(export_address->label));
+        return 1;
+    }
+    return 0;
+}
+
+
+/* ----- Import Address ----- */
+
+//! XVM import procedure address structure.
+typedef struct
+{
+    unsigned int    num_indices;    //!< Number of instructions which must be back-patched.
+    unsigned int*   indices;        //!< Instruction indices which require to be back-patched.
+    xvm_string      label;          //!< Address label to import. This must match any of the export addresses.
+}
+xvm_import_address;
+
+//! Initializes the import address with its default values.
+STATIC int xvm_import_address_init(xvm_import_address* import_address)
+{
+    if (import_address != NULL)
+    {
+        import_address->num_indices = 0;
+        import_address->indices     = 0;
+        import_address->label       = xvm_string_init();
+        return 1;
+    }
+    return 0;
+}
+
+/**
+Initializes the import address with the specified startup values.
+\note All indices are uninitialized!
+*/
+STATIC int xvm_import_address_setup(xvm_import_address* import_address, unsigned int num_indices)
+{
+    if (import_address != NULL)
+    {
+        import_address->num_indices = num_indices;
+        import_address->indices     = (unsigned int*)malloc(sizeof(unsigned int) * num_indices);
+        import_address->label       = xvm_string_init();
+        return 1;
+    }
+    return 0;
+}
+
+//! Frees the memory for the specified import address object.
+STATIC int xvm_import_address_free(xvm_import_address* import_address)
+{
+    if (import_address != NULL)
+    {
+        if (import_address->indices != NULL)
+        {
+            free(import_address->indices);
+            import_address->indices = NULL;
+        }
+        import_address->num_indices = 0;
+        xvm_string_free(&(import_address->label));
+        return 1;
+    }
+    return 0;
+}
+
+
+/* ----- Byte Code ----- */
 
 //! XVM byte code structure.
 typedef struct
@@ -1576,37 +1677,16 @@ typedef struct
     instr_t*                instructions;           //!< Instruction array. By default NULL.
 
     unsigned int            num_export_addresses;   //!< Number of export addresses. By default 0.
-    xvm_export_address*     export_addresses;       //!< Export addresses array. By default NULL.
+    xvm_export_address*     export_addresses;       //!< Export address array. By default NULL.
+
+    unsigned int            num_import_addresses;   //!< Number of import addresses. By default 0.
+    xvm_import_address*     import_addresses;       //!< Import address array. By default NULL.
 
     unsigned int            num_invoke_idents;      //!< Number of invocation identifiers. By default 0.
     xvm_string*             invoke_idents;          //!< Invocation identifiers. By default NULL.
-    XVM_INVOCATION_PROC*    invoke_bindings;        //!< Invocation procedure bindings. By default NULL.
+    xvm_invocation_proc*    invoke_bindings;        //!< Invocation procedure bindings. By default NULL.
 }
 xvm_bytecode;
-
-//! Initializes the export address with its default values.
-STATIC int xvm_export_address_init(xvm_export_address* export_address)
-{
-    if (export_address != NULL)
-    {
-        export_address->addr = 0;
-        export_address->name = xvm_string_init();
-        return 1;
-    }
-    return 0;
-}
-
-//! Initializes the export address with the specified startup values.
-STATIC int xvm_export_address_setup(xvm_export_address* export_address, unsigned int addr, xvm_string name)
-{
-    if (export_address != NULL)
-    {
-        export_address->addr = addr;
-        export_address->name = name;
-        return 1;
-    }
-    return 0;
-}
 
 /**
 Initializes the specified byte code structure.
@@ -1615,6 +1695,7 @@ xvm_bytecode byte_code;
 xvm_bytecode_init(&byte_code);
 xvm_bytecode_create_instructions(&byte_code, num_instructions);
 xvm_bytecode_create_export_addresses(&byte_code, num_export_addresses);
+xvm_bytecode_create_import_addresses(&byte_code, num_import_addresses);
 // ...
 xvm_bytecode_free(&byte_code);
 \endcode
@@ -1629,6 +1710,9 @@ STATIC int xvm_bytecode_init(xvm_bytecode* byte_code)
         
         byte_code->num_export_addresses = 0;
         byte_code->export_addresses     = NULL;
+
+        byte_code->num_import_addresses = 0;
+        byte_code->import_addresses     = NULL;
 
         byte_code->num_invoke_idents    = 0;
         byte_code->invoke_idents        = NULL;
@@ -1661,6 +1745,7 @@ Allocates memory for the specified amount of byte code export addresses.
 \param[in,out] byte_code Pointer to the byte code object.
 \param[in] num_export_addresses Specifies the number of export addresses to allocate for the byte code.
 \see xvm_bytecode_init
+\see xvm_export_address
 \note All export addresses are uninitialized!
 */
 STATIC int xvm_bytecode_create_export_addresses(xvm_bytecode* byte_code, unsigned int num_export_addresses)
@@ -1672,6 +1757,40 @@ STATIC int xvm_bytecode_create_export_addresses(xvm_bytecode* byte_code, unsigne
         return 1;
     }
     return 0;
+}
+
+/**
+Allocates memory for the specified amount of byte code import addresses.
+\param[in,out] byte_code Pointer to the byte code object.
+\param[in] num_export_addresses Specifies the number of export addresses to allocate for the byte code.
+\see xvm_bytecode_init
+\see xvm_import_address
+\note All import addresses are uninitialized!
+*/
+STATIC int xvm_bytecode_create_import_addresses(xvm_bytecode* byte_code, unsigned int num_import_addresses)
+{
+    if (byte_code != NULL && byte_code->import_addresses == NULL && num_import_addresses > 0)
+    {
+        byte_code->num_import_addresses = num_import_addresses;
+        byte_code->import_addresses     = (xvm_import_address*)malloc(sizeof(xvm_import_address)*num_import_addresses);
+        return 1;
+    }
+    return 0;
+}
+
+//! Returns the export address with the specified label or NULL if there is no such export address.
+STATIC const xvm_export_address* xvm_bytecode_find_export_address(const xvm_bytecode* byte_code, const char* label)
+{
+    if (byte_code != NULL && byte_code->export_addresses != NULL)
+    {
+        for (unsigned int i = 0; i < byte_code->num_export_addresses; ++i)
+        {
+            const xvm_export_address* export_addr = &(byte_code->export_addresses[i]);
+            if (strcmp(export_addr->label.str, label) == 0)
+                return export_addr;
+        }
+    }
+    return NULL;
 }
 
 /**
@@ -1691,7 +1810,7 @@ STATIC int xvm_bytecode_create_invocations(xvm_bytecode* byte_code, unsigned int
         byte_code->invoke_idents        = (xvm_string*)malloc(sizeof(xvm_string)*num_invoke_idents);
 
         // Create and initialize invocation bindings
-        byte_code->invoke_bindings      = (XVM_INVOCATION_PROC*)malloc(sizeof(XVM_INVOCATION_PROC)*num_invoke_idents);
+        byte_code->invoke_bindings      = (xvm_invocation_proc*)malloc(sizeof(xvm_invocation_proc)*num_invoke_idents);
         for (unsigned int i = 0; i < num_invoke_idents; ++i)
             byte_code->invoke_bindings[i] = _xvm_null_invocation;
         return 1;
@@ -1699,7 +1818,7 @@ STATIC int xvm_bytecode_create_invocations(xvm_bytecode* byte_code, unsigned int
     return 0;
 }
 
-STATIC int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ident, XVM_INVOCATION_PROC proc)
+STATIC int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ident, xvm_invocation_proc proc)
 {
     if (byte_code != NULL && ident != NULL)
     {
@@ -1744,17 +1863,26 @@ STATIC int xvm_bytecode_free(xvm_bytecode* byte_code)
 
         if (byte_code->export_addresses != NULL)
         {
-            // Free string of each export address
+            // Free each each export address
             for (unsigned int i = 0; i < byte_code->num_export_addresses; ++i)
-            {
-                xvm_export_address* export_addr = &(byte_code->export_addresses[i]);
-                xvm_string_free(&(export_addr->name));
-            }
+                xvm_export_address_free(&(byte_code->export_addresses[i]));
 
             // Free export address list
             free(byte_code->export_addresses);
             byte_code->export_addresses     = NULL;
             byte_code->num_export_addresses = 0;
+        }
+
+        if (byte_code->import_addresses != NULL)
+        {
+            // Free each each import address
+            for (unsigned int i = 0; i < byte_code->num_import_addresses; ++i)
+                xvm_import_address_free(&(byte_code->import_addresses[i]));
+
+            // Free import address list
+            free(byte_code->import_addresses);
+            byte_code->import_addresses     = NULL;
+            byte_code->num_import_addresses = 0;
         }
 
         if (byte_code->invoke_idents != NULL)
@@ -1886,13 +2014,35 @@ WORD: number of invoke identifiers (n3)
 n3 times:
     STR: identifier
 
+--- XBC file format spec (Version 1.34): ---
+
+WORD: magic number (Must be *(int*)"XBCF")
+WORD: version number (Must be 134 for "1.34")
+WORD: number of instructions (n1)
+n1 times:
+    WORD: instruction
+WORD: number of export addresses (n2)
+n2 times:
+    WORD: address
+    STR: name
+WORD: number of import addresses (n3)
+n3 times:
+    WORD: number of instruction indices (n3b)
+    n3b times:
+        WORD: index
+    STR: name
+WORD: number of invoke identifiers (n4)
+n4 times:
+    STR: identifier
+
 */
 
 #define XBC_FORMAT_MAGIC            (*((int*)("XBCF")))
 #define XBC_FORMAT_VERSION_1_31     131
 #define XBC_FORMAT_VERSION_1_32     132
 #define XBC_FORMAT_VERSION_1_33     133
-#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_33
+#define XBC_FORMAT_VERSION_1_34     134
+#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_34
 
 /**
 Reads a byte code form file.
@@ -1963,13 +2113,43 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
 
             for (unsigned int i = 0; i < num_export_addr; ++i)
             {
-                // Read address and name and store it into the export address
+                // Read address and label and store it into the export address
                 xvm_export_address* export_addr = &(byte_code->export_addresses[i]);
 
                 unsigned int addr = xvm_file_read_uint(file);
-                xvm_string string = xvm_string_read_from_file(file);
+                xvm_string label = xvm_string_read_from_file(file);
 
-                xvm_export_address_setup(export_addr, addr, string);
+                xvm_export_address_setup(export_addr, addr, label);
+            }
+        }
+    }
+
+    // Read import addresses
+    if (version >= XBC_FORMAT_VERSION_1_34)
+    {
+        unsigned int num_import_addr = xvm_file_read_uint(file);
+
+        if (num_import_addr > 0)
+        {
+            if (xvm_bytecode_create_import_addresses(byte_code, num_import_addr) == 0)
+            {
+                xvm_log_error("creating byte code import addresses failed");
+                fclose(file);
+                return 0;
+            }
+
+            for (unsigned int i = 0; i < num_import_addr; ++i)
+            {
+                // Read indices and label and store it into the import address
+                xvm_import_address* import_addr = &(byte_code->import_addresses[i]);
+
+                unsigned int num_indices = xvm_file_read_uint(file);
+                xvm_import_address_setup(import_addr, num_indices);
+
+                for (unsigned int j = 0; j < num_indices; ++j)
+                    import_addr->indices[j] = xvm_file_read_uint(file);
+
+                import_addr->label = xvm_string_read_from_file(file);
             }
         }
     }
@@ -2052,10 +2232,31 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
 
         for (unsigned int i = 0; i < num_export_addr; ++i)
         {
-            xvm_export_address* export_addr = &(byte_code->export_addresses[i]);
+            const xvm_export_address* export_addr = &(byte_code->export_addresses[i]);
 
             xvm_file_write_uint(file, export_addr->addr);
-            xvm_string_write_to_file(export_addr->name, file);
+            xvm_string_write_to_file(export_addr->label, file);
+        }
+    }
+
+    // Write import addresses
+    if (version >= XBC_FORMAT_VERSION_1_34)
+    {
+        unsigned int num_import_addr = byte_code->num_import_addresses;
+        xvm_file_write_uint(file, num_import_addr);
+
+        for (unsigned int i = 0; i < num_import_addr; ++i)
+        {
+            const xvm_import_address* import_addr = &(byte_code->import_addresses[i]);
+
+            unsigned int num_indices = import_addr->num_indices;
+            const unsigned int* indices = import_addr->indices;
+
+            xvm_file_write_uint(file, num_indices);
+            for (unsigned int j = 0; j < num_indices; ++j)
+                xvm_file_write_uint(file, indices[j]);
+
+            xvm_string_write_to_file(import_addr->label, file);
         }
     }
 
@@ -2078,9 +2279,9 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
 
 /* ----- Module ----- */
 
-typedef int (*XVM_MODULEPROCCOUNT_PROC)(void);
-typedef XVM_INVOCATION_PROC (*XVM_MODULEFETCHPROC_PROC)(int); 
-typedef const char* (*XVM_MODULEFETCHIDENT_PROC)(int); 
+typedef int (*xvm_module_proc_count_fnc)(void);
+typedef xvm_invocation_proc (*xvm_module_fetch_proc_fnc)(int); 
+typedef const char* (*xvm_module_fetch_ident_fnc)(int); 
 
 //! XVM module library structure.
 typedef struct
@@ -2090,9 +2291,9 @@ typedef struct
     #elif defined(__linux__)
     void*                       handle;
     #endif
-    XVM_MODULEPROCCOUNT_PROC    proc_count;
-    XVM_MODULEFETCHPROC_PROC    fetch_proc;
-    XVM_MODULEFETCHIDENT_PROC   fetch_ident;
+    xvm_module_proc_count_fnc   proc_count;
+    xvm_module_fetch_proc_fnc   fetch_proc;
+    xvm_module_fetch_ident_fnc  fetch_ident;
 }
 xvm_module;
 
@@ -2121,7 +2322,7 @@ This must be a dynamic library (*.dll file on Win32, *.so file on GNU/Linux).
 The library must contain functions with the following interfaces:
 \code
 int xx_module_proc_count();
-XVM_INVOCATION_PROC xx_module_fetch_proc(int index);
+xvm_invocation_proc xx_module_fetch_proc(int index);
 const char* xx_module_fetch_ident(int index);
 \endcode
 */
@@ -2141,9 +2342,9 @@ STATIC int xvm_module_load(xvm_module* module, const char* filename)
     }
 
     // Load module interface
-    module->proc_count = (XVM_MODULEPROCCOUNT_PROC)GetProcAddress(module->handle, "xx_module_proc_count");
-    module->fetch_proc = (XVM_MODULEFETCHPROC_PROC)GetProcAddress(module->handle, "xx_module_fetch_proc");
-    module->fetch_ident = (XVM_MODULEFETCHIDENT_PROC)GetProcAddress(module->handle, "xx_module_fetch_ident");
+    module->proc_count = (xvm_module_proc_count_fnc)GetProcAddress(module->handle, "xx_module_proc_count");
+    module->fetch_proc = (xvm_module_fetch_proc_fnc)GetProcAddress(module->handle, "xx_module_fetch_proc");
+    module->fetch_ident = (xvm_module_fetch_ident_fnc)GetProcAddress(module->handle, "xx_module_fetch_ident");
 
     #elif defined(__linux__)
 
@@ -2156,9 +2357,9 @@ STATIC int xvm_module_load(xvm_module* module, const char* filename)
     }
 
     // Load module interface
-    module->proc_count = (XVM_MODULEPROCCOUNT_PROC)dlsym(module->handle, "xx_module_proc_count");
-    module->fetch_proc = (XVM_MODULEFETCHPROC_PROC)dlsym(module->handle, "xx_module_fetch_proc");
-    module->fetch_ident = (XVM_MODULEFETCHIDENT_PROC)dlsym(module->handle, "xx_module_fetch_ident");
+    module->proc_count = (xvm_module_proc_count_fnc)dlsym(module->handle, "xx_module_proc_count");
+    module->fetch_proc = (xvm_module_fetch_proc_fnc)dlsym(module->handle, "xx_module_fetch_proc");
+    module->fetch_ident = (xvm_module_fetch_ident_fnc)dlsym(module->handle, "xx_module_fetch_ident");
 
     #endif
 
@@ -2235,7 +2436,7 @@ STATIC int _xvm_bytecode_bind_module_ext(xvm_bytecode* byte_code, const xvm_modu
         else
         {
             // Fetch procedure pointer
-            XVM_INVOCATION_PROC proc = module->fetch_proc(i);
+            xvm_invocation_proc proc = module->fetch_proc(i);
 
             // Bind procedure invocation
             if (xvm_bytecode_bind_invocation(byte_code, ident, proc) == 0)
@@ -3344,7 +3545,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 if (unsgn_value < byte_code->num_invoke_idents)
                 {
                     // Invoke bounded procedure
-                    XVM_INVOCATION_PROC invokeProc = byte_code->invoke_bindings[unsgn_value];
+                    xvm_invocation_proc invokeProc = byte_code->invoke_bindings[unsgn_value];
                     invokeProc((void*)&stack_env);
                 }
                 else
@@ -3395,25 +3596,13 @@ STATIC xvm_exit_codes xvm_execute_program_entry_point(
     xvm_stack* const stack,
     const char* entry_point)
 {
-    const xvm_export_address* export_addr = NULL;
     const xvm_export_address* entry_point_addr = NULL;
-
+    
     if (byte_code == NULL)
         return EXITCODE_INVALID_BYTECODE;
-    if (byte_code->export_addresses == NULL)
-        return EXITCODE_UNKNOWN_ENTRY_POINT;
 
     // Find entry point in export addresses
-    for (unsigned int i = 0; i < byte_code->num_export_addresses; ++i)
-    {
-        export_addr = &(byte_code->export_addresses[i]);
-        if (strcmp(export_addr->name.str, entry_point) == 0)
-        {
-            entry_point_addr = export_addr;
-            break;
-        }
-    }
-
+    entry_point_addr = xvm_bytecode_find_export_address(byte_code, entry_point);
     if (entry_point_addr == NULL)
         return EXITCODE_UNKNOWN_ENTRY_POINT;
 
