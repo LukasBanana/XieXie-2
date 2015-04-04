@@ -60,7 +60,7 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( ForStmnt             );    \
     DECL_VISIT_PROC( ForRangeStmnt        );    \
     DECL_VISIT_PROC( ForEachStmnt         );    \
-    DECL_VISIT_PROC( ForEverStmnt         );    \
+    DECL_VISIT_PROC( RepeatStmnt          );    \
                                                 \
     DECL_VISIT_PROC( ClassDeclStmnt       );    \
     DECL_VISIT_PROC( VarDeclStmnt         );    \
@@ -135,7 +135,7 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( ForStmnt             );
         DEF_ABSTRACT_VISIT_PROC( ForRangeStmnt        );
         DEF_ABSTRACT_VISIT_PROC( ForEachStmnt         );
-        DEF_ABSTRACT_VISIT_PROC( ForEverStmnt         );
+        DEF_ABSTRACT_VISIT_PROC( RepeatStmnt          );
 
         DEF_ABSTRACT_VISIT_PROC( ClassDeclStmnt       );
         DEF_ABSTRACT_VISIT_PROC( VarDeclStmnt         );

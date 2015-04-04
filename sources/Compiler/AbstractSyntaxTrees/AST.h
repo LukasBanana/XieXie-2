@@ -86,8 +86,8 @@ class AST
 
             ForStmnt,
             ForEachStmnt,
-            ForEverStmnt,
             ForRangeStmnt,
+            RepeatStmnt,
             WhileStmnt,
             DoWhileStmnt,
 

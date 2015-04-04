@@ -54,7 +54,7 @@ DECL_SHR_PTR( WhileStmnt           );
 DECL_SHR_PTR( ForStmnt             );
 DECL_SHR_PTR( ForRangeStmnt        );
 DECL_SHR_PTR( ForEachStmnt         );
-DECL_SHR_PTR( ForEverStmnt         );
+DECL_SHR_PTR( RepeatStmnt          );
 
 DECL_SHR_PTR( ClassDeclStmnt       );
 DECL_SHR_PTR( VarDeclStmnt         );

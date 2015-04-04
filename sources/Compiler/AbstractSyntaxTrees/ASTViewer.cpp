@@ -220,9 +220,9 @@ DEF_VISIT_PROC(ASTViewer, ForEachStmnt)
     Visit(ast->codeBlock);
 }
 
-DEF_VISIT_PROC(ASTViewer, ForEverStmnt)
+DEF_VISIT_PROC(ASTViewer, RepeatStmnt)
 {
-    AST_INFO_COLOR("ForEverStmnt", colorStmnt);
+    AST_INFO_COLOR("RepeatStmnt", colorStmnt);
     Visit(ast->codeBlock);
 }
 

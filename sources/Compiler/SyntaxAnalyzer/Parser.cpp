@@ -991,8 +991,8 @@ StmntPtr Parser::ParseRepeatStmnt()
         return ParseForRangeStmnt(false);
     }
 
-    /* Parse for-ever statement */
-    auto ast = Make<ForEverStmnt>();
+    /* Parse repeat statement */
+    auto ast = Make<RepeatStmnt>();
 
     ast->codeBlock = ParseCodeBlock();
 

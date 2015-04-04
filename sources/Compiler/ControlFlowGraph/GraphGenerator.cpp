@@ -602,19 +602,19 @@ DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
 }
 
 /*
-       ForEver
+       Repeat
         |   ^
         v   |
       Body  |
       /  \__/
  break|
       v
-  EndForEver
+  EndRepeat
 */
-DEF_VISIT_PROC(GraphGenerator, ForEverStmnt)
+DEF_VISIT_PROC(GraphGenerator, RepeatStmnt)
 {
-    auto in = MakeBlock("ForEver");
-    auto out = MakeBlock("EndForEver");
+    auto in = MakeBlock("Repeat");
+    auto out = MakeBlock("EndRepeat");
 
     PushBreakBB(out);
     {

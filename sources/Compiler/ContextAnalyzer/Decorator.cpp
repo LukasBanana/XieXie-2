@@ -352,7 +352,7 @@ DEF_VISIT_PROC(Decorator, ForEachStmnt)
     CloseScope();
 }
 
-DEF_VISIT_PROC(Decorator, ForEverStmnt)
+DEF_VISIT_PROC(Decorator, RepeatStmnt)
 {
     Visit(ast->codeBlock);
 }
