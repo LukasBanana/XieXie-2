@@ -116,6 +116,11 @@ std::string TACInst::OpCodeToString(const OpCodes opcode)
             return "dircall";
         case OpCodes::INDCALL:
             return "indcall";
+
+        case OpCodes::PARAM:
+            return "param";
+        case OpCodes::ARG:
+            return "arg";
     }
 
     return "";

@@ -15,6 +15,10 @@ namespace Optimization
 {
 
 
+Optimizer::~Optimizer()
+{
+}
+
 void Optimizer::OptimizeProgram(std::vector<ClassTreePtr>& classTrees)
 {
     for (auto& ct : classTrees)
@@ -31,6 +35,66 @@ void Optimizer::OptimizeProgram(std::vector<ClassTreePtr>& classTrees)
             vr.Transform(*bb);
         }
     }
+}
+
+
+/*
+ * ======= Protected: =======
+ */
+
+void Optimizer::TransformInst(TACInstPtr& inst)
+{
+    switch (inst->Type())
+    {
+        case TACInst::Types::Copy:
+            TransformCopyInst(inst);
+            break;
+        case TACInst::Types::Modify:
+            TransformModifyInst(inst);
+            break;
+        case TACInst::Types::Relation:
+            TransformRelationInst(inst);
+            break;
+        case TACInst::Types::Return:
+            TransformReturnInst(inst);
+            break;
+        case TACInst::Types::Param:
+            TransformParamInst(inst);
+            break;
+        case TACInst::Types::Arg:
+            TransformArgInst(inst);
+            break;
+    }
+}
+
+void Optimizer::TransformCopyInst(TACInstPtr& inst)
+{
+    // dummy
+}
+
+void Optimizer::TransformModifyInst(TACInstPtr& inst)
+{
+    // dummy
+}
+
+void Optimizer::TransformRelationInst(TACInstPtr& inst)
+{
+    // dummy
+}
+
+void Optimizer::TransformReturnInst(TACInstPtr& inst)
+{
+    // dummy
+}
+
+void Optimizer::TransformParamInst(TACInstPtr& inst)
+{
+    // dummy
+}
+
+void Optimizer::TransformArgInst(TACInstPtr& inst)
+{
+    // dummy
 }
 
 

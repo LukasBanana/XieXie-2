@@ -27,13 +27,22 @@ class Optimizer
     
     public:
         
-        virtual ~Optimizer()
-        {
-        }
+        virtual ~Optimizer();
 
         virtual void Transform(BasicBlock& basicBlock) = 0;
 
         static void OptimizeProgram(std::vector<ClassTreePtr>& classTrees);
+
+    protected:
+        
+        virtual void TransformInst(TACInstPtr& inst);
+
+        virtual void TransformCopyInst(TACInstPtr& inst);
+        virtual void TransformModifyInst(TACInstPtr& inst);
+        virtual void TransformRelationInst(TACInstPtr& inst);
+        virtual void TransformReturnInst(TACInstPtr& inst);
+        virtual void TransformParamInst(TACInstPtr& inst);
+        virtual void TransformArgInst(TACInstPtr& inst);
 
 };
 

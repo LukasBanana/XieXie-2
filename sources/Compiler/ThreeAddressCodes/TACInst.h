@@ -44,8 +44,8 @@ class TACInst
             DirectCall,     //!< Jump and link
             IndirectCall,   //!< Jump register and link
             Return,         //!< Procedure return
-            Parameter,      //!< Fetch parameter.
-            Argument,       //!< Assign argument to parameter.
+            Param,          //!< Fetch parameter.
+            Arg,            //!< Assign argument to parameter.
         };
 
         //! TAC instruction opcodes.
@@ -104,6 +104,12 @@ class TACInst
 
             /* IndirectCall */
             INDCALL,
+
+            /* Param */
+            PARAM,
+
+            /* Arg */
+            ARG,
         };
 
         /* === Structures === */

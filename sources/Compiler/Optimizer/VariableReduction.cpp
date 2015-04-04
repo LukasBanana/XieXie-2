@@ -6,8 +6,13 @@
  */
 
 #include "VariableReduction.h"
+
+#include "TACModifyInst.h"
+#include "TACCopyInst.h"
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
+#include "TACParamInst.h"
+#include "TACArgInst.h"
 
 #include <algorithm>
 
@@ -31,25 +36,6 @@ void VariableReduction::Transform(BasicBlock& basicBlock)
 /*
  * ======= Private: =======
  */
-
-void VariableReduction::TransformInst(TACInstPtr& inst)
-{
-    switch (inst->Type())
-    {
-        case TACInst::Types::Copy:
-            TransformCopyInst(inst);
-            break;
-        case TACInst::Types::Modify:
-            TransformModifyInst(inst);
-            break;
-        case TACInst::Types::Relation:
-            TransformRelationInst(inst);
-            break;
-        case TACInst::Types::Return:
-            TransformReturnInst(inst);
-            break;
-    }
-}
 
 void VariableReduction::TransformCopyInst(TACInstPtr& inst)
 {
@@ -85,6 +71,22 @@ void VariableReduction::TransformReturnInst(TACInstPtr& inst)
 
     /* Propagate variabel usage */
     ReadVar(returnInst->src, *inst);
+}
+
+void VariableReduction::TransformParamInst(TACInstPtr& inst)
+{
+    auto paramInst = static_cast<TACParamInst*>(inst.get());
+
+    /* Propagate variabel usage */
+    WriteVar(paramInst->dest, *inst);
+}
+
+void VariableReduction::TransformArgInst(TACInstPtr& inst)
+{
+    auto argInst = static_cast<TACArgInst*>(inst.get());
+
+    /* Propagate variabel usage */
+    ReadVar(argInst->src, *inst);
 }
 
 void VariableReduction::ReadVar(const TACVar& var, TACInst& inst)

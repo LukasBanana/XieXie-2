@@ -10,8 +10,6 @@
 
 
 #include "Optimizer.h"
-#include "TACModifyInst.h"
-#include "TACCopyInst.h"
 
 #include <set>
 
@@ -29,11 +27,12 @@ class VariableClean : public Optimizer
 
     private:
         
-        void TransformInst(TACInstPtr& inst);
-        void TransformCopyInst(TACInstPtr& inst);
-        void TransformModifyInst(TACInstPtr& inst);
-        void TransformRelationInst(TACInstPtr& inst);
-        void TransformReturnInst(TACInstPtr& inst);
+        void TransformCopyInst(TACInstPtr& inst) override;
+        void TransformModifyInst(TACInstPtr& inst) override;
+        void TransformRelationInst(TACInstPtr& inst) override;
+        void TransformReturnInst(TACInstPtr& inst) override;
+        void TransformParamInst(TACInstPtr& inst) override;
+        void TransformArgInst(TACInstPtr& inst) override;
 
         void ReadVar(const TACVar& var);
         void WriteVar(const TACVar& var);

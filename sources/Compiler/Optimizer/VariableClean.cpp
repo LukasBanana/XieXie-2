@@ -6,8 +6,13 @@
  */
 
 #include "VariableClean.h"
+
+#include "TACModifyInst.h"
+#include "TACCopyInst.h"
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
+#include "TACParamInst.h"
+#include "TACArgInst.h"
 
 #include <algorithm>
 
@@ -34,25 +39,6 @@ void VariableClean::Transform(BasicBlock& basicBlock)
 /*
  * ======= Private: =======
  */
-
-void VariableClean::TransformInst(TACInstPtr& inst)
-{
-    switch (inst->Type())
-    {
-        case TACInst::Types::Copy:
-            TransformCopyInst(inst);
-            break;
-        case TACInst::Types::Modify:
-            TransformModifyInst(inst);
-            break;
-        case TACInst::Types::Relation:
-            TransformRelationInst(inst);
-            break;
-        case TACInst::Types::Return:
-            TransformReturnInst(inst);
-            break;
-    }
-}
 
 void VariableClean::TransformCopyInst(TACInstPtr& inst)
 {
@@ -98,6 +84,22 @@ void VariableClean::TransformReturnInst(TACInstPtr& inst)
 
     /* Propagate variabel usage */
     ReadVar(returnInst->src);
+}
+
+void VariableClean::TransformParamInst(TACInstPtr& inst)
+{
+    auto paramInst = static_cast<TACParamInst*>(inst.get());
+
+    /* Propagate variabel usage */
+    WriteVar(paramInst->dest);
+}
+
+void VariableClean::TransformArgInst(TACInstPtr& inst)
+{
+    auto argInst = static_cast<TACArgInst*>(inst.get());
+
+    /* Propagate variabel usage */
+    WriteVar(argInst->src);
 }
 
 void VariableClean::ReadVar(const TACVar& var)

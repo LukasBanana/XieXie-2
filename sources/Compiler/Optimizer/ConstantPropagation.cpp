@@ -7,8 +7,10 @@
 
 #include "ConstantPropagation.h"
 #include "StringModifier.h"
+
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
+#include "TACArgInst.h"
 
 
 namespace Optimization
@@ -26,25 +28,6 @@ void ConstantPropagation::Transform(BasicBlock& basicBlock)
 /*
  * ======= Private: =======
  */
-
-void ConstantPropagation::TransformInst(TACInstPtr& inst)
-{
-    switch (inst->Type())
-    {
-        case TACInst::Types::Copy:
-            TransformCopyInst(inst);
-            break;
-        case TACInst::Types::Modify:
-            TransformModifyInst(inst);
-            break;
-        case TACInst::Types::Relation:
-            TransformRelationInst(inst);
-            break;
-        case TACInst::Types::Return:
-            TransformReturnInst(inst);
-            break;
-    }
-}
 
 void ConstantPropagation::TransformCopyInst(TACInstPtr& inst)
 {
@@ -93,6 +76,14 @@ void ConstantPropagation::TransformRelationInst(TACInstPtr& inst)
 void ConstantPropagation::TransformReturnInst(TACInstPtr& inst)
 {
     auto returnInst = static_cast<TACReturnInst*>(inst.get());
+
+    /* Propagate constant */
+    FetchConst(returnInst->src);
+}
+
+void ConstantPropagation::TransformArgInst(TACInstPtr& inst)
+{
+    auto returnInst = static_cast<TACArgInst*>(inst.get());
 
     /* Propagate constant */
     FetchConst(returnInst->src);
