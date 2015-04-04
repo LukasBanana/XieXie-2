@@ -27,12 +27,13 @@ class ProcDeclStmnt : public ScopedStmnt
         //! Returns the type of the procedure signature.
         const TypeDenoter* GetTypeDenoter() const override;
 
-        AttribPrefixPtr         attribPrefix;           // may be null
+        AttribPrefixPtr         attribPrefix;               // may be null
         ProcSignaturePtr        procSignature;
-        CodeBlockPtr            codeBlock;              // may be null (for extern procedures)
+        CodeBlockPtr            codeBlock;                  // may be null (for extern procedures)
 
         // dast
-        ClassDeclStmnt*         parentRef = nullptr;    // reference to the AST node's parent declaration statement (this is already decorated inside the parser)
+        bool                    isEntryPoint    = false;
+        ClassDeclStmnt*         parentRef       = nullptr;  // reference to the AST node's parent declaration statement (this is already decorated inside the parser)
         ProcOverloadSwitch      overloadSwitch;
 
 };

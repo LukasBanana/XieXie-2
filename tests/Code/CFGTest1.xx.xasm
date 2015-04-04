@@ -1,8 +1,14 @@
 ; XieXie Assembler File (XASM)
 ; XieXie Compiler Version 2.0 Alpha
-; Generated at 2015-04-04 16:54:13
+; Generated at 2015-04-04 17:26:01
 
 ; <------- CLASS "Object" ------->
+
+
+; <------- CLASS "String" ------->
+
+
+; <------- CLASS "Array" ------->
 
 
 ; <------- CLASS "Test" ------->
@@ -61,8 +67,17 @@ CTest.Pfunc,I,I:
 	mov $ar, $r2
 	ret 2
 
-; Test.main(int)
-CTest.Pmain,I:
+; Test.main(String[])
+CTest.Pmain,A@R@String:
+	.bb0:
+	ldw $r0, ($lb) -4
+	push 1
+	call CTest.Ptest1,I
+	mov $ar, 0
+	ret 1
+
+; Test.test1(int)
+CTest.Ptest1,I:
 	.bb0:
 	ldw $r0, ($lb) -4
 	mov $r1, 0

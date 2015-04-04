@@ -42,6 +42,11 @@ class PointerTypeDenoter : public TypeDenoter
             return copy;
         }
 
+        bool IsPointer(const std::string& ident) const override
+        {
+            return declIdent.empty() || declIdent == ident;
+        }
+
         std::string declIdent;          // may be empty (for null pointer literal)
         bool        isWeakRef = false;
 

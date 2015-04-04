@@ -112,6 +112,7 @@ class Decorator final : private Visitor
 
         void RegisterProcSymbol(ProcDeclStmnt& ast);
         void DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch);
+        void DecorateMainProc(ProcSignature& ast);
 
         /* --- Symbol table --- */
 

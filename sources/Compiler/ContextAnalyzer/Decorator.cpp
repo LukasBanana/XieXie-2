@@ -1223,6 +1223,10 @@ void Decorator::RegisterProcSymbol(ProcDeclStmnt& ast)
 
     /* Add procedure to overload switch */
     overloadSwitch->procDeclRefs.push_back(&ast);
+
+    /* Check if procedure is an entry point */
+    if (ident == "main")
+        DecorateMainProc(*ast.procSignature);
 }
 
 /*
@@ -1287,6 +1291,48 @@ void Decorator::DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overlo
         /* Decorate procedure call with reference to final procedure delcaration statement */
         ast.declStmntRef = procDecls.front();
     }
+}
+
+/*
+Decorate the specified procedure signature to be an
+entry point and verifies its parameters.
+*/
+void Decorator::DecorateMainProc(ProcSignature& ast)
+{
+    if (!ast.isStatic)
+        return;
+
+    try
+    {
+        /* Verify "main" return type */
+        if (!ast.returnTypeDenoter->IsVoid() && !ast.returnTypeDenoter->IsIntegral())
+            throw "main entry point can only have 'void' or 'int' as return type";
+
+        /* Verify "main" parameter list */
+        if (ast.params.size() > 1)
+            throw "main entry point can only have zero or one parameters";
+
+        /* Verify "main" parameter type */
+        if (ast.params.size() == 1)
+        {
+            static const char* wrongTypeErr = "parameter of main entry point must be from type 'String[]'";
+
+            const auto& param0 = *ast.params[0];
+            if (!param0.typeDenoter->IsArray())
+                throw wrongTypeErr;
+
+            auto arrayType = static_cast<const ArrayTypeDenoter&>(*param0.typeDenoter);
+            if (!arrayType.lowerTypeDenoter->IsPointer("String"))
+                throw wrongTypeErr;
+        }
+    }
+    catch (const char* err)
+    {
+        Error(err, &ast);
+        return;
+    }
+
+    ast.isEntryPoint = true;
 }
 
 /* --- Symbol table --- */

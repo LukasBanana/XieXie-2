@@ -31,7 +31,8 @@ class ProcSignature : public AST
         */
         static bool AreSimilar(const ProcSignature& lhs, const ProcSignature& rhs);
 
-        bool                    isStatic = false;
+        bool                    isStatic        = false;
+        bool                    isEntryPoint    = false;
         TypeDenoterPtr          returnTypeDenoter;
         std::string             ident;
         std::vector<ParamPtr>   params;
