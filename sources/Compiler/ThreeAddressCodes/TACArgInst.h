@@ -29,6 +29,8 @@ class TACArgInst : public TACInst
         Types Type() const override;
         std::string ToString() const override;
 
+        void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
+
         TACVar src;
 
 };

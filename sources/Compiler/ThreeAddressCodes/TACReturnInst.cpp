@@ -13,14 +13,16 @@ namespace ThreeAddressCodes
 {
 
 
-TACReturnInst::TACReturnInst() :
-    TACInst { OpCodes::RETURN }
+TACReturnInst::TACReturnInst(unsigned int numProcParams) :
+    TACInst         { OpCodes::RETURN },
+    numProcParams   { numProcParams   }
 {
 }
-TACReturnInst::TACReturnInst(const TACVar& src) :
-    TACInst { OpCodes::RETURN },
-    src     { src             },
-    hasVar  { true            }
+TACReturnInst::TACReturnInst(const TACVar& src, unsigned int numProcParams) :
+    TACInst         { OpCodes::RETURN },
+    src             { src             },
+    hasVar          { true            },
+    numProcParams   { numProcParams   }
 {
 }
 
@@ -39,6 +41,12 @@ std::string TACReturnInst::ToString() const
         str += "<none>";
 
     return str;
+}
+
+void TACReturnInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
+{
+    if ( flags(VarFlags::Source) && ( !flags(VarFlags::TempOnly) || src.IsTemp() ) )
+        src.Replace(varToReplace, replacedVar);
 }
 
 

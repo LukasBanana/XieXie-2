@@ -10,7 +10,9 @@
 
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
+#include "TACResultInst.h"
 #include "TACArgInst.h"
+#include "TACSwitchInst.h"
 
 
 namespace Optimization
@@ -78,7 +80,16 @@ void ConstantPropagation::TransformReturnInst(TACInstPtr& inst)
     auto returnInst = static_cast<TACReturnInst*>(inst.get());
 
     /* Propagate constant */
-    FetchConst(returnInst->src);
+    if (returnInst->hasVar)
+        FetchConst(returnInst->src);
+}
+
+void ConstantPropagation::TransformResultInst(TACInstPtr& inst)
+{
+    auto resultInst = static_cast<TACResultInst*>(inst.get());
+    
+    /* Procedure result is already variable */
+    RemoveConst(resultInst->dest);
 }
 
 void ConstantPropagation::TransformArgInst(TACInstPtr& inst)
@@ -87,6 +98,14 @@ void ConstantPropagation::TransformArgInst(TACInstPtr& inst)
 
     /* Propagate constant */
     FetchConst(returnInst->src);
+}
+
+void ConstantPropagation::TransformSwitchInst(TACInstPtr& inst)
+{
+    auto switchInst = static_cast<TACSwitchInst*>(inst.get());
+
+    /* Propagate constant */
+    FetchConst(switchInst->switchVar);
 }
 
 std::unique_ptr<TACCopyInst> ConstantPropagation::ConstantFolding(const TACModifyInst& inst)

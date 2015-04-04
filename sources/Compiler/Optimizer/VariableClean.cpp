@@ -11,8 +11,10 @@
 #include "TACCopyInst.h"
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
+#include "TACResultInst.h"
 #include "TACParamInst.h"
 #include "TACArgInst.h"
+#include "TACSwitchInst.h"
 
 #include <algorithm>
 
@@ -45,7 +47,7 @@ void VariableClean::TransformCopyInst(TACInstPtr& inst)
     auto copyInst = static_cast<TACCopyInst*>(inst.get());
 
     /* Propagate variable usage */
-    if ( IsVarUsed(copyInst->dest) || ( !copyInst->dest.IsTemp() && VarNotWritten(copyInst->dest) ) )
+    if (IsDestVarRequired(copyInst->dest))
     {
         WriteVar(copyInst->dest);
         ReadVar(copyInst->src);
@@ -59,7 +61,7 @@ void VariableClean::TransformModifyInst(TACInstPtr& inst)
     auto modifyInst = static_cast<TACModifyInst*>(inst.get());
 
     /* Propagate variable usage */
-    if ( IsVarUsed(modifyInst->dest) || ( !modifyInst->dest.IsTemp() && VarNotWritten(modifyInst->dest) ) )
+    if (IsDestVarRequired(modifyInst->dest))
     {
         WriteVar(modifyInst->dest);
         ReadVar(modifyInst->srcLhs);
@@ -83,7 +85,19 @@ void VariableClean::TransformReturnInst(TACInstPtr& inst)
     auto returnInst = static_cast<TACReturnInst*>(inst.get());
 
     /* Propagate variabel usage */
-    ReadVar(returnInst->src);
+    if (returnInst->hasVar)
+        ReadVar(returnInst->src);
+}
+
+void VariableClean::TransformResultInst(TACInstPtr& inst)
+{
+    auto resultInst = static_cast<TACResultInst*>(inst.get());
+
+    /* Propagate variabel usage */
+    if (IsDestVarRequired(resultInst->dest))
+        WriteVar(resultInst->dest);
+    else
+        inst = nullptr;
 }
 
 void VariableClean::TransformParamInst(TACInstPtr& inst)
@@ -91,7 +105,10 @@ void VariableClean::TransformParamInst(TACInstPtr& inst)
     auto paramInst = static_cast<TACParamInst*>(inst.get());
 
     /* Propagate variabel usage */
-    WriteVar(paramInst->dest);
+    if (IsDestVarRequired(paramInst->dest))
+        WriteVar(paramInst->dest);
+    else
+        inst = nullptr;
 }
 
 void VariableClean::TransformArgInst(TACInstPtr& inst)
@@ -99,7 +116,15 @@ void VariableClean::TransformArgInst(TACInstPtr& inst)
     auto argInst = static_cast<TACArgInst*>(inst.get());
 
     /* Propagate variabel usage */
-    WriteVar(argInst->src);
+    ReadVar(argInst->src);
+}
+
+void VariableClean::TransformSwitchInst(TACInstPtr& inst)
+{
+    auto switchInst = static_cast<TACSwitchInst*>(inst.get());
+
+    /* Propagate variabel usage */
+    ReadVar(switchInst->switchVar);
 }
 
 void VariableClean::ReadVar(const TACVar& var)
@@ -125,6 +150,11 @@ bool VariableClean::VarNotWritten(const TACVar& var)
         return true;
     }
     return false;
+}
+
+bool VariableClean::IsDestVarRequired(const TACVar& var)
+{
+    return IsVarUsed(var) || ( !var.IsTemp() && VarNotWritten(var) ) ;
 }
 
 

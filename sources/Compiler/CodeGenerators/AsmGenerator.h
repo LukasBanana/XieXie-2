@@ -44,12 +44,12 @@ class AsmGenerator
         void ErrorIntern(const std::string& msg) const;
 
         //! Starts a new line.
-        void StartLine();
+        void StartLn();
         //! Ends the current line.
-        void EndLine();
+        void EndLn();
         
         //! Append text to the current line.
-        void L(const std::string& text);
+        void Ln(const std::string& text);
         //! Write a new line of code.
         void Line(const std::string& line);
 

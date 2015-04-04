@@ -109,6 +109,8 @@ std::string XASMGenerator::Reg(const TACVar& var)
 {
     if (var.IsConst())
         return var.ToString();
+    if (var.type == TACVar::Types::Return)
+        return "$ar";
     if (!var.IsValid())
         ErrorIntern("invalid ID for TAC variable");
     return regAlloc_.Reg(var);
@@ -278,6 +280,18 @@ void XASMGenerator::GenerateInst(const TACInst& inst)
         case TACInst::Types::Return:
             GenerateReturnInst(static_cast<const TACReturnInst&>(inst));
             break;
+        case TACInst::Types::Result:
+            GenerateResultInst(static_cast<const TACResultInst&>(inst));
+            break;
+        case TACInst::Types::DirectCall:
+            GenerateDirectCallInst(static_cast<const TACDirectCallInst&>(inst));
+            break;
+        case TACInst::Types::Param:
+            GenerateParamInst(static_cast<const TACParamInst&>(inst));
+            break;
+        case TACInst::Types::Arg:
+            GenerateArgInst(static_cast<const TACArgInst&>(inst));
+            break;
     }
 }
 
@@ -286,27 +300,27 @@ void XASMGenerator::GenerateCopyInst(const TACCopyInst& inst)
     auto reg0 = Reg(inst.dest);
     auto reg1 = Reg(inst.src);
 
-    StartLine();
+    StartLn();
     {
         switch (inst.opcode)
         {
             case OpCodes::MOV:
-                L("mov");
+                Ln("mov");
                 break;
             case OpCodes::NOT:
-                L("not");
+                Ln("not");
                 break;
             case OpCodes::FTI:
-                L("fti");
+                Ln("fti");
                 break;
             case OpCodes::ITF:
-                L("itf");
+                Ln("itf");
                 break;
         }
 
-        L(" " + reg0 + ", " + reg1);
+        Ln(" " + reg0 + ", " + reg1);
     }
-    EndLine();
+    EndLn();
 }
 
 void XASMGenerator::GenerateModifyInst(const TACModifyInst& inst)
@@ -343,62 +357,62 @@ void XASMGenerator::GenerateModifyInst(const TACModifyInst& inst)
         reg1 = reg0;
     }
 
-    StartLine();
+    StartLn();
     {
         switch (inst.opcode)
         {
             case OpCodes::AND:
-                L("and");
+                Ln("and");
                 break;
             case OpCodes::OR:
-                L("or");
+                Ln("or");
                 break;
             case OpCodes::XOR:
-                L("xor");
+                Ln("xor");
                 break;
 
             case OpCodes::ADD:
-                L("add");
+                Ln("add");
                 break;
             case OpCodes::SUB:
-                L("sub");
+                Ln("sub");
                 break;
             case OpCodes::MUL:
-                L("mul");
+                Ln("mul");
                 break;
             case OpCodes::DIV:
-                L("div");
+                Ln("div");
                 break;
             case OpCodes::MOD:
-                L("mod");
+                Ln("mod");
                 break;
             case OpCodes::SLL:
-                L("sll");
+                Ln("sll");
                 break;
             case OpCodes::SLR:
-                L("slr");
+                Ln("slr");
                 break;
 
             case OpCodes::FADD:
-                L("addf");
+                Ln("addf");
                 break;
             case OpCodes::FSUB:
-                L("subf");
+                Ln("subf");
                 break;
             case OpCodes::FMUL:
-                L("mulf");
+                Ln("mulf");
                 break;
             case OpCodes::FDIV:
-                L("divf");
+                Ln("divf");
                 break;
             case OpCodes::FMOD:
-                L("modf");
+                Ln("modf");
                 break;
         }
 
-        L(" " + reg0 + ", " + reg1 + ", " + reg2);
+        Ln(" " + reg0 + ", " + reg1 + ", " + reg2);
     }
-    EndLine();
+    EndLn();
 }
 
 void XASMGenerator::GenerateRelationInst(const TACRelationInst& inst)
@@ -419,51 +433,51 @@ void XASMGenerator::GenerateRelationInst(const TACRelationInst& inst)
         auto reg0 = Reg(inst.srcLhs);
         auto reg1 = Reg(inst.srcRhs);
 
-        StartLine();
+        StartLn();
         {
             if (inst.IsFloatOp())
-                L("cmpf ");
+                Ln("cmpf ");
             else
-                L("cmp ");
-            L(reg0 + ", " + reg1);
+                Ln("cmp ");
+            Ln(reg0 + ", " + reg1);
         }
-        EndLine();
+        EndLn();
     }
 
-    StartLine();
+    StartLn();
     {
         /* Negate condition to jump only on false-branch */
         switch (inst.opcode)
         {
             case OpCodes::CMPE:
             case OpCodes::FCMPE:
-                L("jne");
+                Ln("jne");
                 break;
             case OpCodes::CMPNE:
             case OpCodes::FCMPNE:
-                L("je");
+                Ln("je");
                 break;
             case OpCodes::CMPL:
             case OpCodes::FCMPL:
-                L("jge");
+                Ln("jge");
                 break;
             case OpCodes::CMPLE:
             case OpCodes::FCMPLE:
-                L("jg");
+                Ln("jg");
                 break;
             case OpCodes::CMPG:
             case OpCodes::FCMPG:
-                L("jle");
+                Ln("jle");
                 break;
             case OpCodes::CMPGE:
             case OpCodes::FCMPGE:
-                L("jl");
+                Ln("jl");
                 break;
         }
 
-        L(' ' + Label(Succ(1)));
+        Ln(' ' + Label(Succ(1)));
     }
-    EndLine();
+    EndLn();
 
     PushIndentBlock(Succ(1));
 
@@ -474,7 +488,34 @@ void XASMGenerator::GenerateReturnInst(const TACReturnInst& inst)
 {
     if (inst.hasVar)
         Line("mov $ar, " + Reg(inst.src));
-    Line("ret");
+
+    StartLn();
+    {
+        Ln("ret");
+        if (inst.numProcParams > 0)
+            Ln(' ' + std::to_string(inst.numProcParams));
+    }
+    EndLn();
+}
+
+void XASMGenerator::GenerateResultInst(const TACResultInst& inst)
+{
+    Line("mov " + Reg(inst.dest) + ", $ar");
+}
+
+void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
+{
+    Line("call " + inst.procIdent);
+}
+
+void XASMGenerator::GenerateParamInst(const TACParamInst& inst)
+{
+    Line("ldw " + Reg(inst.dest) + ", ($lb) " + std::to_string(-4 * (inst.argIndex + 1)));
+}
+
+void XASMGenerator::GenerateArgInst(const TACArgInst& inst)
+{
+    Line("push " + Reg(inst.src));
 }
 
 void XASMGenerator::GenerateDirectJump(const BasicBlock& bb)

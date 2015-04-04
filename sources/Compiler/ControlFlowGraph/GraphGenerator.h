@@ -124,6 +124,7 @@ class GraphGenerator final : private Visitor
 
         std::vector<ClassTreePtr>   programClassTrees_;
         ClassTree*                  classTree_          = nullptr;  //!< Reference to the current class tree.
+        unsigned int                numProcParams_      = 0;        //!< Number of parameters in the current procedure declaration.
 
         SafeStack<BasicBlock*>      stackBB_;
         SafeStack<BasicBlock*>      breakStackBB_;

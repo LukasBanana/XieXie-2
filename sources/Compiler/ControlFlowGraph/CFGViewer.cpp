@@ -81,7 +81,7 @@ void CFGViewer::DefineBlock(const BasicBlock& block)
     auto blockLabel = "<" + blockID + ">";
 
     if (!block.label.empty())
-        blockLabel += "\\n" + block.label;
+        blockLabel += "\\n'" + block.label + "'";
 
     WriteLine(blockID + " [label=\"" + blockLabel + "\\n" + instrList + "\"];");
 

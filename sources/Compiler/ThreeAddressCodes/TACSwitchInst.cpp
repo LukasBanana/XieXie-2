@@ -29,6 +29,12 @@ std::string TACSwitchInst::ToString() const
     return "switch | " + switchVar.ToString();
 }
 
+void TACSwitchInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
+{
+    if ( flags(VarFlags::Source) && ( !flags(VarFlags::TempOnly) || switchVar.IsTemp() ) )
+        switchVar.Replace(varToReplace, replacedVar);
+}
+
 
 } // /namespace ThreeAddressCodes
 

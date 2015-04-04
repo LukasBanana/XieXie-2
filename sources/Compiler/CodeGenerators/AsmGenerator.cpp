@@ -32,34 +32,34 @@ void AsmGenerator::ErrorIntern(const std::string& msg) const
     throw InternalError(msg);
 }
 
-void AsmGenerator::StartLine()
+void AsmGenerator::StartLn()
 {
     stream_ << indent_;
 }
 
-void AsmGenerator::EndLine()
+void AsmGenerator::EndLn()
 {
     stream_ << std::endl;
 }
 
-void AsmGenerator::L(const std::string& text)
+void AsmGenerator::Ln(const std::string& text)
 {
     stream_ << text;
 }
 
 void AsmGenerator::Line(const std::string& line)
 {
-    StartLine();
-    L(line);
-    EndLine();
+    StartLn();
+    Ln(line);
+    EndLn();
 }
 
 void AsmGenerator::Blank()
 {
     if (config.blanks)
     {
-        StartLine();
-        EndLine();
+        StartLn();
+        EndLn();
     }
 }
 

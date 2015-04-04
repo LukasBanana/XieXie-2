@@ -1,16 +1,70 @@
 ; XieXie Assembler File (XASM)
 ; XieXie Compiler Version 2.0 Alpha
-; Generated at 2015-04-04 14:20:00
+; Generated at 2015-04-04 16:54:13
 
 ; <------- CLASS "Object" ------->
 
 
 ; <------- CLASS "Test" ------->
 
+; Test.fib1(int)
+CTest.Pfib1,I:
+	.bb0:
+	ldw $r0, ($lb) -4
+	cmp $r0, 2
+	jg .bb2
+	.bb1:
+	mov $ar, 1
+	ret 1
+	.bb2:
+	sub $r1, $r0, 1
+	push $r1
+	call CTest.Pfib1,I
+	mov $r2, $ar
+	sub $r3, $r0, 2
+	push $r3
+	call CTest.Pfib1,I
+	mov $r1, $ar
+	add $r2, $r2, $r1
+	mov $ar, $r2
+	ret 1
+
+; Test.func(float)
+CTest.Pfunc,F:
+	.bb0:
+	ldw $r0, ($lb) -4
+	mulf $r1, $r0, $r0
+	mov $ar, $r1
+	ret 1
+
+; Test.func(int)
+CTest.Pfunc,I:
+	.bb0:
+	ldw $r0, ($lb) -4
+	mov $cf, $r0
+	jne .bb2
+	.bb1:
+	mov $ar, 1
+	ret 1
+	.bb2:
+	mul $r1, $r0, $r0
+	mov $ar, $r1
+	ret 1
+
+; Test.func(int, int)
+CTest.Pfunc,I,I:
+	.bb0:
+	ldw $r0, ($lb) -4
+	ldw $r1, ($lb) -8
+	mul $r2, $r1, 2
+	add $r2, $r0, $r2
+	mov $ar, $r2
+	ret 2
+
 ; Test.main(int)
 CTest.Pmain,I:
 	.bb0:
-	mov $r0, 0
+	ldw $r0, ($lb) -4
 	mov $r1, 0
 	mov $r2, 0
 	mov $r3, 0
@@ -18,40 +72,42 @@ CTest.Pmain,I:
 	mov $r5, 0
 	mov $r6, 0
 	mov $r7, 0
-	mov $r8, $r9
+	mov $r8, 0
+	mov $r9, $r0
 	mov $r10, 0
 	.bb1:
-	add $r0, $r0, 4
-	cmp $r0, 100
+	add $r1, $r1, 4
+	cmp $r1, 100
 	jle .bb3
 	.bb2:
-	mov $r0, 42
+	mov $r1, 42
+	push 3
+	call CTest.Pfunc,I
+	mov $r11, $ar
+	mov $r3, $r11
+	push 5.2
+	call CTest.Pfunc,F
+	mov $r11, $ar
+	mov $r8, $r11
+	push 5
+	call CTest.Pfunc,I
+	mov $r11, 5
+	add $r11, $r11, $r2
+	mov $r11, 2
+	mul $r11, $r11, $r11
+	push $r11
+	call CTest.Pfunc,I
+	push 2.3
+	call CTest.Pfunc,F
+	push $r2
+	push 42
+	call CTest.Pfunc,I,I
 	mov $ar, 0
-	ret
+	ret 1
 	.bb3:
-	add $r1, $r1, $r0
-	inc $r0
+	add $r2, $r2, $r1
+	inc $r1
 	jmp .bb1
-
-; Test.pow2(float)
-CTest.Ppow2,F:
-	.bb0:
-	mulf $r0, $r1, $r1
-	mov $ar, $r0
-	ret
-
-; Test.pow2(int)
-CTest.Ppow2,I:
-	.bb0:
-	mov $cf, $r0
-	jne .bb2
-	.bb1:
-	mov $ar, 1
-	ret
-	.bb2:
-	mul $r1, $r0, $r0
-	mov $ar, $r1
-	ret
 
 
 

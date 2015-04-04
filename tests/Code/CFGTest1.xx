@@ -6,15 +6,26 @@ extern class Object {}
 
 class Test {
 	
-	int pow2(int x) {
+	int func(int x) {
 		if x = 0 {
 			return 1
 		} else {
 			return x*x
 		}
 	}
-	float pow2(float x) {
+	float func(float x) {
 		return x*x
+	}
+	int func(int a, int b) {
+		return a+b*2
+	}
+	
+	static int fib1(int n) {
+		if n <= 2 {
+			return 1
+		} else {
+			return Test.fib1(n-1) + Test.fib1(n-2)
+		}
 	}
 	
 	int main(int p) {
@@ -143,10 +154,12 @@ class Test {
 		p := -1*/
 		
 		// --- direct procedure call ---
-		//a := pow2(3)
-		//f := pow2(5.2)
-		pow2(5)
-		pow2(2.3)
+		a := func(3)
+		f := func(5.2)
+		func(5)
+		func(2*(5 + j))
+		func(2.3)
+		func(i, j)
 		
 		// --- foreach loop ---
 		//...

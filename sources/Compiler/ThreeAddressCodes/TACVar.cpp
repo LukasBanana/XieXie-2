@@ -47,10 +47,8 @@ std::string TACVar::ToString() const
             return "l" + idStr;
         case Types::Temp:
             return "t" + idStr;
-        case Types::ArgIn:
-            return "i" + idStr;
-        case Types::ArgOut:
-            return "o" + idStr;
+        case Types::Return:
+            return "r" + idStr;
     }
 
     return idStr;

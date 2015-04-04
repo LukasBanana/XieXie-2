@@ -29,7 +29,13 @@ TACInst::Types TACArgInst::Type() const
 
 std::string TACArgInst::ToString() const
 {
-    return OpCodePrefix() + " | push(" + src.ToString() + ")";
+    return OpCodePrefix() + " | push " + src.ToString();
+}
+
+void TACArgInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
+{
+    if ( flags(VarFlags::Source) && ( !flags(VarFlags::TempOnly) || src.IsTemp() ) )
+        src.Replace(varToReplace, replacedVar);
 }
 
 

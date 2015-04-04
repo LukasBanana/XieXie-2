@@ -33,6 +33,18 @@ std::string TACParamInst::ToString() const
     return OpCodePrefix() + " | " + dest.ToString() + " := fetch(" + std::to_string(argIndex) + ")";
 }
 
+void TACParamInst::InsertDestVar(std::set<TACVar>& vars, const BitMask& flags) const
+{
+    if (!flags(TACInst::VarFlags::TempOnly) || dest.IsTemp())
+        vars.insert(dest);
+}
+
+void TACParamInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
+{
+    if ( flags(VarFlags::Dest) && ( !flags(VarFlags::TempOnly) || dest.IsTemp() ) )
+        dest.Replace(varToReplace, replacedVar);
+}
+
 
 } // /namespace ThreeAddressCodes
 

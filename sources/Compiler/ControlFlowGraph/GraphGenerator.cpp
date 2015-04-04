@@ -14,8 +14,11 @@
 #include "TACCopyInst.h"
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
+#include "TACResultInst.h"
 #include "TACSwitchInst.h"
 #include "TACDirectCallInst.h"
+#include "TACParamInst.h"
+#include "TACArgInst.h"
 
 
 namespace ControlFlowGraph
@@ -140,6 +143,14 @@ DEF_VISIT_PROC(GraphGenerator, Param)
 
 DEF_VISIT_PROC(GraphGenerator, Arg)
 {
+    /* Build argument expression CFG */
+    Visit(ast->expr);
+    auto var = Var();
+
+    /* Make instruction */
+    auto inst = BB()->MakeInst<TACArgInst>(var);
+
+    PopVar();
 }
 
 DEF_VISIT_PROC(GraphGenerator, ProcSignature)
@@ -168,11 +179,6 @@ DEF_VISIT_PROC(GraphGenerator, ArrayAccess)
 //!!!INCOMPLETE!!!
 DEF_VISIT_PROC(GraphGenerator, ProcCall)
 {
-    /* Build CFG for procedure call */
-    auto in = MakeBlock("ProcCall");
-    //auto out = MakeBlock("EndProcCall");
-    auto out = in;
-    
     /* Get procedure identifier */
     if (!ast->declStmntRef)
         ErrorIntern("missing reference for procedure declaration", ast);
@@ -181,11 +187,15 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     auto procClass = ast->declStmntRef->parentRef;
     auto procIdent = UniqueLabel(procClass->ident, *procSig);
 
-    in->MakeInst<TACDirectCallInst>(procIdent);
+    /* Make argument instructions */
+    for (auto it = ast->args.rbegin(); it != ast->args.rend(); ++it)
+        Visit(*it);
+
+    /* Make call instruction */
+    BB()->MakeInst<TACDirectCallInst>(procIdent);
 
     //...
 
-    RETURN_BLOCK_REF(BlockRef(in, out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, SwitchCase)
@@ -209,14 +219,14 @@ DEF_VISIT_PROC(GraphGenerator, ReturnStmnt)
             auto var = Var();
 
             /* Make instruction */
-            auto inst = bb->MakeInst<TACReturnInst>(var);
+            auto inst = bb->MakeInst<TACReturnInst>(var, numProcParams_);
 
             PopVar();
         }
         PopBB();
     }
     else
-        bb->MakeInst<TACReturnInst>();
+        bb->MakeInst<TACReturnInst>(numProcParams_);
 
     bb->flags << BasicBlock::Flags::HasReturnStmnt;
 
@@ -238,7 +248,16 @@ DEF_VISIT_PROC(GraphGenerator, CtrlTransferStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ProcCallStmnt)
 {
-    RETURN_BLOCK_REF(VisitAndLink(ast->procCall));
+    /* Build CFG for procedure call */
+    auto bb = MakeBlock("ProcCall");
+    
+    PushBB(bb);
+    {
+        Visit(ast->procCall);
+    }
+    PopBB();
+
+    RETURN_BLOCK_REF(bb);
 }
 
 /*
@@ -647,11 +666,19 @@ DEF_VISIT_PROC(GraphGenerator, VarDeclStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 {
+    /* Store number of parameters in the current procedure declaration */
+    numProcParams_ = static_cast<unsigned int>(ast->procSignature->params.size());
+
     /* Generate name mangling for procedure signature */
     auto procIdent = UniqueLabel(CT()->GetClassDeclAST()->ident, *ast->procSignature);
     auto procDisplay = DisplayLabel(procIdent);
     
     auto root = CT()->CreateRootBasicBlock(procIdent, procDisplay);
+
+    /* Fetch parameters */
+    size_t argIndex = 0;
+    for (auto& param : ast->procSignature->params)
+        root->MakeInst<TACParamInst>(LocalVar(*param), argIndex++);
 
     /* Build sub-CFG for this procedure */
     auto graph = VisitAndLink(ast->codeBlock);
@@ -665,7 +692,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     if (graph.out && !graph.out->flags(BasicBlock::Flags::HasReturnStmnt))
     {
         auto bb = MakeBlock();
-        bb->MakeInst<TACReturnInst>();
+        bb->MakeInst<TACReturnInst>(numProcParams_);
         graph.out->AddSucc(*bb, "return");
     }
 
@@ -904,6 +931,12 @@ DEF_VISIT_PROC(GraphGenerator, CastExpr)
 
 DEF_VISIT_PROC(GraphGenerator, ProcCallExpr)
 {
+    Visit(ast->procCall);
+
+    auto var = TempVar();
+    BB()->MakeInst<TACResultInst>(var);
+
+    PushVar(var);
 }
 
 DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)

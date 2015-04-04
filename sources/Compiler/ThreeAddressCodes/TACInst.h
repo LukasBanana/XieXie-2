@@ -44,6 +44,7 @@ class TACInst
             DirectCall,     //!< Jump and link
             IndirectCall,   //!< Jump register and link
             Return,         //!< Procedure return
+            Result,         //!< Fetch procedure result.
             Param,          //!< Fetch parameter.
             Arg,            //!< Assign argument to parameter.
         };
@@ -104,6 +105,9 @@ class TACInst
 
             /* IndirectCall */
             INDCALL,
+
+            /* Result */
+            RESULT,
 
             /* Param */
             PARAM,

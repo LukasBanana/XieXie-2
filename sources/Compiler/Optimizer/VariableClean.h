@@ -31,14 +31,17 @@ class VariableClean : public Optimizer
         void TransformModifyInst(TACInstPtr& inst) override;
         void TransformRelationInst(TACInstPtr& inst) override;
         void TransformReturnInst(TACInstPtr& inst) override;
+        void TransformResultInst(TACInstPtr& inst) override;
         void TransformParamInst(TACInstPtr& inst) override;
         void TransformArgInst(TACInstPtr& inst) override;
+        void TransformSwitchInst(TACInstPtr& inst) override;
 
         void ReadVar(const TACVar& var);
         void WriteVar(const TACVar& var);
 
         bool IsVarUsed(const TACVar& var) const;
         bool VarNotWritten(const TACVar& var);
+        bool IsDestVarRequired(const TACVar& var);
 
         std::set<TACVar> vars_;             //!< Variables which are used for reading.
         std::set<TACVar> varsLastWrite_;    //!< Variables which have already been written in the last stage.

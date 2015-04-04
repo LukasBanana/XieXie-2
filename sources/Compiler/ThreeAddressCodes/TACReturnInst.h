@@ -22,14 +22,17 @@ class TACReturnInst : public TACInst
     
     public:
         
-        TACReturnInst();
-        TACReturnInst(const TACVar& src);
+        TACReturnInst(unsigned int numProcParams = 0);
+        TACReturnInst(const TACVar& src, unsigned int numProcParams = 0);
 
         Types Type() const override;
         std::string ToString() const override;
 
-        TACVar  src;
-        bool    hasVar = false;
+        void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
+
+        TACVar          src;
+        bool            hasVar          = false;
+        unsigned int    numProcParams   = 0;
 
 };
 

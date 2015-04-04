@@ -34,8 +34,7 @@ class TACVar
             Global,     //!< Global variable
             Local,      //!< Local variable.
             Temp,       //!< Compiler temporary variable.
-            ArgIn,      //!< Input argument for a procedure call.
-            ArgOut,     //!< Output argument from a procedure call.
+            Return,     //!< Argument return for a procedure call.
         };
 
         TACVar() = default;
