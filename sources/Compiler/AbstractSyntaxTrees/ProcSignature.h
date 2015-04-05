@@ -31,8 +31,9 @@ class ProcSignature : public AST
         */
         static bool AreSimilar(const ProcSignature& lhs, const ProcSignature& rhs);
 
-        bool                    isStatic        = false;
-        bool                    isEntryPoint    = false;
+        bool                    isStatic        = false;    // is this procedure static?
+        bool                    isEntryPoint    = false;    // is this procedure a main entry point?
+
         TypeDenoterPtr          returnTypeDenoter;
         std::string             ident;
         std::vector<ParamPtr>   params;

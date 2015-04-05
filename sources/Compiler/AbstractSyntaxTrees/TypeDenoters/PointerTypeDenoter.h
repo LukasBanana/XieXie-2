@@ -47,11 +47,11 @@ class PointerTypeDenoter : public TypeDenoter
             return declIdent.empty() || declIdent == ident;
         }
 
-        std::string declIdent;          // may be empty (for null pointer literal)
-        bool        isWeakRef = false;
+        std::string declIdent;              // may be empty (for null pointer literal)
+        bool        isWeakRef   = false;    // is this pointer a weak reference?
 
         // dast
-        AST*        declRef = nullptr; // reference to the declaration AST node (may be null -> for null pointer literal)
+        AST*        declRef     = nullptr;  // reference to the declaration AST node (may be null -> for null pointer literal)
 
 };
 

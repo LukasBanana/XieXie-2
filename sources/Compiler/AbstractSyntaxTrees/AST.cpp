@@ -352,16 +352,34 @@ const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const
 
 void ClassDeclStmnt::BindBaseClassRef(ClassDeclStmnt* classDeclStmnt)
 {
-    baseClassRef_ = classDeclStmnt;
-    if (baseClassRef_)
-        symTab.fallbackSymTab = &(baseClassRef_->symTab);
-    else
-        symTab.fallbackSymTab = nullptr;
-}
+    if (classDeclStmnt)
+    {
+        /* Bind fallback symbol table to find identifiers in 'super' class */
+        symTab.fallbackSymTab = &(classDeclStmnt->symTab);
 
-ClassDeclStmnt* ClassDeclStmnt::GetBaseClassRef() const
-{
-    return baseClassRef_;
+        /* Bind new sub class */
+        auto& subClasses = classDeclStmnt->subClassesRef_;
+        auto it = std::find(subClasses.begin(), subClasses.end(), this);
+        if (it == subClasses.end())
+            subClasses.push_back(this);
+    }
+    else
+    {
+        /* Unbind callback */
+        symTab.fallbackSymTab = nullptr;
+
+        /* Unbind previous sub class */
+        if (baseClassRef_)
+        {
+            auto& subClasses = baseClassRef_->subClassesRef_;
+            auto it = std::find(subClasses.begin(), subClasses.end(), this);
+            if (it != subClasses.end())
+                subClasses.erase(it);
+        }
+    }
+
+    /* Store new base class reference */
+    baseClassRef_ = classDeclStmnt;
 }
 
 bool ClassDeclStmnt::IsSuperClassOf(const ClassDeclStmnt& classDeclStmnt) const
@@ -400,6 +418,32 @@ std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const 
     if (rootClass != this && baseClassRef_)
         return ident + separator + baseClassRef_->HierarchyString(separator, rootClass);
     return ident;
+}
+
+void ClassDeclStmnt::GenerateRTTI()
+{
+    /* Initialize RTTI for root class */
+    typeID_ = 0;
+    numSubClasses_ = 0;
+    
+    /* Generate RTTI for sub classes */
+    auto typeID = typeID_;
+    for (auto subClass : subClassesRef_)
+        subClass->GenerateRTTI(typeID, numSubClasses_);
+}
+
+void ClassDeclStmnt::GenerateRTTI(unsigned int& typeID, unsigned int& numSubClasses)
+{
+    /* Initialize RTTI for this class */
+    typeID_ = ++typeID;
+    numSubClasses_ = 0;
+    
+    /* Generate RTTI for sub classes */
+    for (auto subClass : subClassesRef_)
+        subClass->GenerateRTTI(typeID, numSubClasses_);
+
+    /* Increase sub-class count for super class */
+    numSubClasses += (numSubClasses_ + 1);
 }
 
 

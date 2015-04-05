@@ -160,6 +160,13 @@ DEF_VISIT_PROC(Decorator, Program)
     /* (5) Analyze the actual code */
     state_ = States::AnalyzeCode;
     Visit(ast->classDeclStmnts);
+
+    /* Generate RTTI for the entire class hierarchy */
+    auto rootClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope("Object", ast->symTab, ast));
+    if (rootClassDecl)
+        rootClassDecl->GenerateRTTI();
+    else
+        Error("missing root class \"Object\"");
 }
 
 DEF_VISIT_PROC(Decorator, CodeBlock)

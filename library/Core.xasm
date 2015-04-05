@@ -73,7 +73,7 @@ dec_ref:
 	.end:
 	ret 1
 
-; Object dynamic_cast(Object obj, int baseTypeID, int numSubClasses)
+; Object dynamic_cast(Object obj, int baseTypeID, int castNumSubClasses)
 dynamic_cast:
 	ldw $cf, ($lb) -4		; load object reference 'obj'
 	
@@ -84,13 +84,13 @@ dynamic_cast:
 	mov $ar, $cf
 	ldw $r1, ($ar) 4		; load type-id of 'obj'
 	ldw $r2, ($lb) -8		; load type-id 'baseTypeID'
-	ldw $r3, ($lb) -12		; load number of sub classes 'numSubClasses'
-	add $r3, $r3, $r2		; calculate: baseClass.typeID + obj.numSubClasses
+	ldw $r3, ($lb) -12		; load number of sub classes 'castNumSubClasses'
+	add $r3, $r3, $r2		; calculate: baseTypeID + castNumSubClasses
 	
 	; compare type-ids
-	cmp $r2, $r1			; compare: baseClass.typeID > obj.typeID
+	cmp $r2, $r1			; compare: baseTypeID > obj.typeID
 	jg .end
-		cmp $r1, $r3		; compare: obj.typeID > (baseClass.typeID + obj.numSubClasses)
+		cmp $r1, $r3		; compare: obj.typeID > (baseTypeID + castNumSubClasses)
 		jg .end
 			ret 3			; return object reference (ar)
 			

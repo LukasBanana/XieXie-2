@@ -38,91 +38,103 @@ std::string TACInst::OpCodeToString(const OpCodes opcode)
     switch (opcode)
     {
         case OpCodes::NOP:
-            return "nop";
+            return "NOP";
 
+        /* Copy */
         case OpCodes::MOV:
-            return "mov";
+            return "Mov";
         case OpCodes::NOT:
-            return "not";
-        case OpCodes::AND:
-            return "and";
-        case OpCodes::OR:
-            return "or";
-        case OpCodes::XOR:
-            return "xor";
-
-        case OpCodes::ADD:
-            return "add";
-        case OpCodes::SUB:
-            return "sub";
-        case OpCodes::MUL:
-            return "mul";
-        case OpCodes::DIV:
-            return "div";
-        case OpCodes::MOD:
-            return "mod";
-        case OpCodes::SLL:
-            return "sll";
-        case OpCodes::SLR:
-            return "slr";
-
-        case OpCodes::FADD:
-            return "fadd";
-        case OpCodes::FSUB:
-            return "fsub";
-        case OpCodes::FMUL:
-            return "fmul";
-        case OpCodes::FDIV:
-            return "fdiv";
-
-        case OpCodes::CMPE:
-            return "cmpe";
-        case OpCodes::CMPNE:
-            return "cmpne";
-        case OpCodes::CMPL:
-            return "cmpl";
-        case OpCodes::CMPLE:
-            return "cmple";
-        case OpCodes::CMPG:
-            return "cmpg";
-        case OpCodes::CMPGE:
-            return "cmpge";
-
-        case OpCodes::FCMPE:
-            return "fcmpe";
-        case OpCodes::FCMPNE:
-            return "fcmpne";
-        case OpCodes::FCMPL:
-            return "fcmpl";
-        case OpCodes::FCMPLE:
-            return "fcmple";
-        case OpCodes::FCMPG:
-            return "fcmpg";
-        case OpCodes::FCMPGE:
-            return "fcmpge";
-
+            return "Not";
         case OpCodes::FTI:
-            return "fti";
+            return "FTI";
         case OpCodes::ITF:
-            return "itf";
+            return "ITF";
+        case OpCodes::DYNCAST:
+            return "DynCast";
 
+        /* Modify */
+        case OpCodes::AND:
+            return "And";
+        case OpCodes::OR:
+            return "Or";
+        case OpCodes::XOR:
+            return "XOr";
+        case OpCodes::ADD:
+            return "Add";
+        case OpCodes::SUB:
+            return "Sub";
+        case OpCodes::MUL:
+            return "Mul";
+        case OpCodes::DIV:
+            return "Div";
+        case OpCodes::MOD:
+            return "Mod";
+        case OpCodes::SLL:
+            return "SLL";
+        case OpCodes::SLR:
+            return "SLR";
+        case OpCodes::FADD:
+            return "fAdd";
+        case OpCodes::FSUB:
+            return "fSub";
+        case OpCodes::FMUL:
+            return "fMul";
+        case OpCodes::FDIV:
+            return "fDiv";
+
+        /* Relation */
+        case OpCodes::CMPE:
+            return "CmpE";
+        case OpCodes::CMPNE:
+            return "CmpNE";
+        case OpCodes::CMPL:
+            return "CmpL";
+        case OpCodes::CMPLE:
+            return "CmpLE";
+        case OpCodes::CMPG:
+            return "CmpG";
+        case OpCodes::CMPGE:
+            return "CmpGE";
+        case OpCodes::FCMPE:
+            return "fCmpE";
+        case OpCodes::FCMPNE:
+            return "fCmpNE";
+        case OpCodes::FCMPL:
+            return "fCmpL";
+        case OpCodes::FCMPLE:
+            return "fCmpLE";
+        case OpCodes::FCMPG:
+            return "fCmpG";
+        case OpCodes::FCMPGE:
+            return "fCmpGE";
+
+        /* Switch */
         case OpCodes::SWITCH:
-            return "switch";
+            return "Switch";
 
+        /* Return */
         case OpCodes::RETURN:
-            return "return";
-        case OpCodes::RESULT:
-            return "result";
+            return "Return";
 
+        /* DirectCall */
         case OpCodes::DIRCALL:
-            return "dircall";
-        case OpCodes::INDCALL:
-            return "indcall";
+            return "DirCall";
 
+        /* IndirectCall */
+        case OpCodes::INDCALL:
+            return "IndCall";
+
+        /* Result */
+        case OpCodes::RESULT:
+            return "Result";
+
+        /* Param */
         case OpCodes::PARAM:
-            return "param";
+            return "Param";
+
+        /* Arg */
         case OpCodes::ARG:
-            return "arg";
+            return "Arg";
     }
 
     return "";

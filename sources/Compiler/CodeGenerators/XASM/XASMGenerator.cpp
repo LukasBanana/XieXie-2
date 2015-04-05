@@ -10,6 +10,7 @@
 #include "Timer.h"
 #include "CFGTopDownCollector.h"
 #include "CodeGenerators/NameMangling.h"
+#include "BuiltinClasses.h"
 
 
 namespace CodeGenerator
@@ -17,6 +18,7 @@ namespace CodeGenerator
 
 
 using namespace std::placeholders;
+using namespace AbstractSyntaxTrees;
 
 static RegisterAllocator::RegList XASMRegList()
 {
@@ -97,6 +99,11 @@ void XASMGenerator::WORDAddress(const std::string& label)
 void XASMGenerator::WORDField(int value)
 {
     Line(".word " + std::to_string(value));
+}
+
+void XASMGenerator::WORDField(unsigned int value)
+{
+    WORDField(static_cast<int>(value));
 }
 
 void XASMGenerator::ASCIIField(const std::string& text)
@@ -332,30 +339,41 @@ void XASMGenerator::GenerateInst(const TACInst& inst)
 
 void XASMGenerator::GenerateCopyInst(const TACCopyInst& inst)
 {
-    auto reg0 = Reg(inst.dest);
-    auto reg1 = Reg(inst.src);
-
-    StartLn();
+    if (inst.opcode == OpCodes::DYNCAST)
     {
-        switch (inst.opcode)
-        {
-            case OpCodes::MOV:
-                Ln("mov");
-                break;
-            case OpCodes::NOT:
-                Ln("not");
-                break;
-            case OpCodes::FTI:
-                Ln("fti");
-                break;
-            case OpCodes::ITF:
-                Ln("itf");
-                break;
-        }
-
-        Ln(" " + reg0 + ", " + reg1);
+        Line("push " + std::to_string(inst.dynCastK));
+        Line("push " + std::to_string(inst.dynCastID));
+        Line("push " + Reg(inst.src));
+        Line("call dynamic_cast");
+        Line("mov " + Reg(inst.dest) + ", $ar");
     }
-    EndLn();
+    else
+    {
+        auto reg0 = Reg(inst.dest);
+        auto reg1 = Reg(inst.src);
+
+        StartLn();
+        {
+            switch (inst.opcode)
+            {
+                case OpCodes::MOV:
+                    Ln("mov");
+                    break;
+                case OpCodes::NOT:
+                    Ln("not");
+                    break;
+                case OpCodes::FTI:
+                    Ln("fti");
+                    break;
+                case OpCodes::ITF:
+                    Ln("itf");
+                    break;
+            }
+
+            Ln(" " + reg0 + ", " + reg1);
+        }
+        EndLn();
+    }
 }
 
 void XASMGenerator::GenerateModifyInst(const TACModifyInst& inst)
@@ -574,12 +592,12 @@ void XASMGenerator::GenerateStringLiteral(const CFGProgram::StringLiteral& const
     GlobalLabel(constStr.ident);
     IncIndent();
     {
-        WORDField(1);           // Object.refCount
-        WORDField(1);           // Object.typeID
-        WORDField(0);           // Object.vtableAddr !!!!!!!!!!
-        WORDField(strLen);      // String.size
-        WORDField(strLen);      // String.bufSize
-        WORDAddress(".buffer"); // String.buffer
+        WORDField(1);                               // Object.refCount
+        WORDField(BuiltinClasses::String::typeID);  // Object.typeID
+        WORDField(0);                               // Object.vtableAddr !!!!!!!!!!
+        WORDField(strLen);                          // String.size
+        WORDField(strLen);                          // String.bufSize
+        WORDAddress(".buffer");                     // String.buffer
         LocalLabel("buffer");
         ASCIIField(ResolveStringLiteral(constStr.value));
     }

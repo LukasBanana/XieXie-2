@@ -60,6 +60,8 @@ class XASMGenerator final : public AsmGenerator
         void WORDAddress(const std::string& label);
         //! Writes a WORD data-field with value.
         void WORDField(int value);
+        //! Writes a WORD data-field with value.
+        void WORDField(unsigned int value);
         //! Writes an ASCII data-field, e.g. ".ascii \"text\"".
         void ASCIIField(const std::string& text);
 

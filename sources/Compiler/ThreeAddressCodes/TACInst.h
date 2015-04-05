@@ -57,8 +57,9 @@ class TACInst
             /* Copy */
             MOV,
             NOT,
-            FTI,
-            ITF,
+            FTI,        // float-to-int static cast
+            ITF,        // int-to-float static cast
+            DYNCAST,    // dynamic (down) cast
 
             /* Modify */
             AND,

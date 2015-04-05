@@ -2,13 +2,9 @@
 // CFG Test 1
 // 08/03/2015
 
-extern class Object {}
-extern class String {}
-extern class Array {}
-
 module MyModule {
-	static void foo()
-	void bar() // error, all module procedures must be static
+	static int foo(int x)
+	static void bar()
 }
 
 class Test {
@@ -172,6 +168,10 @@ class Test {
 		func(2*(5 + j))
 		func(2.3)
 		func(i, j)
+		
+		// --- invocations ---
+		a := MyModule.foo(a)
+		MyModule.bar()
 		
 		// --- foreach loop ---
 		//...

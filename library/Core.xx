@@ -5,7 +5,146 @@
  * See "LICENSE.txt" for license information.
  */
 
-// Low-level intrinsic functions.
+/**
+Root base object for all classes.
+\note typeID = 0
+*/
+extern class Object {
+	
+	//! Returns the type ID of this object
+	[[final]]
+	int typeID()
+	
+	//! Returns the reference count of this object
+	[[final]]
+	int refCount()
+	
+	bool equals(Object rhs)
+	String toString()
+	
+}
+
+/**
+UTF-8 string class.
+\note typeID = 1
+*/
+extern class String {
+	
+	init()
+	init(String src)
+	
+	bool equals(Object rhs)
+	String toString()
+	
+	String copy()
+	
+	int size()
+	void resize(int size)
+	
+	bool empty()
+	
+	String add(String rhs)
+	String subString(int pos, int len := -1)
+	
+	void setChar(int pos, int char)
+	int getChar(int pos)
+	
+	/**
+	Returns the raw pointer (as integer) which points to
+	the first character in this null terminated string.
+	*/
+	[[final]]
+	int pointer()
+	
+}
+
+/**
+Array class for pointers.
+\note typeID = 2
+*/
+extern class Array {
+	
+	init()
+	init(int size)
+	
+	bool equals(Object rhs)
+	
+	Array copy()
+	
+	//! Returns the number of elements in the array
+	int size()
+	void resize(int size)
+	
+	bool empty()
+	
+	void add(Object entry)
+	void remove(int pos)
+	
+	void setEntry(int pos, Object entry)
+	Object getEntry(int pos)
+	
+	//! Returns the index (beginning from 0) for the entry or -1, if the array does not contain it
+	int find(Object entry, int startPos := 0)
+	bool contains(Object entry)
+	
+	//! Returns the raw pointer (as integer) of this array.
+	[[final]]
+	int pointer()
+	
+}
+
+/**
+Array class for built-in data types.
+\note typeID = 3
+*/
+extern class PrimArray {
+	//...
+}
+
+/**
+Array class for built-in boolean data types.
+\note typeID = 4
+*/
+extern class BoolArray {
+	//...
+}
+
+/**
+General purpose buffer. This class manages a pointer.
+\note typeID = 5
+*/
+extern class Buffer {
+	
+	bool equals(Object rhs)
+	
+	Buffer copy()
+	
+	int size()
+	void resize(int s)
+	
+	void writeByte(int offset, int value)
+	int readByte(int offset)
+	
+	void writeInt(int offset, int value)
+	int readInt(int offset)
+	
+	void writeFloat(int offset, float value)
+	float readFloat(int offset)
+	
+	//! Writes the specified sub buffer into this buffer.
+	void writeBuffer(int offset, int size, Buffer subBuffer)
+	//! Reads this buffer into the specified sub buffer.
+	void readBuffer(int offset, int size, Buffer subBuffer)
+	
+	//! Returns the raw pointer (as integer) of this buffer.
+	int pointer()
+	
+}
+
+/**
+Low-level intrinsic functions.
+\note typeID = 6
+*/
 extern class Intrinsics {
 	
 	static int allocMem(int size)
@@ -53,106 +192,3 @@ extern class Intrinsics {
 	
 }
 
-// Root base object for all classes
-extern class Object {
-	
-	//! Returns the type ID of this object
-	[[final]]
-	int typeID()
-	
-	//! Returns the reference count of this object
-	[[final]]
-	int refCount()
-	
-	bool equals(Object rhs)
-	String toString()
-	
-}
-
-// UTF-8 string class.
-extern class String {
-	
-	bool equals(Object rhs)
-	String toString()
-	
-	String copy()
-	
-	int size()
-	void resize(int size)
-	
-	bool empty()
-	
-	String add(String rhs)
-	
-	void setChar(int pos, int char)
-	int getChar(int pos)
-	
-	/**
-	Returns the raw pointer (as integer) which points to
-	the first character in this null terminated string.
-	*/
-	[[final]]
-	int pointer()
-	
-}
-
-// (Generic) array class.
-extern class Array {
-	
-	init()
-	init(int size)
-	
-	bool equals(Object rhs)
-	
-	Array copy()
-	
-	//! Returns the number of elements in the array
-	int size()
-	void resize(int size)
-	
-	bool empty()
-	
-	void add(Object entry)
-	void remove(int pos)
-	
-	void setEntry(int pos, Object entry)
-	Object getEntry(int pos)
-	
-	//! Returns the index (beginning from 0) for the entry or -1, if the array does not contain it
-	int find(Object entry, int startPos := 0)
-	bool contains(Object entry)
-	
-	//! Returns the raw pointer (as integer) of this array.
-	[[final]]
-	int pointer()
-	
-}
-
-//! General purpose buffer. This class manages a pointer.
-extern class Buffer {
-	
-	bool equals(Object rhs)
-	
-	Buffer copy()
-	
-	int size()
-	void resize(int s)
-	
-	void writeByte(int offset, int value)
-	int readByte(int offset)
-	
-	void writeInt(int offset, int value)
-	int readInt(int offset)
-	
-	void writeFloat(int offset, float value)
-	float readFloat(int offset)
-	
-	//! Writes the specified sub buffer into this buffer.
-	void writeBuffer(int offset, int size, Buffer subBuffer)
-	//! Reads this buffer into the specified sub buffer.
-	void readBuffer(int offset, int size, Buffer subBuffer)
-	
-	//! Returns the raw pointer (as integer) of this buffer.
-	int pointer()
-	
-}

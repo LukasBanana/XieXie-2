@@ -1,26 +1,6 @@
 ; XieXie Assembler File (XASM)
 ; XieXie Compiler Version 2.0 Alpha
-; Generated at 2015-04-05 12:27:00
-
-; <------- CLASS "Object" ------->
-
-
-; <------- CLASS "String" ------->
-
-
-; <------- CLASS "Array" ------->
-
-
-; <------- CLASS "MyModule" ------->
-
-; MyModule.bar()
-CMyModule.Pbar:
-	.bb0:
-
-; MyModule.foo()
-CMyModule.Pfoo:
-	.bb0:
-
+; Generated at 2015-04-05 17:38:42
 
 ; <------- CLASS "Test" ------->
 
@@ -117,17 +97,22 @@ CTest.Ptest1,I:
 	mov $r8, $r11
 	push 5
 	call CTest.Pfunc,I
-	mov $r11, 5
-	add $r11, $r11, $r2
-	mov $r11, 2
-	mul $r11, $r11, $r11
-	push $r11
+	mov $r12, 5
+	add $r12, $r12, $r2
+	mov $r12, 2
+	mul $r12, $r12, $r12
+	push $r12
 	call CTest.Pfunc,I
 	push 2.3
 	call CTest.Pfunc,F
 	push $r2
 	push 42
 	call CTest.Pfunc,I,I
+	push $r3
+	invk MyModule.foo
+	mov $r13, $ar
+	mov $r3, $r13
+	invk MyModule.bar
 	mov $ar, 0
 	ret 1
 	.bb3:
@@ -135,5 +120,17 @@ CTest.Ptest1,I:
 	inc $r1
 	jmp .bb1
 
+
+; <------- STRING "String.const.0" ------->
+
+String.const.0:
+	.word 1
+	.word 1
+	.word 0
+	.word 14
+	.word 14
+	.word @.buffer
+	.buffer:
+	.ascii "Hello, World!\n"
 
 
