@@ -9,8 +9,7 @@
 #define __XX_OPTIMIZER_H__
 
 
-#include "ClassTree.h"
-#include "BasicBlock.h"
+#include "CFGProgram.h"
 #include "TACVar.h"
 
 
@@ -31,7 +30,7 @@ class Optimizer
 
         virtual void Transform(BasicBlock& basicBlock) = 0;
 
-        static void OptimizeProgram(std::vector<ClassTreePtr>& classTrees);
+        static void OptimizeProgram(CFGProgram& program);
 
     protected:
         

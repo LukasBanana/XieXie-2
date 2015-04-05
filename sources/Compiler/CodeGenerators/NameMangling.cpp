@@ -8,6 +8,8 @@
 #include "NameMangling.h"
 #include "Param.h"
 #include "ProcSignature.h"
+#include "ProcDeclStmnt.h"
+#include "ClassDeclStmnt.h"
 #include "BuiltinTypeDenoter.h"
 #include "PointerTypeDenoter.h"
 #include "ArrayTypeDenoter.h"
@@ -104,9 +106,30 @@ std::string UniqueLabel(const ProcSignature& procSignature)
     return label;
 }
 
-std::string UniqueLabel(const std::string& classIdent, const AbstractSyntaxTrees::ProcSignature& procSignature)
+std::string UniqueLabel(const AbstractSyntaxTrees::ProcDeclStmnt& procDecl)
 {
-    return "C" + classIdent + "." + UniqueLabel(procSignature);
+    if (procDecl.procSignature)
+    {
+        if (procDecl.parentRef)
+        {
+            if (procDecl.parentRef->isModule)
+            {
+                /* Return simple label for module procedures */
+                return procDecl.parentRef->ident + "." + procDecl.procSignature->ident;
+            }
+            else
+            {
+                /* Return label with name-mangling for standard class procedures */
+                return "C" + procDecl.parentRef->ident + "." + UniqueLabel(*procDecl.procSignature);
+            }
+        }
+        else
+        {
+            /* Returns only label with name-mangling for stand-alone procedures */
+            return UniqueLabel(*procDecl.procSignature);
+        }
+    }
+    return "";
 }
 
 /* --- DisplayLabel --- */

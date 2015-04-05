@@ -295,8 +295,8 @@ String.vtable:
 
 ; Array:
 ;	Object	super	( 0)
-;	int		size	(12) <- number of entries
-;	int		bufSize	(16) <- actual number of entries
+;	int		size	(12) <- number of entries (without null terminator)
+;	int		bufSize	(16) <- actual number of entries (without null terminator)
 ;	int		buffer	(20)
 
 ; void Array.release(Object this)

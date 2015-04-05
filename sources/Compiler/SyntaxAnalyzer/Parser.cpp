@@ -1135,6 +1135,7 @@ ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attri
 ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
+    state_.classDecl = ast.get();
 
     if (!attribPrefix && Is(Tokens::LDParen))
         attribPrefix = ParseAttribPrefix();

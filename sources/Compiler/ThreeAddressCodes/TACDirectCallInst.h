@@ -23,12 +23,13 @@ class TACDirectCallInst : public TACInst
     public:
         
         TACDirectCallInst();
-        TACDirectCallInst(const std::string& procIdent);
+        TACDirectCallInst(const std::string& procIdent, bool isInvocation = false);
 
         Types Type() const override;
         std::string ToString() const override;
 
         std::string procIdent;
+        bool        isInvocation = false;
 
 };
 

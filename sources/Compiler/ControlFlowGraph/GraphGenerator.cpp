@@ -44,10 +44,10 @@ static bool IsVarFloat(const VarName& ast)
  * GraphGenerator class
  */
 
-std::vector<ClassTreePtr> GraphGenerator::GenerateCFG(Program& program, ErrorReporter& errorReporter)
+CFGProgramPtr GraphGenerator::GenerateCFG(Program& program, ErrorReporter& errorReporter)
 {
-    programClassTrees_.clear();
-    
+    program_ = MakeUnique<CFGProgram>();
+
     try
     {
         errorReporter_ = &errorReporter;
@@ -57,8 +57,12 @@ std::vector<ClassTreePtr> GraphGenerator::GenerateCFG(Program& program, ErrorRep
     {
         errorReporter.Add(err);
     }
+    
+    #if 1//!!!TEST!!!
+    program_->stringLiterals.push_back({ "String.const.0", "Hello, World!\n" });
+    #endif
 
-    return std::move(programClassTrees_);
+    return std::move(program_);
 }
 
 
@@ -183,16 +187,16 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     if (!ast->declStmntRef)
         ErrorIntern("missing reference for procedure declaration", ast);
 
-    auto procSig = ast->declStmntRef->procSignature;
-    auto procClass = ast->declStmntRef->parentRef;
-    auto procIdent = UniqueLabel(procClass->ident, *procSig);
+    auto procDecl = ast->declStmntRef;
+    auto procClass = procDecl->parentRef;
+    auto procIdent = UniqueLabel(*ast->declStmntRef);
 
     /* Make argument instructions */
     for (auto it = ast->args.rbegin(); it != ast->args.rend(); ++it)
         Visit(*it);
 
     /* Make call instruction */
-    BB()->MakeInst<TACDirectCallInst>(procIdent);
+    BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
 
     //...
 
@@ -654,9 +658,12 @@ DEF_VISIT_PROC(GraphGenerator, RepeatStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ClassDeclStmnt)
 {
-    CreateClassTree(*ast);
-    Visit(&(ast->publicSegment));
-    Visit(&(ast->privateSegment));
+    if (!ast->isExtern && !ast->isModule)
+    {
+        CreateClassTree(*ast);
+        Visit(&(ast->publicSegment));
+        Visit(&(ast->privateSegment));
+    }
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarDeclStmnt)
@@ -670,7 +677,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     numProcParams_ = static_cast<unsigned int>(ast->procSignature->params.size());
 
     /* Generate name mangling for procedure signature */
-    auto procIdent = UniqueLabel(CT()->GetClassDeclAST()->ident, *ast->procSignature);
+    auto procIdent = UniqueLabel(*ast);
     auto procDisplay = DisplayLabel(procIdent);
     
     auto root = CT()->CreateRootBasicBlock(procIdent, procDisplay);
@@ -1239,8 +1246,8 @@ template <typename T> GraphGenerator::BlockRef GraphGenerator::VisitAndLink(cons
 
 void GraphGenerator::CreateClassTree(ClassDeclStmnt& ast)
 {
-    programClassTrees_.emplace_back(MakeUnique<ClassTree>(ast));
-    classTree_ = programClassTrees_.back().get();
+    program_->classTrees.emplace_back(MakeUnique<ClassTree>(ast));
+    classTree_ = program_->classTrees.back().get();
 }
 
 BasicBlock* GraphGenerator::MakeBlock(const std::string& label)

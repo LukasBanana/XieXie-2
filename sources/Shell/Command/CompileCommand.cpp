@@ -117,7 +117,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     }
 
     /* Transform to CFG */
-    std::vector<std::unique_ptr<ControlFlowGraph::ClassTree>> classTrees;
+    ControlFlowGraph::CFGProgramPtr cfgProgram;
 
     if (!hasError)
     {
@@ -129,7 +129,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             output.Message("AST to CFG conversion ...");
 
         ControlFlowGraph::GraphGenerator converter;
-        classTrees = converter.GenerateCFG(program, errorReporter);
+        cfgProgram = converter.GenerateCFG(program, errorReporter);
 
         if (errorReporter.HasErrors())
             hasError = true;
@@ -138,7 +138,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             /* Optimize CFG */
             if (output.verbose)
                 output.Message("optimize CFG ...");
-            Optimization::Optimizer::OptimizeProgram(classTrees);
+            Optimization::Optimizer::OptimizeProgram(*cfgProgram);
         }
 
         #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!!!
@@ -147,7 +147,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     }
 
     /* Generate assembler code */
-    if (!hasError)
+    if (!hasError && cfgProgram)
     {
         #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!
         if (showCFG){
@@ -187,7 +187,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             output.Message("generate code file \"" + OutFile() + "\" ...");
 
         CodeGenerator::XASMGenerator generator(outputFile);
-        if (!generator.GenerateAsm(classTrees, errorReporter))
+        if (!generator.GenerateAsm(*cfgProgram, errorReporter))
             hasError = true;
 
         #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!!!
@@ -196,12 +196,12 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     }
 
     /* Show flow graph */
-    if (showCFG)
+    if (showCFG && cfgProgram)
     {
         ControlFlowGraph::CFGViewer viewer;
 
         size_t i = 0;
-        for (const auto& tree : classTrees)
+        for (const auto& tree : cfgProgram->classTrees)
         {
             if (output.verbose)
                 output.Message("dump CFG class tree \"" + tree->GetClassDeclAST()->ident + "\"");

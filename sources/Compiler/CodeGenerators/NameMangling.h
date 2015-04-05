@@ -28,10 +28,10 @@ Returns the unique label for the specified procedure signature (excluding the id
 std::string UniqueLabel(const AbstractSyntaxTrees::ProcSignature& procSignature);
 
 /**
-Returns the unique label for the specified procedure signature including the identifier of its namespace 'classIdent'.
+Returns the unique label for the specified procedure signature including the identifier of its namespace (parent class).
 \throws std::invalid_argument If name mangling failed.
 */
-std::string UniqueLabel(const std::string& classIdent, const AbstractSyntaxTrees::ProcSignature& procSignature);
+std::string UniqueLabel(const AbstractSyntaxTrees::ProcDeclStmnt& procDecl);
 
 /**
 Converts the specified label into a string for display,

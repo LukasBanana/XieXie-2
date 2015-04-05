@@ -1221,6 +1221,15 @@ void Decorator::RegisterProcSymbol(ProcDeclStmnt& ast)
         }
     }
 
+    /* Check if this is a module procedure */
+    if (ast.parentRef->isModule)
+    {
+        if (!ast.procSignature->isStatic)
+            Error("module procedures must be static", &ast);
+        if (!overloadSwitch->procDeclRefs.empty())
+            Error("module procedures must not be overloaded", &ast);
+    }
+
     /* Add procedure to overload switch */
     overloadSwitch->procDeclRefs.push_back(&ast);
 

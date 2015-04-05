@@ -9,7 +9,7 @@
 #define __XX_ASM_GENERATOR_XASM_H__
 
 
-#include "ClassTree.h"
+#include "CFGProgram.h"
 #include "../AsmGenerator.h"
 #include "CodeGenerators/RegisterAllocator.h"
 #include "ErrorReporter.h"
@@ -40,7 +40,7 @@ class XASMGenerator final : public AsmGenerator
         
         XASMGenerator(std::ostream& outputStream, const std::string& indentStr = "\t");
 
-        bool GenerateAsm(const std::vector<ClassTreePtr>& classTrees, ErrorReporter& errorReporter);
+        bool GenerateAsm(const CFGProgram& program, ErrorReporter& errorReporter);
 
     private:
         
@@ -58,10 +58,16 @@ class XASMGenerator final : public AsmGenerator
         void LocalLabel(const std::string& label);
         //! Writes a WORD data-field with address, e.g. ".word @label".
         void WORDAddress(const std::string& label);
+        //! Writes a WORD data-field with value.
+        void WORDField(int value);
         //! Writes an ASCII data-field, e.g. ".ascii \"text\"".
-        void ASCII(const std::string& text);
+        void ASCIIField(const std::string& text);
 
         void WriteHeader();
+
+        /* --- Conversion --- */
+
+        std::string ResolveStringLiteral(const std::string& str) const;
 
         /* --- Register Allocation --- */
 
@@ -128,6 +134,10 @@ class XASMGenerator final : public AsmGenerator
         void GenerateArgInst(const TACArgInst& inst);
 
         void GenerateDirectJump(const BasicBlock& bb);
+
+        /* --- Data Generation --- */
+
+        void GenerateStringLiteral(const CFGProgram::StringLiteral& constStr);
 
         /* === Members === */
 

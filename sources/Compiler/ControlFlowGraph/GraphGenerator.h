@@ -10,8 +10,7 @@
 
 
 #include "Visitor.h"
-#include "ClassTree.h"
-#include "BasicBlock.h"
+#include "CFGProgram.h"
 #include "SafeStack.h"
 #include "TACVar.h"
 #include "TACVarManager.h"
@@ -33,7 +32,7 @@ class GraphGenerator final : private Visitor
     
     public:
         
-        std::vector<ClassTreePtr> GenerateCFG(Program& program, ErrorReporter& errorReporter);
+        CFGProgramPtr GenerateCFG(Program& program, ErrorReporter& errorReporter);
 
     private:
         
@@ -122,7 +121,7 @@ class GraphGenerator final : private Visitor
 
         ErrorReporter*              errorReporter_      = nullptr;
 
-        std::vector<ClassTreePtr>   programClassTrees_;
+        CFGProgramPtr               program_;
         ClassTree*                  classTree_          = nullptr;  //!< Reference to the current class tree.
         unsigned int                numProcParams_      = 0;        //!< Number of parameters in the current procedure declaration.
 

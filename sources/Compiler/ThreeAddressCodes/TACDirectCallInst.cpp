@@ -18,9 +18,10 @@ TACDirectCallInst::TACDirectCallInst() :
     TACInst{ OpCodes::DIRCALL }
 {
 }
-TACDirectCallInst::TACDirectCallInst(const std::string& procIdent) :
+TACDirectCallInst::TACDirectCallInst(const std::string& procIdent, bool isInvocation) :
     TACInst     { OpCodes::DIRCALL },
-    procIdent   { procIdent        }
+    procIdent   { procIdent        },
+    isInvocation{ isInvocation     }
 {
 }
 
@@ -31,7 +32,7 @@ TACInst::Types TACDirectCallInst::Type() const
 
 std::string TACDirectCallInst::ToString() const
 {
-    return OpCodePrefix() + " | " + CodeGenerator::NameMangling::DisplayLabel(procIdent);
+    return OpCodePrefix() + " | " + (isInvocation ? procIdent : CodeGenerator::NameMangling::DisplayLabel(procIdent));
 }
 
 

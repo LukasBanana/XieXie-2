@@ -39,7 +39,7 @@ XASMGenerator::XASMGenerator(std::ostream& outputStream, const std::string& inde
 {
 }
 
-bool XASMGenerator::GenerateAsm(const std::vector<ClassTreePtr>& classTrees, ErrorReporter& errorReporter)
+bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorReporter)
 {
     try
     {
@@ -47,8 +47,12 @@ bool XASMGenerator::GenerateAsm(const std::vector<ClassTreePtr>& classTrees, Err
         WriteHeader();
 
         /* Generate assembler code for each class tree */
-        for (auto& ct : classTrees)
+        for (const auto& ct : program.classTrees)
             GenerateClassTree(*ct);
+
+        /* Generate string literals */
+        for (const auto& sl : program.stringLiterals)
+            GenerateStringLiteral(sl);
 
         /* Write last empty line, so that assembler parser works correct */
         Line("");
@@ -90,7 +94,12 @@ void XASMGenerator::WORDAddress(const std::string& label)
     Line(".word @" + label);
 }
 
-void XASMGenerator::ASCII(const std::string& text)
+void XASMGenerator::WORDField(int value)
+{
+    Line(".word " + std::to_string(value));
+}
+
+void XASMGenerator::ASCIIField(const std::string& text)
 {
     Line(".ascii \"" + text + "\"");
 }
@@ -101,6 +110,32 @@ void XASMGenerator::WriteHeader()
     Comment("XieXie Compiler Version " + Version::AsString());
     Comment("Generated at " + Timer::CurrentTime());
     Blank();
+}
+
+/* --- Conversion --- */
+
+std::string XASMGenerator::ResolveStringLiteral(const std::string& str) const
+{
+    auto result = str;
+
+    for (auto i = result.size(); i > 0;)
+    {
+        --i;
+        switch (result[i])
+        {
+            case '\n':
+                result.replace(i, 1, "\\n");
+                break;
+            case '\t':
+                result.replace(i, 1, "\\t");
+                break;
+            case '\r':
+                result.replace(i, 1, "\\r");
+                break;
+        }
+    }
+
+    return result;
 }
 
 /* --- Register Allocation --- */
@@ -505,7 +540,10 @@ void XASMGenerator::GenerateResultInst(const TACResultInst& inst)
 
 void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
 {
-    Line("call " + inst.procIdent);
+    if (inst.isInvocation)
+        Line("invk " + inst.procIdent);
+    else
+        Line("call " + inst.procIdent);
 }
 
 void XASMGenerator::GenerateParamInst(const TACParamInst& inst)
@@ -522,6 +560,32 @@ void XASMGenerator::GenerateDirectJump(const BasicBlock& bb)
 {
     if (!IsNextBlock(bb))
         Line("jmp " + Label(bb));
+}
+
+/* --- Data Generation --- */
+
+void XASMGenerator::GenerateStringLiteral(const CFGProgram::StringLiteral& constStr)
+{
+    Comment("<------- STRING \"" + constStr.ident + "\" ------->");
+    Blank();
+    
+    auto strLen = static_cast<int>(constStr.value.size());
+
+    GlobalLabel(constStr.ident);
+    IncIndent();
+    {
+        WORDField(1);           // Object.refCount
+        WORDField(1);           // Object.typeID
+        WORDField(0);           // Object.vtableAddr !!!!!!!!!!
+        WORDField(strLen);      // String.size
+        WORDField(strLen);      // String.bufSize
+        WORDAddress(".buffer"); // String.buffer
+        LocalLabel("buffer");
+        ASCIIField(ResolveStringLiteral(constStr.value));
+    }
+    DecIndent();
+
+    Blank();
 }
 
 

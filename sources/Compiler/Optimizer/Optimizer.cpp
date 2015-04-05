@@ -19,9 +19,9 @@ Optimizer::~Optimizer()
 {
 }
 
-void Optimizer::OptimizeProgram(std::vector<ClassTreePtr>& classTrees)
+void Optimizer::OptimizeProgram(CFGProgram& program)
 {
-    for (auto& ct : classTrees)
+    for (auto& ct : program.classTrees)
     {
         for (auto& bb : ct->GetBasicBlocks())
         {
