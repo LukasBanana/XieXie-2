@@ -20,6 +20,10 @@ namespace AbstractSyntaxTrees
 {
 
 
+/**
+Main class for all 'class', 'extern-class', and 'module' declarations.
+For simplicity in compiler development, this is used as a collection for 'class-like' declarations.
+*/
 class ClassDeclStmnt : public ScopedStmnt
 {
     
@@ -47,10 +51,11 @@ class ClassDeclStmnt : public ScopedStmnt
             return source_.get();
         }
 
-        bool                isExtern = false;
-        AttribPrefixPtr     attribPrefix;       // may be null
+        bool                isExtern            = false;
+        bool                isModule            = false;
+        AttribPrefixPtr     attribPrefix;                   // may be null
         std::string         ident;
-        std::string         baseClassIdent;     // may be empty
+        std::string         baseClassIdent;                 // may be empty
         ClassBodySegment    publicSegment;
         ClassBodySegment    privateSegment;
 
@@ -58,11 +63,11 @@ class ClassDeclStmnt : public ScopedStmnt
         
         std::string HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const;
 
-        SourceCodePtr       source_;            // Reference to the source where this class is declared.
+        SourceCodePtr       source_;                        // Reference to the source where this class is declared.
 
         // dast
-        PointerTypeDenoter  thisTypeDenoter_;   // type denoter for this class declaration
-        ClassDeclStmnt*     baseClassRef_ = nullptr;
+        PointerTypeDenoter  thisTypeDenoter_;               // type denoter for this class declaration
+        ClassDeclStmnt*     baseClassRef_       = nullptr;
 
 };
 

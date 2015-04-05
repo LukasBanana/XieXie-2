@@ -205,7 +205,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
         {
             if (output.verbose)
                 output.Message("dump CFG class tree \"" + tree->GetClassDeclAST()->ident + "\"");
-            viewer.ViewGraph(*tree);
+            viewer.ViewGraph(*tree, "cfg-dump/");
         }
     }
 

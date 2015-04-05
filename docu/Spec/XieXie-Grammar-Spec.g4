@@ -6,15 +6,16 @@ grammar XieXie;
 
 //options { language = Cpp; }
 
-program: global_stmnt_list? EOF;
+program: global_stmnt_list EOF;
 
-code_block:	'{' stmnt_list? '}';
+code_block:	'{' stmnt_list '}';
 
 // STATEMENTS
-stmnt_list:				stmnt+;
-decl_stmnt_list: 		decl_stmnt+;
-extern_decl_stmnt_list:	extern_decl_stmnt+;
-global_stmnt_list:		global_stmnt+;
+stmnt_list:						stmnt*;
+decl_stmnt_list: 				decl_stmnt*;
+extern_decl_stmnt_list:			extern_decl_stmnt*;
+global_stmnt_list:				global_stmnt*;
+extern_proc_decl_stmnt_list:	extern_proc_decl_stmnt*;
 
 stmnt	: var_name_stmnt
 		| branch_stmnt
@@ -22,6 +23,7 @@ stmnt	: var_name_stmnt
 		| ctrl_transfer_stmnt;
 
 global_stmnt	: class_decl_stmnt
+				| module_decl_stmnt
 				| import_stmnt;
 
 var_name_stmnt	: var_decl_stmnt
@@ -29,15 +31,15 @@ var_name_stmnt	: var_decl_stmnt
 				| proc_call_stmnt;
 
 decl_stmnt	: var_decl_stmnt
-			| class_decl_stmnt
-			/*| enum_decl_stmnt
+			/*| class_decl_stmnt
+			| enum_decl_stmnt
 			| flags_decl_stmnt*/
 			| proc_decl_stmnt
 			| init_decl_stmnt
 			| release_decl_stmnt;
 
-extern_decl_stmnt	: extern_class_decl_stmnt
-					| extern_proc_decl_stmnt
+extern_decl_stmnt	: /*extern_class_decl_stmnt
+					|*/ extern_proc_decl_stmnt
 					| extern_init_decl_stmnt
 					/*| enum_decl_stmnt
 					| flags_decl_stmnt*/;
@@ -118,17 +120,22 @@ array_index:		expr;
 import_stmnt:	'import' (STRING_LITERAL | IDENT);
 
 // CLASSES
-class_decl_stmnt:			attrib_prefix? intern_class_decl_stmnt | ('extern' extern_class_decl_stmnt);
-intern_class_decl_stmnt:	'class' class_name base_class_ident? class_body;
-extern_class_decl_stmnt:	'class' class_name base_class_ident? extern_class_body;
-class_body:					'{' class_body_segment_list '}';
-class_body_segment_list:	class_body_segment*;
-class_body_segment:			class_visibility? decl_stmnt_list?;
+class_decl_stmnt:			attrib_prefix? (intern_class_decl_stmnt | extern_class_decl_stmnt);
+base_class_ident:			':' ident;
 class_visibility:			class_visibility_type (':')?;
 class_visibility_type:		'public' | 'private';
-extern_class_body:			'{' extern_decl_stmnt_list? '}';
-class_name:					IDENT;
-base_class_ident:			':' ident;
+
+intern_class_decl_stmnt:	'class' IDENT base_class_ident? class_body;
+class_body:					'{' class_body_segment_list '}';
+class_body_segment_list:	class_body_segment*;
+class_body_segment:			class_visibility? decl_stmnt_list;
+
+extern_class_decl_stmnt:	'extern' 'class' IDENT base_class_ident? extern_class_body;
+extern_class_body:			'{' extern_decl_stmnt_list '}';
+
+// MODULES
+module_decl_stmnt:			attrib_prefix? 'module' IDENT module_body;
+module_body:				'{' extern_proc_decl_stmnt_list '}';
 
 /*
 // ENUMERATIONS

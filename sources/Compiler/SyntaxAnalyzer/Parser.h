@@ -62,6 +62,7 @@ class Parser
         void ErrorUnexpected(const Tokens expectedType, bool breakParsing = true);
         void ErrorUnexpected(const std::string& hint, bool breakParsing = true);
         void ErrorInternal(const std::string& msg);
+        void ErrorNotSupported(const std::string& feature);
 
         /* --- Token parsing --- */
 
@@ -107,6 +108,7 @@ class Parser
         StmntPtr                ParseVarNameStmntSub(const TokenPtr& identTkn);
         StmntPtr                ParseVarDeclOrProcDeclStmnt();
         StmntPtr                ParseClassDeclOrProcDeclStmnt();
+        StmntPtr                ParseClassDeclOrModuleDeclStmnt();
 
         StmntPtr                ParseCtrlTransferStmnt();
         CtrlTransferStmntPtr    ParseBreakStmnt();
@@ -129,11 +131,12 @@ class Parser
         ClassDeclStmntPtr       ParseClassDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
         ClassDeclStmntPtr       ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         ClassDeclStmntPtr       ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
+        ClassDeclStmntPtr       ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
         VarDeclStmntPtr         ParseVarDeclStmnt(const TokenPtr& identTkn = nullptr, bool hasArrayType = false, bool isStatic = false);
         VarDeclStmntPtr         ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
         //EnumDeclStmntPtr        ParseEnumDeclStmnt();
         //FlagsDeclStmntPtr       ParseFlagsDeclStmnt();
-        ProcDeclStmntPtr        ParseProcDeclStmnt(bool isExtern = false, AttribPrefixPtr attribPrefix = nullptr);
+        ProcDeclStmntPtr        ParseProcDeclStmntPrimary(bool isExtern = false, AttribPrefixPtr attribPrefix = nullptr);
         ProcDeclStmntPtr        ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
         InitDeclStmntPtr        ParseInitDeclStmnt(bool isExtern = false);
         ReleaseDeclStmntPtr     ParseReleaseDeclStmnt();
@@ -208,6 +211,7 @@ class Parser
         std::vector<StmntPtr>               ParseStmntList(const Tokens terminatorToken = Tokens::RCurly);
         std::vector<StmntPtr>               ParseDeclStmntList();
         std::vector<StmntPtr>               ParseExternDeclStmntList(const Tokens terminatorToken = Tokens::RCurly);
+        std::vector<StmntPtr>               ParseExternProcDeclStmntList(const Tokens terminatorToken = Tokens::RCurly);
         std::vector<SwitchCasePtr>          ParseSwitchCaseList();
         std::vector<StmntPtr>               ParseSwitchCaseStmntList();
         std::vector<VarNamePtr>             ParseVarNameList(const Tokens separatorToken = Tokens::Comma);

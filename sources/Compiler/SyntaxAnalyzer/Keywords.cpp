@@ -54,14 +54,15 @@ static KeywordMapType GenerateKeywordMap()
 
         { "class",      Ty::Class          },
         { "extern",     Ty::Extern         },
+        { "module",     Ty::Module         },
         { "public",     Ty::Visibility     },
         { "private",    Ty::Visibility     },
         { "static",     Ty::Static         },
         { "init",       Ty::Init           },
         { "release",    Ty::Release        },
 
-        //{ "enum",       Ty::Enum           },
-        //{ "flags",      Ty::Flags          },
+        { "enum",       Ty::Enum           },
+        { "flags",      Ty::Flags          },
 
         { "new",        Ty::New            },
 
@@ -86,8 +87,6 @@ static KeywordMapType GenerateKeywordMap()
         { "long",       Ty::Reserved       },
         { "ulong",      Ty::Reserved       },
         { "double",     Ty::Reserved       },
-        { "enum",       Ty::Reserved       },
-        { "flags",      Ty::Reserved       },
         { "override",   Ty::Reserved       },
         { "readonly",   Ty::Reserved       },
     };

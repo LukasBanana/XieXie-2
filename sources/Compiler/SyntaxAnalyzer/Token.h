@@ -112,13 +112,14 @@ class Token
 
             Class,          //!< class
             Extern,         //!< extern
+            Module,         //!< module
             Visibility,     //!< public, private
             Static,         //!< static
             Init,           //!< init
             Release,        //!< release
 
-            //Enum,           //!< enum
-            //Flags,          //!< flags
+            Enum,           //!< enum
+            Flags,          //!< flags
 
             New,            //!< new
 

@@ -6,6 +6,11 @@ extern class Object {}
 extern class String {}
 extern class Array {}
 
+module MyModule {
+	static void foo()
+	void bar() // error, all module procedures must be static
+}
+
 class Test {
 	
 	int func(int x) {

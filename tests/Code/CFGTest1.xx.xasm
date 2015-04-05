@@ -1,6 +1,6 @@
 ; XieXie Assembler File (XASM)
 ; XieXie Compiler Version 2.0 Alpha
-; Generated at 2015-04-04 17:26:01
+; Generated at 2015-04-05 12:27:00
 
 ; <------- CLASS "Object" ------->
 
@@ -9,6 +9,17 @@
 
 
 ; <------- CLASS "Array" ------->
+
+
+; <------- CLASS "MyModule" ------->
+
+; MyModule.bar()
+CMyModule.Pbar:
+	.bb0:
+
+; MyModule.foo()
+CMyModule.Pfoo:
+	.bb0:
 
 
 ; <------- CLASS "Test" ------->

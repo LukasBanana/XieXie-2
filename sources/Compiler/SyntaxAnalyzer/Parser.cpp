@@ -19,6 +19,9 @@ namespace SyntaxAnalyzer
 {
 
 
+//! Disable syntax features which are planed for future versions.
+#define _DISABLE_FUTURE_FEATURES_
+
 using namespace std::placeholders;
 
 static const std::string defaultForRangeIdent = "__xx__idx";
@@ -122,6 +125,11 @@ void Parser::ErrorInternal(const std::string& msg)
 {
     errorReporter_->Add(InternalError(msg));
     throw std::exception();
+}
+
+void Parser::ErrorNotSupported(const std::string& feature)
+{
+    Error(feature + " are currently not supported");
 }
 
 /* --- Token parsing --- */
@@ -249,7 +257,7 @@ void Parser::ParseProgram(Program& ast)
         if (Is(Tokens::Import))
             ast.importFilenames.push_back(AcceptImport());
         else
-            ast.classDeclStmnts.push_back(ParseClassDeclStmnt());
+            ast.classDeclStmnts.push_back(ParseClassDeclOrModuleDeclStmnt());
     }
 }
 
@@ -598,19 +606,32 @@ StmntPtr Parser::ParseStmnt()
     return ParseVarNameStmnt();
 }
 
-// decl_stmnt: var_decl_stmnt | class_decl_stmnt | proc_decl_stmnt | init_decl_stmnt;
-// ( | enum_decl_stmnt | flags_decl_stmnt)
+// decl_stmnt: var_decl_stmnt | proc_decl_stmnt | init_decl_stmnt | release_decl_stmnt;
+// ( | class_decl_stmnt | enum_decl_stmnt | flags_decl_stmnt)
 StmntPtr Parser::ParseDeclStmnt()
 {
     switch (TknType())
     {
+        #ifdef _DISABLE_FUTURE_FEATURES_
+        case Tokens::Extern:
+        case Tokens::Class:
+            ErrorNotSupported("inner classes");
+            break;
+        case Tokens::Enum:
+            ErrorNotSupported("enumerations");
+            break;
+        case Tokens::Flags:
+            ErrorNotSupported("enumeration-flags");
+            break;
+        #else
         case Tokens::Extern:
         case Tokens::Class:
             return ParseClassDeclStmnt();
-        /*case Tokens::Enum:
+        case Tokens::Enum:
             return ParseEnumDeclStmnt();
         case Tokens::Flags:
-            return ParseFlagsDeclStmnt();*/
+            return ParseFlagsDeclStmnt();
+        #endif
         case Tokens::Init:
             return ParseInitDeclStmnt();
         case Tokens::Release:
@@ -630,8 +651,8 @@ StmntPtr Parser::ParseExternDeclStmnt()
 {
     switch (TknType())
     {
-        case Tokens::Class:
-            return ParseExternClassDeclStmnt();
+        /*case Tokens::Class:
+            return ParseExternClassDeclStmnt();*/
         case Tokens::Init:
             return ParseInitDeclStmnt(true);
         /*case Tokens::Enum:
@@ -639,7 +660,7 @@ StmntPtr Parser::ParseExternDeclStmnt()
         case Tokens::Flags:
             return ParseFlagsDeclStmnt();*/
     }
-    return ParseProcDeclStmnt(true);
+    return ParseProcDeclStmntPrimary(true);
 }
 
 // var_name_stmnt: var_decl_stmnt | assign_stmnt | proc_call_stmnt;
@@ -695,7 +716,7 @@ StmntPtr Parser::ParseVarDeclOrProcDeclStmnt()
 {
     /* Check for procedure modifier or return type denoter 'void' */
     if (Is(Tokens::Void))
-        return ParseProcDeclStmnt();
+        return ParseProcDeclStmntPrimary();
 
     /* Parse optional storage modifier */
     bool isStatic = false;
@@ -739,9 +760,28 @@ StmntPtr Parser::ParseClassDeclOrProcDeclStmnt()
     auto attribPrefix = ParseAttribPrefix();
 
     if (Is(Tokens::Extern) || Is(Tokens::Class))
+    {
+        #ifdef _DISABLE_FUTURE_FEATURES_
+        ErrorNotSupported("inner classes");
+        #else
         return ParseClassDeclStmnt(attribPrefix);
+        #endif
+    }
 
-    return ParseProcDeclStmnt(false, attribPrefix);
+    return ParseProcDeclStmntPrimary(false, attribPrefix);
+}
+
+// (class_decl_stmnt | module_decl_stmnt)
+StmntPtr Parser::ParseClassDeclOrModuleDeclStmnt()
+{
+    AttribPrefixPtr attribPrefix;
+    if (Is(Tokens::LDParen))
+        attribPrefix = ParseAttribPrefix();
+
+    if (Is(Tokens::Module))
+        return ParseModuleDeclStmnt(attribPrefix);
+
+    return ParseClassDeclStmnt(attribPrefix);
 }
 
 // ctrl_transfer_stmnt: break_stmnt | continue_stmnt | return_stmnt;
@@ -1024,7 +1064,7 @@ DoWhileStmntPtr Parser::ParseDoWhileStmnt()
     return ast;
 }
 
-// class_decl_stmnt: attrib_prefix? intern_class_decl_stmnt | ('extern' extern_class_decl_stmnt);
+// class_decl_stmnt: attrib_prefix? (intern_class_decl_stmnt | extern_class_decl_stmnt);
 ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
 {
     if (!attribPrefix && Is(Tokens::LDParen))
@@ -1039,7 +1079,7 @@ ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
     return ParseInternClassDeclStmnt(attribPrefix);
 }
 
-// intern_class_decl_stmnt: 'class' class_name base_class_ident? class_body;
+// intern_class_decl_stmnt: 'class' IDENT base_class_ident? class_body;
 ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
@@ -1068,7 +1108,7 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
     return ast;
 }
 
-// extern_class_decl_stmnt: 'class' class_name base_class_ident? extern_class_body;
+// extern_class_decl_stmnt: 'extern' 'class' IDENT base_class_ident? extern_class_body;
 ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
@@ -1086,6 +1126,28 @@ ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attri
     Accept(Tokens::LCurly);
     if (!Is(Tokens::RCurly))
         ast->publicSegment.declStmnts = ParseExternDeclStmntList();
+    Accept(Tokens::RCurly);
+
+    return ast;
+}
+
+// module_decl_stmnt: attrib_prefix? 'module' IDENT module_body;
+ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix)
+{
+    auto ast = Make<ClassDeclStmnt>(source_);
+
+    if (!attribPrefix && Is(Tokens::LDParen))
+        attribPrefix = ParseAttribPrefix();
+
+    ast->isModule = true;
+    ast->attribPrefix = attribPrefix;
+    Accept(Tokens::Module);
+
+    ast->ident = AcceptIdent();
+
+    Accept(Tokens::LCurly);
+    if (!Is(Tokens::RCurly))
+        ast->publicSegment.declStmnts = ParseExternProcDeclStmntList();
     Accept(Tokens::RCurly);
 
     return ast;
@@ -1194,7 +1256,7 @@ FlagsDeclStmntPtr Parser::ParseFlagsDeclStmnt()
 
 // proc_decl_stmnt: attrib_prefix? proc_signature code_block;
 // extern_proc_decl_stmnt: attrib_prefix? proc_signature;
-ProcDeclStmntPtr Parser::ParseProcDeclStmnt(bool isExtern, AttribPrefixPtr attribPrefix)
+ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPtr attribPrefix)
 {
     auto ast = Make<ProcDeclStmnt>();
     ast->parentRef = state_.classDecl;
@@ -1844,6 +1906,11 @@ std::vector<StmntPtr> Parser::ParseDeclStmntList()
 std::vector<StmntPtr> Parser::ParseExternDeclStmntList(const Tokens terminatorToken)
 {
     return ParseList<StmntPtr>(std::bind(&Parser::ParseExternDeclStmnt, this), terminatorToken);
+}
+
+std::vector<StmntPtr> Parser::ParseExternProcDeclStmntList(const Tokens terminatorToken)
+{
+    return ParseList<StmntPtr>(std::bind(&Parser::ParseProcDeclStmntPrimary, this, true, nullptr), terminatorToken);
 }
 
 std::vector<SwitchCasePtr> Parser::ParseSwitchCaseList()
