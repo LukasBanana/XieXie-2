@@ -10,6 +10,7 @@
 
 
 #include "ClassDeclStmnt.h"
+#include "Program.h"
 
 
 namespace ContextAnalyzer
@@ -21,6 +22,9 @@ namespace StdClassGenerator
 
 //! Generates the ASTs for all built-in classes.
 void GenerateBuiltinClasses(std::vector<std::unique_ptr<AbstractSyntaxTrees::ClassDeclStmnt>>& classDeclList);
+
+//! Generates the ASTs for all built-in classes and fills them into the "Program" AST root node.
+void GenerateBuiltinClasses(AbstractSyntaxTrees::Program& program);
 
 
 } // /namespace StdClassGenerator

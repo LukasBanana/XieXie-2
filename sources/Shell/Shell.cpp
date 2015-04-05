@@ -17,6 +17,7 @@
 #include "Decorator.h"
 #include "GraphGenerator.h"
 #include "Program.h"
+#include "StdClassGenerator.h"
 
 #include <sstream>
 
@@ -52,7 +53,27 @@ void Shell::Execute(StreamParser parser)
     }
 }
 
-void Shell::Script(std::istream& stream)
+// Define the code for the default script
+static void AppendDefaultScript(std::stringstream& sstr)
+{
+    sstr
+        << "class XieXieScript { " << std::endl
+        << "void print(int val) { Intrinsics.printInt(val) }" << std::endl
+        << "void print(float val) { Intrinsics.printFloat(val) }" << std::endl
+        << "void print(String val) { Intrinsics.print(val.pointer()) }" << std::endl
+        << "void print(int[] val) { foreach v : val { print(v) } }" << std::endl
+        << "void print(float[] val) { foreach v : val { print(v) } }" << std::endl
+        << "void print(String[] val) { foreach v : val { print(v) } }" << std::endl
+        << "String str(int val) { return \"\" }" << std::endl
+        << "String str(float val) { return \"\" }" << std::endl
+        << "static void main() {" << std::endl
+        << "    XieXieScript script := new XieXieScript()" << std::endl
+        << "}" << std::endl
+        << "init() {" << std::endl
+    ;
+}
+
+void Shell::Script(std::istream& stream, bool appendDefaultScript)
 {
     /* Print info at start-up */
     std::cout << "XieXie Compiler " << Version::AsString() << std::endl;
@@ -63,6 +84,9 @@ void Shell::Script(std::istream& stream)
     auto source = MakeUnique<std::stringstream>();
 
     size_t lineNum = 0;
+
+    if (appendDefaultScript)
+        AppendDefaultScript(*source);
 
     while (!stream.eof())
     {
@@ -80,14 +104,20 @@ void Shell::Script(std::istream& stream)
         }
     }
 
+    if (appendDefaultScript)
+        *source << "}}" << std::endl;
+
     /* Compile and run script */
     ErrorReporter errorReporter;
     bool hasError = false;
 
-    /* Parse program */
+    /* Generate built-in class declarations */
     AbstractSyntaxTrees::Program program;
     SyntaxAnalyzer::Parser parser;
 
+    ContextAnalyzer::StdClassGenerator::GenerateBuiltinClasses(program);
+
+    /* Parse program */
     if (!parser.ParseSource(program, std::make_shared<SyntaxAnalyzer::SourceStream>(std::move(source)), errorReporter))
         hasError = true;
 

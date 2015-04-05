@@ -71,6 +71,11 @@ class BitMask
             return Mask();
         }
 
+        operator bool () const
+        {
+            return Mask() != 0;
+        }
+
     private:
         
         int bitMask_ = 0;

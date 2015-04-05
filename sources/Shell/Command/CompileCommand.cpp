@@ -11,6 +11,7 @@
 #include "Parser.h"
 #include "Decorator.h"
 #include "GraphGenerator.h"
+#include "StdClassGenerator.h"
 #include "CodeGenerators/XASM/XASMGenerator.h"
 
 #include "Program.h"
@@ -42,6 +43,9 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     /* Parse program */
     AbstractSyntaxTrees::Program program;
     SyntaxAnalyzer::Parser parser;
+
+    /* Generate built-in class declarations */
+    ContextAnalyzer::StdClassGenerator::GenerateBuiltinClasses(program);
     
     /* Parse input filenames */
     while (input.Get() == "-f" || input.Get() == "--file")

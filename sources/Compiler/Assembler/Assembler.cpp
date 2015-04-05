@@ -10,6 +10,7 @@
 #include "Log.h"
 
 #include <exception>
+#include <algorithm>
 
 #include "VirtualMachine/XVMWrapper.h"
 
@@ -107,6 +108,67 @@ bool Assembler::Assemble(const std::string& inFilename, const std::string& outFi
 
     /* Assemble file stream */
     return Assemble(inFile, outFilename);
+}
+
+void Assembler::QueryByteCodeInformation(Log& log, const std::string& filename, const BitMask& flags)
+{
+    /* Read byte-code from file */
+    XieXie::VirtualMachine::ByteCode byteCode;
+    if (byteCode.ReadFromFile(filename))
+    {
+        /* Show export addresses */
+        if (flags(QueryFlags::ExportAddresses))
+        {
+            /* Print headline */
+            auto headline = std::to_string(byteCode.GetExportAddresses().size()) + " export addresses:";
+            log.Message(headline);
+            log.Message(std::string(headline.size(), '-'));
+
+            /* Get maximal address value */
+            const auto& addresses = byteCode.GetExportAddresses();
+            std::vector<size_t> lines(addresses.size());
+
+            size_t maxNum = 0;
+            for (size_t i = 0, n = addresses.size(); i < n; ++i)
+            {
+                maxNum = std::max(maxNum, addresses[i].address);
+                lines[i] = i;
+            }
+
+            if (flags(QueryFlags::SortByName))
+            {
+                /* Sort output list */
+                std::sort(
+                    lines.begin(), lines.end(),
+                    [&addresses](size_t a, size_t b) -> bool
+                    {
+                        return addresses[a].label < addresses[b].label;
+                    }
+                );
+
+                /* Print address labels */
+                for (auto ln : lines)
+                {
+                    const auto& addr = addresses[ln];
+                    log.Message(NumberOffset(addr.address, maxNum) + ": " + addr.label);
+                }
+            }
+            else
+            {
+                /* Print address labels */
+                for (const auto& addr : addresses)
+                    log.Message(NumberOffset(addr.address, maxNum) + ": " + addr.label);
+            }
+        }
+
+        /* Show import addresses */
+        //todo...
+
+        /* Show invocations */
+        //todo...
+    }
+    else
+        log.Error("reading byte-code \"" + filename + "\" failed");
 }
 
 

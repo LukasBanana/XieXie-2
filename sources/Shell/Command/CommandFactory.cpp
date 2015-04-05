@@ -31,6 +31,8 @@ std::unique_ptr<Command> InstantiateCommand(const std::string& cmdName)
         return MakeUnique<HelpCommand>();
     if (cmdName == "verbose")
         return MakeUnique<VerboseCommand>();
+    if (cmdName == "reply")
+        return MakeUnique<ReplyCommand>();
     if (cmdName == "color")
         return MakeUnique<ColorCommand>();
     return nullptr;

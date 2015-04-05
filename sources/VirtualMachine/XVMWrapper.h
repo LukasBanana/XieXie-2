@@ -729,12 +729,25 @@ class ByteCode
         //! Reads the instructions from the specified file.
         bool ReadFromFile(const std::string& filename)
         {
-            return xvm_bytecode_read_from_file(&byteCode_, filename.c_str()) != 0;
+            /* Read byte-code from file */
+            if (!xvm_bytecode_read_from_file(&byteCode_, filename.c_str()))
+                return false;
+
+            /* Extract export addresses */
+            exportAddresses_.resize(byteCode_.num_export_addresses);
+            for (size_t i = 0; i < byteCode_.num_export_addresses; ++i)
+            {
+                exportAddresses_[i].address = byteCode_.export_addresses[i].addr;
+                exportAddresses_[i].label   = std::string(byteCode_.export_addresses[i].label.str);
+            }
+
+            return true;
         }
 
         //! Writes the instructions to the specified file.
         bool WriteToFile(const std::string& filename)
         {
+            /* Write byte-code to file */
             return xvm_bytecode_write_to_file(&byteCode_, filename.c_str(), XBC_FORMAT_VERSION_LATEST) != 0;
         }
 
@@ -879,7 +892,7 @@ class ByteCode
             }
 
             /* Copy import-addresses into XVM byte code */
-            //...
+            //todo...
 
             /* Coyp invocation identifiers into XVM byte code */
             size_t numInvokeIdents = invokeIdentifiers_.size();
@@ -897,6 +910,27 @@ class ByteCode
             }
 
             return true;
+        }
+
+        //! Returns the instructions.
+        const std::vector<Instruction>& GetInstructions() const
+        {
+            return instructions_;
+        }
+        //! Returns the export addresses.
+        const std::vector<ExportAddress>& GetExportAddresses() const
+        {
+            return exportAddresses_;
+        }
+        //! Returns the import addresses.
+        const std::map<std::string, ImportAddress>& GetImportAddresses() const
+        {
+            return importAddresses_;
+        }
+        //! Returns the invoke identifiers.
+        const std::vector<std::string>& GetInvokeIdentifiers() const
+        {
+            return invokeIdentifiers_;
         }
 
     private:

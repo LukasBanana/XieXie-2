@@ -14,15 +14,6 @@
 #include <memory>
 
 
-//! Declares an implementation of the "Command" interface
-#define DECL_COMMAND_IMPL(name)                                         \
-    class name##Command : public Command                                \
-    {                                                                   \
-        public:                                                         \
-            void Execute(StreamParser& input, Log& output) override;    \
-    }
-
-
 namespace CommandFactory
 {
 
@@ -33,15 +24,26 @@ std::unique_ptr<Command> InstantiateCommand(const std::string& cmdName);
 }; // /namespace CommandFactory
 
 
+//! Declares an implementation of the "Command" interface
+#define DECL_COMMAND_IMPL(name)                                         \
+    class name##Command : public Command                                \
+    {                                                                   \
+        public:                                                         \
+            void Execute(StreamParser& input, Log& output) override;    \
+    }
+
 DECL_COMMAND_IMPL( Log      );
 DECL_COMMAND_IMPL( Pause    );
 DECL_COMMAND_IMPL( Prompt   );
 DECL_COMMAND_IMPL( Compile  );
+DECL_COMMAND_IMPL( Assemble );
+DECL_COMMAND_IMPL( Reply    );
 DECL_COMMAND_IMPL( Version  );
 DECL_COMMAND_IMPL( Help     );
 DECL_COMMAND_IMPL( Verbose  );
 DECL_COMMAND_IMPL( Color    );
-DECL_COMMAND_IMPL( Assemble );
+
+#undef DECL_COMMAND_IMPL
 
 
 #endif

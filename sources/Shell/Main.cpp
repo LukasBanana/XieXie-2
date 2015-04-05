@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
         shell.Execute(stream);
     }
     else
-        shell.Script(std::cin);
+        shell.Script(std::cin, true);
 
     return 0;
 }

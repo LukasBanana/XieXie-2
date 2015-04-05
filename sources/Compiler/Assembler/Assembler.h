@@ -9,9 +9,10 @@
 #define __XX_ASSEMBLER_H__
 
 
-#include "Base/DeclPtr.h"
+#include "DeclPtr.h"
 #include "Compiler/SyntaxAnalyzer/SourceArea.h"
 #include "ErrorReporter.h"
+#include "BitMask.h"
 
 #include <iostream>
 #include <fstream>
@@ -45,10 +46,23 @@ class Assembler
     
     public:
         
+        struct QueryFlags
+        {
+            enum
+            {
+                ExportAddresses = (1 << 0),
+                ImportAddresses = (1 << 1),
+                Invocations     = (1 << 2),
+                SortByName      = (1 << 3),
+            };
+        };
+
         Assembler(Log& log);
 
         bool Assemble(std::istream& inStream, const std::string& outFilename);
         bool Assemble(const std::string& inFilename, const std::string& outFilename);
+
+        static void QueryByteCodeInformation(Log& log, const std::string& filename, const BitMask& flags);
 
     private:
         

@@ -592,12 +592,12 @@ void XASMGenerator::GenerateStringLiteral(const CFGProgram::StringLiteral& const
     GlobalLabel(constStr.ident);
     IncIndent();
     {
-        WORDField(1);                               // Object.refCount
-        WORDField(BuiltinClasses::String::typeID);  // Object.typeID
-        WORDField(0);                               // Object.vtableAddr !!!!!!!!!!
-        WORDField(strLen);                          // String.size
-        WORDField(strLen);                          // String.bufSize
-        WORDAddress(".buffer");                     // String.buffer
+        WORDField(1);                                   // Object.refCount
+        WORDField(BuiltinClasses::String::typeID);      // Object.typeID
+        WORDField(BuiltinClasses::String::vtableAddr);  // Object.vtableAddr
+        WORDField(strLen);                              // String.size
+        WORDField(strLen);                              // String.bufSize
+        WORDAddress(".buffer");                         // String.buffer
         LocalLabel("buffer");
         ASCIIField(ResolveStringLiteral(constStr.value));
     }

@@ -91,6 +91,7 @@ class ClassDeclStmnt : public ScopedStmnt
         AttribPrefixPtr                 attribPrefix;                   // may be null
         std::string                     ident;
         std::string                     baseClassIdent;                 // may be empty
+
         ClassBodySegment                publicSegment;
         ClassBodySegment                privateSegment;
 
