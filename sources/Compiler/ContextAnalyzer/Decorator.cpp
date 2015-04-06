@@ -637,7 +637,16 @@ DEF_VISIT_PROC(Decorator, PointerTypeDenoter)
         /* Decorate pointer type with declaration identifier */
         auto symbol = FetchSymbol(ast->declIdent, ast);
         if (symbol)
-            ast->declRef = symbol;
+        {
+            if (symbol->Type() == AST::Types::ClassDeclStmnt)
+            {
+                ast->declRef = static_cast<ClassDeclStmnt*>(symbol);
+                if (ast->declRef->isModule)
+                    Error("pointer type must not be a module", ast);
+            }
+            else
+                Error("pointer type must refer to a class declaration", ast);
+        }
     }
 }
 

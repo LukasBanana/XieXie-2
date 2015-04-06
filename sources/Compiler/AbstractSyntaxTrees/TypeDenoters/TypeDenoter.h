@@ -67,6 +67,11 @@ class TypeDenoter : public AST
         {
             return false;
         }
+        //! Returns true if this is a pointer type. By default false.
+        virtual bool IsPointer() const
+        {
+            return false;
+        }
         //! Returns true if this is a pointer type with class name 'ident' or a null pointer literal.
         virtual bool IsPointer(const std::string& ident) const
         {

@@ -42,16 +42,20 @@ class PointerTypeDenoter : public TypeDenoter
             return copy;
         }
 
+        bool IsPointer() const override
+        {
+            return true;
+        }
         bool IsPointer(const std::string& ident) const override
         {
             return declIdent.empty() || declIdent == ident;
         }
 
-        std::string declIdent;              // may be empty (for null pointer literal)
-        bool        isWeakRef   = false;    // is this pointer a weak reference?
+        std::string     declIdent;              // may be empty (for null pointer literal)
+        bool            isWeakRef   = false;    // is this pointer a weak reference?
 
         // dast
-        AST*        declRef     = nullptr;  // reference to the declaration AST node (may be null -> for null pointer literal)
+        ClassDeclStmnt* declRef     = nullptr;  // reference to the class declaration AST node (may be null -> for null pointer literal)
 
 };
 
