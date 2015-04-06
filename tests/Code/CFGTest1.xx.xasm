@@ -1,6 +1,6 @@
 ; XieXie Assembler File (XASM)
 ; XieXie Compiler Version 2.0 Alpha
-; Generated at 2015-04-06 14:06:53
+; Generated at 2015-04-06 16:42:12
 
 ; <------- CLASS "Test" ------->
 
@@ -62,7 +62,14 @@ CTest.Pfunc,I,I:
 CTest.Pmain,A@R@String:
 	.bb0:
 	ldw $r0, ($lb) -4
+	push @Test.vtable
+	push 8
+	push 12
+	call new
+	mov $r1, $ar
+	mov $r2, $r1
 	push 1
+	mov $xr, $r2
 	call CTest.Ptest1,I
 	mov $ar, 0
 	ret 1

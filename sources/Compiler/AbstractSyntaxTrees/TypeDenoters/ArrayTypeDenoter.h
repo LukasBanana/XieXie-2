@@ -33,6 +33,12 @@ class ArrayTypeDenoter : public TypeDenoter
             return (lowerTypeDenoter != nullptr ? lowerTypeDenoter->ToString() : "???") + "[]";
         }
 
+        //! Arrays always require a size of 4 bytes.
+        unsigned int MemorySize() const override
+        {
+            return 4;
+        }
+
         const TypeDenoter* GetLast() const override
         {
             return lowerTypeDenoter != nullptr ? lowerTypeDenoter->GetLast() : nullptr;

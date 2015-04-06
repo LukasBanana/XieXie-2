@@ -90,18 +90,18 @@ static std::string GenerateSubLabel(const Param& param, size_t index)
     }
 }
 
-std::string UniqueLabel(const ProcSignature& procSignature)
+std::string UniqueLabel(const ProcSignature& procSignature, const std::string* classIdent)
 {
     std::string label;
 
     label += "P" + procSignature.ident;
 
+    if (classIdent)
+        label += ",R@" + *classIdent;
+
     size_t i = 0;
     for (const auto& param : procSignature.params)
-    {
-        label += ',';
-        label += GenerateSubLabel(*param, i++);
-    }
+        label += ',' + GenerateSubLabel(*param, i++);
 
     return label;
 }
@@ -295,11 +295,7 @@ std::string DisplayLabel(const std::string& label)
                 ++pos;
                 break;
             default:
-                throw std::invalid_argument(
-                    "unknown type denoter '" + std::string(1, label[pos]) +
-                    "' in label \"" + label + "\""
-                );
-                break;
+                return label;
         }
     }
 
@@ -307,6 +303,13 @@ std::string DisplayLabel(const std::string& label)
         str += ')';
 
     return str;
+}
+
+/* --- VirtualTable --- */
+
+std::string VirtualTable(const AbstractSyntaxTrees::ClassDeclStmnt& classDecl)
+{
+    return classDecl.ident + ".vtable";
 }
 
 

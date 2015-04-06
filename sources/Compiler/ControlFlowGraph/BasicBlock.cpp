@@ -248,15 +248,13 @@ bool BasicBlock::VerifyProcReturn(VisitSet& visitSet) const
     /* Check if this is a leaf node */
     if (succ_.empty())
     {
-        /* Check if the last instruction is a return statement */
-        if (!insts.empty() && insts.back()->Type() == TACInst::Types::Return)
+        /* Check if there is a 'return' instruction */
+        for (auto it = insts.rbegin(); it != insts.rend(); ++it)
         {
-            /* Check if return instruction has a variable */
-            auto returnInst = static_cast<TACReturnInst*>(insts.back().get());
-            return returnInst->hasVar;
+            if ((*it)->Type() == TACInst::Types::Return)
+                return static_cast<const TACReturnInst&>(**it).hasVar;
         }
-        else
-            return false;
+        return false;
     }
 
     /* Visit successors */

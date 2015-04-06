@@ -170,10 +170,18 @@ std::string XASMGenerator::Reg(const TACVar& var)
 {
     if (var.IsConst())
         return var.ToString();
-    if (var.type == TACVar::Types::Return)
-        return "$ar";
+
+    switch (var.type)
+    {
+        case TACVar::Types::Return:
+            return "$ar";
+        case TACVar::Types::Instance:
+            return "$xr";
+    }
+
     if (!var.IsValid())
         ErrorIntern("invalid ID for TAC variable");
+
     return regAlloc_.Reg(var);
 }
 

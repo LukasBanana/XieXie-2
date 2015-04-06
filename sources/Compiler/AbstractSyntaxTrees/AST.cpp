@@ -98,6 +98,12 @@ const TypeDenoter* VarDecl::GetTypeDenoter() const
     return parentRef != nullptr ? parentRef->GetTypeDenoter() : nullptr;
 }
 
+unsigned int VarDecl::MemorySize() const
+{
+    auto varType = GetTypeDenoter();
+    return varType != nullptr ? varType->MemorySize() : 1;
+}
+
 
 /* --- VarDeclStmnt --- */
 
@@ -329,124 +335,6 @@ const TypeDenoter* VarAccessExpr::GetTypeDenoter() const
 }
 
 
-/* --- ClassDeclStmnt --- */
-
-ClassDeclStmnt::ClassDeclStmnt(const SourceCodePtr& source) :
-    source_{ source }
-{
-    thisTypeDenoter_.declRef = this;
-    privateSegment.visibility = ClassBodySegment::Visibilities::Private;
-}
-ClassDeclStmnt::ClassDeclStmnt(const SourceArea& area, const SourceCodePtr& source) :
-    ScopedStmnt { area   },
-    source_     { source }
-{
-    thisTypeDenoter_.declRef = this;
-    privateSegment.visibility = ClassBodySegment::Visibilities::Private;
-}
-
-const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const
-{
-    return &thisTypeDenoter_;
-}
-
-void ClassDeclStmnt::BindBaseClassRef(ClassDeclStmnt* classDeclStmnt)
-{
-    if (classDeclStmnt)
-    {
-        /* Bind fallback symbol table to find identifiers in 'super' class */
-        symTab.fallbackSymTab = &(classDeclStmnt->symTab);
-
-        /* Bind new sub class */
-        auto& subClasses = classDeclStmnt->subClassesRef_;
-        auto it = std::find(subClasses.begin(), subClasses.end(), this);
-        if (it == subClasses.end())
-            subClasses.push_back(this);
-    }
-    else
-    {
-        /* Unbind callback */
-        symTab.fallbackSymTab = nullptr;
-
-        /* Unbind previous sub class */
-        if (baseClassRef_)
-        {
-            auto& subClasses = baseClassRef_->subClassesRef_;
-            auto it = std::find(subClasses.begin(), subClasses.end(), this);
-            if (it != subClasses.end())
-                subClasses.erase(it);
-        }
-    }
-
-    /* Store new base class reference */
-    baseClassRef_ = classDeclStmnt;
-}
-
-bool ClassDeclStmnt::IsSuperClassOf(const ClassDeclStmnt& classDeclStmnt) const
-{
-    return classDeclStmnt.IsSubClassOf(*this);
-}
-
-bool ClassDeclStmnt::IsSubClassOf(const ClassDeclStmnt& classDeclStmnt) const
-{
-    /* Check for cycles */
-    if (&classDeclStmnt == this)
-        return false;
-
-    if (baseClassRef_)
-    {
-        /* Check if specified class is the direct base of this class */
-        if (baseClassRef_ == &classDeclStmnt)
-            return true;
-
-        /* Continue search in direct base class */
-        return baseClassRef_->IsSubClassOf(classDeclStmnt);
-    }
-
-    return false;
-}
-
-std::string ClassDeclStmnt::HierarchyString(const std::string& separator) const
-{
-    if (baseClassRef_)
-        return ident + separator + baseClassRef_->HierarchyString(separator, this);
-    return ident;
-}
-
-std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const
-{
-    if (rootClass != this && baseClassRef_)
-        return ident + separator + baseClassRef_->HierarchyString(separator, rootClass);
-    return ident;
-}
-
-void ClassDeclStmnt::GenerateRTTI()
-{
-    /* Initialize RTTI for root class */
-    typeID_ = 0;
-    numSubClasses_ = 0;
-    
-    /* Generate RTTI for sub classes */
-    auto typeID = typeID_;
-    for (auto subClass : subClassesRef_)
-        subClass->GenerateRTTI(typeID, numSubClasses_);
-}
-
-void ClassDeclStmnt::GenerateRTTI(unsigned int& typeID, unsigned int& numSubClasses)
-{
-    /* Initialize RTTI for this class */
-    typeID_ = ++typeID;
-    numSubClasses_ = 0;
-    
-    /* Generate RTTI for sub classes */
-    for (auto subClass : subClassesRef_)
-        subClass->GenerateRTTI(typeID, numSubClasses_);
-
-    /* Increase sub-class count for super class */
-    numSubClasses += (numSubClasses_ + 1);
-}
-
-
 /* --- TypeDenoter --- */
 
 bool TypeDenoter::AreEqual(const TypeDenoter& lhs, const TypeDenoter& rhs)
@@ -533,6 +421,22 @@ std::string BuiltinTypeDenoter::ToString() const
             return "float";
     }
     return "<unknown>";
+}
+
+unsigned int BuiltinTypeDenoter::MemorySize() const
+{
+    switch (typeName)
+    {
+        case TypeNames::Void:
+            return 0;
+        case TypeNames::Bool:
+            return 1;
+        case TypeNames::Int:
+            return 4;
+        case TypeNames::Float:
+            return 4;
+    }
+    return 0;
 }
 
 

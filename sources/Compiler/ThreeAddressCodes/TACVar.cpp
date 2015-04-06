@@ -33,6 +33,21 @@ TACVar::TACVar(const char* value) :
 {
 }
 
+TACVar TACVar::Int(int value)
+{
+    return TACVar(ToStr(value));
+}
+
+TACVar TACVar::Int(unsigned int value)
+{
+    return TACVar(ToStr(value));
+}
+
+TACVar TACVar::Float(float value)
+{
+    return TACVar(ToStr(value));
+}
+
 std::string TACVar::ToString() const
 {
     std::string idStr = ToStr(id);
@@ -49,6 +64,8 @@ std::string TACVar::ToString() const
             return "t" + idStr;
         case Types::Return:
             return "r" + idStr;
+        case Types::Instance:
+            return "this";
     }
 
     return idStr;

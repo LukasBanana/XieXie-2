@@ -33,6 +33,12 @@ class PointerTypeDenoter : public TypeDenoter
             return !declIdent.empty() ? declIdent : "???";
         }
 
+        //! Points always require a size of 4 bytes.
+        unsigned int MemorySize() const override
+        {
+            return 4;
+        }
+
         TypeDenoterPtr CopyRef() const override
         {
             auto copy = std::make_shared<PointerTypeDenoter>();

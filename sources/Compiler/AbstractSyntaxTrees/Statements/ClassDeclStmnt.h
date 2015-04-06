@@ -61,6 +61,8 @@ class ClassDeclStmnt : public ScopedStmnt
         Generates the run-time type information (RTTI) for this and all sub-classes recursively.
         \see GetTypeID
         \see GetNumSubClasses
+        \see GetInstanceSize
+        \see GetStaticSize
         */
         void GenerateRTTI();
 
@@ -73,6 +75,16 @@ class ClassDeclStmnt : public ScopedStmnt
         unsigned int GetNumSubClasses() const
         {
             return numSubClasses_;
+        }
+        //! Returns the size (in bytes) of an instance of this class.
+        unsigned int GetInstanceSize() const
+        {
+            return instanceSize_;
+        }
+        //! Returns the size (in bytes) of the static members of this class.
+        unsigned int GetStaticSize() const
+        {
+            return staticSize_;
         }
 
         /**
@@ -98,7 +110,14 @@ class ClassDeclStmnt : public ScopedStmnt
     private:
         
         std::string HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const;
-        void GenerateRTTI(unsigned int& typeID, unsigned int& numSubClasses);
+
+        void GenerateRTTI(unsigned int& typeID, unsigned int& numSubClasses, unsigned int superInstanceSize);
+        
+        void AssignAllMemberVariableLocations(ClassBodySegment& segment);
+        void AssignMemberVariableLocation(VarDecl& varDecl);
+
+        void AssignAllStaticVariableLocations(ClassBodySegment& segment);
+        void AssignStaticVariableLocation(VarDecl& varDecl);
 
         SourceCodePtr                   source_;                        // Reference to the source where this class is declared.
 
@@ -109,6 +128,8 @@ class ClassDeclStmnt : public ScopedStmnt
 
         unsigned int                    typeID_             = 0;        // type ID of this class.
         unsigned int                    numSubClasses_      = 0;        // total number of sub classes in the inheritance hierarchy.
+        unsigned int                    instanceSize_       = 0;        // size (in bytes) of an instance of this class.
+        unsigned int                    staticSize_         = 0;        // size (in bytes) of all static members of this class.
 
 };
 

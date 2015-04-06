@@ -115,6 +115,9 @@ class TypeDenoter : public AST
         //! Returns a declarative string for this type.
         virtual std::string ToString() const = 0;
 
+        //! Returns the size (in bytes) for this type denoter.
+        virtual unsigned int MemorySize() const = 0;
+
         //! Returns true if the two type denoters are equal.
         static bool AreEqual(const TypeDenoter& lhs, const TypeDenoter& rhs);
 

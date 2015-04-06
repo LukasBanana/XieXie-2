@@ -261,6 +261,7 @@ static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& i
     GenMemberProc(*ast, Int(), "size");
     GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
     GenMemberProc(*ast, Bool(), "empty");
+    GenMemberProc(*ast, Int(), "pointer");
 
     return ast;
 }
@@ -293,7 +294,55 @@ static std::unique_ptr<ClassDeclStmnt> GenIntrinsicsClass()
 {
     auto ast = GenClass("Intrinsics");
 
-    //...
+    auto voidType   = Void();
+    auto intType    = Int();
+    auto floatType  = Float();
+
+    GenStaticProc(*ast, intType, "allocMem", GenParam(intType, "size"));
+    GenStaticProc(*ast, voidType, "freeMem", GenParam(intType, "ptr"));
+    GenStaticProc(*ast, voidType, "copyMem", ( GenParam(intType, "destPtr"), GenParam(intType, "srcPtr"), GenParam(intType, "size") ));
+    
+    GenStaticProc(*ast, voidType, "sysCall", GenParam(intType, "commandPtr"));
+    GenStaticProc(*ast, voidType, "clearTerm");
+    GenStaticProc(*ast, voidType, "print", GenParam(intType, "textPtr"));
+    GenStaticProc(*ast, voidType, "printLn", GenParam(intType, "textPtr"));
+    GenStaticProc(*ast, voidType, "printInt", GenParam(intType, "value"));
+    GenStaticProc(*ast, voidType, "printFloat", GenParam(floatType, "value"));
+    GenStaticProc(*ast, intType, "input");
+    GenStaticProc(*ast, intType, "inputInt");
+    GenStaticProc(*ast, floatType, "inputFloat");
+
+    GenStaticProc(*ast, intType, "createFile", GenParam(intType, "filenamePtr"));
+    GenStaticProc(*ast, intType, "deleteFile", GenParam(intType, "filenamePtr"));
+    GenStaticProc(*ast, intType, "openFile", ( GenParam(intType, "filenamePtr"), GenParam(intType, "flagsPtr") ));
+    GenStaticProc(*ast, voidType, "closeFile", GenParam(intType, "handlePtr"));
+    GenStaticProc(*ast, intType, "fileSize", GenParam(intType, "handlePtr"));
+    GenStaticProc(*ast, voidType, "fileSetPos", ( GenParam(intType, "handlePtr"), GenParam(intType, "pos") ));
+    GenStaticProc(*ast, intType, "fileGetPos", GenParam(intType, "handlePtr"));
+    GenStaticProc(*ast, intType, "fileEOF", GenParam(intType, "handlePtr"));
+    GenStaticProc(*ast, voidType, "writeByte", ( GenParam(intType, "handlePtr"), GenParam(intType, "value") ));
+    GenStaticProc(*ast, voidType, "writeInt", ( GenParam(intType, "handlePtr"), GenParam(intType, "value") ));
+    GenStaticProc(*ast, voidType, "writeFloat", ( GenParam(intType, "handlePtr"), GenParam(floatType, "value") ));
+    GenStaticProc(*ast, voidType, "writeBuffer", ( GenParam(intType, "handlePtr"), GenParam(intType, "bufferPtr"), GenParam(intType, "size") ));
+    GenStaticProc(*ast, intType, "readByte", GenParam(intType, "handlePtr"));
+    GenStaticProc(*ast, intType, "readInt", GenParam(intType, "handlePtr"));
+    GenStaticProc(*ast, floatType, "readFloat", GenParam(intType, "handlePtr"));
+    GenStaticProc(*ast, voidType, "readBuffer", ( GenParam(intType, "handlePtr"), GenParam(intType, "bufferPtr"), GenParam(intType, "size") ));
+
+    GenStaticProc(*ast, floatType, "sin", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "cos", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "tan", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "asin", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "acos", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "atan", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "pow", ( GenParam(floatType, "b"), GenParam(floatType, "e") ));
+    GenStaticProc(*ast, floatType, "sqrt", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "log", GenParam(floatType, "x"));
+
+    GenStaticProc(*ast, intType, "randInt");
+    GenStaticProc(*ast, floatType, "randFloat");
+    GenStaticProc(*ast, intType, "time");
+    GenStaticProc(*ast, voidType, "sleep", GenParam(intType, "duration"));
 
     return ast;
 }

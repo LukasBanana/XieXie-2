@@ -32,7 +32,8 @@ class Test {
 	}
 	
 	static int main(String[] args) {
-		Test.test1(1)
+		Test app := new Test()
+		app.test1(1)
 		return 0
 	}
 	

@@ -32,16 +32,21 @@ class TACVar
         enum class Types
         {
             Literal,    //!< Literal constant.
-            Global,     //!< Global variable
+            Global,     //!< Global variable.
             Local,      //!< Local variable.
             Temp,       //!< Compiler temporary variable.
             Return,     //!< Argument return for a procedure call.
+            Instance,   //!< Instance (or 'this') pointer.
         };
 
         TACVar() = default;
         TACVar(IDType id, const Types type = Types::Temp);
         TACVar(const std::string& value);
         TACVar(const char* value);
+
+        static TACVar Int(int value);
+        static TACVar Int(unsigned int value);
+        static TACVar Float(float value);
 
         TACVar& operator = (const TACVar&) = default;
 

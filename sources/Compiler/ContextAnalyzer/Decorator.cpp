@@ -600,6 +600,7 @@ DEF_VISIT_PROC(Decorator, AllocExpr)
 {
     Visit(ast->typeDenoter);
     Visit(ast->ctorArgs);
+    //VerifyConstructor(); //todo...
 }
 
 DEF_VISIT_PROC(Decorator, VarAccessExpr)

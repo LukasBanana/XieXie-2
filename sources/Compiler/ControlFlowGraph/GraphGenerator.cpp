@@ -96,7 +96,13 @@ DEF_VISIT_PROC(GraphGenerator, Program)
 
 DEF_VISIT_PROC(GraphGenerator, CodeBlock)
 {
-    RETURN_BLOCK_REF(VisitAndLink(ast->stmnts));
+    auto block = VisitAndLink(ast->stmnts);
+
+    //block.out -> generate "dec_ref" instructions for all 'strong' pointers
+    //if (block.out) //TEST
+    //    block.out->MakeInst<TACDirectCallInst>("dec_ref");
+
+    RETURN_BLOCK_REF(block);
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarName)
@@ -184,15 +190,28 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
         ErrorIntern("missing reference for procedure declaration", ast);
 
     auto procDecl = ast->declStmntRef;
+    auto procSig = procDecl->procSignature.get();
     auto procClass = procDecl->parentRef;
     auto procIdent = UniqueLabel(*ast->declStmntRef);
 
-    /* Make argument instructions */
+    /* Make instructions to push arguments */
     for (auto it = ast->args.rbegin(); it != ast->args.rend(); ++it)
         Visit(*it);
 
-    /* Make call instruction */
-    BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
+    if (!procSig->isStatic)
+    {
+        /* Make instruction to set 'this' pointer */
+        if (ast->procName->declRef && ast->procName->declRef->Type() == AST::Types::VarDecl)
+            BB()->MakeInst<TACCopyInst>(ThisVar(), LocalVar(ast->procName->declRef));
+
+        /* Make indirect call instruction */
+        BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);//!!!!
+    }
+    else
+    {
+        /* Make direct call instruction */
+        BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
+    }
 
     //...
 
@@ -209,7 +228,7 @@ DEF_VISIT_PROC(GraphGenerator, SwitchCase)
 
 DEF_VISIT_PROC(GraphGenerator, ReturnStmnt)
 {
-    auto bb = MakeBlock("return");
+    auto bb = MakeBlock("Return");
 
     if (ast->expr)
     {
@@ -669,8 +688,10 @@ DEF_VISIT_PROC(GraphGenerator, VarDeclStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 {
+    auto& procSig = *ast->procSignature;
+
     /* Store number of parameters in the current procedure declaration */
-    numProcParams_ = static_cast<unsigned int>(ast->procSignature->params.size());
+    numProcParams_ = static_cast<unsigned int>(procSig.params.size());
 
     /* Generate name mangling for procedure signature */
     auto procIdent = UniqueLabel(*ast);
@@ -680,7 +701,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 
     /* Fetch parameters */
     size_t argIndex = 0;
-    for (auto& param : ast->procSignature->params)
+    for (auto& param : procSig.params)
         root->MakeInst<TACParamInst>(LocalVar(*param), argIndex++);
 
     /* Build sub-CFG for this procedure */
@@ -691,19 +712,21 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     /* Clean local CFG of this procedure */
     root->Clean();
 
-    /* Insert return statement if there is none */
-    if (graph.out && !graph.out->flags(BasicBlock::Flags::HasReturnStmnt))
-    {
-        auto bb = MakeBlock();
-        bb->MakeInst<TACReturnInst>(numProcParams_);
-        graph.out->AddSucc(*bb, "return");
-    }
-
     /* Verify procedure return statements */
-    if (!ast->procSignature->returnTypeDenoter->IsVoid())
+    if (procSig.returnTypeDenoter->IsVoid())
+    {
+        /* Insert return statement if there is none */
+        if (graph.out && !graph.out->flags(BasicBlock::Flags::HasReturnStmnt))
+        {
+            auto bb = MakeBlock();
+            bb->MakeInst<TACReturnInst>(numProcParams_);
+            graph.out->AddSucc(*bb, "Return");
+        }
+    }
+    else
     {
         if (!root->VerifyProcReturn())
-            Error("not all execution paths in \"" + ast->procSignature->ident + "\" end with a valid procedure return", ast);
+            Error("not all execution paths in \"" + procSig.ident + "\" end with a valid procedure return", ast);
     }
 
     RETURN_BLOCK_REF(BlockRef(root, graph.out));
@@ -948,6 +971,36 @@ DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)
 
 DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 {
+    if (ast->typeDenoter->IsArray())
+    {
+        //todo...
+    }
+    else if (ast->typeDenoter->IsPointer())
+    {
+        /* Get pointer class declaration */
+        auto& pointerType = static_cast<PointerTypeDenoter&>(*ast->typeDenoter);
+        auto classDecl = pointerType.declRef;
+
+        if (!classDecl)
+            ErrorIntern("missing reference to class declaration", ast);
+
+        /* Generate allocation code */
+        BB()->MakeInst<TACArgInst>(TACVar("@" + VirtualTable(*classDecl)));
+        BB()->MakeInst<TACArgInst>(TACVar::Int(classDecl->GetTypeID()));
+        BB()->MakeInst<TACArgInst>(TACVar::Int(classDecl->GetInstanceSize()));
+        BB()->MakeInst<TACDirectCallInst>("new");
+
+        /* Generate initialization code */
+        //...
+
+        /* Generate result code */
+        auto var = TempVar();
+        BB()->MakeInst<TACResultInst>(var);
+
+        PushVar(var);
+    }
+    else
+        Error("can not generate dynamic allocation for built-in types", ast);
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
@@ -1324,6 +1377,11 @@ TACVar GraphGenerator::Var()
 TACVar GraphGenerator::TempVar()
 {
     return varMngr_.TempVar();
+}
+
+TACVar GraphGenerator::ThisVar()
+{
+    return TACVar(1, TACVar::Types::Instance);
 }
 
 TACVar GraphGenerator::LocalVar(const AST* ast)

@@ -88,16 +88,16 @@ void ConstantPropagation::TransformResultInst(TACInstPtr& inst)
 {
     auto resultInst = static_cast<TACResultInst*>(inst.get());
     
-    /* Procedure result is already variable */
+    /* Procedure result is always mutable */
     RemoveConst(resultInst->dest);
 }
 
 void ConstantPropagation::TransformArgInst(TACInstPtr& inst)
 {
-    auto returnInst = static_cast<TACArgInst*>(inst.get());
+    auto argInst = static_cast<TACArgInst*>(inst.get());
 
     /* Propagate constant */
-    FetchConst(returnInst->src);
+    FetchConst(argInst->src);
 }
 
 void ConstantPropagation::TransformSwitchInst(TACInstPtr& inst)

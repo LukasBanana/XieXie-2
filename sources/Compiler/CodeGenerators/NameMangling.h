@@ -23,9 +23,12 @@ namespace NameMangling
 
 /**
 Returns the unique label for the specified procedure signature (excluding the identifier of its namespace).
+\param[in] procSignature Specifies the procedure signature.
+\param[in] classIdent Specifies an optional class identifier which is appended as the first argument.
+This can be used for non-static member procedures as the 'this' pointer.
 \throws std::invalid_argument If name mangling failed.
 */
-std::string UniqueLabel(const AbstractSyntaxTrees::ProcSignature& procSignature);
+std::string UniqueLabel(const AbstractSyntaxTrees::ProcSignature& procSignature, const std::string* classIdent = nullptr);
 
 /**
 Returns the unique label for the specified procedure signature including the identifier of its namespace (parent class).
@@ -39,6 +42,9 @@ e.g. "CWidget.PdoSomething,I,A@R@String" -> "Widget.doSomething(int, String[])".
 \throws std::invalid_argument If 'label' is invalid.
 */
 std::string DisplayLabel(const std::string& label);
+
+//! Returns the label for the virutal-table (vtable) of the specified class, e.g. "MyClass.vtable".
+std::string VirtualTable(const AbstractSyntaxTrees::ClassDeclStmnt& classDecl);
 
 
 } // /namespace NameMangling

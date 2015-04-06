@@ -48,6 +48,7 @@ class BuiltinTypeDenoter : public TypeDenoter
 
         TypeDenoterPtr CopyRef() const override;
         std::string ToString() const override;
+        unsigned int MemorySize() const override;
 
         bool IsAutoType() const override
         {
