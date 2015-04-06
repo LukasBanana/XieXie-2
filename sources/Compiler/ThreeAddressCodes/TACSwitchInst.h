@@ -29,7 +29,7 @@ class TACSwitchInst : public TACInst
 
         void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
 
-        TACVar switchVar; //TODO -> rename to "src"
+        TACVar src;
 
 };
 

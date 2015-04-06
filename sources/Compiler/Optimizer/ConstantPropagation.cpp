@@ -105,7 +105,7 @@ void ConstantPropagation::TransformSwitchInst(TACInstPtr& inst)
     auto switchInst = static_cast<TACSwitchInst*>(inst.get());
 
     /* Propagate constant */
-    FetchConst(switchInst->switchVar);
+    FetchConst(switchInst->src);
 }
 
 std::unique_ptr<TACCopyInst> ConstantPropagation::ConstantFolding(const TACModifyInst& inst)

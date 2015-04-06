@@ -105,7 +105,7 @@ void VariableReduction::TransformSwitchInst(TACInstPtr& inst)
     auto switchInst = static_cast<TACSwitchInst*>(inst.get());
 
     /* Propagate variabel usage */
-    ReadVar(switchInst->switchVar, *inst);
+    ReadVar(switchInst->src, *inst);
 }
 
 void VariableReduction::ReadVar(const TACVar& var, TACInst& inst)

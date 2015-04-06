@@ -124,7 +124,7 @@ void VariableClean::TransformSwitchInst(TACInstPtr& inst)
     auto switchInst = static_cast<TACSwitchInst*>(inst.get());
 
     /* Propagate variabel usage */
-    ReadVar(switchInst->switchVar);
+    ReadVar(switchInst->src);
 }
 
 void VariableClean::ReadVar(const TACVar& var)

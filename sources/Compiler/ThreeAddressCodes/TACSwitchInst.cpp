@@ -14,8 +14,8 @@ namespace ThreeAddressCodes
 
 
 TACSwitchInst::TACSwitchInst(const TACVar& var) :
-    TACInst     { OpCodes::SWITCH },
-    switchVar   { var             }
+    TACInst { OpCodes::SWITCH },
+    src     { var             }
 {
 }
 
@@ -26,13 +26,13 @@ TACInst::Types TACSwitchInst::Type() const
 
 std::string TACSwitchInst::ToString() const
 {
-    return "switch | " + switchVar.ToString();
+    return OpCodePrefix() + " | " + src.ToString();
 }
 
 void TACSwitchInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
 {
-    if ( flags(VarFlags::Source) && ( !flags(VarFlags::TempOnly) || switchVar.IsTemp() ) )
-        switchVar.Replace(varToReplace, replacedVar);
+    if ( flags(VarFlags::Source) && ( !flags(VarFlags::TempOnly) || src.IsTemp() ) )
+        src.Replace(varToReplace, replacedVar);
 }
 
 
