@@ -191,15 +191,7 @@ may change over time. Here is a rough ToDo-list:
 	\hline
 	\multicolumn{2}{|c|}{\textsc{Parser}} \\
 	\hline
-	Implementation of parser against grammar specification & \almdone \\
-	\hline
-	Member procedure calls as statements & \notimpl \\
-	\hline
-	Post fix array access & \done \\
-	\hline
-	Destructor & \done \\
-	\hline
-	Named Parameters & \done \\
+	Implementation of parser against grammar specification & \done \\
 	
 	\hline \hline
 	\multicolumn{2}{|c|}{\textsc{Context Analyzer}} \\
@@ -249,6 +241,8 @@ may change over time. Here is a rough ToDo-list:
 	Constant Folding & \done \\
 	\hline
 	Local Constant Propagation & \almdone \\
+	\hline
+	Local Copy Propagation & \notimpl \\
 	\hline
 	Local Variable Clean & \almdone \\
 	\hline
@@ -656,8 +650,8 @@ foreach i : { 1, 2, 3 } {
     print(i)
 }
 
-// Iterate over a 'superList' from type (array of array of strings)
-String[][] superList
+// Iterate over a 'superList' from type (array of arrays of strings)
+String[][] superList := { { "a", "b" }, { "c" } }
 foreach list : superList {
     // Iterate over all elements in the current sub list
     foreach str : list {
