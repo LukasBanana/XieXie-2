@@ -79,7 +79,7 @@ class AST
             /* --- Statements --- */
             ReturnStmnt,
             CtrlTransferStmnt,
-            ProcCallStmnt,
+            ExprStmnt,
 
             IfStmnt,
             SwitchStmnt,

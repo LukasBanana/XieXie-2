@@ -8,11 +8,16 @@ class A {
 
 class B {
 	A[] a
+	int x
 	C getC() {
 		return new C()
 	}
 	C[] getCArray() {
 		return { new C() }
+	}
+	B inc(int x) {
+		this.x += x
+		return this
 	}
 	void print() { /* do something here ... */ }
 }
@@ -76,6 +81,9 @@ class ProcTest : Base {
 	static String f(int x, int y) {
 		return null
 	}
+	static B makeB() {
+		return new B
+	}
 	
 	static int fibonacci(int n) {
 		if n <= 2 {
@@ -101,9 +109,11 @@ class ProcTest : Base {
 		
 		// expression statements
 		new B.print()
-		new B().print()
+		new B().inc(2).print()
 		(new B()).print()
 		{ new B }[0].print()
+		
+		ProcTest.makeB().inc(5).print()
 		
 	}
 	

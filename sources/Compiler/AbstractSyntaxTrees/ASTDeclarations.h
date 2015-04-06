@@ -44,7 +44,7 @@ DECL_SHR_PTR( SwitchCase           );
 
 DECL_SHR_PTR( ReturnStmnt          );
 DECL_SHR_PTR( CtrlTransferStmnt    );
-DECL_SHR_PTR( ProcCallStmnt        );
+DECL_SHR_PTR( ExprStmnt            );
 
 DECL_SHR_PTR( IfStmnt              );
 DECL_SHR_PTR( SwitchStmnt          );

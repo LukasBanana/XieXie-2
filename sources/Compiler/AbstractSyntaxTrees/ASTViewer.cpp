@@ -158,10 +158,10 @@ DEF_VISIT_PROC(ASTViewer, CtrlTransferStmnt)
     String("ctrlTransfer", CtrlTransferStmnt::GetTransferSpell(ast->ctrlTransfer));
 }
 
-DEF_VISIT_PROC(ASTViewer, ProcCallStmnt)
+DEF_VISIT_PROC(ASTViewer, ExprStmnt)
 {
-    AST_INFO_COLOR("ProcCallStmnt", colorStmnt);
-    Visit(ast->procCall);
+    AST_INFO_COLOR("ExprStmnt", colorStmnt);
+    Visit(ast->expr);
 }
 
 DEF_VISIT_PROC(ASTViewer, IfStmnt)

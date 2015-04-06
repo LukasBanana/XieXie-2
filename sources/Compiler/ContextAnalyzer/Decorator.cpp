@@ -279,9 +279,9 @@ DEF_VISIT_PROC(Decorator, CtrlTransferStmnt)
 {
 }
 
-DEF_VISIT_PROC(Decorator, ProcCallStmnt)
+DEF_VISIT_PROC(Decorator, ExprStmnt)
 {
-    Visit(ast->procCall);
+    Visit(ast->expr);
 }
 
 DEF_VISIT_PROC(Decorator, IfStmnt)

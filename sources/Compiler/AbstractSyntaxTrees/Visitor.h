@@ -50,7 +50,7 @@ namespace AbstractSyntaxTrees
 #define DECL_VISITOR_INTERFACE_STMNTS           \
     DECL_VISIT_PROC( ReturnStmnt          );    \
     DECL_VISIT_PROC( CtrlTransferStmnt    );    \
-    DECL_VISIT_PROC( ProcCallStmnt        );    \
+    DECL_VISIT_PROC( ExprStmnt            );    \
                                                 \
     DECL_VISIT_PROC( IfStmnt              );    \
     DECL_VISIT_PROC( SwitchStmnt          );    \
@@ -125,7 +125,7 @@ class Visitor
 
         DEF_ABSTRACT_VISIT_PROC( ReturnStmnt          );
         DEF_ABSTRACT_VISIT_PROC( CtrlTransferStmnt    );
-        DEF_ABSTRACT_VISIT_PROC( ProcCallStmnt        );
+        DEF_ABSTRACT_VISIT_PROC( ExprStmnt            );
 
         DEF_ABSTRACT_VISIT_PROC( IfStmnt              );
         DEF_ABSTRACT_VISIT_PROC( SwitchStmnt          );

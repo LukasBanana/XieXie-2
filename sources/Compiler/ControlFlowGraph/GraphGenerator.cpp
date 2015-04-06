@@ -246,14 +246,14 @@ DEF_VISIT_PROC(GraphGenerator, CtrlTransferStmnt)
     }
 }
 
-DEF_VISIT_PROC(GraphGenerator, ProcCallStmnt)
+DEF_VISIT_PROC(GraphGenerator, ExprStmnt)
 {
-    /* Build CFG for procedure call */
-    auto bb = MakeBlock("ProcCall");
+    /* Build CFG for expression statement */
+    auto bb = MakeBlock("ExprStmnt");
     
     PushBB(bb);
     {
-        Visit(ast->procCall);
+        Visit(ast->expr);
     }
     PopBB();
 

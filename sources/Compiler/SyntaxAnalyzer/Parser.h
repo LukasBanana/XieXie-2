@@ -114,7 +114,7 @@ class Parser
         CtrlTransferStmntPtr    ParseBreakStmnt();
         CtrlTransferStmntPtr    ParseContinueStmnt();
         ReturnStmntPtr          ParseReturnStmnt();
-        ProcCallStmntPtr        ParseProcCallStmnt(const VarNamePtr& varName = nullptr);
+        ExprStmntPtr            ParseExprStmnt(const VarNamePtr& varName = nullptr);
 
         IfStmntPtr              ParseIfStmnt();
         IfStmntPtr              ParseElseStmnt();
@@ -168,9 +168,9 @@ class Parser
         ExprPtr                 ParseMulExpr(const TokenPtr& identTkn = nullptr);
         ExprPtr                 ParseDivExpr(const TokenPtr& identTkn = nullptr);
 
-        ExprPtr                 ParseValueExpr(const TokenPtr& identTkn = nullptr);
-        ExprPtr                 ParsePrimaryValueExpr(const TokenPtr& identTkn = nullptr);
-        ExprPtr                 ParseVarAccessOrProcCallExpr(const TokenPtr& identTkn = nullptr);
+        ExprPtr                 ParseValueExpr(const TokenPtr& identTkn = nullptr, const VarNamePtr& varName = nullptr);
+        ExprPtr                 ParsePrimaryValueExpr(const TokenPtr& identTkn = nullptr, const VarNamePtr& varName = nullptr);
+        ExprPtr                 ParseVarAccessOrProcCallExpr(const TokenPtr& identTkn = nullptr, VarNamePtr varName = nullptr);
         ExprPtr                 ParseBracketOrCastExpr();
         ExprPtr                 ParseBracketOrCastExprSub();
 

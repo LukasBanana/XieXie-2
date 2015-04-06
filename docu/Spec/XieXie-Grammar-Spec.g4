@@ -28,7 +28,7 @@ global_stmnt	: class_decl_stmnt
 
 var_name_stmnt	: var_decl_stmnt
 				| assign_stmnt
-				| proc_call_stmnt;
+				| expr_stmnt;
 
 decl_stmnt	: var_decl_stmnt
 			/*| class_decl_stmnt
@@ -62,7 +62,7 @@ assign_stmnt	: copy_assign_stmnt
 				| modify_assign_stmnt
 				| post_operator_stmnt;
 
-proc_call_stmnt: proc_call;
+expr_stmnt: value_expr;
 
 // ASSIGN STATEMENTS
 copy_assign_stmnt:		var_name (',' var_name)* ':=' expr;

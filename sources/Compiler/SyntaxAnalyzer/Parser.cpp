@@ -602,6 +602,10 @@ StmntPtr Parser::ParseStmnt()
         case Tokens::Var:
         case Tokens::Const:
             return ParseVarDeclStmnt();
+        case Tokens::New:
+        case Tokens::LBracket:
+        case Tokens::LCurly:
+            return ParseExprStmnt();
     }
     return ParseVarNameStmnt();
 }
@@ -684,9 +688,9 @@ StmntPtr Parser::ParseVarNameStmnt(TokenPtr identTkn)
 
     auto varName = ParseVarName(identTkn);
 
-    /* Check for procedure call statement */
+    /* Check for expression statement */
     if (Is(Tokens::LBracket))
-        return ParseProcCallStmnt(varName);
+        return ParseExprStmnt(varName);
 
     /* Parse assign statement */
     return ParseAssignStmnt(varName);
@@ -703,9 +707,9 @@ StmntPtr Parser::ParseVarNameStmntSub(const TokenPtr& identTkn)
 
     auto varName = ParseVarName(identTkn, true);
 
-    /* Check for procedure call statement */
+    /* Check for expression statement */
     if (Is(Tokens::LBracket))
-        return ParseProcCallStmnt(varName);
+        return ParseExprStmnt(varName);
 
     /* Parse assign statement */
     return ParseAssignStmnt(varName);
@@ -832,12 +836,12 @@ ReturnStmntPtr Parser::ParseReturnStmnt()
     return ast;
 }
 
-// proc_call_stmnt: proc_call;
-ProcCallStmntPtr Parser::ParseProcCallStmnt(const VarNamePtr& varName)
+// expr_stmnt: value_expr;
+ExprStmntPtr Parser::ParseExprStmnt(const VarNamePtr& varName)
 {
-    auto ast = Make<ProcCallStmnt>();
+    auto ast = Make<ExprStmnt>();
 
-    ast->procCall = ParseProcCall(varName);
+    ast->expr = ParseValueExpr(nullptr, varName);
 
     return ast;
 }
@@ -1497,13 +1501,13 @@ ExprPtr Parser::ParseMulExpr(const TokenPtr& identTkn)
 // div_expr: value_expr (('/' | '%') value_expr)*;
 ExprPtr Parser::ParseDivExpr(const TokenPtr& identTkn)
 {
-    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseValueExpr, this, _1), Tokens::DivOp, identTkn);
+    return ParseAbstractBinaryExpr(std::bind(&Parser::ParseValueExpr, this, _1, nullptr), Tokens::DivOp, identTkn);
 }
 
 // value_expr: primary_value_expr;
-ExprPtr Parser::ParseValueExpr(const TokenPtr& identTkn)
+ExprPtr Parser::ParseValueExpr(const TokenPtr& identTkn, const VarNamePtr& varName)
 {
-    auto expr = ParsePrimaryValueExpr(identTkn);
+    auto expr = ParsePrimaryValueExpr(identTkn, varName);
 
     while (Is(Tokens::LParen) || Is(Tokens::Dot))
         expr = ParsePostfixValueExpr(expr);
@@ -1512,9 +1516,9 @@ ExprPtr Parser::ParseValueExpr(const TokenPtr& identTkn)
 }
 
 // primary_value_expr : literal_expr | var_access_expr | alloc_expr | bracket_expr | cast_expr | call_expr | unary_expr | init_list_expr | postfix_value_expr;
-ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn)
+ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn, const VarNamePtr& varName)
 {
-    if (!identTkn)
+    if (!identTkn && !varName)
     {
         switch (TknType())
         {
@@ -1536,15 +1540,16 @@ ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn)
                 return ParseInitListExpr();
         }
     }
-    return ParseVarAccessOrProcCallExpr(identTkn);
+    return ParseVarAccessOrProcCallExpr(identTkn, varName);
 }
 
 // var_access_expr: var_name;
 // call_expr: proc_call;
-ExprPtr Parser::ParseVarAccessOrProcCallExpr(const TokenPtr& identTkn)
+ExprPtr Parser::ParseVarAccessOrProcCallExpr(const TokenPtr& identTkn, VarNamePtr varName)
 {
     /* Parse variable name */
-    auto varName = ParseVarName(identTkn);
+    if (!varName)
+        varName = ParseVarName(identTkn);
 
     /* Check for procedure call expression */
     if (Is(Tokens::LBracket))
