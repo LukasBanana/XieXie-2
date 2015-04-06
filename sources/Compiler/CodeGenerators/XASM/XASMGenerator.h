@@ -13,6 +13,7 @@
 #include "../AsmGenerator.h"
 #include "CodeGenerators/RegisterAllocator.h"
 #include "ErrorReporter.h"
+#include "BuiltinClasses.h"
 
 #include "TACCopyInst.h"
 #include "TACModifyInst.h"
@@ -52,16 +53,24 @@ class XASMGenerator final : public AsmGenerator
 
         //! Writes a comment line, e.g. "; comment".
         void Comment(const std::string& line);
+        //! Writes a comment headline, e.g. "; <------- CLASS ------->".
+        void CommentHeadline(const std::string& title);
+
         //! Writes a global label, e.g. "label:".
         void GlobalLabel(const std::string& label);
         //! Writes a local label, e.g. ".label:".
         void LocalLabel(const std::string& label);
+
         //! Writes a WORD data-field with address, e.g. ".word @label".
         void WORDAddress(const std::string& label);
         //! Writes a WORD data-field with value.
         void WORDField(int value);
         //! Writes a WORD data-field with value.
         void WORDField(unsigned int value);
+
+        //! Writes a FLOAT data-field with value.
+        void FLOATField(float value);
+
         //! Writes an ASCII data-field, e.g. ".ascii \"text\"".
         void ASCIIField(const std::string& text);
 
@@ -139,7 +148,11 @@ class XASMGenerator final : public AsmGenerator
 
         /* --- Data Generation --- */
 
+        void GenerateClassRTTI(const AbstractSyntaxTrees::BuiltinClasses::ClassRTTI& typeInfo);
         void GenerateStringLiteral(const CFGProgram::StringLiteral& constStr);
+        void GenerateBoolArrayLiteral(const CFGProgram::BoolArrayLiteral& constArray);
+        void GenerateIntArrayLiteral(const CFGProgram::IntArrayLiteral& constArray);
+        void GenerateFloatArrayLiteral(const CFGProgram::FloatArrayLiteral& constArray);
 
         /* === Members === */
 

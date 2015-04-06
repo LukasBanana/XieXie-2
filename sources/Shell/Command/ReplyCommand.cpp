@@ -49,7 +49,7 @@ void ReplyCommand::Execute(StreamParser& input, Log& output)
     if (flags)
         Assembler::QueryByteCodeInformation(output, filename, flags);
     else
-        output.Warning("reply >> nothing to be done");
+        output.Message("reply: nothing to be done");
 }
 
 

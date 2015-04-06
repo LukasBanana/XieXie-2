@@ -14,6 +14,7 @@ class B {
 	C[] getCArray() {
 		return { new C() }
 	}
+	void print() { /* do something here ... */ }
 }
 
 class C {
@@ -66,6 +67,11 @@ class ProcTest : Base {
 	float[] f(float x) {
 		return x*x
 	}
+	static int[] getIntArray() {
+		return ProcTest.intArray
+	}
+	
+	static int[] intArray := { 1, 2, 3 }
 	
 	static String f(int x, int y) {
 		return null
@@ -92,6 +98,12 @@ class ProcTest : Base {
 		
 		int		g := this.f(p*2) + ProcTest.f(p+3)
 		float	h := this.f((float)p*4.0)[0]
+		
+		// expression statements
+		new B.print()
+		new B().print()
+		(new B()).print()
+		{ new B }[0].print()
 		
 	}
 	

@@ -58,10 +58,6 @@ CFGProgramPtr GraphGenerator::GenerateCFG(Program& program, ErrorReporter& error
         errorReporter.Add(err);
     }
     
-    #if 1//!!!TEST!!!
-    program_->stringLiterals.push_back({ "String.const.0", "Hello, World!\n" });
-    #endif
-
     return std::move(program_);
 }
 

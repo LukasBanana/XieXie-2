@@ -1,6 +1,6 @@
 ; XieXie Assembler File (XASM)
 ; XieXie Compiler Version 2.0 Alpha
-; Generated at 2015-04-05 22:46:41
+; Generated at 2015-04-06 11:52:50
 
 ; <------- CLASS "Test" ------->
 
@@ -126,11 +126,66 @@ CTest.Ptest1,I:
 String.const.0:
 	.word 1
 	.word 1
-	.word 122
+	.word @String.vtable
 	.word 14
 	.word 14
 	.word @.buffer
 	.buffer:
 	.ascii "Hello, World!\n"
+
+; <------- STRING "String.const.1" ------->
+
+String.const.1:
+	.word 1
+	.word 1
+	.word @String.vtable
+	.word 4
+	.word 4
+	.word @.buffer
+	.buffer:
+	.ascii "Test"
+
+; <------- BOOL ARRAY "BoolArray.const.0" ------->
+
+BoolArray.const.0:
+	.word 1
+	.word 4
+	.word @BoolArray.vtable
+	.word 7
+	.word 7
+	.word @.buffer
+	.buffer:
+	.word -1711276032
+
+; <------- INT ARRAY "PrimArray.const.0" ------->
+
+PrimArray.const.0:
+	.word 1
+	.word 3
+	.word @PrimArray.vtable
+	.word 3
+	.word 3
+	.word @.buffer
+	.buffer:
+	.word 42
+	.word -999
+	.word 26
+
+; <------- FLOAT ARRAY "PrimArray.const.1" ------->
+
+PrimArray.const.1:
+	.word 1
+	.word 3
+	.word @PrimArray.vtable
+	.word 6
+	.word 6
+	.word @.buffer
+	.buffer:
+	.float -12345.67871094
+	.float 0.50000000
+	.float 2.50000000
+	.float 0.30000001
+	.float 0.00000001
+	.float 3.14159274
 
 

@@ -253,7 +253,11 @@ static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& i
 {
     auto ast = GenClass(ident);
 
-    //...
+    GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"));
+    //GenMemberProc(*ast, GenericArray(), "copy");
+    GenMemberProc(*ast, Int(), "size");
+    GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
+    GenMemberProc(*ast, Bool(), "empty");
 
     return ast;
 }

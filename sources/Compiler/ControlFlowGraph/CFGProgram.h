@@ -23,16 +23,26 @@ namespace ControlFlowGraph
 class CFGProgram
 {
     
-    public:
+    private:
         
-        struct StringLiteral
+        template <typename T> struct Literal
         {
             std::string ident;
-            std::string value;
+            T           value;
         };
 
-        std::vector<ClassTreePtr>   classTrees;
-        std::vector<StringLiteral>  stringLiterals;
+    public:
+        
+        using StringLiteral     = Literal<std::string>;
+        using BoolArrayLiteral  = Literal<std::vector<bool>>;
+        using IntArrayLiteral   = Literal<std::vector<int>>;
+        using FloatArrayLiteral = Literal<std::vector<float>>;
+
+        std::vector<ClassTreePtr>       classTrees;
+        std::vector<StringLiteral>      stringLiterals;
+        std::vector<BoolArrayLiteral>   boolArrayLiterals;
+        std::vector<IntArrayLiteral>    intArrayLiterals;
+        std::vector<FloatArrayLiteral>  floatArrayLiterals;
 
 };
 

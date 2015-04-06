@@ -16,19 +16,26 @@
 
 template <typename T> inline std::string ToStrTmpl(const T& val)
 {
-    std::stringstream SStr;
-    SStr << val;
-    return SStr.str();
+    std::stringstream sstr;
+    sstr << val;
+    return sstr.str();
 }
 
 template <typename T> inline std::string ToStrTmplPrec(const T& val)
 {
-    std::stringstream SStr;
-    SStr.precision(std::numeric_limits<T>::digits10);
-    SStr << val;
-    return SStr.str();
+    std::stringstream sstr;
+    sstr.precision(std::numeric_limits<T>::digits10);
+    sstr << val;
+    return sstr.str();
 }
 
+template <typename T> inline std::string ToStrTmplPrec(const T& val, int precision)
+{
+    std::stringstream sstr;
+    sstr.precision(precision);
+    sstr << std::fixed << val;
+    return sstr.str();
+}
 
 /* === Functions === */
 
@@ -55,15 +62,6 @@ std::string ToStr(unsigned int val)
     return ToStrTmpl(val);
 }
 
-std::string ToStr(long long int val)
-{
-    return ToStrTmpl(val);
-}
-std::string ToStr(unsigned long long int val)
-{
-    return ToStrTmpl(val);
-}
-
 std::string ToStr(float val)
 {
     return ToStrTmplPrec(val);
@@ -72,9 +70,14 @@ std::string ToStr(double val)
 {
     return ToStrTmplPrec(val);
 }
-std::string ToStr(long double val)
+
+std::string ToStr(float val, int precision)
 {
-    return ToStrTmplPrec(val);
+    return ToStrTmplPrec(val, precision);
+}
+std::string ToStr(double val, int precision)
+{
+    return ToStrTmplPrec(val, precision);
 }
 
 std::string ExtractFilename(const std::string& filename)
@@ -99,23 +102,23 @@ std::string ExtractFilePath(const std::string& filename)
 std::string ExtractFileExtension(const std::string& filename)
 {
     /* Return file extension only */
-    auto Pos = filename.find_last_of('.');
+    auto pos = filename.find_last_of('.');
 
-    if (Pos == std::string::npos)
+    if (pos == std::string::npos)
         return filename;
 
-    return filename.substr(Pos + 1, filename.size() - Pos - 1);
+    return filename.substr(pos + 1, filename.size() - pos - 1);
 }
 
 std::string ReplaceString(
     std::string subject, const std::string& search, const std::string& replace)
 {
-    size_t Pos = 0;
+    size_t pos = 0;
 
-    while ( ( Pos = subject.find(search, Pos) ) != std::string::npos )
+    while ( ( pos = subject.find(search, pos) ) != std::string::npos )
     {
-        subject.replace(Pos, search.size(), replace);
-        Pos += replace.size();
+        subject.replace(pos, search.size(), replace);
+        pos += replace.size();
     }
 
     return subject;
@@ -185,7 +188,7 @@ std::string ToLower(std::string str)
     for (char& chr : str)
     {
         if (chr >= 'A' && chr <= 'Z')
-            chr += 'a' - 'A';
+            chr += ('a' - 'A');
     }
     return str;
 }
@@ -195,7 +198,7 @@ std::string ToUpper(std::string str)
     for (char& chr : str)
     {
         if (chr >= 'a' && chr <= 'z')
-            chr -= 'a' - 'A';
+            chr -= ('a' - 'A');
     }
     return str;
 }

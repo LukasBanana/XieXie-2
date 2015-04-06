@@ -11,6 +11,7 @@
 #include "CFGTopDownCollector.h"
 #include "CodeGenerators/NameMangling.h"
 #include "BuiltinClasses.h"
+#include "StringModifier.h"
 
 
 namespace CodeGenerator
@@ -52,9 +53,17 @@ bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorR
         for (const auto& ct : program.classTrees)
             GenerateClassTree(*ct);
 
-        /* Generate string literals */
+        /* Generate literals */
         for (const auto& sl : program.stringLiterals)
             GenerateStringLiteral(sl);
+
+        #if 1//!!!TEST!!!
+        GenerateStringLiteral({ "String.const.0", "Hello, World!\n" });
+        GenerateStringLiteral({ "String.const.1", "Test" });
+        GenerateBoolArrayLiteral({ "BoolArray.const.0", { true, false, false, true, true, false, true } });
+        GenerateIntArrayLiteral({ "PrimArray.const.0", { 42, -999, 26 } });
+        GenerateFloatArrayLiteral({ "PrimArray.const.1", { -12345.6789f, 0.5f, 2.5f, 0.3f, 0.00000001f, 3.141592654f } });
+        #endif
 
         /* Write last empty line, so that assembler parser works correct */
         Line("");
@@ -81,6 +90,11 @@ void XASMGenerator::Comment(const std::string& line)
         Line("; " + line);
 }
 
+void XASMGenerator::CommentHeadline(const std::string& title)
+{
+    Comment("<------- " + title + " ------->");
+}
+
 void XASMGenerator::GlobalLabel(const std::string& label)
 {
     Line(label + ':');
@@ -104,6 +118,11 @@ void XASMGenerator::WORDField(int value)
 void XASMGenerator::WORDField(unsigned int value)
 {
     WORDField(static_cast<int>(value));
+}
+
+void XASMGenerator::FLOATField(float value)
+{
+    Line(".float " + ToStr(value, 8));
 }
 
 void XASMGenerator::ASCIIField(const std::string& text)
@@ -245,7 +264,7 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
 {
     /* Add commentary for this class */
     auto classDecl = classTree.GetClassDeclAST();
-    Comment("<------- CLASS \"" + classDecl->ident + "\" ------->");
+    CommentHeadline("CLASS \"" + classDecl->ident + "\"");
     Blank();
 
     /* Generate code for each procedure in the class tree */
@@ -582,24 +601,115 @@ void XASMGenerator::GenerateDirectJump(const BasicBlock& bb)
 
 /* --- Data Generation --- */
 
+void XASMGenerator::GenerateClassRTTI(const BuiltinClasses::ClassRTTI& typeInfo)
+{
+    WORDField(1);                       // refCount
+    WORDField(typeInfo.typeID);         // typeID
+    WORDAddress(typeInfo.vtableAddr);   // vtableAddr
+}
+
 void XASMGenerator::GenerateStringLiteral(const CFGProgram::StringLiteral& constStr)
 {
-    Comment("<------- STRING \"" + constStr.ident + "\" ------->");
+    CommentHeadline("STRING \"" + constStr.ident + "\"");
     Blank();
     
-    auto strLen = static_cast<int>(constStr.value.size());
+    auto size = static_cast<int>(constStr.value.size());
 
     GlobalLabel(constStr.ident);
     IncIndent();
     {
-        WORDField(1);                                   // Object.refCount
-        WORDField(BuiltinClasses::String::typeID);      // Object.typeID
-        WORDField(BuiltinClasses::String::vtableAddr);  // Object.vtableAddr
-        WORDField(strLen);                              // String.size
-        WORDField(strLen);                              // String.bufSize
-        WORDAddress(".buffer");                         // String.buffer
+        GenerateClassRTTI(BuiltinClasses::String);
+        WORDField(size);                                    // String.size
+        WORDField(size);                                    // String.bufSize
+        WORDAddress(".buffer");                             // String.buffer
         LocalLabel("buffer");
         ASCIIField(ResolveStringLiteral(constStr.value));
+    }
+    DecIndent();
+
+    Blank();
+}
+
+void XASMGenerator::GenerateBoolArrayLiteral(const CFGProgram::BoolArrayLiteral& constArray)
+{
+    CommentHeadline("BOOL ARRAY \"" + constArray.ident + "\"");
+    Blank();
+    
+    auto size = static_cast<int>(constArray.value.size());
+
+    GlobalLabel(constArray.ident);
+    IncIndent();
+    {
+        GenerateClassRTTI(BuiltinClasses::BoolArray);
+        WORDField(size);                                    // PrimArray.size
+        WORDField(size);                                    // PrimArray.bufSize
+        WORDAddress(".buffer");                             // PrimArray.buffer
+        LocalLabel("buffer");
+
+        /* Build bit-buffer */
+        size_t i = 0;
+        int field = 0;
+
+        for (auto value : constArray.value)
+        {
+            if (value)
+                field |= (0x1 << (31 - i));
+            if (++i == 32)
+            {
+                WORDField(field);
+                field = 0;
+                i = 0;
+            }
+        }
+
+        if (i > 0)
+            WORDField(field);
+    }
+    DecIndent();
+
+    Blank();
+}
+
+void XASMGenerator::GenerateIntArrayLiteral(const CFGProgram::IntArrayLiteral& constArray)
+{
+    CommentHeadline("INT ARRAY \"" + constArray.ident + "\"");
+    Blank();
+    
+    auto size = static_cast<int>(constArray.value.size());
+
+    GlobalLabel(constArray.ident);
+    IncIndent();
+    {
+        GenerateClassRTTI(BuiltinClasses::PrimArray);
+        WORDField(size);                                    // PrimArray.size
+        WORDField(size);                                    // PrimArray.bufSize
+        WORDAddress(".buffer");                             // PrimArray.buffer
+        LocalLabel("buffer");
+        for (auto value : constArray.value)
+            WORDField(value);
+    }
+    DecIndent();
+
+    Blank();
+}
+
+void XASMGenerator::GenerateFloatArrayLiteral(const CFGProgram::FloatArrayLiteral& constArray)
+{
+    CommentHeadline("FLOAT ARRAY \"" + constArray.ident + "\"");
+    Blank();
+    
+    auto size = static_cast<int>(constArray.value.size());
+
+    GlobalLabel(constArray.ident);
+    IncIndent();
+    {
+        GenerateClassRTTI(BuiltinClasses::PrimArray);
+        WORDField(size);                                    // PrimArray.size
+        WORDField(size);                                    // PrimArray.bufSize
+        WORDAddress(".buffer");                             // PrimArray.buffer
+        LocalLabel("buffer");
+        for (auto value : constArray.value)
+            FLOATField(value);
     }
     DecIndent();
 

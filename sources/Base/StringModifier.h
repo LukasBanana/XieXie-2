@@ -30,12 +30,11 @@ std::string ToStr(unsigned short val);
 std::string ToStr(int val);
 std::string ToStr(unsigned int val);
 
-std::string ToStr(long long int val);
-std::string ToStr(unsigned long long int val);
-
 std::string ToStr(float val);
 std::string ToStr(double val);
-std::string ToStr(long double val);
+
+std::string ToStr(float val, int precision);
+std::string ToStr(double val, int precision);
 
 //! Returns the filename of the specified full path (e.g. from "C:/Program Files/Programming/App.xx" to "App.xx").
 std::string ExtractFilename(const std::string& filename);

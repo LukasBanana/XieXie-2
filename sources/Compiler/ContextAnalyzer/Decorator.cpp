@@ -972,7 +972,7 @@ StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
                 throw std::string("can not use 'this' outside class namespace");
         }
 
-        /* (2) Check tor "super" identifier */
+        /* (2) Check for "super" identifier */
         if (ident == "super")
         {
             /* Search only in upper class namespace */
@@ -1059,7 +1059,7 @@ void Decorator::DeduceNamespaceFromTypeDenoter(const TypeDenoter* varType, Stmnt
 
             default:
             {
-                varType = false;
+                varType = nullptr;
             }
             break;
         }

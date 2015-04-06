@@ -16,52 +16,20 @@ namespace BuiltinClasses
 {
 
 
-/*
-[1] make sure the 'vtableAddr' values are up-to-date
-    -> use command line: "xxc reply Core.xasm.xbc --exp-addr"
-*/
-
-struct Object
+//! Structure for class run-time type information (RTTI).
+struct ClassRTTI
 {
-    static const unsigned int typeID        = 0;
-    static const unsigned int vtableAddr    = 73; // [1]
+    unsigned int    typeID;
+    char*           vtableAddr;
 };
 
-struct String
-{
-    static const unsigned int typeID        = 1;
-    static const unsigned int vtableAddr    = 122; // [1]
-};
-
-struct Array
-{
-    static const unsigned int typeID        = 2;
-    static const unsigned int vtableAddr    = 156; // [1]
-};
-
-struct PrimArray
-{
-    static const unsigned int typeID        = 3;
-    static const unsigned int vtableAddr    = 0;//!!!
-};
-
-struct BoolArray
-{
-    static const unsigned int typeID        = 4;
-    static const unsigned int vtableAddr    = 182; // [1]
-};
-
-struct Buffer
-{
-    static const unsigned int typeID        = 5;
-    static const unsigned int vtableAddr    = 0;//!!!
-};
-
-struct Intrinsics
-{
-    static const unsigned int typeID        = 6;
-    static const unsigned int vtableAddr    = 0;//!!!
-};
+static const ClassRTTI Object      { 0, "Object.vtable"     };
+static const ClassRTTI String      { 1, "String.vtable"     };
+static const ClassRTTI Array       { 2, "Array.vtable"      };
+static const ClassRTTI PrimArray   { 3, "PrimArray.vtable"  };
+static const ClassRTTI BoolArray   { 4, "BoolArray.vtable"  };
+static const ClassRTTI Buffer      { 5, "Buffer.vtable"     };
+static const ClassRTTI Intrinsics  { 6, "Intrinsics.vtable" };
 
 
 } // /namespace BuiltinClasses
