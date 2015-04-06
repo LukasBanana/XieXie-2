@@ -2,9 +2,6 @@
 // Macro Test 1
 // 28/03/2015
 
-class String {}
-class Object {}
-
 class Test {
 	
 	static void main() {

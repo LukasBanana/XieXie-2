@@ -2,8 +2,6 @@
 // Init and Release Test
 // 30/03/2015
 
-class Object {}
-
 class Test {
 	
 	init() {

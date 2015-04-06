@@ -18,14 +18,6 @@ extern class Log {
 	static void writeLine(String msg)
 }
 
-extern class String {
-	init()
-	init(Object rhs)
-	int size()
-	void resize(int size)
-	String add(String rhs)
-}
-
 class Vector3 {
 	
 	init() {

@@ -44,6 +44,11 @@ extern class String {
 	bool empty()
 	
 	String add(String rhs)
+	
+	String add(bool rhs)
+	String add(int rhs)
+	String add(float rhs)
+	
 	String subString(int pos, int len := -1)
 	
 	void setChar(int pos, int char)

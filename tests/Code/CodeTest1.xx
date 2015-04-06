@@ -2,27 +2,6 @@
 // XieXie 2.0 Code Test 1
 // 05/09/2014
 
-extern class String {
-	
-	init()
-	init(String rhs)
-	
-	String left(int len)
-	String right(int len)
-	String subString(int pos, int len)
-	
-	int get(int pos)
-	void set(int pos, int char)
-	
-	int size()
-	
-	String add(String other)
-	
-	String lcase()
-	String ucase()
-	
-}
-
 extern class Timer {
 	
 	[[deprecated("Use \"foo bar\" instead")]]
@@ -40,8 +19,6 @@ extern class Log {
 	static void writeLine(String s)
 	
 }
-
-extern class Object {}
 
 class Mouse {
 	
@@ -152,7 +129,7 @@ class AppTest {
 		int x, y, z
 		
 		// For loops
-		foreach String arg : args {
+		foreach arg : args {
 			//if x > y > z or ( y = 3 or z = 4 ) {
 			if x > y and y > z or ( y = 3 or z = 4 ) {
 				Log.write("A")
@@ -163,13 +140,13 @@ class AppTest {
 			}
 		}
 		
-		foreach int i : { 1, 2, 3, 4, 5 } {
+		foreach i : { 1, 2, 3, 4, 5 } {
 			//Log.write(i + ", ")
 		}
 		
-		foreach int[] list : { { 1, 2, 3 }, { -4, 2 }, { 9, 8, 0, 0, 1 } } {
+		foreach list : { { 1, 2, 3 }, { -4, 2 }, { 9, 8, 0, 0, 1 } } {
 			Log.writeLine("New List: ")
-			foreach int i : list {
+			foreach i : list {
 				//Log.write(i + ", ")
 			}
 		}
@@ -211,7 +188,7 @@ class AppTest {
 		
 		Vector3[] vertices := new Vector3[](100)
 		
-		foreach Vector3 vert : vertices {
+		foreach vert : vertices {
 			vert.x := Math.random()
 		}
 		

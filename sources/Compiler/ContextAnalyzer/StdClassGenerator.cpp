@@ -241,6 +241,9 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
     GenMemberProc(*ast, Bool(), "empty");
     GenMemberProc(*ast, String(), "add", GenParam(String(), "rhs"));
+    GenMemberProc(*ast, String(), "add", GenParam(Bool(), "rhs"));
+    GenMemberProc(*ast, String(), "add", GenParam(Int(), "rhs"));
+    GenMemberProc(*ast, String(), "add", GenParam(Float(), "rhs"));
     GenMemberProc(*ast, String(), "subString", ( GenParam(Int(), "pos"), GenParam(Int(), "len", GenExpr(-1)) ));
     GenMemberProc(*ast, Void(), "setChar", ( GenParam(Int(), "pos"), GenParam(Int(), "char") ));
     GenMemberProc(*ast, Int(), "getChar", GenParam(Int(), "pos"));

@@ -27,9 +27,9 @@ class ExprTest1 {
 	init() {
 		
 		// Expressions for initialization
-		int a := (int)test1(2)
-		int b := test2(0)
-		int c := m_c[2][(int)test1(5)]
+		int a := (int)test1(2.2)
+		int b := test1(0)
+		int c := m_c[2][test1(5)]
 		int d := a + -3 // ok, unary expression is valid
 		//int e := a + ---3 // error: "--" is scanned here
 		int e := a + - - -3 // ok, unary expression is valid
@@ -41,7 +41,7 @@ class ExprTest1 {
 		if (a > m_b[0]) = true {
 			int n
 			for int i := 0 ; i < 10 ; i++ {
-				n += i + (int)test1(a > b)
+				n += i + test1((int)(a > b))
 			}
 		} else if m_c[1][2] - m_b[-3] > 0 {
 			Foo f
@@ -63,7 +63,7 @@ class ExprTest1 {
 		return x*x
 	}
 	
-	int test2(int x) {
+	int test1(int x) {
 		return x*x
 	}
 	

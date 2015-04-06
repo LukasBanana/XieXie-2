@@ -2,9 +2,6 @@
 // Pointer Test 1
 // 30/03/2015
 
-class Object {}
-class Array {}
-
 class Node {
 	
 private:

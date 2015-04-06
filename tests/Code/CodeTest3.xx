@@ -2,8 +2,6 @@
 // Code Test 3
 // 19/03/2015
 
-class Object {}
-
 class Test {
 
 	void test() {
