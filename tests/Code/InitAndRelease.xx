@@ -25,8 +25,8 @@ class Test : Base {
 	/*init(int x) { // error, already defined
 		this.y := x+2
 	}*/
-	init(float x) { // ok, overloading
-		this.x := (int)x
+	init(float x) : this((int)x) { // ok, overloading
+		this.y := a*2
 	}
 	release {
 		x, y := -1

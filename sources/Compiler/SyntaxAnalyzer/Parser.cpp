@@ -1317,7 +1317,7 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, c
 // init_decl_stmnt: attrib_prefix? init_head code_block;
 // extern_init_decl_stmnt: attrib_prefix? init_head;
 // init_head: 'init' '(' param_list? ')' super_init?;
-// super_init: ':' 'super' '(' param_list? ')';
+// super_init: ':' OBJECT_IDENT '(' param_list? ')';
 ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 {
     auto ast = Make<ProcDeclStmnt>();
@@ -1351,12 +1351,14 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
         if (Is(Tokens::Colon))
         {
             AcceptIt();
-            Accept(Tokens::ObjectIdent, "super");
+            auto baseIdentSpecifier = Accept(Tokens::ObjectIdent)->Spell();
 
             /* Make procedure call */
+            auto baseIdent = (baseIdentSpecifier == "super" ? state_.classDecl->baseClassIdent : state_.classDecl->ident);
+
             auto callExpr = Make<ProcCallExpr>();
             callExpr->procCall = ParseProcCall(Make<VarName>(
-                std::vector<std::string>{ state_.classDecl->baseClassIdent, "init" }
+                std::vector<std::string>{ baseIdent, "init" }
             ));
 
             callStmnt = Make<ExprStmnt>();

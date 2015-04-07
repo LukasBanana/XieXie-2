@@ -163,8 +163,8 @@ storage_modifier:			'static';
 
 init_decl_stmnt:			attrib_prefix? init_head code_block;
 extern_init_decl_stmnt:		attrib_prefix? init_head;
-init_head:					'init' '(' param_list? ')' super_init?;
-super_init:					':' 'super' '(' param_list? ')';
+init_head:					'init' '(' param_list? ')' base_init?;
+base_init:					':' OBJECT_IDENT '(' param_list? ')';
 
 release_decl_stmnt:			'release' code_block;
 
