@@ -39,7 +39,7 @@ class ProcSignature : public AST
         bool                    isCtor          = false;    // is this a constructor?
         bool                    isDtor          = false;    // is this a destructor?
 
-        TypeDenoterPtr          returnTypeDenoter;          // may be null (for init and release procedures)
+        TypeDenoterPtr          returnTypeDenoter;
         std::string             ident;
         std::vector<ParamPtr>   params;
 

@@ -1084,6 +1084,8 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
 
     if (Is(Tokens::Colon))
         ast->baseClassIdent = AcceptBaseClassIdent();
+    else
+        ast->baseClassIdent = "Object";
     
     /* Parse class body segments */
     auto vis = ClassBodySegment::Visibilities::Public;
@@ -1110,6 +1112,8 @@ ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attri
 
     if (Is(Tokens::Colon))
         ast->baseClassIdent = AcceptBaseClassIdent();
+    else
+        ast->baseClassIdent = "Object";
     
     Accept(Tokens::LCurly);
     if (!Is(Tokens::RCurly))
@@ -1312,21 +1316,27 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, c
 
 // init_decl_stmnt: attrib_prefix? init_head code_block;
 // extern_init_decl_stmnt: attrib_prefix? init_head;
-// init_head: 'init' '(' param_list? ')';
+// init_head: 'init' '(' param_list? ')' super_init?;
+// super_init: ':' 'super' '(' param_list? ')';
 ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 {
     auto ast = Make<ProcDeclStmnt>();
     ast->parentRef = state_.classDecl;
 
+    /* Setup procedure signature */
     ast->procSignature = Make<ProcSignature>();
-    ast->procSignature->ident = "init";
-    ast->procSignature->isCtor = true;
+
+    ast->procSignature->ident               = "init";
+    ast->procSignature->isCtor              = true;
+    ast->procSignature->returnTypeDenoter   = Make<BuiltinTypeDenoter>(BuiltinTypeDenoter::TypeNames::Void);
 
     state_.procIdent = "init";
 
+    /* Parse optional attributes */
     if (Is(Tokens::LDParen))
         ast->attribPrefix = ParseAttribPrefix();
 
+    /* Parse constructor signature */
     Accept(Tokens::Init);
     Accept(Tokens::LBracket);
     if (!Is(Tokens::RBracket))
@@ -1334,7 +1344,31 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
     Accept(Tokens::RBracket);
 
     if (!isExtern)
+    {
+        /* Parse optional super constructor call */
+        ExprStmntPtr callStmnt;
+
+        if (Is(Tokens::Colon))
+        {
+            AcceptIt();
+            Accept(Tokens::ObjectIdent, "super");
+
+            /* Make procedure call */
+            auto callExpr = Make<ProcCallExpr>();
+            callExpr->procCall = ParseProcCall(Make<VarName>(
+                std::vector<std::string>{ state_.classDecl->baseClassIdent, "init" }
+            ));
+
+            callStmnt = Make<ExprStmnt>();
+            callStmnt->expr = callExpr;
+        }
+
+        /* Parse code block */
         ast->codeBlock = ParseCodeBlock();
+
+        if (callStmnt)
+            ast->codeBlock->stmnts.insert(ast->codeBlock->stmnts.begin(), callStmnt);
+    }
 
     return ast;
 }
@@ -1346,8 +1380,10 @@ ProcDeclStmntPtr Parser::ParseReleaseDeclStmnt()
     ast->parentRef = state_.classDecl;
 
     ast->procSignature = Make<ProcSignature>();
-    ast->procSignature->ident = "release";
-    ast->procSignature->isDtor = true;
+
+    ast->procSignature->ident               = "release";
+    ast->procSignature->isDtor              = true;
+    ast->procSignature->returnTypeDenoter   = Make<BuiltinTypeDenoter>(BuiltinTypeDenoter::TypeNames::Void);
 
     state_.procIdent = "release";
 

@@ -19,7 +19,7 @@ class Test : Base {
 	init() : super() {
 		x, y := 0
 	}
-	init(int x) : super(x) {
+	init(int x) : super(x*2) {
 		this.x := x
 	}
 	/*init(int x) { // error, already defined
