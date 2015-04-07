@@ -43,7 +43,7 @@ class ExprTest1 {
 			for int i := 0 ; i < 10 ; i++ {
 				n += i + test1((int)(a > b))
 			}
-		} else if m_c[1][2] - m_b[-3] > 0 {
+		} else if (m_c[1][2] - m_b[-3]) > 0 {
 			Foo f
 			FooSub fs
 			Bar b

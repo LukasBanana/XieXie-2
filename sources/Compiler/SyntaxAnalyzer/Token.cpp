@@ -143,6 +143,8 @@ std::string Token::TypeToString(const Types type)
             return "[[";
         case Types::RDParen:
             return "]]";
+        case Types::LRParen:
+            return "[]";
 
         case Types::At:
             return "@";

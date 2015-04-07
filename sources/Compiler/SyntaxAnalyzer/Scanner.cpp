@@ -377,6 +377,11 @@ TokenPtr Scanner::ScanToken()
             allowRDParenStack_.Push(true);
             return Make(Tokens::LDParen, spell, true);
         }
+        if (Is(']'))
+        {
+            /* Return special case token */
+            return Make(Tokens::LRParen, spell, true);
+        }
 
         /* Push new state and return special case token */
         allowRDParenStack_.Push(false);

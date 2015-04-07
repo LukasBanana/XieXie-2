@@ -84,6 +84,7 @@ class Token
             RParen,         //!< ]
             LDParen,        //!< [[
             RDParen,        //!< ]]
+            LRParen,        //!< []
 
             // Special characters
             At,             //!< @

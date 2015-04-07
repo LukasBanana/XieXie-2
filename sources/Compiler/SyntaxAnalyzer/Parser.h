@@ -105,7 +105,6 @@ class Parser
         StmntPtr                ParseDeclStmnt();
         StmntPtr                ParseExternDeclStmnt();
         StmntPtr                ParseVarNameStmnt(TokenPtr identTkn = nullptr);
-        StmntPtr                ParseVarNameStmntSub(const TokenPtr& identTkn);
         StmntPtr                ParseVarDeclOrProcDeclStmnt();
         StmntPtr                ParseClassDeclOrProcDeclStmnt();
         StmntPtr                ParseClassDeclOrModuleDeclStmnt();

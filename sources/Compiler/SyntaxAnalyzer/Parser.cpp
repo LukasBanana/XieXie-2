@@ -604,7 +604,6 @@ StmntPtr Parser::ParseStmnt()
             return ParseVarDeclStmnt();
         case Tokens::New:
         case Tokens::LBracket:
-        case Tokens::LCurly:
             return ParseExprStmnt();
     }
     return ParseVarNameStmnt();
@@ -667,7 +666,7 @@ StmntPtr Parser::ParseExternDeclStmnt()
     return ParseProcDeclStmntPrimary(true);
 }
 
-// var_name_stmnt: var_decl_stmnt | assign_stmnt | proc_call_stmnt;
+// var_name_stmnt: var_decl_stmnt | assign_stmnt | expr_stmnt;
 StmntPtr Parser::ParseVarNameStmnt(TokenPtr identTkn)
 {
     /* Check for built-in type denoter */
@@ -679,33 +678,14 @@ StmntPtr Parser::ParseVarNameStmnt(TokenPtr identTkn)
         identTkn = AcceptAnyIdent();
 
     /* Check for array type denoter or array access */
-    if (Is(Tokens::LParen))
-        return ParseVarNameStmntSub(identTkn);
+    if (Is(Tokens::LRParen))
+        return ParseVarDeclStmnt(identTkn);
 
     /* Check for identifier or weak-reference denoter of variable declaration */
     if (Is(Tokens::Ident) || Is(Tokens::At))
         return ParseVarDeclStmnt(identTkn);
 
     auto varName = ParseVarName(identTkn);
-
-    /* Check for expression statement */
-    if (Is(Tokens::LBracket))
-        return ParseExprStmnt(varName);
-
-    /* Parse assign statement */
-    return ParseAssignStmnt(varName);
-}
-
-// (var_decl_stmnt | assign_stmnt)
-StmntPtr Parser::ParseVarNameStmntSub(const TokenPtr& identTkn)
-{
-    Accept(Tokens::LParen);
-
-    /* Check for array type denoter */
-    if (Is(Tokens::RParen))
-        return ParseVarDeclStmnt(identTkn, true);
-
-    auto varName = ParseVarName(identTkn, true);
 
     /* Check for expression statement */
     if (Is(Tokens::LBracket))
@@ -1582,7 +1562,7 @@ ExprPtr Parser::ParseBracketOrCastExprSub()
         /* Parse identifier and then check for type denoter */
         auto identTkn = AcceptIt();
 
-        if (Is(Tokens::LParen) || Is(Tokens::RBracket))
+        if (Is(Tokens::LRParen) || Is(Tokens::RBracket))
             return ParseCastExpr(false, identTkn);
 
         return ParseBracketExpr(false, identTkn);
@@ -1790,7 +1770,7 @@ TypeDenoterPtr Parser::ParseTypeDenoter(const TokenPtr& identTkn, bool hasArrayT
     else
         ErrorUnexpected("expected type denoter (built-in or pointer type)");
 
-    while (Is(Tokens::LParen) || hasArrayType)
+    while (Is(Tokens::LRParen) || hasArrayType)
     {
         ast = ParseArrayTypeDenoter(ast, hasArrayType);
         hasArrayType = false;
@@ -1844,7 +1824,8 @@ PointerTypeDenoterPtr Parser::ParsePointerTypeDenoter(const TokenPtr& identTkn)
     return ast;
 }
 
-// array_type_denoter: type_denoter '[]';
+// array_type_denoter: type_denoter LR_PAREN;
+// LR_PAREN: '[]';
 ArrayTypeDenoterPtr Parser::ParseArrayTypeDenoter(const TypeDenoterPtr& lowerTypeDenoter, bool hasArrayType)
 {
     auto ast = Make<ArrayTypeDenoter>();
@@ -1852,8 +1833,7 @@ ArrayTypeDenoterPtr Parser::ParseArrayTypeDenoter(const TypeDenoterPtr& lowerTyp
     ast->lowerTypeDenoter = lowerTypeDenoter;
 
     if (!hasArrayType)
-        Accept(Tokens::LParen);
-    Accept(Tokens::RParen);
+        Accept(Tokens::LRParen);
 
     return ast;
 }

@@ -111,7 +111,6 @@ class ProcTest : Base {
 		new B.print()
 		new B().inc(2).print()
 		(new B()).print()
-		{ new B }[0].print()
 		
 		ProcTest.makeB().inc(5).print()
 		

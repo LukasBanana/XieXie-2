@@ -231,7 +231,8 @@ builtin_type_denoter	: BOOL_TYPE_DENOTER
 return_type_denoter		: VOID_TYPE_DENOTER
 						| type_denoter;
 
-array_type_denoter:		type_denoter '[]';
+array_type_denoter:		type_denoter LR_PAREN;
+LR_PAREN:				'[]';
 
 pointer_type_denoter:	IDENT ('@')?;
 

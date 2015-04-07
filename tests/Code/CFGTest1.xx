@@ -170,6 +170,9 @@ class Test {
 		func(2.3)
 		func(i, j)
 		
+		int[] _y
+		int _x := (_y[0] + _y[1])
+		
 		// --- invocations ---
 		a := MyModule.foo(a)
 		MyModule.bar()

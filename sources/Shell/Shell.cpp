@@ -138,9 +138,6 @@ void Shell::Script(std::istream& stream, bool appendDefaultScript)
 
     /* Print out errors */
     errorReporter.Flush(log_);
-
-    if (!hasError)
-        log_.Success("compilation successful");
 }
 
 
