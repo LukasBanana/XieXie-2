@@ -335,44 +335,6 @@ const TypeDenoter* VarAccessExpr::GetTypeDenoter() const
 }
 
 
-/* --- TypeDenoter --- */
-
-bool TypeDenoter::AreEqual(const TypeDenoter& lhs, const TypeDenoter& rhs)
-{
-    if (lhs.Type() != rhs.Type())
-        return false;
-
-    switch (lhs.Type())
-    {
-        case AST::Types::BuiltinTypeDenoter:
-        {
-            const auto& typeLhs = static_cast<const BuiltinTypeDenoter&>(lhs);
-            const auto& typeRhs = static_cast<const BuiltinTypeDenoter&>(rhs);
-            return typeLhs.typeName == typeRhs.typeName;
-        }
-        break;
-
-        case AST::Types::ArrayTypeDenoter:
-        {
-            const auto& typeLhs = static_cast<const ArrayTypeDenoter&>(lhs);
-            const auto& typeRhs = static_cast<const ArrayTypeDenoter&>(rhs);
-            return TypeDenoter::AreEqual(*typeLhs.lowerTypeDenoter, *typeRhs.lowerTypeDenoter);
-        }
-        break;
-
-        case AST::Types::PointerTypeDenoter:
-        {
-            const auto& typeLhs = static_cast<const PointerTypeDenoter&>(lhs);
-            const auto& typeRhs = static_cast<const PointerTypeDenoter&>(rhs);
-            return typeLhs.declIdent == typeRhs.declIdent;
-        }
-        break;
-    }
-
-    return true;
-}
-
-
 /* --- BuiltinTypeDenoter --- */
 
 BuiltinTypeDenoter::BuiltinTypeDenoter(const TypeNames initTypeName, bool isConst) :

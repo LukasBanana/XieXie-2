@@ -49,7 +49,7 @@ static void VerifyBuiltinTypes(const TypeDenoter& lhs, const TypeDenoter& rhs)
     auto& rhsSub = static_cast<const BuiltinTypeDenoter&>(rhs);
 
     if (lhsSub.typeName != rhsSub.typeName)
-        throw std::string("built-in types " + TypeComparison(lhs, rhs) + " must be explicity casted");
+        throw std::string("built-in types " + TypeComparison(lhs, rhs) + " must be explicitly casted");
 }
 
 static bool VerifyArrayTypes(const TypeDenoter& lhs, const TypeDenoter& rhs, std::string* errorOut)

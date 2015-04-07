@@ -245,17 +245,16 @@ bool BasicBlock::VerifyProcReturn(VisitSet& visitSet) const
     if (HasVisited(visitSet))
         return true;
     
+    /* Check if there is a 'return' instruction */
+    for (auto it = insts.rbegin(); it != insts.rend(); ++it)
+    {
+        if ((*it)->Type() == TACInst::Types::Return)
+            return static_cast<const TACReturnInst&>(**it).hasVar;
+    }
+
     /* Check if this is a leaf node */
     if (succ_.empty())
-    {
-        /* Check if there is a 'return' instruction */
-        for (auto it = insts.rbegin(); it != insts.rend(); ++it)
-        {
-            if ((*it)->Type() == TACInst::Types::Return)
-                return static_cast<const TACReturnInst&>(**it).hasVar;
-        }
         return false;
-    }
 
     /* Visit successors */
     for (auto bb : succ_)

@@ -272,7 +272,12 @@ DEF_VISIT_PROC(Decorator, SwitchCase)
 
 DEF_VISIT_PROC(Decorator, ReturnStmnt)
 {
-    Visit(ast->expr);
+    if (ast->expr)
+    {
+        DecorateExpr(*ast->expr);
+        auto returnType = procDeclStmnt_->procSignature->returnTypeDenoter.get();
+        VerifyReturnStmntExprType(*returnType, *ast->expr);
+    }
 }
 
 DEF_VISIT_PROC(Decorator, CtrlTransferStmnt)
@@ -281,7 +286,7 @@ DEF_VISIT_PROC(Decorator, CtrlTransferStmnt)
 
 DEF_VISIT_PROC(Decorator, ExprStmnt)
 {
-    Visit(ast->expr);
+    DecorateExpr(*ast->expr);
 }
 
 DEF_VISIT_PROC(Decorator, IfStmnt)
@@ -791,10 +796,23 @@ void Decorator::VerifyAssignStmntExprTypes(const VarName& varName, const Expr& e
                 Error(errorOut, &varName);
         }
         else
-            Error("invalid type of expression in assign statement", &expr);
+            Error("invalid type of expression in assign-statement", &expr);
     }
     else
         Error("invalid type of identifier \"" + varName.FullName() + "\" in assign statement", &varName);
+}
+
+void Decorator::VerifyReturnStmntExprType(const TypeDenoter& returnType, const Expr& expr)
+{
+    auto exprType = expr.GetTypeDenoter();
+    if (exprType)
+    {
+        std::string errorOut;
+        if (!TypeChecker::VerifyTypeCompatibility(returnType, *exprType, &errorOut))
+            Error(errorOut, &expr);
+    }
+    else
+        Error("invalid type of expression in return-statement", &expr);
 }
 
 const TypeDenoter* Decorator::DeduceTypeFromVarDecls(const std::vector<VarDeclPtr>& varDecls)
@@ -894,7 +912,7 @@ bool Decorator::VerifyExprIsFromType(
         if (verifier(*exprType))
             return true;
         else
-            Error(usageDesc + " must have " + typeDesc + " type", &expr);
+            Error("expression in " + usageDesc + " must be from type '" + typeDesc + "'", &expr);
     }
     else
         Error("invalid type of expression in " + usageDesc, &expr);
