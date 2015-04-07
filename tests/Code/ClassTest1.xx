@@ -1,0 +1,47 @@
+
+// Class Test 1
+// 07/04/2015
+
+class IO {
+	static void writeLine(String@ s) {
+		Intrinsics.printLn(s.pointer())
+	}
+}
+
+class Hello {
+	String _s
+	
+	String hello() { return "" }
+	
+	[[final]]
+	void print() {
+		IO.writeLine(hello())
+	}
+}
+
+class EnglishHello : Hello {
+	String hello() { return "Hello" }
+}
+
+class Test {
+
+	static void say(Hello sentence) {
+		IO.writeLine(sentence.hello())
+	}
+	
+	static void main() {
+		
+		// Named class
+		Test.say(new EnglishHello)
+		
+		// Anonymous class
+		Test.say(
+			new Hello {
+				String hello() { return "Hallo" }
+			}
+		)
+		
+	}
+	
+}
+

@@ -131,6 +131,7 @@ class Parser
         ClassDeclStmntPtr       ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         ClassDeclStmntPtr       ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         ClassDeclStmntPtr       ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
+        ClassDeclStmntPtr       ParseAnonymousClass(const std::string& baseClassIdent);
         VarDeclStmntPtr         ParseVarDeclStmnt(const TokenPtr& identTkn = nullptr, bool hasArrayType = false, bool isStatic = false);
         VarDeclStmntPtr         ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
         //EnumDeclStmntPtr        ParseEnumDeclStmnt();
@@ -235,6 +236,8 @@ class Parser
 
         bool IsAny(const std::initializer_list<Tokens>& types) const;
 
+        std::string GenAnonymousClassIdent();
+
         inline Tokens TknType() const
         {
             return tkn_->Type();
@@ -257,7 +260,9 @@ class Parser
         Scanner             scanner_;
         SourceCodePtr       source_;
         TokenPtr            tkn_;
-        ErrorReporter*      errorReporter_  = nullptr;
+        ErrorReporter*      errorReporter_          = nullptr;
+
+        Program*            program_                = nullptr; //!< Reference to the current program AST node.
 
         /**
         This stack stores the information, if the current procedure has a return type or not ('void' type).
@@ -266,6 +271,8 @@ class Parser
         std::stack<bool>    procHasReturnTypeStack_;
 
         StateContainer      state_;
+
+        size_t              anonymousClassCounter_  = 0;
 
 };
 

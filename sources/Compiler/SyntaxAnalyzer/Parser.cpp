@@ -252,6 +252,8 @@ unsigned int Parser::AcceptUnsignedIntLiteral()
 
 void Parser::ParseProgram(Program& ast)
 {
+    program_ = &ast;
+
     while (!Is(Tokens::EndOfFile))
     {
         if (Is(Tokens::Import))
@@ -259,6 +261,8 @@ void Parser::ParseProgram(Program& ast)
         else
             ast.classDeclStmnts.push_back(ParseClassDeclOrModuleDeclStmnt());
     }
+
+    program_ = nullptr;
 }
 
 // code_block: '{' stmnt_list? '}';
@@ -1138,6 +1142,27 @@ ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix)
     return ast;
 }
 
+// anonymous_class: class_body;
+ClassDeclStmntPtr Parser::ParseAnonymousClass(const std::string& baseClassIdent)
+{
+    auto ast = Make<ClassDeclStmnt>(source_);
+    state_.classDecl = ast.get();
+
+    ast->isAnonymous    = true;
+    ast->ident          = GenAnonymousClassIdent();
+    ast->baseClassIdent = baseClassIdent;
+
+    /* Parse class body segments */
+    auto vis = ClassBodySegment::Visibilities::Public;
+
+    Accept(Tokens::LCurly);
+    while (!Is(Tokens::RCurly))
+        ParseClassBodySegment(*ast, vis);
+    Accept(Tokens::RCurly);
+
+    return ast;
+}
+
 // var_decl_stmnt: (type_denoter | auto_type_denoter) var_decl_list;
 VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TokenPtr& identTkn, bool hasArrayType, bool isStatic)
 {
@@ -1582,12 +1607,32 @@ AllocExprPtr Parser::ParseAllocExpr()
 
     ast->typeDenoter = ParseTypeDenoter();
 
+    /* Parse optional contructor arguments */
     if (Is(Tokens::LBracket))
     {
         Accept(Tokens::LBracket);
         if (!Is(Tokens::RBracket))
             ast->ctorArgs = ParseArgList();
         Accept(Tokens::RBracket);
+    }
+
+    /* Parse optional anonymous class declaration */
+    if (Is(Tokens::LCurly))
+    {
+        if (ast->typeDenoter->IsPointer())
+        {
+            /* Get pointer type and parse anonymous class */
+            auto pointerType = static_cast<PointerTypeDenoter*>(ast->typeDenoter.get());
+            auto anonymousClassDecl = ParseAnonymousClass(pointerType->declIdent);
+
+            /* Change type identifier "declIdent" form the 'new'-expression to the identifier of the anonymous class */
+            pointerType->declIdent = anonymousClassDecl->ident;
+
+            /* Append anonymous class declaration to the 'Program'-AST root node */
+            program_->classDeclStmnts.push_back(anonymousClassDecl);
+        }
+        else
+            Error("anonymous class can not inherit from non-pointer type", false);
     }
 
     return ast;
@@ -2013,6 +2058,11 @@ bool Parser::ProcHasReturnType() const
 bool Parser::IsAny(const std::initializer_list<Tokens>& types) const
 {
     return std::find(types.begin(), types.end(), tkn_->Type()) != types.end();
+}
+
+std::string Parser::GenAnonymousClassIdent()
+{
+    return "__xx__AnonymousClass" + std::to_string(anonymousClassCounter_++);
 }
 
 

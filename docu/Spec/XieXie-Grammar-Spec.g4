@@ -133,6 +133,8 @@ class_body_segment:			class_visibility? decl_stmnt_list;
 extern_class_decl_stmnt:	'extern' 'class' IDENT base_class_ident? extern_class_body;
 extern_class_body:			'{' extern_decl_stmnt_list '}';
 
+anonymous_class:			class_body;
+
 // MODULES
 module_decl_stmnt:			attrib_prefix? 'module' IDENT module_body;
 module_body:				'{' extern_proc_decl_stmnt_list '}';
@@ -208,7 +210,7 @@ var_access_expr		: var_name;
 
 init_list_expr: 	'{' expr_list? '}';
 
-alloc_expr:			'new' type_denoter ctor_init?;
+alloc_expr:			'new' type_denoter ctor_init? anonymous_class?;
 ctor_init:			'(' arg_list? ')';
 
 literal_expr:		LITERAL;

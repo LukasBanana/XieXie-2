@@ -26,7 +26,7 @@ class AllocExpr : public Expr
         const TypeDenoter* GetTypeDenoter() const override;
 
         TypeDenoterPtr      typeDenoter;
-        std::vector<ArgPtr> ctorArgs;
+        std::vector<ArgPtr> ctorArgs;               // may be empty
 
         // dast
         InitDeclStmnt*      declStmntRef = nullptr; // reference to the constructor declaration statement
