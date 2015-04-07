@@ -25,6 +25,9 @@ class ProcSignature : public AST
 
         const TypeDenoter* GetTypeDenoter() const override;
 
+        //! Returns a string representation of this procedure signature.
+        std::string ToString() const;
+
         /**
         Returns true if the two procedure signatures are too similar, to be used as overloaded procedures.
         This ignores the return type and only compares the identifier and parameter types.
@@ -33,8 +36,10 @@ class ProcSignature : public AST
 
         bool                    isStatic        = false;    // is this procedure static?
         bool                    isEntryPoint    = false;    // is this procedure a main entry point?
+        bool                    isCtor          = false;    // is this a constructor?
+        bool                    isDtor          = false;    // is this a destructor?
 
-        TypeDenoterPtr          returnTypeDenoter;
+        TypeDenoterPtr          returnTypeDenoter;          // may be null (for init and release procedures)
         std::string             ident;
         std::vector<ParamPtr>   params;
 

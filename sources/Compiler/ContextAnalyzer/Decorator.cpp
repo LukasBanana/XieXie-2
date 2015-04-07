@@ -272,7 +272,7 @@ DEF_VISIT_PROC(Decorator, SwitchCase)
 
 DEF_VISIT_PROC(Decorator, ReturnStmnt)
 {
-    if (ast->expr)
+    if (ast->expr && procDeclStmnt_)
     {
         DecorateExpr(*ast->expr);
         auto returnType = procDeclStmnt_->procSignature->returnTypeDenoter.get();
@@ -419,8 +419,6 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
         switch (symTab_->GetOwner().Type())
         {
             case AST::Types::ProcDeclStmnt:
-            case AST::Types::InitDeclStmnt:
-            case AST::Types::ReleaseDeclStmnt:
                 /* Declaration statement for local variables */
                 for (auto& varDecl : ast->varDecls)
                 {
@@ -483,32 +481,6 @@ DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
     }
 
     procDeclStmnt_ = nullptr;
-}
-
-DEF_VISIT_PROC(Decorator, InitDeclStmnt)
-{
-    if (IsAnalyzeCode())
-    {
-        PushSymTab(*ast);
-        {
-            Visit(ast->attribPrefix);
-            Visit(ast->params);
-            Visit(ast->codeBlock);
-        }
-        PopSymTab();
-    }
-}
-
-DEF_VISIT_PROC(Decorator, ReleaseDeclStmnt)
-{
-    if (IsAnalyzeCode())
-    {
-        PushSymTab(*ast);
-        {
-            Visit(ast->codeBlock);
-        }
-        PopSymTab();
-    }
 }
 
 DEF_VISIT_PROC(Decorator, CopyAssignStmnt)
@@ -604,7 +576,7 @@ DEF_VISIT_PROC(Decorator, PostfixValueExpr)
 DEF_VISIT_PROC(Decorator, AllocExpr)
 {
     Visit(ast->typeDenoter);
-    Visit(ast->ctorArgs);
+    Visit(&(ast->procCall));
     //VerifyConstructor(); //todo...
 }
 
@@ -1327,7 +1299,17 @@ void Decorator::DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overlo
 
     /* Check if unique procedure call has found */
     if (procDecls.empty())
+    {
         Error("no suitable signature found for procedure call", &ast);
+        errorReporter_->Add(CompilerMessage(SourceArea::ignore, ">> candidates are: "));
+
+        for (const auto procDecl : procDeclRefs)
+        {
+            errorReporter_->Add(CompilerMessage(
+                SourceArea::ignore, ">>   " + procDecl->procSignature->ToString()
+            ));
+        }
+    }
     else if (procDecls.size() > 1)
         Error("procedure call is ambiguous (deduced " + ToStr(procDecls.size()) + " suitable procedure signatures)", &ast);
     else

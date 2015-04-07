@@ -2,29 +2,43 @@
 // Init and Release Test
 // 30/03/2015
 
-class Test {
+class Base {
 	
-	init() {
+	init() {}
+	
+	init(int a) {
+		this.a := a
+	}
+	
+	int a
+	
+}
+
+class Test : Base {
+	
+	init() : super() {
 		x, y := 0
 	}
-	init(int x) {
+	init(int x) : super(x) {
 		this.x := x
 	}
-	init(int x) { // error, already defined
+	/*init(int x) { // error, already defined
 		this.y := x+2
-	}
+	}*/
 	init(float x) { // ok, overloading
 		this.x := (int)x
 	}
 	release {
 		x, y := -1
 	}
-	release {} // error, already defined
+	//release {} // error, already defined
 	
 	static void main() {
 		var a := new Test
 		var b := new Test()
-		var c := new Test(1, 2) // error, not defined
+		var c := new Test(5)
+		var d := new Test(3.2)
+		var e := new Test[](1) // error, not defined
 		//call deref(c)
 		//call deref(b)
 		//call deref(a)

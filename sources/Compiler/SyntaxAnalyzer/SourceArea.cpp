@@ -13,7 +13,7 @@ namespace SyntaxAnalyzer
 {
 
 
-const SourceArea SourceArea::ignore;
+const SourceArea SourceArea::ignore { { 1, 0 }, { 0, 0 } };
 
 SourceArea::SourceArea(const SourcePosition& pos) :
     start{ pos                                         },
@@ -45,7 +45,7 @@ void SourceArea::IncColumn()
 
 bool SourceArea::IsValid() const
 {
-    return start < end;
+    return start <= end;
 }
 
 void SourceArea::Reset()

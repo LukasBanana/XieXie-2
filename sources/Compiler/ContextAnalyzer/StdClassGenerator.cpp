@@ -13,7 +13,6 @@
 #include "LiteralExpr.h"
 #include "BuiltinTypeDenoter.h"
 #include "PointerTypeDenoter.h"
-#include "InitDeclStmnt.h"
 
 
 namespace ContextAnalyzer
@@ -156,9 +155,9 @@ static void GenStaticProc(ClassDeclStmnt& classDecl, const TypeDenoterPtr& retur
 {
     auto ast = std::make_shared<ProcDeclStmnt>();
     {
-        ast->procSignature  = GenProcSignature(returnType, ident, params);
-        ast->parentRef      = &classDecl;
-        ast->procSignature->isStatic = true;
+        ast->procSignature              = GenProcSignature(returnType, ident, params);
+        ast->parentRef                  = &classDecl;
+        ast->procSignature->isStatic    = true;
     }
     classDecl.publicSegment.declStmnts.push_back(ast);
 }
@@ -166,9 +165,11 @@ static void GenStaticProc(ClassDeclStmnt& classDecl, const TypeDenoterPtr& retur
 // Generate initializer procedure AST
 static void GenInitProc(ClassDeclStmnt& classDecl, const ParamList& params = {})
 {
-    auto ast = std::make_shared<InitDeclStmnt>();
+    auto ast = std::make_shared<ProcDeclStmnt>();
     {
-        ast->params = params.list;
+        ast->procSignature          = GenProcSignature(nullptr, "init", params);
+        ast->parentRef              = &classDecl;
+        ast->procSignature->isCtor  = true;
     }
     classDecl.publicSegment.declStmnts.push_back(ast);
 }
@@ -255,6 +256,9 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
 static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& ident)
 {
     auto ast = GenClass(ident);
+
+    GenInitProc(*ast);
+    GenInitProc(*ast, GenParam(Int(), "size"));
 
     GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"));
     //GenMemberProc(*ast, GenericArray(), "copy");

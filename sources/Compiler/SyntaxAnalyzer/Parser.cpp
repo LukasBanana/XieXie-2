@@ -1313,9 +1313,15 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, c
 // init_decl_stmnt: attrib_prefix? init_head code_block;
 // extern_init_decl_stmnt: attrib_prefix? init_head;
 // init_head: 'init' '(' param_list? ')';
-InitDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
+ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 {
-    auto ast = Make<InitDeclStmnt>();
+    auto ast = Make<ProcDeclStmnt>();
+    ast->parentRef = state_.classDecl;
+
+    ast->procSignature = Make<ProcSignature>();
+    ast->procSignature->ident = "init";
+    ast->procSignature->isCtor = true;
+
     state_.procIdent = "init";
 
     if (Is(Tokens::LDParen))
@@ -1324,7 +1330,7 @@ InitDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
     Accept(Tokens::Init);
     Accept(Tokens::LBracket);
     if (!Is(Tokens::RBracket))
-        ast->params = ParseParamList();
+        ast->procSignature->params = ParseParamList();
     Accept(Tokens::RBracket);
 
     if (!isExtern)
@@ -1334,9 +1340,16 @@ InitDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 }
 
 // release_decl_stmnt: 'release' code_block;
-ReleaseDeclStmntPtr Parser::ParseReleaseDeclStmnt()
+ProcDeclStmntPtr Parser::ParseReleaseDeclStmnt()
 {
-    auto ast = Make<ReleaseDeclStmnt>();
+    auto ast = Make<ProcDeclStmnt>();
+    ast->parentRef = state_.classDecl;
+
+    ast->procSignature = Make<ProcSignature>();
+    ast->procSignature->ident = "release";
+    ast->procSignature->isDtor = true;
+
+    state_.procIdent = "release";
 
     Accept(Tokens::Release);
     ast->codeBlock = ParseCodeBlock();
@@ -1605,15 +1618,32 @@ AllocExprPtr Parser::ParseAllocExpr()
 
     Accept(Tokens::New);
 
+    auto typeTkn = tkn_;
+    ast->procCall.sourceArea = typeTkn->Area();
+
     ast->typeDenoter = ParseTypeDenoter();
+
+    /* Setup constructor identifier */
+    if (ast->typeDenoter->IsPointer())
+    {
+        auto pointerType = static_cast<PointerTypeDenoter*>(ast->typeDenoter.get());
+        ast->procCall.procName = Make<VarName>(std::vector<std::string>{ pointerType->declIdent, "init" });
+    }
+    else if (ast->typeDenoter->IsArray())
+        ast->procCall.procName = Make<VarName>(std::vector<std::string>{ "Array", "init" });
+    else
+        Error("only class and array types are allowed for dynamic allocation", typeTkn, false);
 
     /* Parse optional contructor arguments */
     if (Is(Tokens::LBracket))
     {
         Accept(Tokens::LBracket);
         if (!Is(Tokens::RBracket))
-            ast->ctorArgs = ParseArgList();
-        Accept(Tokens::RBracket);
+            ast->procCall.args = ParseArgList();
+        auto posEnd = Accept(Tokens::RBracket)->PosEnd();
+
+        ast->procCall.sourceArea.end = posEnd;
+        ast->sourceArea.end = posEnd;
     }
 
     /* Parse optional anonymous class declaration */

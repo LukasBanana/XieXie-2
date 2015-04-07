@@ -732,16 +732,6 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     RETURN_BLOCK_REF(BlockRef(root, graph.out));
 }
 
-DEF_VISIT_PROC(GraphGenerator, InitDeclStmnt)
-{
-    //TODO ...
-}
-
-DEF_VISIT_PROC(GraphGenerator, ReleaseDeclStmnt)
-{
-    //TODO ...
-}
-
 DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
 {
     /* Make basic block */

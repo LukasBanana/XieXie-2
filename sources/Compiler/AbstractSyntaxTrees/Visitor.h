@@ -65,8 +65,6 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( ClassDeclStmnt       );    \
     DECL_VISIT_PROC( VarDeclStmnt         );    \
     DECL_VISIT_PROC( ProcDeclStmnt        );    \
-    DECL_VISIT_PROC( InitDeclStmnt        );    \
-    DECL_VISIT_PROC( ReleaseDeclStmnt     );    \
                                                 \
     DECL_VISIT_PROC( CopyAssignStmnt      );    \
     DECL_VISIT_PROC( ModifyAssignStmnt    );    \
@@ -140,8 +138,6 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( ClassDeclStmnt       );
         DEF_ABSTRACT_VISIT_PROC( VarDeclStmnt         );
         DEF_ABSTRACT_VISIT_PROC( ProcDeclStmnt        );
-        DEF_ABSTRACT_VISIT_PROC( InitDeclStmnt        );
-        DEF_ABSTRACT_VISIT_PROC( ReleaseDeclStmnt     );
 
         DEF_ABSTRACT_VISIT_PROC( CopyAssignStmnt      );
         DEF_ABSTRACT_VISIT_PROC( ModifyAssignStmnt    );

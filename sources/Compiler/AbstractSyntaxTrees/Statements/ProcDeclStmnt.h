@@ -32,7 +32,6 @@ class ProcDeclStmnt : public ScopedStmnt
         CodeBlockPtr            codeBlock;                  // may be null (for extern procedures)
 
         // dast
-        bool                    isEntryPoint    = false;
         ClassDeclStmnt*         parentRef       = nullptr;  // reference to the AST node's parent declaration statement (this is already decorated inside the parser)
         ProcOverloadSwitch      overloadSwitch;
 

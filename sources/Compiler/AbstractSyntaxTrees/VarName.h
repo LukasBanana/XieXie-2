@@ -11,6 +11,8 @@
 
 #include "AST.h"
 
+#include <vector>
+
 
 namespace AbstractSyntaxTrees
 {
@@ -22,6 +24,9 @@ class VarName : public AST
     public:
         
         AST_INTERFACE(VarName);
+
+        VarName(const SourceArea& area, const std::string& ident);
+        VarName(const SourceArea& area, const std::vector<std::string>& identList);
 
         const TypeDenoter* GetTypeDenoter() const override;
 

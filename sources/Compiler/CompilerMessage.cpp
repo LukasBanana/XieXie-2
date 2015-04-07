@@ -68,9 +68,11 @@ std::string CompilerMessage::ConstructMessage(
     const Categories Category, const SourceArea& sourceArea, const std::string& message)
 {
     auto msg = GetCategoryString(Category);
-    //if (sourceArea.IsValid())
+    if (sourceArea.IsValid())
         msg += " (" + sourceArea.ToString() + ")";
-    msg += " -- " + message;
+    if (!msg.empty())
+        msg += " -- ";
+    msg += message;
     return msg;
 }
 

@@ -251,20 +251,6 @@ DEF_VISIT_PROC(ASTViewer, ProcDeclStmnt)
     Visit(ast->codeBlock);
 }
 
-DEF_VISIT_PROC(ASTViewer, InitDeclStmnt)
-{
-    AST_INFO_COLOR("InitDeclStmnt", colorStmnt);
-    Visit(ast->attribPrefix);
-    Visit(ast->params);
-    Visit(ast->codeBlock);
-}
-
-DEF_VISIT_PROC(ASTViewer, ReleaseDeclStmnt)
-{
-    AST_INFO_COLOR("ReleaseDeclStmnt", colorStmnt);
-    Visit(ast->codeBlock);
-}
-
 DEF_VISIT_PROC(ASTViewer, CopyAssignStmnt)
 {
     AST_INFO_COLOR("CopyAssignStmnt", colorStmnt);
@@ -336,7 +322,7 @@ DEF_VISIT_PROC(ASTViewer, AllocExpr)
 {
     AST_INFO_COLOR("AllocExpr", colorExpr);
     Visit(ast->typeDenoter);
-    Visit(ast->ctorArgs);
+    Visit(&(ast->procCall));
 }
 
 DEF_VISIT_PROC(ASTViewer, VarAccessExpr)

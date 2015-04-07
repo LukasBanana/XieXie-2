@@ -47,6 +47,28 @@ template <typename T> std::string MapTypeToSpell(
 
 /* --- VarName --- */
 
+VarName::VarName(const SourceArea& area, const std::string& ident) :
+    AST     { area  },
+    ident   { ident }
+{
+}
+VarName::VarName(const SourceArea& area, const std::vector<std::string>& identList) :
+    AST{ area }
+{
+    if (!identList.empty())
+    {
+        ident = identList.front();
+        VarName* parent = this;
+
+        for (size_t i = 1, n = identList.size(); i < n; ++i)
+        {
+            parent->next = std::make_shared<VarName>(area);
+            parent->next->ident = identList[i];
+            parent = parent->next.get();
+        }
+    }
+}
+
 const TypeDenoter* VarName::GetTypeDenoter() const
 {
     /* Get last variable name AST node */
@@ -169,6 +191,31 @@ void LiteralExpr::SetType(const Literals type)
 const TypeDenoter* ProcSignature::GetTypeDenoter() const
 {
     return returnTypeDenoter.get();
+}
+
+std::string ProcSignature::ToString() const
+{
+    std::string str;
+
+    if (returnTypeDenoter)
+        str += returnTypeDenoter->ToString() + ' ';
+    
+    str += ident;
+    str += '(';
+
+    for (size_t i = 0, n = params.size(); i < n; ++i)
+    {
+        str += params[i]->typeDenoter->ToString();
+        str += ' ';
+        str += params[i]->ident;
+
+        if (i + 1 < n)
+            str += ", ";
+    }
+
+    str += ')';
+
+    return str;
 }
 
 bool ProcSignature::AreSimilar(const ProcSignature& lhs, const ProcSignature& rhs)
