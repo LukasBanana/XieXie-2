@@ -211,7 +211,7 @@ var_access_expr		: var_name;
 
 init_list_expr: 	'{' expr_list? '}';
 
-alloc_expr:			'new' type_denoter ctor_init? anonymous_class?;
+alloc_expr:			'new' type_denoter ctor_init anonymous_class?;
 ctor_init:			'(' arg_list? ')';
 
 literal_expr:		LITERAL;

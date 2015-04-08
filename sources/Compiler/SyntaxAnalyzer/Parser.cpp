@@ -1357,9 +1357,7 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
             auto baseIdent = (baseIdentSpecifier == "super" ? state_.classDecl->baseClassIdent : state_.classDecl->ident);
 
             auto callExpr = Make<ProcCallExpr>();
-            callExpr->procCall = ParseProcCall(Make<VarName>(
-                std::vector<std::string>{ baseIdent, "init" }
-            ));
+            callExpr->procCall = ParseProcCall(Make<VarName>(std::vector<std::string>{ baseIdent, "init" }));
 
             callStmnt = Make<ExprStmnt>();
             callStmnt->expr = callExpr;
@@ -1648,7 +1646,7 @@ ExprPtr Parser::ParseBracketOrCastExprSub()
     return ParseBracketExpr(false);
 }
 
-// alloc_expr: 'new' type_denoter ctor_init?;
+// alloc_expr: 'new' type_denoter ctor_init anonymous_class?;
 // ctor_init: '(' arg_list? ')';
 AllocExprPtr Parser::ParseAllocExpr()
 {
@@ -1661,28 +1659,14 @@ AllocExprPtr Parser::ParseAllocExpr()
 
     ast->typeDenoter = ParseTypeDenoter();
 
-    /* Setup constructor identifier */
-    if (ast->typeDenoter->IsPointer())
-    {
-        auto pointerType = static_cast<PointerTypeDenoter*>(ast->typeDenoter.get());
-        ast->procCall.procName = Make<VarName>(std::vector<std::string>{ pointerType->declIdent, "init" });
-    }
-    else if (ast->typeDenoter->IsArray())
-        ast->procCall.procName = Make<VarName>(std::vector<std::string>{ "Array", "init" });
-    else
-        Error("only class and array types are allowed for dynamic allocation", typeTkn, false);
+    /* Parse contructor arguments */
+    Accept(Tokens::LBracket);
+    if (!Is(Tokens::RBracket))
+        ast->procCall.args = ParseArgList();
+    auto posEnd = Accept(Tokens::RBracket)->PosEnd();
 
-    /* Parse optional contructor arguments */
-    if (Is(Tokens::LBracket))
-    {
-        Accept(Tokens::LBracket);
-        if (!Is(Tokens::RBracket))
-            ast->procCall.args = ParseArgList();
-        auto posEnd = Accept(Tokens::RBracket)->PosEnd();
-
-        ast->procCall.sourceArea.end = posEnd;
-        ast->sourceArea.end = posEnd;
-    }
+    ast->procCall.sourceArea.end = posEnd;
+    ast->sourceArea.end = posEnd;
 
     /* Parse optional anonymous class declaration */
     if (Is(Tokens::LCurly))
@@ -1693,7 +1677,7 @@ AllocExprPtr Parser::ParseAllocExpr()
             auto pointerType = static_cast<PointerTypeDenoter*>(ast->typeDenoter.get());
             auto anonymousClassDecl = ParseAnonymousClass(pointerType->declIdent);
 
-            /* Change type identifier "declIdent" form the 'new'-expression to the identifier of the anonymous class */
+            /* Change type identifier "declIdent" from the 'new'-expression to the identifier of the anonymous class */
             pointerType->declIdent = anonymousClassDecl->ident;
 
             /* Append anonymous class declaration to the 'Program'-AST root node */
@@ -1702,6 +1686,17 @@ AllocExprPtr Parser::ParseAllocExpr()
         else
             Error("anonymous class can not inherit from non-pointer type", false);
     }
+
+    /* Setup constructor identifier */
+    if (ast->typeDenoter->IsPointer())
+    {
+        auto pointerType = static_cast<PointerTypeDenoter*>(ast->typeDenoter.get());
+        ast->procCall.procName = Make<VarName>(std::vector<std::string>{ pointerType->declIdent, "init" });
+    }
+    else if (ast->typeDenoter->IsArray())
+        ast->procCall.procName = Make<VarName>(std::vector<std::string>{ "Array", "init" });
+    else
+        Error("only class and array types are allowed for dynamic allocation", typeTkn, false);
 
     return ast;
 }

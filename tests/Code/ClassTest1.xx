@@ -20,6 +20,7 @@ class Hello {
 }
 
 class EnglishHello : Hello {
+	init() {}
 	String hello() { return "Hello" }
 }
 
@@ -32,11 +33,12 @@ class Test {
 	static void main() {
 		
 		// Named class
-		Test.say(new EnglishHello)
+		Test.say(new EnglishHello())
 		
 		// Anonymous class
 		Test.say(
-			new Hello {
+			new Hello(5) {
+				init(int x) {}
 				String hello() { return "Hallo" }
 			}
 		)

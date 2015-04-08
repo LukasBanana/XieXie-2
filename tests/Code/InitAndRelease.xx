@@ -34,13 +34,12 @@ class Test : Base {
 	//release {} // error, already defined
 	
 	static void main() {
-		var a := new Test
-		var b := new Test()
-		var c := new Test(5)
-		var d := new Test(3.2)
-		var e := new Test[](1) // error, not defined
-		//call deref(c)
-		//call deref(b)
+		var a := new Test()
+		var b := new Test(5)
+		var c := new Test(3.2)
+		var d := new Test[](1) // error, not defined
+		//call deref(d)
+		//          ...
 		//call deref(a)
 	}
 	
