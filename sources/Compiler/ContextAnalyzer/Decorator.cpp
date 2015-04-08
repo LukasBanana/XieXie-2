@@ -1316,6 +1316,10 @@ void Decorator::DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overlo
     {
         /* Decorate procedure call with reference to final procedure delcaration statement */
         ast.declStmntRef = procDecls.front();
+
+        /* Check if procedure is deprecated */
+        if (ast.declStmntRef->IsDeprecated())
+            Warning("call of deprecated procedure", &ast);
     }
 }
 
