@@ -138,7 +138,7 @@ std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const 
 
 void ClassDeclStmnt::GenerateRTTI(
     unsigned int& typeID, unsigned int& numSubClasses, unsigned int superInstanceSize,
-    const std::vector<ProcDeclStmnt*>& setupVtable, ErrorReporter* errorReporter)
+    const Vtable& setupVtable, ErrorReporter* errorReporter)
 {
     /* Initialize RTTI for this class */
     typeID_         = ++typeID;
@@ -221,11 +221,11 @@ void ClassDeclStmnt::AssignStaticVariableLocation(VarDecl& varDecl)
 This function generates the vtable for this class and checks if a procedure
 override of a procedure from 'setupVtable' (vtable of its base class) is valid.
 */
-void ClassDeclStmnt::GenerateVtable(const std::vector<ProcDeclStmnt*>* setupVtable, ErrorReporter* errorReporter)
+void ClassDeclStmnt::GenerateVtable(const Vtable* setupVtable, ErrorReporter* errorReporter)
 {
     /* First copy vtable of its super class */
     if (setupVtable)
-        vtable_ = *setupVtable;
+        vtable_.procs = setupVtable->procs;
 
     /* Assign all procedures of all segments to the vtable */
     AssignAllProceduresToVtable(publicSegment, errorReporter);
@@ -234,7 +234,7 @@ void ClassDeclStmnt::GenerateVtable(const std::vector<ProcDeclStmnt*>* setupVtab
 
 void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, ErrorReporter* errorReporter)
 {
-    const auto setupVtableSize = static_cast<unsigned int>(vtable_.size());
+    const auto setupVtableSize = vtable_.Size();
     auto vtableOffset = setupVtableSize;
 
     /* Iterate over all procedure declaration statements in the class */
@@ -250,7 +250,7 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, Erro
 
         for (unsigned int i = 0; i < setupVtableSize; ++i)
         {
-            auto baseProc = vtable_[i];
+            auto baseProc = vtable_.procs[i];
             if (ProcSignature::AreSimilar(*(procDecl->procSignature), *(baseProc->procSignature)))
             {
                 /* Omit attribute check for contrstructors and destructors */
@@ -276,8 +276,8 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, Erro
 
                 /* Override base procedure in vtable */
                 hasOverridden           = true;
-                baseProc->vtableOffset  = i;
-                vtable_[i]              = baseProc;
+                procDecl->vtableOffset  = i;
+                vtable_.procs[i]        = procDecl;
                 break;
             }
         }
@@ -286,7 +286,7 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, Erro
         {
             /* Append new procedure to vtable */
             procDecl->vtableOffset = vtableOffset;
-            vtable_.push_back(procDecl);
+            vtable_.procs.push_back(procDecl);
             ++vtableOffset;
         }
     }

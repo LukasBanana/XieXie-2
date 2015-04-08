@@ -1,6 +1,6 @@
 ; XieXie Assembler File (XASM)
 ; XieXie Compiler Version 2.0 Alpha
-; Generated at 2015-04-08 21:00:00
+; Generated at 2015-04-08 22:18:09
 
 ; <------- CLASS "IO" ------->
 
@@ -8,54 +8,109 @@
 CIO.PwriteLine,R@String:
 	.bb0:
 	ldw $r0, ($lb) -4
-	call CString.Ppointer
+	call CString.Ppointer,R@String
 	mov $r1, $ar
 	push $r1
 	call CIntrinsics.PprintLn,I
 
+IO.vtable:
+	.word @CObject.Prelease,R@Object
+	.word @CObject.Pinit,R@Object
+	.word @CObject.PtypeID,R@Object
+	.word @CObject.PrefCount,R@Object
+	.word @CObject.Pequals,R@Object,R@Object
+	.word @CObject.PtoString,R@Object
+	.word @CIO.PwriteLine,R@String
+
 
 ; <------- CLASS "Hello" ------->
 
-; Hello.hello()
-CHello.Phello:
+; Hello.hello(Hello)
+CHello.Phello,R@Hello:
 	.bb0:
 	mov $ar, 
 	ret
 
-; Hello.print()
-CHello.Pprint:
+; Hello.init(Hello)
+CHello.Pinit,R@Hello:
 	.bb0:
-	call CHello.Phello
+
+; Hello.init(Hello, String)
+CHello.Pinit,R@Hello,R@String:
+	.bb0:
+	ldw $r0, ($lb) -4
+	mov $r1, $r0
+
+; Hello.print(Hello)
+CHello.Pprint,R@Hello:
+	.bb0:
+	call CHello.Phello,R@Hello
 	mov $r0, $ar
 	push $r0
 	call CIO.PwriteLine,R@String
 
+Hello.vtable:
+	.word @CObject.Prelease,R@Object
+	.word @CHello.Pinit,R@Hello
+	.word @CObject.PtypeID,R@Object
+	.word @CObject.PrefCount,R@Object
+	.word @CObject.Pequals,R@Object,R@Object
+	.word @CObject.PtoString,R@Object
+	.word @CHello.Pinit,R@Hello,R@String
+	.word @CHello.Phello,R@Hello
+	.word @CHello.Pprint,R@Hello
+
 
 ; <------- CLASS "EnglishHello" ------->
 
-; EnglishHello.hello()
-CEnglishHello.Phello:
+; EnglishHello.hello(EnglishHello)
+CEnglishHello.Phello,R@EnglishHello:
 	.bb0:
 	mov $ar, Hello
 	ret
 
-; EnglishHello.init()
-CEnglishHello.Pinit:
+; EnglishHello.init(EnglishHello)
+CEnglishHello.Pinit,R@EnglishHello:
 	.bb0:
+
+EnglishHello.vtable:
+	.word @CObject.Prelease,R@Object
+	.word @CEnglishHello.Pinit,R@EnglishHello
+	.word @CObject.PtypeID,R@Object
+	.word @CObject.PrefCount,R@Object
+	.word @CObject.Pequals,R@Object,R@Object
+	.word @CObject.PtoString,R@Object
+	.word @CHello.Pinit,R@Hello,R@String
+	.word @CEnglishHello.Phello,R@EnglishHello
+	.word @CHello.Pprint,R@Hello
 
 
 ; <------- CLASS "__xx__AnonymousClass0" ------->
 
-; __xx__AnonymousClass0.hello()
-C__xx__AnonymousClass0.Phello:
+; __xx__AnonymousClass0.hello(__xx__AnonymousClass0)
+C__xx__AnonymousClass0.Phello,R@__xx__AnonymousClass0:
 	.bb0:
 	mov $ar, Hallo
 	ret
 
-; __xx__AnonymousClass0.init(int)
-C__xx__AnonymousClass0.Pinit,I:
+; __xx__AnonymousClass0.init(__xx__AnonymousClass0, int)
+C__xx__AnonymousClass0.Pinit,R@__xx__AnonymousClass0,I:
 	.bb0:
 	ldw $r0, ($lb) -4
+	push x
+	call CHello.Pinit,R@Hello,R@String
+
+__xx__AnonymousClass0.vtable:
+	.word @CObject.Prelease,R@Object
+	.word @CHello.Pinit,R@Hello
+	.word @CObject.PtypeID,R@Object
+	.word @CObject.PrefCount,R@Object
+	.word @CObject.Pequals,R@Object,R@Object
+	.word @CObject.PtoString,R@Object
+	.word @CHello.Pinit,R@Hello,R@String
+	.word @C__xx__AnonymousClass0.Phello,R@__xx__AnonymousClass0
+	.word @CHello.Pprint,R@Hello
+	.word @C__xx__AnonymousClass0.Pinit,R@__xx__AnonymousClass0,I
 
 
 ; <------- CLASS "Test" ------->
@@ -82,77 +137,20 @@ CTest.Pmain:
 CTest.Psay,R@Hello:
 	.bb0:
 	ldw $r0, ($lb) -4
-	call CHello.Phello
+	call CHello.Phello,R@Hello
 	mov $r1, $ar
 	push $r1
 	call CIO.PwriteLine,R@String
 
+Test.vtable:
+	.word @CObject.Prelease,R@Object
+	.word @CObject.Pinit,R@Object
+	.word @CObject.PtypeID,R@Object
+	.word @CObject.PrefCount,R@Object
+	.word @CObject.Pequals,R@Object,R@Object
+	.word @CObject.PtoString,R@Object
+	.word @CTest.Psay,R@Hello
+	.word @CTest.Pmain
 
-; <------- STRING "String.const.0" ------->
-
-String.const.0:
-	.word 1
-	.word 1
-	.word @String.vtable
-	.word 14
-	.word 14
-	.word @.buffer
-	.buffer:
-	.ascii "Hello, World!\n"
-
-; <------- STRING "String.const.1" ------->
-
-String.const.1:
-	.word 1
-	.word 1
-	.word @String.vtable
-	.word 4
-	.word 4
-	.word @.buffer
-	.buffer:
-	.ascii "Test"
-
-; <------- BOOL ARRAY "BoolArray.const.0" ------->
-
-BoolArray.const.0:
-	.word 1
-	.word 4
-	.word @BoolArray.vtable
-	.word 7
-	.word 7
-	.word @.buffer
-	.buffer:
-	.word -1711276032
-
-; <------- INT ARRAY "PrimArray.const.0" ------->
-
-PrimArray.const.0:
-	.word 1
-	.word 3
-	.word @PrimArray.vtable
-	.word 3
-	.word 3
-	.word @.buffer
-	.buffer:
-	.word 42
-	.word -999
-	.word 26
-
-; <------- FLOAT ARRAY "PrimArray.const.1" ------->
-
-PrimArray.const.1:
-	.word 1
-	.word 3
-	.word @PrimArray.vtable
-	.word 6
-	.word 6
-	.word @.buffer
-	.buffer:
-	.float -12345.67871094
-	.float 0.50000000
-	.float 2.50000000
-	.float 0.30000001
-	.float 0.00000001
-	.float 3.14159274
 
 

@@ -201,13 +201,25 @@ static void GenStaticProc(
     classDecl.publicSegment.declStmnts.push_back(ast);
 }
 
-// Generate initializer procedure AST
+// Generate constructor procedure AST
 static void GenInitProc(ClassDeclStmnt& classDecl, const ParamList& params = {})
 {
     auto ast = std::make_shared<ProcDeclStmnt>();
     {
         ast->procSignature          = GenProcSignature(nullptr, "init", params);
         ast->procSignature->isCtor  = true;
+        ast->parentRef              = &classDecl;
+    }
+    classDecl.publicSegment.declStmnts.push_back(ast);
+}
+
+// Generate destructor procedure AST
+static void GenReleaseProc(ClassDeclStmnt& classDecl)
+{
+    auto ast = std::make_shared<ProcDeclStmnt>();
+    {
+        ast->procSignature          = GenProcSignature(nullptr, "release", ParamList());
+        ast->procSignature->isDtor  = true;
         ast->parentRef              = &classDecl;
     }
     classDecl.publicSegment.declStmnts.push_back(ast);
@@ -242,6 +254,9 @@ static std::unique_ptr<ClassDeclStmnt> GenObjectClass()
 {
     auto ast = GenClass("Object");
 
+    GenReleaseProc(*ast);
+    GenInitProc(*ast);
+
     GenMemberProc(*ast, Int(), "typeID", ParamList(), AttrFinal());
     GenMemberProc(*ast, Int(), "refCount", ParamList(), AttrFinal());
     GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"));
@@ -271,6 +286,7 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
 {
     auto ast = GenClass("String");
 
+    GenReleaseProc(*ast);
     GenInitProc(*ast);
     GenInitProc(*ast, GenParam(String(), "src"));
 
@@ -296,6 +312,7 @@ static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& i
 {
     auto ast = GenClass(ident);
 
+    GenReleaseProc(*ast);
     GenInitProc(*ast);
     GenInitProc(*ast, GenParam(Int(), "size"));
 

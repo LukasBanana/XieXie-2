@@ -127,7 +127,7 @@ CObject.PrefCount,R@Object:
 	ret 1
 
 ; bool Object.equals(Object this, Object rhs)
-CObject.Pequals,R@Object:
+CObject.Pequals,R@Object,R@Object:
 	; check for null pointer
 	ldw $r1, ($lb) -8	; load object reference 'rhs'
 	mov $cf, $r1		; compare: rhs = null
@@ -147,14 +147,6 @@ CObject.Pequals,R@Object:
 	mov $ar, 0			; return false
 	ret 2
 
-; Object Object.copy(Object this)
-CObject.Pcopy,R@Object:
-	push @Object.vtable		; push Object vtable
-	push 0					; push Object type-id
-	push 12					; push Object size
-	call new				; allocate new empty object
-	ret 1
-
 ; TODO: currently returns null pointer !!!
 ; String Object.toString(Object this)
 CObject.PtoString,R@Object:
@@ -164,6 +156,9 @@ CObject.PtoString,R@Object:
 Object.vtable:
 	.word @CObject.Prelease,R@Object
 	.word @CObject.Pinit,R@Object
+	.word @CObject.PtypeID,R@Object
+	.word @CObject.PrefCount,R@Object
+	.word @CObject.Pequals,R@Object,R@Object
 	.word @CObject.PtoString,R@Object
 
 

@@ -12,6 +12,8 @@
 #include "CodeGenerators/NameMangling.h"
 #include "BuiltinClasses.h"
 #include "StringModifier.h"
+#include "ProcDeclStmnt.h"
+#include "ProcSignature.h"
 
 
 namespace CodeGenerator
@@ -57,7 +59,7 @@ bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorR
         for (const auto& sl : program.stringLiterals)
             GenerateStringLiteral(sl);
 
-        #if 1//!!!TEST!!!
+        #if 0//!!!TEST!!!
         GenerateStringLiteral({ "String.const.0", "Hello, World!\n" });
         GenerateStringLiteral({ "String.const.1", "Test" });
         GenerateBoolArrayLiteral({ "BoolArray.const.0", { true, false, false, true, true, false, true } });
@@ -281,6 +283,9 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
         GenerateProcedure(*bb.second, bb.first);
         Blank();
     }
+
+    /* Generate vtable */
+    GenerateVtable(*classDecl);
 
     Blank();
 }
@@ -608,6 +613,20 @@ void XASMGenerator::GenerateDirectJump(const BasicBlock& bb)
 }
 
 /* --- Data Generation --- */
+
+void XASMGenerator::GenerateVtable(const ClassDeclStmnt& classDecl)
+{
+    const auto& vtable = classDecl.GetVtable();
+
+    GlobalLabel(classDecl.ident + ".vtable");
+    IncIndent();
+    {
+        for (const auto procDecl : vtable.procs)
+            WORDAddress(NameMangling::UniqueLabel(*procDecl));
+    }
+    DecIndent();
+    Blank();
+}
 
 void XASMGenerator::GenerateClassRTTI(const BuiltinClasses::ClassRTTI& typeInfo)
 {

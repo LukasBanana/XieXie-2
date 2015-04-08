@@ -32,6 +32,16 @@ class ClassDeclStmnt : public ScopedStmnt
     
     public:
         
+        //! Structure for a class virtual-table (vtable).
+        struct Vtable
+        {
+            unsigned int Size() const
+            {
+                return static_cast<unsigned int>(procs.size());
+            }
+            std::vector<ProcDeclStmnt*> procs;
+        };
+
         AST_INTERFACE_BASE(ClassDeclStmnt);
 
         ClassDeclStmnt(const SourceCodePtr& source = nullptr);
@@ -91,7 +101,7 @@ class ClassDeclStmnt : public ScopedStmnt
         }
 
         //! Returns the list of all class procedures, including the procedures from its base classes.
-        const std::vector<ProcDeclStmnt*>& GetVtable() const
+        const Vtable& GetVtable() const
         {
             return vtable_;
         }
@@ -125,7 +135,7 @@ class ClassDeclStmnt : public ScopedStmnt
             unsigned int& typeID,
             unsigned int& numSubClasses,
             unsigned int superInstanceSize,
-            const std::vector<ProcDeclStmnt*>& setupVtable,
+            const Vtable& setupVtable,
             ErrorReporter* errorReporter
         );
         
@@ -135,7 +145,7 @@ class ClassDeclStmnt : public ScopedStmnt
         void AssignAllStaticVariableLocations(ClassBodySegment& segment);
         void AssignStaticVariableLocation(VarDecl& varDecl);
 
-        void GenerateVtable(const std::vector<ProcDeclStmnt*>* setupVtable, ErrorReporter* errorReporter);
+        void GenerateVtable(const Vtable* setupVtable, ErrorReporter* errorReporter);
         void AssignAllProceduresToVtable(ClassBodySegment& segment, ErrorReporter* errorReporter);
 
         SourceCodePtr                   source_;                        // Reference to the source where this class is declared.
@@ -144,7 +154,7 @@ class ClassDeclStmnt : public ScopedStmnt
         PointerTypeDenoter              thisTypeDenoter_;               // type denoter for this class declaration
         ClassDeclStmnt*                 baseClassRef_       = nullptr;  // reference to base class (or null if the base class is "Object").
         std::vector<ClassDeclStmnt*>    subClassesRef_;                 // reference to all sub classes.
-        std::vector<ProcDeclStmnt*>     vtable_;                        // list of all class procedures (including the procedures from its base class).
+        Vtable                          vtable_;                        // list of all class procedures (including the procedures from its base class).
 
         unsigned int                    typeID_             = 0;        // type ID of this class.
         unsigned int                    numSubClasses_      = 0;        // total number of sub classes in the inheritance hierarchy.

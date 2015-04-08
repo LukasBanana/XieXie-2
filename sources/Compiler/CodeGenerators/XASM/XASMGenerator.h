@@ -148,6 +148,7 @@ class XASMGenerator final : public AsmGenerator
 
         /* --- Data Generation --- */
 
+        void GenerateVtable(const AbstractSyntaxTrees::ClassDeclStmnt& classDecl);
         void GenerateClassRTTI(const AbstractSyntaxTrees::BuiltinClasses::ClassRTTI& typeInfo);
         void GenerateStringLiteral(const CFGProgram::StringLiteral& constStr);
         void GenerateBoolArrayLiteral(const CFGProgram::BoolArrayLiteral& constArray);

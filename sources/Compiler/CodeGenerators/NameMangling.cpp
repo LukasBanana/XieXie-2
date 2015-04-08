@@ -120,7 +120,11 @@ std::string UniqueLabel(const AbstractSyntaxTrees::ProcDeclStmnt& procDecl)
             else
             {
                 /* Return label with name-mangling for standard class procedures */
-                return "C" + procDecl.parentRef->ident + "." + UniqueLabel(*procDecl.procSignature);
+                const auto& procSig = *procDecl.procSignature;
+                return (
+                    "C" + procDecl.parentRef->ident + "." +
+                    UniqueLabel(procSig, procSig.isStatic ? nullptr : &(procDecl.parentRef->ident))
+                );
             }
         }
         else
