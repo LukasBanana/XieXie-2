@@ -33,11 +33,11 @@ class VarDecl : public Stmnt
         unsigned int MemorySize() const;
 
         std::string     ident;
-        ExprPtr         initExpr;               // may be null
+        ExprPtr         initExpr;                   // may be null
 
         // dast
-        VarDeclStmnt*   parentRef   = nullptr;  // reference to the AST node's parent declaration statement (this is already decorated inside the parser)
-        unsigned int    instanceLoc = 0;        // memory location (in bytes) inside a class instance or global scope (only used for member variables).
+        VarDeclStmnt*   parentRef       = nullptr;  // reference to the AST node's parent declaration statement (this is already decorated inside the parser)
+        unsigned int    memoryOffset    = 0;        // memory offset (in bytes) inside a class instance or global scope (only used for member variables).
 
 };
 

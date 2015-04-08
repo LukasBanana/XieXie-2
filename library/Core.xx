@@ -33,7 +33,10 @@ extern class String {
 	init()
 	init(String src)
 	
+	[[override]]
 	bool equals(Object rhs)
+	
+	[[override]]
 	String toString()
 	
 	String copy()
@@ -72,6 +75,7 @@ extern class Array {
 	init()
 	init(int size)
 	
+	[[override]]
 	bool equals(Object rhs)
 	
 	Array copy()
@@ -120,6 +124,7 @@ General purpose buffer. This class manages a pointer.
 */
 extern class Buffer {
 	
+	[[override]]
 	bool equals(Object rhs)
 	
 	Buffer copy()

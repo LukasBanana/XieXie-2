@@ -8,6 +8,9 @@
 #include "ClassDeclStmnt.h"
 #include "VarDeclStmnt.h"
 #include "VarDecl.h"
+#include "ProcDeclStmnt.h"
+#include "ProcSignature.h"
+#include "CompilerMessage.h"
 
 
 namespace AbstractSyntaxTrees
@@ -96,14 +99,7 @@ std::string ClassDeclStmnt::HierarchyString(const std::string& separator) const
     return ident;
 }
 
-std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const
-{
-    if (rootClass != this && baseClassRef_)
-        return ident + separator + baseClassRef_->HierarchyString(separator, rootClass);
-    return ident;
-}
-
-void ClassDeclStmnt::GenerateRTTI()
+void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
 {
     /* Initialize RTTI for root class "Object" */
     typeID_         = 0;
@@ -111,17 +107,38 @@ void ClassDeclStmnt::GenerateRTTI()
     instanceSize_   = 12; // 3 * (4 bytes): refCount, typeID, vtableAddr
     staticSize_     = 0;
 
-    /* Incease static sizue by static variables */
+    /* Incease static size by static variables */
     AssignAllStaticVariableLocations(publicSegment);
     AssignAllStaticVariableLocations(privateSegment);
+
+    /* Generate vtable */
+    GenerateVtable(nullptr, errorReporter);
 
     /* Generate RTTI for sub classes */
     auto typeID = typeID_;
     for (auto subClass : subClassesRef_)
-        subClass->GenerateRTTI(typeID, numSubClasses_, instanceSize_);
+    {
+        subClass->GenerateRTTI(
+            typeID, numSubClasses_, instanceSize_, vtable_, errorReporter
+        );
+    }
 }
 
-void ClassDeclStmnt::GenerateRTTI(unsigned int& typeID, unsigned int& numSubClasses, unsigned int superInstanceSize)
+
+/*
+ * ======= Private: =======
+ */
+
+std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const
+{
+    if (rootClass != this && baseClassRef_)
+        return ident + separator + baseClassRef_->HierarchyString(separator, rootClass);
+    return ident;
+}
+
+void ClassDeclStmnt::GenerateRTTI(
+    unsigned int& typeID, unsigned int& numSubClasses, unsigned int superInstanceSize,
+    const std::vector<ProcDeclStmnt*>& setupVtable, ErrorReporter* errorReporter)
 {
     /* Initialize RTTI for this class */
     typeID_         = ++typeID;
@@ -137,9 +154,16 @@ void ClassDeclStmnt::GenerateRTTI(unsigned int& typeID, unsigned int& numSubClas
     AssignAllStaticVariableLocations(publicSegment);
     AssignAllStaticVariableLocations(privateSegment);
 
+    /* Generate vtable */
+    GenerateVtable(&setupVtable, errorReporter);
+
     /* Generate RTTI for sub classes */
     for (auto subClass : subClassesRef_)
-        subClass->GenerateRTTI(typeID, numSubClasses_, instanceSize_);
+    {
+        subClass->GenerateRTTI(
+            typeID, numSubClasses_, instanceSize_, vtable_, errorReporter
+        );
+    }
 
     /* Increase sub-class count for super class */
     numSubClasses += (numSubClasses_ + 1);
@@ -167,7 +191,7 @@ void ClassDeclStmnt::AssignAllMemberVariableLocations(ClassBodySegment& segment)
 
 void ClassDeclStmnt::AssignMemberVariableLocation(VarDecl& varDecl)
 {
-    varDecl.instanceLoc = instanceSize_;
+    varDecl.memoryOffset = instanceSize_;
     instanceSize_ += varDecl.MemorySize();
 }
 
@@ -189,8 +213,83 @@ void ClassDeclStmnt::AssignAllStaticVariableLocations(ClassBodySegment& segment)
 
 void ClassDeclStmnt::AssignStaticVariableLocation(VarDecl& varDecl)
 {
-    varDecl.instanceLoc = staticSize_;
+    varDecl.memoryOffset = staticSize_;
     staticSize_ += varDecl.MemorySize();
+}
+
+/*
+This function generates the vtable for this class and checks if a procedure
+override of a procedure from 'setupVtable' (vtable of its base class) is valid.
+*/
+void ClassDeclStmnt::GenerateVtable(const std::vector<ProcDeclStmnt*>* setupVtable, ErrorReporter* errorReporter)
+{
+    /* First copy vtable of its super class */
+    if (setupVtable)
+        vtable_ = *setupVtable;
+
+    /* Assign all procedures of all segments to the vtable */
+    AssignAllProceduresToVtable(publicSegment, errorReporter);
+    AssignAllProceduresToVtable(privateSegment, errorReporter);
+}
+
+void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, ErrorReporter* errorReporter)
+{
+    const auto setupVtableSize = static_cast<unsigned int>(vtable_.size());
+    auto vtableOffset = setupVtableSize;
+
+    /* Iterate over all procedure declaration statements in the class */
+    for (auto& stmnt : segment.declStmnts)
+    {
+        /* Get procedure declaration AST node */
+        auto procDecl = AST::Cast<ProcDeclStmnt>(stmnt.get());
+        if (!procDecl)
+            continue;
+        
+        /* Check if this procedure overrides a procedure from its base class */
+        bool hasOverridden = false;
+
+        for (unsigned int i = 0; i < setupVtableSize; ++i)
+        {
+            auto baseProc = vtable_[i];
+            if (ProcSignature::AreSimilar(*(procDecl->procSignature), *(baseProc->procSignature)))
+            {
+                /* Omit attribute check for contrstructors and destructors */
+                if (!procDecl->procSignature->isCtor && !procDecl->procSignature->isDtor)
+                {
+                    /* Check if procedure can be overridden */
+                    if (baseProc->IsFinal())
+                    {
+                        errorReporter->Add(ContextError(
+                            procDecl->sourceArea,
+                            "can not override procedure with 'final' attribute at (" + baseProc->sourceArea.ToString() + ")"
+                        ));
+                    }
+                    /* Check if procedure should be overridden */
+                    else if (!procDecl->IsOverride())
+                    {
+                        errorReporter->Add(CompilerWarning(
+                            procDecl->sourceArea,
+                            "hidden procedure override from its base class at (" + baseProc->sourceArea.ToString() + ")"
+                        ));
+                    }
+                }
+
+                /* Override base procedure in vtable */
+                hasOverridden           = true;
+                baseProc->vtableOffset  = i;
+                vtable_[i]              = baseProc;
+                break;
+            }
+        }
+
+        if (!hasOverridden)
+        {
+            /* Append new procedure to vtable */
+            procDecl->vtableOffset = vtableOffset;
+            vtable_.push_back(procDecl);
+            ++vtableOffset;
+        }
+    }
 }
 
 

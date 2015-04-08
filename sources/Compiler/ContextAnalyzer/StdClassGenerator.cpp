@@ -13,6 +13,8 @@
 #include "LiteralExpr.h"
 #include "BuiltinTypeDenoter.h"
 #include "PointerTypeDenoter.h"
+#include "Attrib.h"
+#include "AttribPrefix.h"
 
 
 namespace ContextAnalyzer
@@ -83,6 +85,37 @@ static PointerTypeDenoterPtr String(bool isWeakRef = false)
 
 
 /*
+ * Attribute generation functions
+ */
+
+static AttribPtr GenAttrib(const std::string& ident)
+{
+    auto attrib = std::make_shared<Attrib>();
+    attrib->ident = ident;
+    return attrib;
+}
+
+static AttribPrefixPtr GenAttribPrefix(const std::string& attribIdent)
+{
+    auto attribPrefix = std::make_shared<AttribPrefix>();
+    attribPrefix->attribs.push_back(GenAttrib(attribIdent));
+    return attribPrefix;
+}
+
+// Generates the attribute prefix: [[final]]
+static AttribPrefixPtr AttrFinal()
+{
+    return GenAttribPrefix("final");
+}
+
+// Generates the attribute prefix: [[override]]
+static AttribPrefixPtr AttrOverride()
+{
+    return GenAttribPrefix("override");
+}
+
+
+/*
  * Procedure and parameter generation functions
  */
 
@@ -140,24 +173,30 @@ static ProcSignaturePtr GenProcSignature(const TypeDenoterPtr& returnType, const
 }
 
 // Generate member procedure AST
-static void GenMemberProc(ClassDeclStmnt& classDecl, const TypeDenoterPtr& returnType, const std::string& ident, const ParamList& params = ParamList())
+static void GenMemberProc(
+    ClassDeclStmnt& classDecl, const TypeDenoterPtr& returnType, const std::string& ident,
+    const ParamList& params = ParamList(), const AttribPrefixPtr& attribPrefix = nullptr)
 {
     auto ast = std::make_shared<ProcDeclStmnt>();
     {
         ast->procSignature  = GenProcSignature(returnType, ident, params);
+        ast->attribPrefix   = attribPrefix;
         ast->parentRef      = &classDecl;
     }
     classDecl.publicSegment.declStmnts.push_back(ast);
 }
 
 // Generate static procedure AST
-static void GenStaticProc(ClassDeclStmnt& classDecl, const TypeDenoterPtr& returnType, const std::string& ident, const ParamList& params = ParamList())
+static void GenStaticProc(
+    ClassDeclStmnt& classDecl, const TypeDenoterPtr& returnType, const std::string& ident,
+    const ParamList& params = ParamList(), const AttribPrefixPtr& attribPrefix = nullptr)
 {
     auto ast = std::make_shared<ProcDeclStmnt>();
     {
         ast->procSignature              = GenProcSignature(returnType, ident, params);
-        ast->parentRef                  = &classDecl;
         ast->procSignature->isStatic    = true;
+        ast->attribPrefix               = attribPrefix;
+        ast->parentRef                  = &classDecl;
     }
     classDecl.publicSegment.declStmnts.push_back(ast);
 }
@@ -168,8 +207,8 @@ static void GenInitProc(ClassDeclStmnt& classDecl, const ParamList& params = {})
     auto ast = std::make_shared<ProcDeclStmnt>();
     {
         ast->procSignature          = GenProcSignature(nullptr, "init", params);
-        ast->parentRef              = &classDecl;
         ast->procSignature->isCtor  = true;
+        ast->parentRef              = &classDecl;
     }
     classDecl.publicSegment.declStmnts.push_back(ast);
 }
@@ -203,8 +242,8 @@ static std::unique_ptr<ClassDeclStmnt> GenObjectClass()
 {
     auto ast = GenClass("Object");
 
-    GenMemberProc(*ast, Int(), "typeID");
-    GenMemberProc(*ast, Int(), "refCount");
+    GenMemberProc(*ast, Int(), "typeID", ParamList(), AttrFinal());
+    GenMemberProc(*ast, Int(), "refCount", ParamList(), AttrFinal());
     GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"));
     GenMemberProc(*ast, String(), "toString");
 
@@ -235,8 +274,8 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     GenInitProc(*ast);
     GenInitProc(*ast, GenParam(String(), "src"));
 
-    GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"));
-    GenMemberProc(*ast, String(), "toString");
+    GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"), AttrOverride());
+    GenMemberProc(*ast, String(), "toString", ParamList(), AttrOverride());
     GenMemberProc(*ast, String(), "copy");
     GenMemberProc(*ast, Int(), "size");
     GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
@@ -248,7 +287,7 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     GenMemberProc(*ast, String(), "subString", ( GenParam(Int(), "pos"), GenParam(Int(), "len", GenExpr(-1)) ));
     GenMemberProc(*ast, Void(), "setChar", ( GenParam(Int(), "pos"), GenParam(Int(), "char") ));
     GenMemberProc(*ast, Int(), "getChar", GenParam(Int(), "pos"));
-    GenMemberProc(*ast, Int(), "pointer");
+    GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrFinal());
 
     return ast;
 }
@@ -260,12 +299,12 @@ static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& i
     GenInitProc(*ast);
     GenInitProc(*ast, GenParam(Int(), "size"));
 
-    GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"));
+    GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"), AttrOverride());
     //GenMemberProc(*ast, GenericArray(), "copy");
     GenMemberProc(*ast, Int(), "size");
     GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
     GenMemberProc(*ast, Bool(), "empty");
-    GenMemberProc(*ast, Int(), "pointer");
+    GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrFinal());
 
     return ast;
 }

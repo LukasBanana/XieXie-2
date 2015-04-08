@@ -30,6 +30,9 @@ class AttribPrefix : public AST
 
         AST_INTERFACE(AttribPrefix);
 
+        //! Returns true if this attribute prefix has the specified attribute identifier.
+        bool HasAttrib(const std::string& attribIdent) const;
+
         std::vector<AttribPtr>  attribs;
 
         // dast

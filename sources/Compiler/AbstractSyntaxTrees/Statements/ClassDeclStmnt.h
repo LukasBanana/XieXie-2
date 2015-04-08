@@ -14,6 +14,7 @@
 #include "Attrib.h"
 #include "SourceCode.h"
 #include "ClassBodySegment.h"
+#include "ErrorReporter.h"
 
 #include <set>
 
@@ -59,12 +60,14 @@ class ClassDeclStmnt : public ScopedStmnt
 
         /**
         Generates the run-time type information (RTTI) for this and all sub-classes recursively.
+        It also sets up the vtable for each class and check for valid procedure override.
         \see GetTypeID
         \see GetNumSubClasses
         \see GetInstanceSize
         \see GetStaticSize
+        \see GetVtable
         */
-        void GenerateRTTI();
+        void GenerateRTTI(ErrorReporter* errorReporter = nullptr);
 
         //! Returns the type ID of this class. The root class "Object" has type ID 0.
         unsigned int GetTypeID() const
@@ -85,6 +88,12 @@ class ClassDeclStmnt : public ScopedStmnt
         unsigned int GetStaticSize() const
         {
             return staticSize_;
+        }
+
+        //! Returns the list of all class procedures, including the procedures from its base classes.
+        const std::vector<ProcDeclStmnt*>& GetVtable() const
+        {
+            return vtable_;
         }
 
         /**
@@ -112,7 +121,13 @@ class ClassDeclStmnt : public ScopedStmnt
         
         std::string HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const;
 
-        void GenerateRTTI(unsigned int& typeID, unsigned int& numSubClasses, unsigned int superInstanceSize);
+        void GenerateRTTI(
+            unsigned int& typeID,
+            unsigned int& numSubClasses,
+            unsigned int superInstanceSize,
+            const std::vector<ProcDeclStmnt*>& setupVtable,
+            ErrorReporter* errorReporter
+        );
         
         void AssignAllMemberVariableLocations(ClassBodySegment& segment);
         void AssignMemberVariableLocation(VarDecl& varDecl);
@@ -120,12 +135,16 @@ class ClassDeclStmnt : public ScopedStmnt
         void AssignAllStaticVariableLocations(ClassBodySegment& segment);
         void AssignStaticVariableLocation(VarDecl& varDecl);
 
+        void GenerateVtable(const std::vector<ProcDeclStmnt*>* setupVtable, ErrorReporter* errorReporter);
+        void AssignAllProceduresToVtable(ClassBodySegment& segment, ErrorReporter* errorReporter);
+
         SourceCodePtr                   source_;                        // Reference to the source where this class is declared.
 
         // dast
         PointerTypeDenoter              thisTypeDenoter_;               // type denoter for this class declaration
         ClassDeclStmnt*                 baseClassRef_       = nullptr;  // reference to base class (or null if the base class is "Object").
         std::vector<ClassDeclStmnt*>    subClassesRef_;                 // reference to all sub classes.
+        std::vector<ProcDeclStmnt*>     vtable_;                        // list of all class procedures (including the procedures from its base class).
 
         unsigned int                    typeID_             = 0;        // type ID of this class.
         unsigned int                    numSubClasses_      = 0;        // total number of sub classes in the inheritance hierarchy.

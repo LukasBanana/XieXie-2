@@ -87,7 +87,6 @@ static KeywordMapType GenerateKeywordMap()
         { "long",       Ty::Reserved       },
         { "ulong",      Ty::Reserved       },
         { "double",     Ty::Reserved       },
-        { "override",   Ty::Reserved       },
         { "readonly",   Ty::Reserved       },
     };
 }

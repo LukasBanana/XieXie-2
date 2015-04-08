@@ -9,6 +9,9 @@ class IO {
 }
 
 class Hello {
+	init() {}
+	init(String s) { _s := s }
+	
 	String _s
 	
 	String hello() { return "" }
@@ -21,7 +24,10 @@ class Hello {
 
 class EnglishHello : Hello {
 	init() {}
+	
+	[[override]]
 	String hello() { return "Hello" }
+	//void print() {} // error, "Hello.print" is 'final'
 }
 
 class Test {
@@ -38,7 +44,8 @@ class Test {
 		// Anonymous class
 		Test.say(
 			new Hello(5) {
-				init(int x) {}
+				init(int x) : super("x") {}
+				[[override]]
 				String hello() { return "Hallo" }
 			}
 		)

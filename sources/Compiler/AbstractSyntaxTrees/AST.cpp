@@ -113,6 +113,19 @@ const VarName& VarName::GetLast() const
 }
 
 
+/* --- AttribPrefix --- */
+
+bool AttribPrefix::HasAttrib(const std::string& attribIdent) const
+{
+    for (const auto& attr : attribs)
+    {
+        if (attr->ident == attribIdent)
+            return true;
+    }
+    return false;
+}
+
+
 /* --- VarDecl --- */
 
 const TypeDenoter* VarDecl::GetTypeDenoter() const
@@ -247,14 +260,6 @@ bool ProcSignature::AreSimilar(const ProcSignature& lhs, const ProcSignature& rh
 const TypeDenoter* ProcCall::GetTypeDenoter() const
 {
     return declStmntRef != nullptr ? declStmntRef->GetTypeDenoter() : nullptr;
-}
-
-
-/* --- ProcDeclStmnt --- */
-
-const TypeDenoter* ProcDeclStmnt::GetTypeDenoter() const
-{
-    return procSignature->GetTypeDenoter();
 }
 
 

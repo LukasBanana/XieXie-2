@@ -164,7 +164,7 @@ DEF_VISIT_PROC(Decorator, Program)
     /* Generate RTTI for the entire class hierarchy */
     auto rootClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope("Object", ast->symTab, ast));
     if (rootClassDecl)
-        rootClassDecl->GenerateRTTI();
+        rootClassDecl->GenerateRTTI(errorReporter_);
     else
         Error("missing root class \"Object\"");
 }

@@ -27,6 +27,13 @@ class ProcDeclStmnt : public ScopedStmnt
         //! Returns the type of the procedure signature.
         const TypeDenoter* GetTypeDenoter() const override;
 
+        //! Returns true if this procedure has the "final" attribute.
+        bool IsFinal() const;
+        //! Returns true if this procedure has the "override" attribute.
+        bool IsOverride() const;
+        //! Returns true if this procedure has the "deprecated" attribute.
+        bool IsDeprecated() const;
+
         AttribPrefixPtr         attribPrefix;               // may be null
         ProcSignaturePtr        procSignature;
         CodeBlockPtr            codeBlock;                  // may be null (for extern procedures)
@@ -34,6 +41,11 @@ class ProcDeclStmnt : public ScopedStmnt
         // dast
         ClassDeclStmnt*         parentRef       = nullptr;  // reference to the AST node's parent declaration statement (this is already decorated inside the parser)
         ProcOverloadSwitch      overloadSwitch;
+        unsigned int            vtableOffset    = 0;        // offset inside a class' vtable. unused for static procedures.
+
+    private:
+
+        bool HasAttrib(const std::string& attribIdent) const;
 
 };
 
