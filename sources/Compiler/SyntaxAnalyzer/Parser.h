@@ -13,6 +13,7 @@
 #include "ASTDeclarations.h"
 #include "BinaryExpr.h"
 #include "ClassBodySegment.h"
+#include "ProcDeclStmnt.h"
 
 #include <string>
 #include <stack>
@@ -44,9 +45,10 @@ class Parser
 
         struct StateContainer
         {
-            std::string     filename;               //!< Current filename.
-            ClassDeclStmnt* classDecl   = nullptr;  //!< Reference to the current class declaration.
-            std::string     procIdent;              //!< Identifier of the current procedure declaration.
+            std::string         filename;                               //!< Current filename.
+            ClassDeclStmnt*     classDecl   = nullptr;                  //!< Reference to the current class declaration.
+            std::string         procIdent;                              //!< Identifier of the current procedure declaration.
+            ProcDeclStmnt::Vis  procVis = ProcDeclStmnt::Vis::Public;   //!< Procedure visibility within a class declaration.
         };
 
         /* === Functions === */

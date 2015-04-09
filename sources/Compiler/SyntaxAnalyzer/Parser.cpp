@@ -513,6 +513,7 @@ void Parser::ParseClassBodySegment(ClassDeclStmnt& ast, ClassBodySegment::Visibi
     if (Is(Tokens::Visibility))
     {
         segmentVis = ClassBodySegment::GetVisibility(AcceptIt()->Spell());
+        state_.procVis = segmentVis;
 
         /* Check if visibility is for all following statements */
         if (Is(Tokens::Colon))
@@ -1077,6 +1078,8 @@ ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
     if (!attribPrefix && Is(Tokens::LDParen))
         attribPrefix = ParseAttribPrefix();
 
+    state_.procVis = ProcDeclStmnt::Vis::Public;
+
     if (Is(Tokens::Extern))
     {
         AcceptIt();
@@ -1292,7 +1295,9 @@ FlagsDeclStmntPtr Parser::ParseFlagsDeclStmnt()
 ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPtr attribPrefix)
 {
     auto ast = Make<ProcDeclStmnt>();
-    ast->parentRef = state_.classDecl;
+
+    ast->parentRef  = state_.classDecl;
+    ast->visibility = state_.procVis;
 
     if (attribPrefix)
         ast->attribPrefix = attribPrefix;
@@ -1322,7 +1327,9 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPt
 ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic)
 {
     auto ast = Make<ProcDeclStmnt>();
-    ast->parentRef = state_.classDecl;
+
+    ast->parentRef  = state_.classDecl;
+    ast->visibility = state_.procVis;
 
     ast->procSignature = ParseProcSignature(typeDenoter, identTkn, isStatic);
     state_.procIdent = ast->procSignature->ident;
@@ -1346,7 +1353,9 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, c
 ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 {
     auto ast = Make<ProcDeclStmnt>();
-    ast->parentRef = state_.classDecl;
+
+    ast->parentRef  = state_.classDecl;
+    ast->visibility = state_.procVis;
 
     /* Setup procedure signature */
     ast->procSignature = Make<ProcSignature>();
@@ -1402,7 +1411,9 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 ProcDeclStmntPtr Parser::ParseReleaseDeclStmnt()
 {
     auto ast = Make<ProcDeclStmnt>();
-    ast->parentRef = state_.classDecl;
+
+    ast->parentRef  = state_.classDecl;
+    ast->visibility = state_.procVis;
 
     ast->procSignature = Make<ProcSignature>();
 

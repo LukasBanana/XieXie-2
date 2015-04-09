@@ -16,6 +16,7 @@ namespace AbstractSyntaxTrees
 {
 
 
+//!TODO! -> remove this class (only use "vector<StmntPtr>" inside ClassDeclStmnt).
 class ClassBodySegment : public AST
 {
     

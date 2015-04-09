@@ -41,7 +41,7 @@ class EnglishHello : Hello {
 	//void print() {} // error, "Hello.print" is 'final'
 }
 
-class Test {
+class Test : EnglishHello {
 	
 	static void say(Hello sentence) {
 		IO.writeLine(sentence.hello())
@@ -60,6 +60,11 @@ class Test {
 				String hello() { return "Hallo" }
 			}
 		)
+		
+		// Private access
+		var v := new EnglishHello()
+		v.protProc()
+		var x := v.protVar
 		
 		// Procedure calls
 		EnglishHello.hello() // error, "hello" is not static!

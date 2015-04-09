@@ -366,6 +366,7 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
             PushSymTab(*ast);
             {
                 Visit(&(ast->publicSegment));
+                Visit(&(ast->protectedSegment));
                 Visit(&(ast->privateSegment));
             }
             PopSymTab();
@@ -375,6 +376,7 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
             PushSymTab(*ast);
             {
                 Visit(&(ast->publicSegment));
+                Visit(&(ast->protectedSegment));
                 Visit(&(ast->privateSegment));
             }
             PopSymTab();
@@ -1251,10 +1253,29 @@ void Decorator::DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overlo
     {
         /* Decorate procedure call with reference to final procedure delcaration statement */
         ast.declStmntRef = procDecls.front();
+        const auto& procDecl = *ast.declStmntRef;
 
         /* Check if procedure is deprecated */
-        if (ast.declStmntRef->IsDeprecated())
+        if (procDecl.IsDeprecated())
             Warning("call of deprecated procedure", &ast);
+
+        /* Check procedure visibility */
+        switch (procDecl.visibility)
+        {
+            case ProcDeclStmnt::Vis::Protected:
+            {
+                if (!class_->IsSubClassOf(*procDecl.parentRef))
+                    Error("procedure \"" + procDecl.procSignature->ident + "\" is inaccessible from this class", &ast);
+            }
+            break;
+
+            case ProcDeclStmnt::Vis::Private:
+            {
+                if (procDecl.parentRef != class_)
+                    Error("procedure \"" + procDecl.procSignature->ident + "\" is inaccessible from this class", &ast);
+            }
+            break;
+        }
     }
 }
 
