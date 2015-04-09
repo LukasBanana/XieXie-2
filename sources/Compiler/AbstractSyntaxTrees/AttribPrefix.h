@@ -11,6 +11,9 @@
 
 #include "AST.h"
 
+#include <vector>
+#include <set>
+
 
 namespace AbstractSyntaxTrees
 {
@@ -32,6 +35,11 @@ class AttribPrefix : public AST
 
         //! Returns true if this attribute prefix has the specified attribute identifier.
         bool HasAttrib(const std::string& attribIdent) const;
+
+        //! Returns a list of all duplicate attributes.
+        std::vector<const Attrib*> FindDuplicateAttribs() const;
+        //! Returns a list of all attributes which are not allowed, i.e. not part of 'validAttribs'.
+        std::vector<const Attrib*> FindInvalidAttribs(const std::set<std::string>& validAttribs) const;
 
         std::vector<AttribPtr>  attribs;
 
