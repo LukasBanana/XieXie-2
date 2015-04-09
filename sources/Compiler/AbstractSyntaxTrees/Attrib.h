@@ -23,6 +23,12 @@ class Attrib : public AST
         
         AST_INTERFACE(Attrib);
 
+        //! Returns true if the number of parameters of this attributes is in the specified range [minParam .. maxParam].
+        bool VerifyParamCount(size_t minParam, size_t maxParam) const
+        {
+            return exprs.size() >= minParam && exprs.size() <= maxParam;
+        }
+
         std::string             ident;
         std::vector<ExprPtr>    exprs;
 

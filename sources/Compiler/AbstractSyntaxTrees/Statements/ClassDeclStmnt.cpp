@@ -11,6 +11,8 @@
 #include "ProcDeclStmnt.h"
 #include "ProcSignature.h"
 #include "AttribPrefix.h"
+#include "Attrib.h"
+#include "LiteralExpr.h"
 #include "CompilerMessage.h"
 
 
@@ -125,10 +127,39 @@ void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
     }
 }
 
+bool ClassDeclStmnt::IsFinal() const
+{
+    return HasAttrib("final");
+}
+
+bool ClassDeclStmnt::IsDeprecated(std::string* hint) const
+{
+    if (attribPrefix)
+    {
+        auto attr = attribPrefix->FindAttrib("deprecated");
+        if (attr)
+        {
+            if (hint && attr->exprs.size() == 1)
+            {
+                auto literalExpr = AST::Cast<const LiteralExpr>(attr->exprs.front().get());
+                if (literalExpr)
+                    *hint = literalExpr->value;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 
 /*
  * ======= Private: =======
  */
+
+bool ClassDeclStmnt::HasAttrib(const std::string& attribIdent) const
+{
+    return attribPrefix != nullptr ? attribPrefix->HasAttrib(attribIdent) : false;
+}
 
 std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const
 {
@@ -157,6 +188,9 @@ void ClassDeclStmnt::GenerateRTTI(
 
     /* Generate vtable */
     GenerateVtable(&setupVtable, errorReporter);
+
+    /* Process attributes of this class */
+    ProcessClassAttributes(errorReporter);
 
     /* Generate RTTI for sub classes */
     for (auto subClass : subClassesRef_)
@@ -239,24 +273,27 @@ void ClassDeclStmnt::GenerateVtable(const Vtable* setupVtable, ErrorReporter* er
         {
             if (proc->IsAbstract())
             {
-                isAbstract = true;
+                isAbstract_ = true;
                 break;
             }
         }
     }
 }
 
+static void Error(ErrorReporter* errorReporter, const std::string& msg, const AST* ast)
+{
+    if (errorReporter)
+        errorReporter->Add<ContextError>(msg, ast);
+};
+
+static void Warning(ErrorReporter* errorReporter, const std::string& msg, const AST* ast)
+{
+    if (errorReporter)
+        errorReporter->Add<CompilerWarning>(msg, ast);
+};
+
 void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, ErrorReporter* errorReporter)
 {
-    auto Error = [&errorReporter](const std::string& msg, const AST* ast)
-    {
-        errorReporter->Add(ContextError(ast->sourceArea, msg));
-    };
-    auto Warning = [&errorReporter](const std::string& msg, const AST* ast)
-    {
-        errorReporter->Add(CompilerWarning(ast->sourceArea, msg));
-    };
-
     const auto setupVtableSize = vtable_.Size();
     auto vtableOffset = setupVtableSize;
 
@@ -282,10 +319,10 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, Erro
             }
 
             for (auto attr : procDecl->attribPrefix->FindDuplicateAttribs())
-                Error("duplicate attribute '" + attr->ident + "' for procedure declaration", attr);
+                Error(errorReporter, "duplicate attribute '" + attr->ident + "' for procedure declaration", attr);
 
             for (auto attr : procDecl->attribPrefix->FindInvalidAttribs(validAttribs))
-                Error("invalid attribute '" + attr->ident + "' for procedure declaration", attr);
+                Error(errorReporter, "invalid attribute '" + attr->ident + "' for procedure declaration", attr);
         }
         
         /* Check if this procedure overrides a procedure from its base class */
@@ -305,6 +342,7 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, Erro
                         if (baseProc->IsFinal())
                         {
                             Error(
+                                errorReporter,
                                 "can not override procedure with 'final' attribute at (" +
                                 baseProc->sourceArea.ToString() + ")", procDecl
                             );
@@ -313,6 +351,7 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, Erro
                         else if (!procDecl->IsOverride())
                         {
                             Warning(
+                                errorReporter,
                                 "hidden procedure override from its base class at (" +
                                 baseProc->sourceArea.ToString() + ")", procDecl
                             );
@@ -331,12 +370,54 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, Erro
         if (!hasOverridden)
         {
             if (!isStatic && procDecl->IsOverride())
-                Error("procedure does not override a procedure from its base class", procDecl);
+                Error(errorReporter, "procedure does not override a procedure from its base class", procDecl);
 
             /* Append new procedure to vtable */
             procDecl->vtableOffset = vtableOffset;
             vtable_.procs.push_back(procDecl);
             ++vtableOffset;
+        }
+    }
+}
+
+/*
+First decorates this class with its attributes,
+then verifies the attributes to its base class (e.g. "deprecated" attribute).
+*/
+void ClassDeclStmnt::ProcessClassAttributes(ErrorReporter* errorReporter)
+{
+    /* Verify class attributes */
+    if (attribPrefix)
+    {
+        std::set<std::string> validAttribs { "deprecated" };
+
+        std::string typeName = (isModule ? "module" : "class");
+        if (!isModule)
+            validAttribs.insert("final");
+
+        for (auto attr : attribPrefix->FindDuplicateAttribs())
+            Error(errorReporter, "duplicate attribute '" + attr->ident + "' for " + typeName + " declaration", this);
+
+        for (auto attr : attribPrefix->FindInvalidAttribs(validAttribs))
+            Error(errorReporter, "invalid attribute '" + attr->ident + "' for " + typeName + " declaration", this);
+    }
+
+    if (baseClassRef_)
+    {
+        /* Check if this class can inherit from its base class */
+        if (baseClassRef_->IsFinal())
+            Error(errorReporter, "can not inherit from class with 'final' attribute", this);
+        else if (!IsDeprecated())
+        {
+            /* Check if base class is marked as deprecated */
+            std::string hint;
+            if (baseClassRef_->IsDeprecated(&hint))
+            {
+                std::string info = "class declaration \"" + ident + "\" with deprecated base class";
+                if (!hint.empty())
+                    info += ": " + hint;
+                Warning(errorReporter, info, this);
+            }
         }
     }
 }

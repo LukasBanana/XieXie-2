@@ -115,14 +115,19 @@ const VarName& VarName::GetLast() const
 
 /* --- AttribPrefix --- */
 
-bool AttribPrefix::HasAttrib(const std::string& attribIdent) const
+const Attrib* AttribPrefix::FindAttrib(const std::string& attribIdent) const
 {
     for (const auto& attr : attribs)
     {
         if (attr->ident == attribIdent)
-            return true;
+            return attr.get();
     }
-    return false;
+    return nullptr;
+}
+
+bool AttribPrefix::HasAttrib(const std::string& attribIdent) const
+{
+    return FindAttrib(attribIdent) != nullptr;
 }
 
 std::vector<const Attrib*> AttribPrefix::FindDuplicateAttribs() const

@@ -70,45 +70,16 @@ bool Decorator::DecorateProgram(Program& program, ErrorReporter& errorReporter)
  * ======= Private: =======
  */
 
-void Decorator::Error(const ContextError& err, bool breakAnalysis)
+void Decorator::Error(const std::string& msg, const AST* ast)
 {
-    if (breakAnalysis)
-        throw err;
-    else
-        errorReporter_->Add(err);
-}
-
-void Decorator::Error(const std::string& msg, const AST* ast, bool breakAnalysis)
-{
-    if (ast)
-    {
-        auto source = GetCurrentSource();
-        if (source)
-        {
-            std::string line, marker;
-            if (source->FetchLineMarker(ast->sourceArea, line, marker))
-                Error(ContextError(ast->sourceArea, msg, line, marker));
-            else
-                Error(ContextError(ast->sourceArea, msg));
-        }
-        else
-            Error(ContextError(ast->sourceArea, msg));
-    }
-    else
-        Error(ContextError(msg));
-}
-
-void Decorator::Error(const std::string& msg, bool breakAnalysis)
-{
-    Error(msg, nullptr, breakAnalysis);
+    errorReporter_->source = GetCurrentSource();
+    errorReporter_->Add<ContextError>(msg, ast);
 }
 
 void Decorator::Warning(const std::string& msg, const AST* ast)
 {
-    if (ast)
-        errorReporter_->Add(CompilerWarning(ast->sourceArea, msg));
-    else
-        errorReporter_->Add(CompilerWarning(msg));
+    errorReporter_->source = GetCurrentSource();
+    errorReporter_->Add<CompilerWarning>(msg, ast);
 }
 
 const SyntaxAnalyzer::SourceCode* Decorator::GetCurrentSource() const
@@ -163,7 +134,10 @@ DEF_VISIT_PROC(Decorator, Program)
     /* (5) Generate RTTI for the entire class hierarchy */
     auto rootClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope("Object", ast->symTab, ast));
     if (rootClassDecl)
+    {
+        errorReporter_->source = GetCurrentSource();
         rootClassDecl->GenerateRTTI(errorReporter_);
+    }
     else
         Error("missing root class \"Object\"");
 
@@ -382,7 +356,6 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
 
         case States::AnalyzeClassSignature:
             DecorateClassBaseClass(*ast);
-            DecorateClassAttribs(*ast);
             break;
 
         case States::VerifyClassInheritance:
@@ -580,7 +553,6 @@ DEF_VISIT_PROC(Decorator, AllocExpr)
 {
     Visit(ast->typeDenoter);
     Visit(&(ast->procCall));
-    //VerifyConstructor(); //todo...
 
     /* Check if pointer is not an abstract class */
     if (ast->typeDenoter->IsPointer())
@@ -588,13 +560,36 @@ DEF_VISIT_PROC(Decorator, AllocExpr)
         const auto& pointerType = static_cast<const PointerTypeDenoter&>(*ast->typeDenoter);
         const auto classDecl = pointerType.declRef;
 
-        if (classDecl && classDecl->isAbstract)
+        if (classDecl)
         {
-            Error("can not instantiate abstract class \"" + classDecl->ident + "\"", ast);
+            std::string hint;
 
-            /* List all abstract procedures */
-            //...
-            //for ()
+            /* Check if pointer is not an abstract class */
+            if (classDecl->IsAbstract())
+            {
+                Error("can not instantiate abstract class \"" + classDecl->ident + "\"", ast);
+
+                /* List all abstract procedures */
+                errorReporter_->Add(CompilerMessage(SourceArea::ignore, ">> abstract procedures are: "));
+
+                for (const auto procDecl : classDecl->GetVtable().procs)
+                {
+                    if (procDecl->IsAbstract())
+                    {
+                        errorReporter_->Add(CompilerMessage(
+                            SourceArea::ignore, ">>   " + procDecl->procSignature->ToString()
+                        ));
+                    }
+                }
+            }
+            /* Check if class is marked as deprecated */
+            else if (classDecl->IsDeprecated(&hint))
+            {
+                std::string info = "allocation of deprecated class \"" + classDecl->ident + "\"";
+                if (!hint.empty())
+                    info += ": " + hint;
+                Warning(info, ast);
+            }
         }
     }
 }
@@ -681,32 +676,13 @@ void Decorator::DecorateClassBaseClass(ClassDeclStmnt& ast)
     }
 }
 
-void Decorator::DecorateClassAttribs(ClassDeclStmnt& ast)
-{
-    /* Valid attribute for classes is 'deprecated' and 'deprecated(string)' */
-    if (ast.attribPrefix)
-    {
-        DecorateAttribPrefix(
-            *ast.attribPrefix, "class declaration \"" + ast.ident + "\"",
-            {
-                { "deprecated", std::bind(&Decorator::DecorateAttribDeprecated, this, _1, _2) },
-            }
-        );
-    }
-}
-
 void Decorator::VerifyClassInheritance(ClassDeclStmnt& ast)
 {
     /* Detect cycle in class inheritance tree */
     ClassDeclStmnt* baseClass = ast.GetBaseClassRef();
-    AttribPrefix::Flags* deprecationFlags = nullptr;
 
     while (baseClass)
     {
-        /* Check if base class is deprecated */
-        if (!deprecationFlags && baseClass->attribPrefix && baseClass->attribPrefix->flags.isDeprecated)
-            deprecationFlags = &(baseClass->attribPrefix->flags);
-
         /* Check if current base class is the reference to this class declaration */
         if (baseClass == &ast)
         {
@@ -721,16 +697,6 @@ void Decorator::VerifyClassInheritance(ClassDeclStmnt& ast)
 
         /* Go to next upper base class */
         baseClass = baseClass->GetBaseClassRef();
-    }
-
-    /* Check if any base class is deprecated but this class is not marked as deprecated */
-    if ( deprecationFlags && ( !ast.attribPrefix || !(ast.attribPrefix->flags.isDeprecated) ) )
-    {
-        /* Print warning for usage of deprecated base class */
-        std::string warnInfo = "class declaration \"" + ast.ident + "\" with deprecated base class";
-        if (!deprecationFlags->deprecationHint.empty())
-            warnInfo += ": " + deprecationFlags->deprecationHint;
-        Warning(warnInfo, &ast);
     }
 }
 
@@ -814,66 +780,6 @@ const TypeDenoter* Decorator::DeduceTypeFromVarDecls(const std::vector<VarDeclPt
             return varDecl->initExpr->GetTypeDenoter();
     }
     return nullptr;
-}
-
-void Decorator::DecorateAttribPrefix(
-    AttribPrefix& ast, const std::string& declDesc,
-    const std::map<std::string, std::function<void(const Attrib&, AttribPrefix::Flags&)>>& allowedAttribs)
-{
-    if (ast.attribs.size() <= allowedAttribs.size())
-    {
-        std::set<std::string> attribUsed;
-        for (const auto& attrib : ast.attribs)
-        {
-            const auto& ident = attrib->ident;
-
-            /* Check if attribute is allowed for this declaration */
-            auto it = allowedAttribs.find(ident);
-            if (it != allowedAttribs.end())
-            {
-                /* Check if attribute has already been used */
-                if (attribUsed.find(ident) == attribUsed.end())
-                {
-                    attribUsed.insert(ident);
-                    it->second(*attrib, ast.flags);
-                }
-                else
-                    Error("attribute \"" + ident + "\" already used for " + declDesc, attrib.get());
-            }
-            else
-                Error("unknown attribute \"" + ident + "\" for " + declDesc, attrib.get());
-        }
-    }
-    else
-    {
-        Error(
-            "invalid number of attributes for " + declDesc + "; only " +
-            ToStr(allowedAttribs.size()) + " attribute" +
-            SelectString("s are", " is", allowedAttribs.size() > 1) + " allowed",
-            &ast
-        );
-    }
-}
-
-void Decorator::DecorateAttribDeprecated(const Attrib& ast, AttribPrefix::Flags& attribArgs)
-{
-    /* Decorate AST with deprecation flag */
-    attribArgs.isDeprecated = true;
-
-    if (ast.exprs.size() == 1)
-    {
-        auto expr0 = ast.exprs.front().get();
-        auto strLiteral = AST::Cast<LiteralExpr>(expr0);
-        if (strLiteral && strLiteral->GetType() == LiteralExpr::Literals::String)
-        {
-            /* Decorate AST with deprecation hint string */
-            attribArgs.deprecationHint = strLiteral->value;
-        }
-        else
-            Error("invalid argument for attribute \"" + ast.ident + "\"; only a string literal is allowed", expr0);
-    }
-    else if (ast.exprs.size() > 1)
-        Error("invalid number of arguments for attribute \"" + ast.ident + "\"; only a single argument is allowed", &ast);
 }
 
 void Decorator::DecorateExpr(Expr& ast)

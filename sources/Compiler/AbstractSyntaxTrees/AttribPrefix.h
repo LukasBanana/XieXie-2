@@ -25,14 +25,16 @@ class AttribPrefix : public AST
     public:
         
         //! Summarized attribute falgs.
-        struct Flags
+        /*struct Flags
         {
             bool        isDeprecated = false;
             std::string deprecationHint;
-        };
+        };*/
 
         AST_INTERFACE(AttribPrefix);
 
+        //! Returns a reference to the specified attribute or null if there is no such attribute in the list.
+        const Attrib* FindAttrib(const std::string& attribIdent) const;
         //! Returns true if this attribute prefix has the specified attribute identifier.
         bool HasAttrib(const std::string& attribIdent) const;
 
@@ -44,7 +46,7 @@ class AttribPrefix : public AST
         std::vector<AttribPtr>  attribs;
 
         // dast
-        Flags                   flags;
+        //Flags                   flags;
 
 };
 

@@ -115,11 +115,20 @@ class ClassDeclStmnt : public ScopedStmnt
             return source_.get();
         }
 
+        //! Returns true if this class has the "final" attribute.
+        bool IsFinal() const;
+        //! Returns true if this class has the "deprecated" attribute.
+        bool IsDeprecated(std::string* hint = nullptr) const;
+        //! Returns true if this is an abstract class.
+        bool IsAbstract() const
+        {
+            return isAbstract_;
+        }
+
         bool                            isBuiltin           = false;    // is this a built-in class (e.g. "Object", "String", etc.)?
         bool                            isExtern            = false;    // is this an extern class?
         bool                            isModule            = false;    // is this a module class?
         bool                            isAnonymous         = false;    // is this an anonymous class?
-        bool                            isAbstract          = false;    // is this an abstract class, i.e. has it abstract procedures?
 
         AttribPrefixPtr                 attribPrefix;                   // may be null
         std::string                     ident;
@@ -130,6 +139,8 @@ class ClassDeclStmnt : public ScopedStmnt
 
     private:
         
+        bool HasAttrib(const std::string& attribIdent) const;
+
         std::string HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const;
 
         void GenerateRTTI(
@@ -149,6 +160,8 @@ class ClassDeclStmnt : public ScopedStmnt
         void GenerateVtable(const Vtable* setupVtable, ErrorReporter* errorReporter);
         void AssignAllProceduresToVtable(ClassBodySegment& segment, ErrorReporter* errorReporter);
 
+        void ProcessClassAttributes(ErrorReporter* errorReporter);
+
         SourceCodePtr                   source_;                        // Reference to the source where this class is declared.
 
         // dast
@@ -156,6 +169,8 @@ class ClassDeclStmnt : public ScopedStmnt
         ClassDeclStmnt*                 baseClassRef_       = nullptr;  // reference to base class (or null if the base class is "Object").
         std::vector<ClassDeclStmnt*>    subClassesRef_;                 // reference to all sub classes.
         Vtable                          vtable_;                        // list of all class procedures (including the procedures from its base class).
+
+        bool                            isAbstract_         = false;    // is this an abstract class, i.e. has it abstract procedures?
 
         unsigned int                    typeID_             = 0;        // type ID of this class.
         unsigned int                    numSubClasses_      = 0;        // total number of sub classes in the inheritance hierarchy.

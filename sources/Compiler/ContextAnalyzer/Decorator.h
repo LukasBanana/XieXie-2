@@ -53,10 +53,7 @@ class Decorator final : private Visitor
 
         /* === Functions === */
 
-        void Error(const ContextError& err, bool breakAnalysis = false);
-        void Error(const std::string& msg, const AST* ast, bool breakAnalysis = false);
-        void Error(const std::string& msg, bool breakAnalysis = false);
-
+        void Error(const std::string& msg, const AST* ast = nullptr);
         void Warning(const std::string& msg, const AST* ast = nullptr);
 
         //! Returns the source code wherein the current class was declared.
@@ -77,12 +74,6 @@ class Decorator final : private Visitor
         void VerifyAssignStmntExprTypes(const VarName& varName, const Expr& expr);
         void VerifyReturnStmntExprType(const TypeDenoter& returnType, const Expr& expr);
         const TypeDenoter* DeduceTypeFromVarDecls(const std::vector<VarDeclPtr>& varDecls);
-
-        void DecorateAttribPrefix(
-            AttribPrefix& ast, const std::string& declDesc,
-            const std::map<std::string, std::function<void(const Attrib&, AttribPrefix::Flags&)>>& allowedAttribs
-        );
-        void DecorateAttribDeprecated(const Attrib& ast, AttribPrefix::Flags& attribArgs);
 
         void DecorateExpr(Expr& ast);
         bool VerifyExprConst(const Expr& expr);

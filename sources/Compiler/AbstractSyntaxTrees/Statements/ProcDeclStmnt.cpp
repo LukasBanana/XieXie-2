@@ -46,7 +46,6 @@ bool ProcDeclStmnt::HasAttrib(const std::string& attribIdent) const
 }
 
 
-
 } // /namespace AbstractSyntaxTrees
 
 

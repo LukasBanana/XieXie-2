@@ -8,6 +8,7 @@ class IO {
 	}
 }
 
+//[[final(test)]]
 class Hello {
 	init() {}
 	init(String s) { _s := s }
@@ -23,11 +24,12 @@ class Hello {
 	}
 }
 
+[[deprecated("use anonymous classes instead")]]
 class EnglishHello : Hello {
 	init() {}
 	
-	/*[[override]]
-	String hello() { return "Hello" }*/
+	[[override, final]]
+	String hello() { return "Hello" }
 	
 	//void print() {} // error, "Hello.print" is 'final'
 }

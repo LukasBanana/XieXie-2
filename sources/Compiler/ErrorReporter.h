@@ -10,6 +10,8 @@
 
 
 #include "CompilerMessage.h"
+#include "SourceCode.h"
+#include "AST.h"
 
 #include <vector>
 
@@ -21,7 +23,34 @@ class ErrorReporter
     
     public:
         
+        //! Adds the specified compiler message to the report.
         void Add(const CompilerMessage& message);
+
+        /**
+        Adds the specified message to the report.
+        \tparam MsgType Specifies the compiler message type.
+        \param[in] msg Specifies the output message.
+        \param[in] ast Specifies an optional AST node.
+        \param[in] source Specifies an optional source code reference.
+        */
+        template <typename MsgType> void Add(const std::string& msg, const AbstractSyntaxTrees::AST* ast = nullptr)
+        {
+            if (ast)
+            {
+                if (source)
+                {
+                    std::string line, marker;
+                    if (source->FetchLineMarker(ast->sourceArea, line, marker))
+                        Add(MsgType(ast->sourceArea, msg, line, marker));
+                    else
+                        Add(MsgType(ast->sourceArea, msg));
+                }
+                else
+                    Add(MsgType(ast->sourceArea, msg));
+            }
+            else
+                Add(MsgType(msg));
+        }
 
         /**
         Prints all messages to console and clears the message list.
@@ -29,10 +58,14 @@ class ErrorReporter
         */
         void Flush(Log& log, bool printMetaInfo = true);
 
+        //! Returns true if the current report has any errors.
         bool HasErrors() const
         {
             return hasErrors_;
         }
+
+        //! Optional source code reference. This can be used for better error outputs.
+        const SyntaxAnalyzer::SourceCode* source = nullptr;
 
     private:
 
