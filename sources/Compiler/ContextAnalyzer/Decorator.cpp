@@ -133,6 +133,9 @@ In all classes: Register all class member identifiers (procedures, variables, en
 in the scope of the current class. Identifiers of procedures can be overloaded.
 
 (Phase 5)
+Generate run-time type information (RTTI) for entire class hierarchy, i.e. recursively for the root class "Object".
+
+(Phase 6)
 In all classes: In all members of the current class: Analyze the declaration of the current member.
 */
 DEF_VISIT_PROC(Decorator, Program)
@@ -157,16 +160,16 @@ DEF_VISIT_PROC(Decorator, Program)
     state_ = States::RegisterMemberSymbols;
     Visit(ast->classDeclStmnts);
 
-    /* (5) Analyze the actual code */
-    state_ = States::AnalyzeCode;
-    Visit(ast->classDeclStmnts);
-
-    /* Generate RTTI for the entire class hierarchy */
+    /* (5) Generate RTTI for the entire class hierarchy */
     auto rootClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope("Object", ast->symTab, ast));
     if (rootClassDecl)
         rootClassDecl->GenerateRTTI(errorReporter_);
     else
         Error("missing root class \"Object\"");
+
+    /* (6) Analyze the actual code */
+    state_ = States::AnalyzeCode;
+    Visit(ast->classDeclStmnts);
 }
 
 DEF_VISIT_PROC(Decorator, CodeBlock)
@@ -578,6 +581,22 @@ DEF_VISIT_PROC(Decorator, AllocExpr)
     Visit(ast->typeDenoter);
     Visit(&(ast->procCall));
     //VerifyConstructor(); //todo...
+
+    /* Check if pointer is not an abstract class */
+    if (ast->typeDenoter->IsPointer())
+    {
+        const auto& pointerType = static_cast<const PointerTypeDenoter&>(*ast->typeDenoter);
+        const auto classDecl = pointerType.declRef;
+
+        if (classDecl && classDecl->isAbstract)
+        {
+            Error("can not instantiate abstract class \"" + classDecl->ident + "\"", ast);
+
+            /* List all abstract procedures */
+            //...
+            //for ()
+        }
+    }
 }
 
 DEF_VISIT_PROC(Decorator, VarAccessExpr)

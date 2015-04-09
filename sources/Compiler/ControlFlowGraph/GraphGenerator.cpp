@@ -688,6 +688,10 @@ DEF_VISIT_PROC(GraphGenerator, VarDeclStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 {
+    /* Check if this is an abstract procedure */
+    if (!ast->codeBlock)
+        return;
+
     auto& procSig = *ast->procSignature;
 
     /* Store number of parameters in the current procedure declaration */

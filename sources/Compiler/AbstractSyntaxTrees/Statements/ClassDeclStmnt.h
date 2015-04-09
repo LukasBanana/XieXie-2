@@ -119,6 +119,7 @@ class ClassDeclStmnt : public ScopedStmnt
         bool                            isExtern            = false;    // is this an extern class?
         bool                            isModule            = false;    // is this a module class?
         bool                            isAnonymous         = false;    // is this an anonymous class?
+        bool                            isAbstract          = false;    // is this an abstract class, i.e. has it abstract procedures?
 
         AttribPrefixPtr                 attribPrefix;                   // may be null
         std::string                     ident;

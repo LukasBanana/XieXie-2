@@ -26,8 +26,9 @@ class Hello {
 class EnglishHello : Hello {
 	init() {}
 	
-	[[override]]
-	String hello() { return "Hello" }
+	/*[[override]]
+	String hello() { return "Hello" }*/
+	
 	//void print() {} // error, "Hello.print" is 'final'
 }
 

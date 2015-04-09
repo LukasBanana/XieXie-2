@@ -8,6 +8,7 @@
 #include "ProcDeclStmnt.h"
 #include "ProcSignature.h"
 #include "AttribPrefix.h"
+#include "ClassDeclStmnt.h"
 
 
 namespace AbstractSyntaxTrees
@@ -32,6 +33,11 @@ bool ProcDeclStmnt::IsOverride() const
 bool ProcDeclStmnt::IsDeprecated() const
 {
     return HasAttrib("deprecated");
+}
+
+bool ProcDeclStmnt::IsAbstract() const
+{
+    return codeBlock == nullptr && parentRef != nullptr && !parentRef->isExtern;
 }
 
 bool ProcDeclStmnt::HasAttrib(const std::string& attribIdent) const

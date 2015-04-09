@@ -231,6 +231,19 @@ void ClassDeclStmnt::GenerateVtable(const Vtable* setupVtable, ErrorReporter* er
     /* Assign all procedures of all segments to the vtable */
     AssignAllProceduresToVtable(publicSegment, errorReporter);
     AssignAllProceduresToVtable(privateSegment, errorReporter);
+
+    /* Check if this class has any abstract procedure */
+    if (!isExtern)
+    {
+        for (const auto proc : vtable_.procs)
+        {
+            if (proc->IsAbstract())
+            {
+                isAbstract = true;
+                break;
+            }
+        }
+    }
 }
 
 void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, ErrorReporter* errorReporter)

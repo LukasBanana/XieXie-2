@@ -1268,7 +1268,7 @@ FlagsDeclStmntPtr Parser::ParseFlagsDeclStmnt()
 
 #endif
 
-// proc_decl_stmnt: attrib_prefix? proc_signature code_block;
+// proc_decl_stmnt: attrib_prefix? proc_signature code_block?;
 // extern_proc_decl_stmnt: attrib_prefix? proc_signature;
 ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPtr attribPrefix)
 {
@@ -1285,13 +1285,16 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPt
 
     if (!isExtern)
     {
-        PushProcHasReturnType(!ast->procSignature->returnTypeDenoter->IsVoid());
+        if (Is(Tokens::LCurly))
         {
-            ast->codeBlock = ParseCodeBlock();
+            PushProcHasReturnType(!ast->procSignature->returnTypeDenoter->IsVoid());
+            {
+                ast->codeBlock = ParseCodeBlock();
+            }
+            PopProcHasReturnType();
         }
-        PopProcHasReturnType();
     }
-
+    
     return ast;
 }
 
@@ -1305,11 +1308,14 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, c
     ast->procSignature = ParseProcSignature(typeDenoter, identTkn, isStatic);
     state_.procIdent = ast->procSignature->ident;
 
-    PushProcHasReturnType(!ast->procSignature->returnTypeDenoter->IsVoid());
+    if (Is(Tokens::LCurly))
     {
-        ast->codeBlock = ParseCodeBlock();
+        PushProcHasReturnType(!ast->procSignature->returnTypeDenoter->IsVoid());
+        {
+            ast->codeBlock = ParseCodeBlock();
+        }
+        PopProcHasReturnType();
     }
-    PopProcHasReturnType();
 
     return ast;
 }

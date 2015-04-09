@@ -156,7 +156,7 @@ base_flags_varname_list:	':' var_name (',' var_name)*;
 */
 
 // PROCEDURES
-proc_decl_stmnt:			attrib_prefix? proc_signature code_block;
+proc_decl_stmnt:			attrib_prefix? proc_signature code_block?;
 extern_proc_decl_stmnt:		attrib_prefix? proc_signature;
 proc_signature:				storage_modifier? return_type_denoter IDENT '(' param_list? ')';
 storage_modifier:			'static';

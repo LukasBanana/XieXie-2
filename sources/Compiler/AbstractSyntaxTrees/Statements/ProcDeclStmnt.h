@@ -33,10 +33,12 @@ class ProcDeclStmnt : public ScopedStmnt
         bool IsOverride() const;
         //! Returns true if this procedure has the "deprecated" attribute.
         bool IsDeprecated() const;
+        //! Returns true if this procedure is abstract, i.e. 'codeBlock' is null and its parent class is not an extern class.
+        bool IsAbstract() const;
 
         AttribPrefixPtr         attribPrefix;               // may be null
         ProcSignaturePtr        procSignature;
-        CodeBlockPtr            codeBlock;                  // may be null (for extern procedures)
+        CodeBlockPtr            codeBlock;                  // may be null (for extern or abstract procedures)
 
         // dast
         ClassDeclStmnt*         parentRef       = nullptr;  // reference to the AST node's parent declaration statement (this is already decorated inside the parser)
