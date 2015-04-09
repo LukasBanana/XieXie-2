@@ -105,24 +105,23 @@ std::string ClassDeclStmnt::HierarchyString(const std::string& separator) const
 void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
 {
     /* Initialize RTTI for root class "Object" */
-    typeID_         = 0;
-    numSubClasses_  = 0;
-    instanceSize_   = 12; // 3 * (4 bytes): refCount, typeID, vtableAddr
-    staticSize_     = 0;
-
-    /* Incease static size by static variables */
-    AssignAllStaticVariableLocations(publicSegment);
-    AssignAllStaticVariableLocations(privateSegment);
+    typeID_             = 0;
+    numSubClasses_      = 0;
+    instanceSize_       = 12; // 3 * (4 bytes): refCount, typeID, vtableAddr
+    globalEndOffset_    = 0;
 
     /* Generate vtable */
     GenerateVtable(nullptr, errorReporter);
 
     /* Generate RTTI for sub classes */
-    auto typeID = typeID_;
+    auto typeID             = typeID_;
+    auto globalEndOffset    = globalEndOffset_;
+
     for (auto subClass : subClassesRef_)
     {
         subClass->GenerateRTTI(
-            typeID, numSubClasses_, instanceSize_, vtable_, errorReporter
+            typeID, numSubClasses_, instanceSize_,
+            globalEndOffset, vtable_, errorReporter
         );
     }
 }
@@ -170,20 +169,22 @@ std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const 
 
 void ClassDeclStmnt::GenerateRTTI(
     unsigned int& typeID, unsigned int& numSubClasses, unsigned int superInstanceSize,
-    const Vtable& setupVtable, ErrorReporter* errorReporter)
+    unsigned int& globalEndOffset, const Vtable& setupVtable, ErrorReporter* errorReporter)
 {
     /* Initialize RTTI for this class */
-    typeID_         = ++typeID;
-    numSubClasses_  = 0;
-    instanceSize_   = superInstanceSize;
-    staticSize_     = 0;
+    typeID_             = ++typeID;
+    numSubClasses_      = 0;
+    instanceSize_       = superInstanceSize;
+    globalEndOffset_    = globalEndOffset;
 
     /* Increase instance size by (non-static) member variables */
     AssignAllMemberVariableLocations(publicSegment);
+    AssignAllMemberVariableLocations(protectedSegment);
     AssignAllMemberVariableLocations(privateSegment);
     
-    /* Incease static sizue by static variables */
+    /* Incease static size by static variables */
     AssignAllStaticVariableLocations(publicSegment);
+    AssignAllStaticVariableLocations(protectedSegment);
     AssignAllStaticVariableLocations(privateSegment);
 
     /* Generate vtable */
@@ -193,10 +194,13 @@ void ClassDeclStmnt::GenerateRTTI(
     ProcessClassAttributes(errorReporter);
 
     /* Generate RTTI for sub classes */
+    globalEndOffset = globalEndOffset_;
+
     for (auto subClass : subClassesRef_)
     {
         subClass->GenerateRTTI(
-            typeID, numSubClasses_, instanceSize_, vtable_, errorReporter
+            typeID, numSubClasses_, instanceSize_,
+            globalEndOffset, vtable_, errorReporter
         );
     }
 
@@ -248,8 +252,8 @@ void ClassDeclStmnt::AssignAllStaticVariableLocations(ClassBodySegment& segment)
 
 void ClassDeclStmnt::AssignStaticVariableLocation(VarDecl& varDecl)
 {
-    varDecl.memoryOffset = staticSize_;
-    staticSize_ += varDecl.MemorySize();
+    varDecl.memoryOffset = globalEndOffset_;
+    globalEndOffset_ += varDecl.MemorySize();
 }
 
 /*
@@ -264,6 +268,7 @@ void ClassDeclStmnt::GenerateVtable(const Vtable* setupVtable, ErrorReporter* er
 
     /* Assign all procedures of all segments to the vtable */
     AssignAllProceduresToVtable(publicSegment, errorReporter);
+    AssignAllProceduresToVtable(protectedSegment, errorReporter);
     AssignAllProceduresToVtable(privateSegment, errorReporter);
 
     /* Check if this class has any abstract procedure */

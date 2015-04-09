@@ -11,6 +11,7 @@
 #include "SourceStream.h"
 #include "BuiltinTypeDenoter.h"
 #include "Timer.h"
+#include "Version.h"
 
 #include <algorithm>
 
@@ -177,21 +178,32 @@ e.g. __FILE__ -> "CurrentFile.xx"
 */
 TokenPtr Parser::InlineMacro(const Token& macro)
 {
+    auto MakeString = [&macro](const std::string& value) -> TokenPtr
+    {
+        return std::make_shared<Token>(macro.Area(), Tokens::StringLiteral, value);
+    };
+    auto MakeInt = [&macro](int value) -> TokenPtr
+    {
+        return std::make_shared<Token>(macro.Area(), Tokens::IntLiteral, std::to_string(value));
+    };
+
     const auto& spell = macro.Spell();
-    std::string content;
 
     if (spell == "__FILE__")
-        content = state_.filename;
+        return MakeString(state_.filename);
     else if (spell == "__CLASS__")
-        content = (state_.classDecl != nullptr ? state_.classDecl->ident : "");
+        return MakeString(state_.classDecl != nullptr ? state_.classDecl->ident : "");
     else if (spell == "__PROC__")
-        content = state_.procIdent;
+        return MakeString(state_.procIdent);
     else if (spell == "__LINE__")
-        content = ToStr(macro.PosStart().Row());
+        return MakeInt(macro.PosStart().Row());
     else if (spell == "__DATE__")
-        content = Timer::CurrentTime();
+        return MakeString(Timer::CurrentTime());
+    else if (spell == "__VERSION__")
+        return MakeInt(Version::AsInt());
 
-    return std::make_shared<Token>(macro.Area(), Tokens::StringLiteral, content);
+    Error("undeclared macro \"" + spell + "\"");
+    return nullptr;
 }
 
 std::string Parser::AcceptIdent()
@@ -487,7 +499,14 @@ void Parser::ParseClassBodySegment(ClassDeclStmnt& ast, ClassBodySegment::Visibi
 
     auto GetSegment = [&segmentVis, &ast]()
     {
-        return (segmentVis == ClassBodySegment::Visibilities::Private) ? &(ast.privateSegment) : &(ast.publicSegment);
+        switch (segmentVis)
+        {
+            case ClassBodySegment::Visibilities::Private:
+                return &(ast.privateSegment);
+            case ClassBodySegment::Visibilities::Protected:
+                return &(ast.protectedSegment);
+        }
+        return &(ast.publicSegment);
     };
 
     /* Parse segment visibility */

@@ -17,7 +17,7 @@ public:
 	Node@ getParent() { return parent }
 	
 	init() {}
-	init(Node@ parent := null) {
+	init(Node@ parent) {
 		this.parent := parent
 	}
 	

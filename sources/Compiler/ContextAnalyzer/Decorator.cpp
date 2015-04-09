@@ -1236,7 +1236,17 @@ void Decorator::DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overlo
         }
     }
     else if (procDecls.size() > 1)
-        Error("procedure call is ambiguous (deduced " + ToStr(procDecls.size()) + " suitable procedure signatures)", &ast);
+    {
+        Error("procedure call is ambiguous", &ast);
+        errorReporter_->Add(CompilerMessage(SourceArea::ignore, ">> deduced procedures are: "));
+
+        for (const auto procDecl : procDecls)
+        {
+            errorReporter_->Add(CompilerMessage(
+                SourceArea::ignore, ">>   " + procDecl->procSignature->ToString()
+            ));
+        }
+    }
     else
     {
         /* Decorate procedure call with reference to final procedure delcaration statement */

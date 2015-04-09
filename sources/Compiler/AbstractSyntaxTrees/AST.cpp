@@ -251,9 +251,14 @@ std::string ProcSignature::ToString() const
 
     for (size_t i = 0, n = params.size(); i < n; ++i)
     {
-        str += params[i]->typeDenoter->ToString();
+        const auto& param = *params[i];
+
+        str += param.typeDenoter->ToString();
         str += ' ';
-        str += params[i]->ident;
+        str += param.ident;
+
+        if (param.defaultArgExpr)
+            str += " := <default>";
 
         if (i + 1 < n)
             str += ", ";
@@ -636,8 +641,9 @@ static std::map<std::string, ClassBodySegment::Visibilities> MapClassVisibility(
     using Ty = ClassBodySegment::Visibilities;
     return std::map<std::string, Ty>
     {
-        { "private", Ty::Private },
-        { "public",  Ty::Public  },
+        { "public",    Ty::Public    },
+        { "protected", Ty::Protected },
+        { "private",   Ty::Private   },
     };
 }
 

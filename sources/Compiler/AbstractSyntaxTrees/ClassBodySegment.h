@@ -24,6 +24,7 @@ class ClassBodySegment : public AST
         enum class Visibilities
         {
             Public, // default visibility
+            Protected,
             Private,
         };
 

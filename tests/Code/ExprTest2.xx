@@ -99,7 +99,7 @@ class Main {
 		int			len		:= { new String().size() }[0]
 		String		str		:= { new C().str }[0]
 		String[]	strAry	:= { new C().str }
-		int[]		intAry	:= { new C.intAry[len] }		// ".intAry" is from namespace "C", but "len" is from local scope
+		int[]		intAry	:= { new C().intAry[len] }		// ".intAry" is from namespace "C", but "len" is from local scope
 		
 	}
 	

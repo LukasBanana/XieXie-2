@@ -21,7 +21,10 @@ int Minor();
 int Revision();
 std::string Status();
 
+//! Returns the compiler version as string, e.g. "1.00 Rev. 5 Beta".
 std::string AsString();
+//! Returns the compiler version as integer, e.g. 200 for version "2.00".
+int AsInt();
 
 
 } // /namespace Version

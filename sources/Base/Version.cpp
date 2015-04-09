@@ -39,7 +39,7 @@ std::string AsString()
     
     str += ToStr(Major());
     str += '.';
-    str += ToStr(Minor());
+    str += NumberOffset(Minor(), 99, '0');
 
     if (Revision() != 0)
     {
@@ -54,6 +54,11 @@ std::string AsString()
     }
 
     return str;
+}
+
+int AsInt()
+{
+    return Major() * 100 + Minor();
 }
 
 

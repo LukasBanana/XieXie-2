@@ -22,12 +22,19 @@ class Hello {
 	void print() {
 		IO.writeLine(hello())
 	}
+	
+	protected void protProc() {}
+	protected int protVar
+	
+	private void privProc() {}
+	private int privVar
 }
 
-[[deprecated("use anonymous classes instead")]]
+//[[deprecated("use anonymous classes instead")]]
 class EnglishHello : Hello {
 	init() {}
 	
+//	[[override, final, deprecated("deprecated! LOL :-)")]]
 	[[override, final]]
 	String hello() { return "Hello" }
 	
@@ -53,6 +60,9 @@ class Test {
 				String hello() { return "Hallo" }
 			}
 		)
+		
+		// Procedure calls
+		EnglishHello.hello() // error, "hello" is not static!
 		
 	}
 	

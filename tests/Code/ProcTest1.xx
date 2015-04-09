@@ -72,9 +72,11 @@ class ProcTest : Base {
 		app.test2(2)
 	}
 	
+	[[override]]
 	int f(int x) {
 		return x*x
 	}
+	[[override]]
 	float[] f(float x) {
 		return { x*x }
 	}
@@ -88,7 +90,7 @@ class ProcTest : Base {
 		return null
 	}
 	static B makeB() {
-		return new B
+		return new B()
 	}
 	
 	static int fibonacci(int n) {
@@ -114,7 +116,7 @@ class ProcTest : Base {
 		float	h := this.f((float)p*4.0)[0]
 		
 		// expression statements
-		new B.print()
+		new B().print()
 		new B().inc(2).print()
 		(new B()).print()
 		

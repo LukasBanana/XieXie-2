@@ -114,7 +114,7 @@ class Token
             Class,          //!< class
             Extern,         //!< extern
             Module,         //!< module
-            Visibility,     //!< public, private
+            Visibility,     //!< public, protected, private
             Static,         //!< static
             Init,           //!< init
             Release,        //!< release

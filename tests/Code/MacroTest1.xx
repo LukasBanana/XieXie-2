@@ -5,11 +5,12 @@
 class Test {
 	
 	static void main() {
-		String fileName		:= __FILE__
-		String className	:= __CLASS__
-		String procName		:= __PROC__
-		String lineNumber	:= __LINE__
-		String timeStamp	:= __DATE__
+		String	fileName		:= __FILE__
+		String	className		:= __CLASS__
+		String	procName		:= __PROC__
+		int		lineNumber		:= __LINE__
+		String	timeStamp		:= __DATE__
+		int		compilerVersion	:= __VERSION__
 	}
 	
 }

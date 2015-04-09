@@ -94,10 +94,10 @@ class ClassDeclStmnt : public ScopedStmnt
         {
             return instanceSize_;
         }
-        //! Returns the size (in bytes) of the static members of this class.
-        unsigned int GetStaticSize() const
+        //! Returns the offset (in bytes) of the global (or rather 'static') members of this class.
+        unsigned int GetGlobalEndOffset() const
         {
-            return staticSize_;
+            return globalEndOffset_;
         }
 
         //! Returns the list of all class procedures, including the procedures from its base classes.
@@ -135,6 +135,7 @@ class ClassDeclStmnt : public ScopedStmnt
         std::string                     baseClassIdent;                 // may be empty
 
         ClassBodySegment                publicSegment;
+        ClassBodySegment                protectedSegment;
         ClassBodySegment                privateSegment;
 
     private:
@@ -147,6 +148,7 @@ class ClassDeclStmnt : public ScopedStmnt
             unsigned int& typeID,
             unsigned int& numSubClasses,
             unsigned int superInstanceSize,
+            unsigned int& globalEndOffset,
             const Vtable& setupVtable,
             ErrorReporter* errorReporter
         );
@@ -175,7 +177,7 @@ class ClassDeclStmnt : public ScopedStmnt
         unsigned int                    typeID_             = 0;        // type ID of this class.
         unsigned int                    numSubClasses_      = 0;        // total number of sub classes in the inheritance hierarchy.
         unsigned int                    instanceSize_       = 0;        // size (in bytes) of an instance of this class.
-        unsigned int                    staticSize_         = 0;        // size (in bytes) of all static members of this class.
+        unsigned int                    globalEndOffset_    = 0;        // end offset (in bytes) of all global (or rather 'static') members of this class.
 
 };
 
