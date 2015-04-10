@@ -1,0 +1,34 @@
+/*
+ * Sample preview code
+ * This is a block comment
+ */
+
+import System // this is a line comment
+
+/**
+  * This is a documentation comment block
+  * @param xxx does this (this is the documentation keyword)
+  * @authr some user (this is the documentation keyword error)
+  */
+
+class Main {
+	static int main(String[] args)
+	{
+		/// This is a documentation comment line
+		int[] numbers := new int[](10)
+		int average := 0
+		int total := 0
+		
+		foreach i : numbers { // a breakpoint is set
+			numbers[i] = i // active line (during debugging)
+			total += i // error line
+		}
+		
+		average = total / 20;
+		System.out.printLn("total: ".add(total))
+		System.out.printLn("average: ".add(average))
+		
+		return 0
+	}
+}
+
