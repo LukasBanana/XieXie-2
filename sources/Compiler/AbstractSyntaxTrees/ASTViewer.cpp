@@ -113,7 +113,7 @@ DEF_VISIT_PROC(ASTViewer, Attrib)
 {
     AST_INFO("Attrib");
     AST_STRING(ident);
-    Visit(ast->exprs);
+    Visit(ast->arg);
 }
 
 DEF_VISIT_PROC(ASTViewer, ArrayAccess)

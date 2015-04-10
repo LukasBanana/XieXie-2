@@ -292,8 +292,8 @@ CodeBlockPtr Parser::ParseCodeBlock()
     return ast;
 }
 
-// var_name: (OBJECT_IDENT | var_name_sub) ('.' var_name_sub)?;
-// var_name_sub: IDENT array_access? ('.' var_name_sub)?;
+// var_name:        (OBJECT_IDENT | var_name_sub) ('.' var_name_sub)?;
+// var_name_sub:    IDENT array_access? ('.' var_name_sub)?;
 VarNamePtr Parser::ParseVarName(TokenPtr identTkn, bool hasArrayAccess)
 {
     auto ast = Make<VarName>();
@@ -417,8 +417,8 @@ ArgPtr Parser::ParseArg()
     return ast;
 }
 
-// proc_signature: storage_modifier? return_type_denoter IDENT '(' param_list? ')';
-// storage_modifier: 'static';
+// proc_signature:      storage_modifier? return_type_denoter IDENT '(' param_list? ')';
+// storage_modifier:    'static';
 ProcSignaturePtr Parser::ParseProcSignature(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic)
 {
     auto ast = Make<ProcSignature>();
@@ -454,7 +454,8 @@ AttribPrefixPtr Parser::ParseAttribPrefix()
     return ast;
 }
 
-// attrib: IDENT ('(' attrib_arg_list ')')?;
+// attrib:      IDENT ('(' attrib_arg ')')?;
+// attrib_arg:  LITERAL;
 AttribPtr Parser::ParseAttrib()
 {
     auto ast = Make<Attrib>();
@@ -464,7 +465,7 @@ AttribPtr Parser::ParseAttrib()
     if (Is(Tokens::LBracket))
     {
         AcceptIt();
-        ast->exprs = ParseExprList();
+        ast->arg = ParseLiteralExpr();
         Accept(Tokens::RBracket);
     }
 
@@ -492,9 +493,9 @@ EnumEntryPtr Parser::ParseEnumEntry()
 
 #endif
 
-// class_body_segment: class_visibility? decl_stmnt_list?;
-// class_visibility: class_visibility_type ':';
-// class_visibility_type: 'public' | 'private';
+// class_body_segment:      class_visibility? decl_stmnt_list?;
+// class_visibility:        CLASS_VISIBILITY_TYPE ':';
+// CLASS_VISIBILITY_TYPE:   'public' | 'protected' | 'private';
 void Parser::ParseClassBodySegment(ClassDeclStmnt& ast, ClassDeclStmnt::Visibilities& vis)
 {
     auto segmentVis = vis;
@@ -561,9 +562,9 @@ ProcCallPtr Parser::ParseProcCall(const VarNamePtr& varName)
     return ast;
 }
 
-// switch_case: (case_label | default_label) stmnt_list;
-// case_label: 'case' case_item_list ':';
-// default_label: 'default' ':';
+// switch_case:     (case_label | default_label) stmnt_list;
+// case_label:      'case' case_item_list ':';
+// default_label:   'default' ':';
 SwitchCasePtr Parser::ParseSwitchCase()
 {
     auto ast = Make<SwitchCase>();
@@ -1346,10 +1347,10 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, c
     return ast;
 }
 
-// init_decl_stmnt: attrib_prefix? init_head code_block;
-// extern_init_decl_stmnt: attrib_prefix? init_head;
-// init_head: 'init' '(' param_list? ')' super_init?;
-// super_init: ':' OBJECT_IDENT '(' param_list? ')';
+// init_decl_stmnt:         attrib_prefix? init_head code_block;
+// extern_init_decl_stmnt:  attrib_prefix? init_head;
+// init_head:               'init' '(' param_list? ')' super_init?;
+// super_init:              ':' OBJECT_IDENT '(' param_list? ')';
 ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 {
     auto ast = Make<ProcDeclStmnt>();
@@ -1649,8 +1650,8 @@ ExprPtr Parser::ParseVarAccessOrProcCallExpr(const TokenPtr& identTkn, VarNamePt
     return ParseVarAccessExpr(varName);
 }
 
-// bracket_expr: '(' expr ')';
-// cast_expr: '(' type_denoter ')' value_expr;
+// bracket_expr:    '(' expr ')';
+// cast_expr:       '(' type_denoter ')' value_expr;
 ExprPtr Parser::ParseBracketOrCastExpr()
 {
     auto startPos = Accept(Tokens::LBracket)->PosStart();
@@ -1682,8 +1683,8 @@ ExprPtr Parser::ParseBracketOrCastExprSub()
     return ParseBracketExpr(false);
 }
 
-// alloc_expr: 'new' type_denoter ctor_init anonymous_class?;
-// ctor_init: '(' arg_list? ')';
+// alloc_expr:  'new' type_denoter ctor_init anonymous_class?;
+// ctor_init:   '(' arg_list? ')';
 AllocExprPtr Parser::ParseAllocExpr()
 {
     auto ast = Make<AllocExpr>();
@@ -1968,8 +1969,8 @@ PointerTypeDenoterPtr Parser::ParsePointerTypeDenoter(const TokenPtr& identTkn)
     return ast;
 }
 
-// array_type_denoter: type_denoter LR_PAREN;
-// LR_PAREN: '[]';
+// array_type_denoter:  type_denoter LR_PAREN;
+// LR_PAREN:            '[]';
 ArrayTypeDenoterPtr Parser::ParseArrayTypeDenoter(const TypeDenoterPtr& lowerTypeDenoter, bool hasArrayType)
 {
     auto ast = Make<ArrayTypeDenoter>();

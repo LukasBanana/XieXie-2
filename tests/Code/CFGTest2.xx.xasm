@@ -1,0 +1,118 @@
+; XieXie Assembler File (XASM)
+; XieXie Compiler Version 2.00 Alpha
+; Generated at 2015-04-10 13:39:48
+
+; <------- CLASS "StreamOut" ------->
+
+; StreamOut.print(StreamOut, float)
+CStreamOut.Pprint,R@StreamOut,F:
+	.bb0:
+	ldw $r0, ($lb) -4
+	push $r0
+	call CIntrinsics.PprintFloat,F
+
+; StreamOut.print(StreamOut, int)
+CStreamOut.Pprint,R@StreamOut,I:
+	.bb0:
+	ldw $r0, ($lb) -4
+	push $r0
+	call CIntrinsics.PprintInt,I
+
+; StreamOut.print(StreamOut, String)
+CStreamOut.Pprint,R@StreamOut,R@String:
+	.bb0:
+	ldw $r0, ($lb) -4
+	mov $cf, $r0
+	je .bb2
+	.bb1:
+	call CString.Ppointer,R@String
+	mov $r1, $ar
+	push $r1
+	call CIntrinsics.Pprint,I
+	.bb2:
+	.bb3:
+	ret 1
+
+; StreamOut.printLn(StreamOut, String)
+CStreamOut.PprintLn,R@StreamOut,R@String:
+	.bb0:
+	ldw $r0, ($lb) -4
+	mov $cf, $r0
+	je .bb2
+	.bb1:
+	call CString.Ppointer,R@String
+	mov $r1, $ar
+	push $r1
+	call CIntrinsics.PprintLn,I
+	.bb2:
+	.bb3:
+	ret 1
+
+StreamOut.vtable:
+	.word @CObject.Prelease,R@Object
+	.word @CObject.Pinit,R@Object
+	.word @CObject.PtypeID,R@Object
+	.word @CObject.PrefCount,R@Object
+	.word @CObject.Pequals,R@Object,R@Object
+	.word @CObject.PtoString,R@Object
+	.word @CStreamOut.Pprint,R@StreamOut,R@String
+	.word @CStreamOut.Pprint,R@StreamOut,I
+	.word @CStreamOut.Pprint,R@StreamOut,F
+	.word @CStreamOut.PprintLn,R@StreamOut,R@String
+
+
+; <------- CLASS "System" ------->
+
+; System.startUp()
+CSystem.PstartUp:
+	.bb0:
+	push @StreamOut.vtable
+	push 7
+	push 12
+	call new
+	mov $r0, $ar
+	mov $r1, $r0
+
+System.vtable:
+	.word @CObject.Prelease,R@Object
+	.word @CObject.Pinit,R@Object
+	.word @CObject.PtypeID,R@Object
+	.word @CObject.PrefCount,R@Object
+	.word @CObject.Pequals,R@Object,R@Object
+	.word @CObject.PtoString,R@Object
+	.word @CSystem.PstartUp
+
+
+; <------- CLASS "Test" ------->
+
+; Test.main()
+CTest.Pmain:
+	.bb0:
+	push Hello, World!
+	call CStreamOut.PprintLn,R@StreamOut,R@String
+	mov $r0, 0
+	.bb1:
+	cmp $r0, 5
+	jge .bb3
+	.bb2:
+	push $r0
+	call CStreamOut.Pprint,R@StreamOut,I
+	push 
+	call CStreamOut.PprintLn,R@StreamOut,R@String
+	inc $r0
+	jmp .bb1
+	.bb3:
+	.bb4:
+	ret
+
+Test.vtable:
+	.word @CObject.Prelease,R@Object
+	.word @CObject.Pinit,R@Object
+	.word @CObject.PtypeID,R@Object
+	.word @CObject.PrefCount,R@Object
+	.word @CObject.Pequals,R@Object,R@Object
+	.word @CObject.PtoString,R@Object
+	.word @CTest.Pmain
+
+
+

@@ -99,9 +99,8 @@ do_while_stmnt:		'do' code_block 'while' expr;
 // ATTRIBUTES
 attrib_prefix:		'[[' attrib_list ']]';
 attrib_list:		attrib (',' attrib)*;
-attrib:				IDENT ('(' attrib_arg_list ')')?;
-attrib_arg_list:	attrib_arg (',' attrib_arg)*;
-attrib_arg:			expr;
+attrib:				IDENT ('(' attrib_arg ')')?;
+attrib_arg:			LITERAL;
 
 // VARIABLES
 var_name:			(OBJECT_IDENT | var_name_sub) ('.' var_name_sub)?;
@@ -122,8 +121,8 @@ import_stmnt:	'import' (STRING_LITERAL | IDENT);
 // CLASSES
 class_decl_stmnt:			attrib_prefix? (intern_class_decl_stmnt | extern_class_decl_stmnt);
 base_class_ident:			':' ident;
-class_visibility:			class_visibility_type (':')?;
-class_visibility_type:		'public' | 'private';
+class_visibility:			CLASS_VISIBILITY_TYPE (':')?;
+CLASS_VISIBILITY_TYPE:		'public' | 'protected' | 'private';
 
 intern_class_decl_stmnt:	'class' IDENT base_class_ident? class_body;
 class_body:					'{' class_body_segment_list '}';
@@ -260,7 +259,8 @@ LITERAL	: BIN_LITERAL
 		| DEC_LITERAL
 		| HEX_LITERAL
 		| BOOL_LITERAL
-		| NULL_LITERAL;
+		| NULL_LITERAL
+		| STRING_LITERAL;
 
 BIN_LITERAL:	'0b' BIN_DIGIT+;
 OCT_LITERAL:	'0o' OCT_DIGIT+;

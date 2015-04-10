@@ -24,13 +24,6 @@ class AttribPrefix : public AST
     
     public:
         
-        //! Summarized attribute falgs.
-        /*struct Flags
-        {
-            bool        isDeprecated = false;
-            std::string deprecationHint;
-        };*/
-
         AST_INTERFACE(AttribPrefix);
 
         //! Returns a reference to the specified attribute or null if there is no such attribute in the list.
@@ -44,9 +37,6 @@ class AttribPrefix : public AST
         std::vector<const Attrib*> FindInvalidAttribs(const std::set<std::string>& validAttribs) const;
 
         std::vector<AttribPtr>  attribs;
-
-        // dast
-        //Flags                   flags;
 
 };
 

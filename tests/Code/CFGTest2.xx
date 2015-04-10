@@ -1,0 +1,47 @@
+
+// CFG Test 2
+// 10/04/2015
+
+class StreamOut {
+	void print(String s) {
+		if s != null {
+			Intrinsics.print(s.pointer())
+		}
+	}
+	void print(int i) {
+		Intrinsics.printInt(i)
+	}
+	void print(float i) {
+		Intrinsics.printFloat(i)
+	}
+	void printLn(String s) {
+		if s != null {
+			Intrinsics.printLn(s.pointer())
+		}
+	}
+}
+
+class System {
+	static StreamOut out
+	static void startUp() {
+		System.out := new StreamOut()
+	}
+}
+
+class Test {
+	
+	static int state := 5
+	
+	static void main() {
+		
+		System.out.printLn("Hello, World!")
+		
+		for Test.state := 0 ; Test.state < 5 ; Test.state++ {
+			System.out.print(Test.state)
+			System.out.printLn("")
+		}
+		
+	}
+	
+}
+

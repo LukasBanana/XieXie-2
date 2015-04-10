@@ -201,7 +201,30 @@ DEF_VISIT_PROC(Decorator, AttribPrefix)
 
 DEF_VISIT_PROC(Decorator, Attrib)
 {
-    Visit(ast->exprs);
+    Visit(ast->arg);
+
+    using Arg = LiteralExpr::Literals;
+
+    /* Verify attribute argument */
+    try
+    {
+        if (ast->ident == "deprecated")
+        {
+            if (ast->arg && ast->arg->GetType() != Arg::String)
+                throw std::string("attribute 'deprecated' can only have a string as argument");
+        }
+        else if (ast->ident == "final" || ast->ident == "override")
+        {
+            if (ast->arg)
+                throw std::string("attribute '" + ast->ident + "' can not have any arguments");
+        }
+        else
+            throw std::string("unknown attribute '" + ast->ident + '\'');
+    }
+    catch (const std::string& err)
+    {
+        Error(err, ast);
+    }
 }
 
 DEF_VISIT_PROC(Decorator, ArrayAccess)
@@ -346,7 +369,9 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
     switch (state_)
     {
         case States::RegisterClassSymbols:
+            class_ = ast;
             RegisterSymbol(ast->ident, ast);
+            Visit(ast->attribPrefix);
             break;
 
         case States::AnalyzeClassSignature:
@@ -436,12 +461,12 @@ DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
     {
         case States::RegisterMemberSymbols:
             RegisterProcSymbol(*ast);
+            Visit(ast->attribPrefix);
             break;
 
         case States::AnalyzeCode:
             PushSymTab(*ast);
             {
-                Visit(ast->attribPrefix);
                 Visit(ast->procSignature);
                 Visit(ast->codeBlock);
             }

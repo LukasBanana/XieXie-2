@@ -33,6 +33,7 @@ namespace CodeGenerator
 
 using namespace ControlFlowGraph;
 using namespace ThreeAddressCodes;
+using namespace AbstractSyntaxTrees;
 
 class XASMGenerator final : public AsmGenerator
 {
@@ -148,8 +149,10 @@ class XASMGenerator final : public AsmGenerator
 
         /* --- Data Generation --- */
 
-        void GenerateVtable(const AbstractSyntaxTrees::ClassDeclStmnt& classDecl);
-        void GenerateClassRTTI(const AbstractSyntaxTrees::BuiltinClasses::ClassRTTI& typeInfo);
+        void GenerateVtable(const ClassDeclStmnt& classDecl);
+        void GenerateClassRTTI(const BuiltinClasses::ClassRTTI& typeInfo);
+        void GenerateStartUpCode(const ClassDeclStmnt& rootClass);
+
         void GenerateStringLiteral(const CFGProgram::StringLiteral& constStr);
         void GenerateBoolArrayLiteral(const CFGProgram::BoolArrayLiteral& constArray);
         void GenerateIntArrayLiteral(const CFGProgram::IntArrayLiteral& constArray);

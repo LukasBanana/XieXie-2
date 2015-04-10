@@ -21,7 +21,6 @@ namespace CodeGenerator
 
 
 using namespace std::placeholders;
-using namespace AbstractSyntaxTrees;
 
 static RegisterAllocator::RegList XASMRegList()
 {
@@ -50,6 +49,22 @@ bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorR
     {
         /* Write commentary header */
         WriteHeader();
+
+        /* Generate start-up code */
+        bool hasRootClass = false;
+
+        for (const auto& ct : program.classTrees)
+        {
+            if (ct->GetClassDeclAST()->isBuiltin && ct->GetClassDeclAST()->ident == "Object")
+            {
+                GenerateStartUpCode(*ct->GetClassDeclAST());
+                hasRootClass = true;
+                break;
+            }
+        }
+
+        if (!hasRootClass)
+            ErrorIntern("missing root class \"Object\"");
 
         /* Generate assembler code for each class tree */
         for (const auto& ct : program.classTrees)
@@ -633,6 +648,18 @@ void XASMGenerator::GenerateClassRTTI(const BuiltinClasses::ClassRTTI& typeInfo)
     WORDField(1);                       // refCount
     WORDField(typeInfo.typeID);         // typeID
     WORDAddress(typeInfo.vtableAddr);   // vtableAddr
+}
+
+void XASMGenerator::GenerateStartUpCode(const ClassDeclStmnt& rootClass)
+{
+    /* Allocate space for global variables */
+    Line("mov $gp, $sp");
+    Line("add $sp, $sp, " + std::to_string(rootClass.GetGlobalEndOffset()));
+
+    /* Initialize global variables with zeros */
+
+
+
 }
 
 void XASMGenerator::GenerateStringLiteral(const CFGProgram::StringLiteral& constStr)

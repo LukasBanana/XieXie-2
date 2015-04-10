@@ -130,6 +130,7 @@ void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
     typeID_             = 0;
     numSubClasses_      = 0;
     instanceSize_       = 12; // 3 * (4 bytes): refCount, typeID, vtableAddr
+    globalStartOffset_  = 0;
     globalEndOffset_    = 0;
 
     /* Generate vtable */
@@ -137,13 +138,12 @@ void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
 
     /* Generate RTTI for sub classes */
     auto typeID             = typeID_;
-    auto globalEndOffset    = globalEndOffset_;
 
     for (auto subClass : subClassesRef_)
     {
         subClass->GenerateRTTI(
             typeID, numSubClasses_, instanceSize_,
-            globalEndOffset, vtable_, errorReporter
+            globalEndOffset_, vtable_, errorReporter
         );
     }
 }
@@ -160,9 +160,9 @@ bool ClassDeclStmnt::IsDeprecated(std::string* hint) const
         auto attr = attribPrefix->FindAttrib("deprecated");
         if (attr)
         {
-            if (hint && attr->exprs.size() == 1)
+            if (hint && attr->arg)
             {
-                auto literalExpr = AST::Cast<const LiteralExpr>(attr->exprs.front().get());
+                auto literalExpr = AST::Cast<const LiteralExpr>(attr->arg.get());
                 if (literalExpr)
                     *hint = literalExpr->value;
             }
@@ -191,13 +191,14 @@ std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const 
 
 void ClassDeclStmnt::GenerateRTTI(
     unsigned int& typeID, unsigned int& numSubClasses, unsigned int superInstanceSize,
-    unsigned int& globalEndOffset, const Vtable& setupVtable, ErrorReporter* errorReporter)
+    unsigned int& globalOffset, const Vtable& setupVtable, ErrorReporter* errorReporter)
 {
     /* Initialize RTTI for this class */
     typeID_             = ++typeID;
     numSubClasses_      = 0;
     instanceSize_       = superInstanceSize;
-    globalEndOffset_    = globalEndOffset;
+    globalStartOffset_  = globalOffset;
+    globalEndOffset_    = globalOffset;
 
     /* Increase instance size by (non-static) member variables */
     AssignAllMemberVariableLocations();
@@ -212,13 +213,13 @@ void ClassDeclStmnt::GenerateRTTI(
     ProcessClassAttributes(errorReporter);
 
     /* Generate RTTI for sub classes */
-    globalEndOffset = globalEndOffset_;
+    globalOffset = globalEndOffset_;
 
     for (auto subClass : subClassesRef_)
     {
         subClass->GenerateRTTI(
             typeID, numSubClasses_, instanceSize_,
-            globalEndOffset, vtable_, errorReporter
+            globalOffset, vtable_, errorReporter
         );
     }
 

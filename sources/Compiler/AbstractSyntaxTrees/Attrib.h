@@ -10,6 +10,7 @@
 
 
 #include "AST.h"
+#include "LiteralExpr.h"
 
 
 namespace AbstractSyntaxTrees
@@ -23,14 +24,14 @@ class Attrib : public AST
         
         AST_INTERFACE(Attrib);
 
-        //! Returns true if the number of parameters of this attributes is in the specified range [minParam .. maxParam].
-        bool VerifyParamCount(size_t minParam, size_t maxParam) const
+        //! Verifies the attribute argument.
+        bool VerifyArg(const LiteralExpr::Literals validArg, bool isArgOptional, std::string* errorOut = nullptr) const
         {
-            return exprs.size() >= minParam && exprs.size() <= maxParam;
+            return (arg != nullptr ? arg->GetType() == validArg : isArgOptional);
         }
 
-        std::string             ident;
-        std::vector<ExprPtr>    exprs;
+        std::string     ident;
+        LiteralExprPtr  arg;    // may be null
 
 };
 
