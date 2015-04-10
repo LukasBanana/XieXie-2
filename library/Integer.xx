@@ -5,6 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
+import ASCII
+
 class Integer {
 
 	init() {}
@@ -12,12 +14,82 @@ class Integer {
 		this.value := value
 	}
 	init(String s) {
-		//todo: parse from string ...
+		value := Integer.parseFrom(s)
 	}
 	
-	String toString() {
-		//todo: convert to string ...
-		return null
+	[[override]]
+	String toString() {	
+		// Determine string length
+		int len, firstDigit, v := value
+		
+		if v < 0 {
+			len++
+			firstDigit := 1
+			v := -v
+		}
+		
+		do {
+			len++
+			v /= 10
+		} while v > 0
+		
+		// Allocate string
+		var s := new String(len)
+		
+		// Check for negative value
+		v := value
+		
+		if v < 0 {
+			// Append sign to string
+			s.setChar(0, ASCII.HYPHEN)
+			v := -v
+		}
+		
+		// Append digits to string
+		for int i := len - 1 ; i >= firstDigit ; i-- {
+			s.setChar(i, ASCII.DIGIT0 + (v & 9))
+			v /= 10
+		}
+		
+		return s
+	}
+	
+	/// Parses an integer from the specified string
+	static int parseFrom(String s) {
+		if s = null {
+			// Invalid argument
+			return 0
+		}
+		
+		int i, v, digit, len := s.size()
+		bool neg
+		
+		// Check if integer is negative
+		if len > 0 and s.getChar(0) = ASCII.HYPHEN {
+			neg := true
+			i++
+		}
+		
+		// Parse digits
+		for ; i < len ; i++ {
+			digit := s.getChar(i)
+			
+			if digit < ASCII.DIGIT0 or digit > ASCII.DIGIT9 {
+				// Error while parsing
+				return 0
+			}
+			
+			v += (digit - ASCII.DIGIT0)
+			if i + 1 < len {
+				v *= 10
+			}
+		}
+		
+		if neg {
+			v := -v
+		}
+		
+		return v
 	}
 	
 	int value

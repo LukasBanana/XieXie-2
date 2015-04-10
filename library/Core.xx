@@ -30,7 +30,11 @@ UTF-8 string class.
 */
 extern class String {
 	
+	/// String end position.
+	static const end := -1
+	
 	init()
+	init(int size)
 	init(String src)
 	
 	[[override]]

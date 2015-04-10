@@ -123,14 +123,18 @@ static AttribPrefixPtr AttrOverride()
 struct ParamList
 {
     ParamList() = default;
+    ParamList(ParamList&& rhs) :
+        list{ std::move(rhs.list) }
+    {
+    }
     ParamList(const ParamPtr& param)
     {
         list.push_back(param);
     }
 
-    ParamList& operator , (const ParamPtr& param)
+    ParamList& operator , (const ParamList& param)
     {
-        list.push_back(param);
+        list.insert(list.end(), param.list.begin(), param.list.end());
         return *this;
     }
 
@@ -149,7 +153,7 @@ static ExprPtr GenExpr(int value)
 }
 
 // Generate parameter AST
-static ParamPtr GenParam(const TypeDenoterPtr& type, const std::string& ident, const ExprPtr& defaultArg = nullptr)
+static ParamList GenParam(const TypeDenoterPtr& type, const std::string& ident, const ExprPtr& defaultArg = nullptr)
 {
     auto ast = std::make_shared<Param>();
     {
@@ -157,7 +161,7 @@ static ParamPtr GenParam(const TypeDenoterPtr& type, const std::string& ident, c
         ast->ident          = ident;
         ast->defaultArgExpr = defaultArg;
     }
-    return ast;
+    return ParamList(ast);
 }
 
 // Generate procedure signature AST
@@ -288,6 +292,7 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
 
     GenReleaseProc(*ast);
     GenInitProc(*ast);
+    GenInitProc(*ast, GenParam(Int(), "size"));
     GenInitProc(*ast, GenParam(String(), "src"));
 
     GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"), AttrOverride());
