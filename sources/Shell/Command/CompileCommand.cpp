@@ -36,6 +36,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     bool showAST        = false;
     bool showCFG        = false;
     bool optimize       = false;
+    bool warnings       = false;
     bool forceOverride  = false;
 
     std::string outputFilename;
@@ -82,6 +83,11 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             input.Accept();
             optimize = true;
         }
+        else if ( ( input.Get() == "-W" || input.Get() == "--warn" ) && !warnings)
+        {
+            input.Accept();
+            warnings = true;
+        }
         else if ( ( input.Get() == "-fo" || input.Get() == "--force-override" ) && !forceOverride)
         {
             input.Accept();
@@ -101,6 +107,8 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
         output.Error("missing output filename for code generation");
         return;
     }
+
+    ErrorReporter::showWarnings = warnings;
 
     /* Decorate program */
     if (!hasError)
@@ -218,6 +226,8 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
 
     if (!hasError)
         output.Success("compilation successful");
+
+    ErrorReporter::showWarnings = false;
 }
 
 
