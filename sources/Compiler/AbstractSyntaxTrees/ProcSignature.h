@@ -43,6 +43,9 @@ class ProcSignature : public AST
         std::string             ident;
         std::vector<ParamPtr>   params;
 
+        // dast
+        std::string             label;                      // final label for assembly
+
 };
 
 

@@ -22,6 +22,8 @@ namespace CodeGenerator
 
 using namespace std::placeholders;
 
+static const std::string mainProcIdent = "__xx__main";
+
 static RegisterAllocator::RegList XASMRegList()
 {
     return RegisterAllocator::RegList
@@ -68,7 +70,10 @@ bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorR
 
         /* Generate assembler code for each class tree */
         for (const auto& ct : program.classTrees)
-            GenerateClassTree(*ct);
+        {
+            if (!ct->GetClassDeclAST()->isExtern)
+                GenerateClassTree(*ct);
+        }
 
         /* Generate literals */
         for (const auto& sl : program.stringLiterals)
@@ -110,6 +115,7 @@ void XASMGenerator::Comment(const std::string& line)
 void XASMGenerator::CommentHeadline(const std::string& title)
 {
     Comment("<------- " + title + " ------->");
+    Blank();
 }
 
 void XASMGenerator::GlobalLabel(const std::string& label)
@@ -290,12 +296,11 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
     /* Add commentary for this class */
     auto classDecl = classTree.GetClassDeclAST();
     CommentHeadline("CLASS \"" + classDecl->ident + "\"");
-    Blank();
 
     /* Generate code for each procedure in the class tree */
     for (const auto& bb : classTree.GetRootBasicBlocks())
     {
-        GenerateProcedure(*bb.second, bb.first);
+        GenerateProcedure(*bb.second, *bb.first);
         Blank();
     }
 
@@ -305,13 +310,17 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
     Blank();
 }
 
-void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const std::string& ident)
+void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcSignature& procSignature)
 {
     regAlloc_.Reset();
 
-    Comment(NameMangling::DisplayLabel(ident));
+    const auto& label = procSignature.label;
+    Comment(NameMangling::DisplayLabel(label));
 
-    GlobalLabel(ident);
+    if (procSignature.isEntryPoint)
+        GlobalLabel(mainProcIdent);
+
+    GlobalLabel(label);
     IncIndent();
     {
         CFGTopDownCollector collector;
@@ -652,20 +661,38 @@ void XASMGenerator::GenerateClassRTTI(const BuiltinClasses::ClassRTTI& typeInfo)
 
 void XASMGenerator::GenerateStartUpCode(const ClassDeclStmnt& rootClass)
 {
+    auto globalSize = rootClass.GetGlobalEndOffset();
+
+    CommentHeadline("PROGRAM START-UP");
+
     /* Allocate space for global variables */
     Line("mov $gp, $sp");
-    Line("add $sp, $sp, " + std::to_string(rootClass.GetGlobalEndOffset()));
+    Line("add $sp, $sp, " + std::to_string(globalSize));
 
     /* Initialize global variables with zeros */
+    Line("push 0");
+    Line("push " + std::to_string(globalSize));
+    Line("push $gp");
+    Line("insc FillMem");
 
+    /* Initialize global variables with specific values */
+    //...
 
+    /* Call main procedure */
+    Line("call " + mainProcIdent);
 
+    /* Call destructors of all global dynamic objects */
+    //...
+
+    /* Stop program */
+    Line("stop");
+
+    Blanks(2);
 }
 
 void XASMGenerator::GenerateStringLiteral(const CFGProgram::StringLiteral& constStr)
 {
     CommentHeadline("STRING \"" + constStr.ident + "\"");
-    Blank();
     
     auto size = static_cast<int>(constStr.value.size());
 
@@ -687,7 +714,6 @@ void XASMGenerator::GenerateStringLiteral(const CFGProgram::StringLiteral& const
 void XASMGenerator::GenerateBoolArrayLiteral(const CFGProgram::BoolArrayLiteral& constArray)
 {
     CommentHeadline("BOOL ARRAY \"" + constArray.ident + "\"");
-    Blank();
     
     auto size = static_cast<int>(constArray.value.size());
 
@@ -727,7 +753,6 @@ void XASMGenerator::GenerateBoolArrayLiteral(const CFGProgram::BoolArrayLiteral&
 void XASMGenerator::GenerateIntArrayLiteral(const CFGProgram::IntArrayLiteral& constArray)
 {
     CommentHeadline("INT ARRAY \"" + constArray.ident + "\"");
-    Blank();
     
     auto size = static_cast<int>(constArray.value.size());
 
@@ -750,7 +775,6 @@ void XASMGenerator::GenerateIntArrayLiteral(const CFGProgram::IntArrayLiteral& c
 void XASMGenerator::GenerateFloatArrayLiteral(const CFGProgram::FloatArrayLiteral& constArray)
 {
     CommentHeadline("FLOAT ARRAY \"" + constArray.ident + "\"");
-    Blank();
     
     auto size = static_cast<int>(constArray.value.size());
 

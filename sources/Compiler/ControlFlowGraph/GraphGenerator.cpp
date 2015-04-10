@@ -668,10 +668,11 @@ DEF_VISIT_PROC(GraphGenerator, RepeatStmnt)
 
 DEF_VISIT_PROC(GraphGenerator, ClassDeclStmnt)
 {
-    if (!ast->isExtern && !ast->isModule)
+    if (!ast->isModule)
     {
         CreateClassTree(*ast);
-        Visit(ast->declStmnts);
+        if (!ast->isExtern)
+            Visit(ast->declStmnts);
     }
 }
 
@@ -692,10 +693,10 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     numProcParams_ = static_cast<unsigned int>(procSig.params.size());
 
     /* Generate name mangling for procedure signature */
-    auto procIdent = UniqueLabel(*ast);
-    auto procDisplay = DisplayLabel(procIdent);
+    procSig.label = UniqueLabel(*ast);
+    auto procDisplay = DisplayLabel(procSig.label);
     
-    auto root = CT()->CreateRootBasicBlock(procIdent, procDisplay);
+    auto root = CT()->CreateRootBasicBlock(procSig, procDisplay);
 
     /* Fetch parameters */
     size_t argIndex = 0;

@@ -16,6 +16,8 @@ namespace ControlFlowGraph
 {
 
 
+using namespace AbstractSyntaxTrees;
+
 ClassTree::ClassTree(AbstractSyntaxTrees::ClassDeclStmnt& classDeclAST) :
     classDeclAST_( classDeclAST )
 {
@@ -30,11 +32,16 @@ BasicBlock* ClassTree::CreateBasicBlock(const std::string& label)
     return bb;
 }
 
-BasicBlock* ClassTree::CreateRootBasicBlock(const std::string& ident, const std::string& label)
+BasicBlock* ClassTree::CreateRootBasicBlock(const ProcSignature& procSignature, const std::string& label)
 {
     /* Check if identifier has already been used */
-    if (rootBasicBlocks_.find(ident) != rootBasicBlocks_.end())
-        throw std::invalid_argument("identifier \"" + ident + "\" has already been used for a CFG basic block");
+    if (rootBasicBlocks_.find(&procSignature) != rootBasicBlocks_.end())
+    {
+        throw std::invalid_argument(
+            "procedure signature \"" + procSignature.ident +
+            "\" has already been used for a CFG basic block"
+        );
+    }
 
     /* Create new basic block */
     basicBlocks_.emplace_back(MakeUnique<BasicBlock>());
@@ -42,7 +49,7 @@ BasicBlock* ClassTree::CreateRootBasicBlock(const std::string& ident, const std:
     /* Register identifier */
     auto bb = basicBlocks_.back().get();
     bb->label = label;
-    rootBasicBlocks_[ident] = bb;
+    rootBasicBlocks_[(&procSignature)] = bb;
 
     return bb;
 }

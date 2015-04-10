@@ -11,6 +11,7 @@
 
 #include "BasicBlock.h"
 #include "ClassDeclStmnt.h"
+#include "ProcSignature.h"
 
 #include <map>
 
@@ -25,11 +26,13 @@ class ClassTree
     
     public:
         
+        using RootBasicBocks = std::map<const AbstractSyntaxTrees::ProcSignature*, BasicBlock*>;
+
         ClassTree(AbstractSyntaxTrees::ClassDeclStmnt& classDeclAST);
 
         BasicBlock* CreateBasicBlock(const std::string& label = "");
         //! \throws std::invalid_argument If "ident" has already been used.
-        BasicBlock* CreateRootBasicBlock(const std::string& ident, const std::string& label = "");
+        BasicBlock* CreateRootBasicBlock(const AbstractSyntaxTrees::ProcSignature& procSignature, const std::string& label = "");
 
         void DeleteBasicBlock(BasicBlock* basicBlock);
 
@@ -39,7 +42,7 @@ class ClassTree
             return basicBlocks_;
         }
         //! Returns the list of all root basic blocks, i.e. the entry points of all procedures in this class tree.
-        const std::map<std::string, BasicBlock*> GetRootBasicBlocks() const
+        const RootBasicBocks& GetRootBasicBlocks() const
         {
             return rootBasicBlocks_;
         }
@@ -59,7 +62,7 @@ class ClassTree
         std::vector<BasicBlockPtr>              basicBlocks_;
 
         //! References to the root of a basic block graph (e.g. for each procedure declaration).
-        std::map<std::string, BasicBlock*>      rootBasicBlocks_;
+        RootBasicBocks                          rootBasicBlocks_;
 
 };
 

@@ -10,11 +10,16 @@
 #include "StringModifier.h"
 
 
+bool ErrorReporter::showWarnings = false;
+
 void ErrorReporter::Add(const CompilerMessage& message)
 {
-    messages_.push_back(message);
-    if (message.IsError())
-        hasErrors_ = true;
+    if (!message.IsWarning() || ErrorReporter::showWarnings)
+    {
+        messages_.push_back(message);
+        if (message.IsError())
+            hasErrors_ = true;
+    }
 }
 
 void ErrorReporter::Flush(Log& log, bool printMetaInfo)

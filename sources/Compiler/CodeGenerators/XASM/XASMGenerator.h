@@ -14,6 +14,7 @@
 #include "CodeGenerators/RegisterAllocator.h"
 #include "ErrorReporter.h"
 #include "BuiltinClasses.h"
+#include "ProcSignature.h"
 
 #include "TACCopyInst.h"
 #include "TACModifyInst.h"
@@ -132,7 +133,7 @@ class XASMGenerator final : public AsmGenerator
         /* --- Code Generation --- */
 
         void GenerateClassTree(const ClassTree& classTree);
-        void GenerateProcedure(BasicBlock& cfg, const std::string& ident);
+        void GenerateProcedure(BasicBlock& cfg, const ProcSignature& procSignature);
         void GenerateBlock(const BasicBlock& bb);
 
         void GenerateInst(const TACInst& inst);

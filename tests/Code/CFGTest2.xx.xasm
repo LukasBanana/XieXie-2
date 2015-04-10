@@ -1,22 +1,20 @@
 ; XieXie Assembler File (XASM)
 ; XieXie Compiler Version 2.00 Alpha
-; Generated at 2015-04-10 13:39:48
+; Generated at 2015-04-10 14:32:01
+
+; <------- PROGRAM START-UP ------->
+
+mov $gp, $sp
+add $sp, $sp, 8
+push 0
+push 8
+push $gp
+insc FillMem
+call __xx__main
+stop
+
 
 ; <------- CLASS "StreamOut" ------->
-
-; StreamOut.print(StreamOut, float)
-CStreamOut.Pprint,R@StreamOut,F:
-	.bb0:
-	ldw $r0, ($lb) -4
-	push $r0
-	call CIntrinsics.PprintFloat,F
-
-; StreamOut.print(StreamOut, int)
-CStreamOut.Pprint,R@StreamOut,I:
-	.bb0:
-	ldw $r0, ($lb) -4
-	push $r0
-	call CIntrinsics.PprintInt,I
 
 ; StreamOut.print(StreamOut, String)
 CStreamOut.Pprint,R@StreamOut,R@String:
@@ -32,6 +30,20 @@ CStreamOut.Pprint,R@StreamOut,R@String:
 	.bb2:
 	.bb3:
 	ret 1
+
+; StreamOut.print(StreamOut, float)
+CStreamOut.Pprint,R@StreamOut,F:
+	.bb0:
+	ldw $r0, ($lb) -4
+	push $r0
+	call CIntrinsics.PprintFloat,F
+
+; StreamOut.print(StreamOut, int)
+CStreamOut.Pprint,R@StreamOut,I:
+	.bb0:
+	ldw $r0, ($lb) -4
+	push $r0
+	call CIntrinsics.PprintInt,I
 
 ; StreamOut.printLn(StreamOut, String)
 CStreamOut.PprintLn,R@StreamOut,R@String:
@@ -86,6 +98,7 @@ System.vtable:
 ; <------- CLASS "Test" ------->
 
 ; Test.main()
+__xx__main:
 CTest.Pmain:
 	.bb0:
 	push Hello, World!

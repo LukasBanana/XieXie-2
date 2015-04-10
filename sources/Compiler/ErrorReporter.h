@@ -64,8 +64,13 @@ class ErrorReporter
             return hasErrors_;
         }
 
+        /* === Members === */
+
         //! Optional source code reference. This can be used for better error outputs.
         const SyntaxAnalyzer::SourceCode* source = nullptr;
+
+        //! Show warnings configuration. By default false.
+        static bool showWarnings;
 
     private:
 

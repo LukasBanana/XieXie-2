@@ -35,7 +35,7 @@ class ProcOverloadSwitch : public AST
         }
         void Visit(Visitor* visitor, void* args = nullptr) override
         {
-            // dummy
+            // do nothing
         }
 
         std::vector<ProcDeclStmnt*> procDeclRefs; // reference to all procedure declarations with the same identifier
