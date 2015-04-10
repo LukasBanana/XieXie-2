@@ -70,7 +70,6 @@ class AST
             AttribPrefix,
             Attrib,
             EnumEntry,
-            ClassBodySegment,
             ArrayAccess,
             ProcCall,
             SwitchCase,

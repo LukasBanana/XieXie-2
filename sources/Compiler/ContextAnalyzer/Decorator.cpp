@@ -204,11 +204,6 @@ DEF_VISIT_PROC(Decorator, Attrib)
     Visit(ast->exprs);
 }
 
-DEF_VISIT_PROC(Decorator, ClassBodySegment)
-{
-    Visit(ast->declStmnts);
-}
-
 DEF_VISIT_PROC(Decorator, ArrayAccess)
 {
     DecorateExpr(*ast->indexExpr);
@@ -229,7 +224,7 @@ DEF_VISIT_PROC(Decorator, ProcCall)
     if (declRef && declRef->Type() == AST::Types::ProcOverloadSwitch)
     {
         auto overloadSwitch = static_cast<ProcOverloadSwitch*>(declRef);
-        DecorateProcCall(*ast, *overloadSwitch);
+        DecorateOverloadedProcCall(*ast, *overloadSwitch);
     }
     else
         Error("identifier \"" + ast->procName->FullName() + "\" does not refer to a procedure declaration", ast);
@@ -365,9 +360,7 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
         case States::RegisterMemberSymbols:
             PushSymTab(*ast);
             {
-                Visit(&(ast->publicSegment));
-                Visit(&(ast->protectedSegment));
-                Visit(&(ast->privateSegment));
+                Visit(ast->declStmnts);
             }
             PopSymTab();
             break;
@@ -375,9 +368,7 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
         case States::AnalyzeCode:
             PushSymTab(*ast);
             {
-                Visit(&(ast->publicSegment));
-                Visit(&(ast->protectedSegment));
-                Visit(&(ast->privateSegment));
+                Visit(ast->declStmnts);
             }
             PopSymTab();
             break;
@@ -1000,29 +991,37 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
 {
     /* Decorate AST node */
     ast.declRef = symbol;
-
+    
     /* Check if symbol is a static or non-static member */
     auto requireStaticMembers = IsScopeStatic();
 
     switch (symbol->Type())
     {
+        #if 0 /// !!!DEAD CODE!!!
         case AST::Types::ProcDeclStmnt:
         {
             auto procDecl = static_cast<ProcDeclStmnt*>(symbol);
+
             if (!procDecl->procSignature->isStatic && requireStaticMembers)
                 Error("procedure \"" + procDecl->procSignature->ident + "\" is not declared as 'static'", &ast);
             else if (procDecl->procSignature->isStatic && !requireStaticMembers)
                 Error("procedure \"" + procDecl->procSignature->ident + "\" is declared as 'static'", &ast);
         }
         break;
+        #endif
 
         case AST::Types::VarDecl:
         {
             auto varDecl = static_cast<VarDecl*>(symbol);
+
             if (!varDecl->parentRef->isStatic && requireStaticMembers)
                 Error("variable \"" + varDecl->ident + "\" is not declared as 'static'", &ast);
             else if (varDecl->parentRef->isStatic && !requireStaticMembers)
                 Error("variable \"" + varDecl->ident + "\" is declared as 'static'", &ast);
+
+            /* Check procedure visibility */
+            if (!VerifyVisibility(varDecl->visibility, varDecl->parentRef->parentRef))
+                Error("variable \"" + varDecl->ident + "\" is inaccessible from this class", &ast);
         }
         break;
     }
@@ -1114,6 +1113,31 @@ void Decorator::VerifyVarNameMutable(VarName& ast)
 }
 
 /*
+Check if the access of an object with the specified visiblity
+is valid from the current class to the specified base class.
+*/
+bool Decorator::VerifyVisibility(const ClassDeclStmnt::Visibilities varNameVis, const ClassDeclStmnt* varNameParentClass) const
+{
+    switch (varNameVis)
+    {
+        case ProcDeclStmnt::Vis::Protected:
+        {
+            if (varNameParentClass != class_ && !class_->IsSubClassOf(*varNameParentClass))
+                return false;
+        }
+        break;
+
+        case ProcDeclStmnt::Vis::Private:
+        {
+            if (varNameParentClass != class_)
+                return false;
+        }
+        break;
+    }
+    return true;
+}
+
+/*
 Registers the specified procedure (with its signature) in the current (and only in the current) class scope.
 If the signature is similar to another procedure signature in this class scope, the registration fails.
 */
@@ -1177,7 +1201,7 @@ Decorates the procedure call with the reference to the procedure declaration, wh
 If the same procedure identifier is used in a base class and a sub class, the sub class procedure must overload the base class procedure.
 Otherwise the procedure of the base class can only identified with 'super.' inside a sub class procedure body.
 */
-void Decorator::DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch)
+void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch)
 {
     const auto& procDeclRefs = overloadSwitch.procDeclRefs;
 
@@ -1253,36 +1277,19 @@ void Decorator::DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overlo
     {
         /* Decorate procedure call with reference to final procedure delcaration statement */
         ast.declStmntRef = procDecls.front();
-        const auto& procDecl = *ast.declStmntRef;
+        auto procDecl = ast.declStmntRef;
 
         /* Check if procedure is deprecated */
-        if (procDecl.IsDeprecated())
+        if (procDecl->IsDeprecated())
             Warning("call of deprecated procedure", &ast);
 
         /* Check procedure visibility */
-        switch (procDecl.visibility)
-        {
-            case ProcDeclStmnt::Vis::Protected:
-            {
-                if (!class_->IsSubClassOf(*procDecl.parentRef))
-                    Error("procedure \"" + procDecl.procSignature->ident + "\" is inaccessible from this class", &ast);
-            }
-            break;
-
-            case ProcDeclStmnt::Vis::Private:
-            {
-                if (procDecl.parentRef != class_)
-                    Error("procedure \"" + procDecl.procSignature->ident + "\" is inaccessible from this class", &ast);
-            }
-            break;
-        }
+        if (!VerifyVisibility(procDecl->visibility, procDecl->parentRef))
+            Error("procedure \"" + procDecl->procSignature->ident + "\" is inaccessible from this class", &ast);
     }
 }
 
-/*
-Decorate the specified procedure signature to be an
-entry point and verifies its parameters.
-*/
+// Decorates the specified procedure signature to be an entry point and verifies its parameters.
 void Decorator::DecorateMainProc(ProcSignature& ast)
 {
     if (!ast.isStatic)

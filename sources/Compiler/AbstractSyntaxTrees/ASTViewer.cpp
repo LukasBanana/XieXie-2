@@ -116,13 +116,6 @@ DEF_VISIT_PROC(ASTViewer, Attrib)
     Visit(ast->exprs);
 }
 
-DEF_VISIT_PROC(ASTViewer, ClassBodySegment)
-{
-    AST_INFO("ClassBodySegment");
-    String("visibility", ClassBodySegment::GetVisibilitySpell(ast->visibility));
-    Visit(ast->declStmnts);
-}
-
 DEF_VISIT_PROC(ASTViewer, ArrayAccess)
 {
     AST_INFO("ArrayAccess");
@@ -232,8 +225,7 @@ DEF_VISIT_PROC(ASTViewer, ClassDeclStmnt)
     Visit(ast->attribPrefix);
     AST_STRING(ident);
     AST_STRING(baseClassIdent);
-    Visit(&(ast->publicSegment));
-    Visit(&(ast->privateSegment));
+    Visit(ast->declStmnts);
 }
 
 DEF_VISIT_PROC(ASTViewer, VarDeclStmnt)

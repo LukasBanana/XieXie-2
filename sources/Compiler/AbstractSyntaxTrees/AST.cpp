@@ -6,6 +6,7 @@
  */
 
 #include "ASTImport.h"
+#include "MapTypeSpell.h"
 
 #include <exception>
 #include <initializer_list>
@@ -15,34 +16,6 @@
 
 namespace AbstractSyntaxTrees
 {
-
-
-/* --- <Internal> --- */
-
-template <typename T> T MapSpellToType(
-    const std::string& spell, const std::map<std::string, T>& list, const std::string& error)
-{
-    auto it = list.find(spell);
-    if (it != list.end())
-        return it->second;
-    throw std::invalid_argument(error);
-}
-
-template <typename T> std::string MapTypeToSpell(
-    const T& type, const std::map<std::string, T>& list)
-{
-    for (const auto& it : list)
-    {
-        if (it.second == type)
-            return it.first;
-    }
-    return "";
-}
-
-/*bool ContainsString(const std::string& str, const std::initializer_list<std::string>& list)
-{
-    return std::find(list.begin(), list.end(), str) != list.end();
-}*/
 
 
 /* --- VarName --- */
@@ -631,32 +604,6 @@ bool BinaryExpr::HasBoolCompatibleOperator() const
         binaryOperator == Operators::LogicAnd ||
         binaryOperator == Operators::Equal    ||
         binaryOperator == Operators::Inequal;
-}
-
-
-/* --- ClassBodySegment --- */
-
-static std::map<std::string, ClassBodySegment::Visibilities> MapClassVisibility()
-{
-    using Ty = ClassBodySegment::Visibilities;
-    return std::map<std::string, Ty>
-    {
-        { "public",    Ty::Public    },
-        { "protected", Ty::Protected },
-        { "private",   Ty::Private   },
-    };
-}
-
-ClassBodySegment::Visibilities ClassBodySegment::GetVisibility(const std::string& spell)
-{
-    return MapSpellToType<Visibilities>(
-        spell, MapClassVisibility(), "invalid class visibility \"" + spell + "\""
-    );
-}
-
-std::string ClassBodySegment::GetVisibilitySpell(const Visibilities vis)
-{
-    return MapTypeToSpell<Visibilities>(vis, MapClassVisibility());
 }
 
 

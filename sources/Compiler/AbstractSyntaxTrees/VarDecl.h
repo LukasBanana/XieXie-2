@@ -10,6 +10,7 @@
 
 
 #include "Stmnt.h"
+#include "ClassDeclStmnt.h"
 
 
 namespace AbstractSyntaxTrees
@@ -25,6 +26,8 @@ class VarDecl : public Stmnt
     
     public:
         
+        using Vis = ClassDeclStmnt::Visibilities;
+
         AST_INTERFACE_EXT(VarDecl, Stmnt);
 
         const TypeDenoter* GetTypeDenoter() const override;
@@ -32,12 +35,15 @@ class VarDecl : public Stmnt
         //! Returns the size (in bytes) of this variable. By default 1.
         unsigned int MemorySize() const;
 
+        /* === Members === */
+
         std::string     ident;
-        ExprPtr         initExpr;                   // may be null
+        ExprPtr         initExpr;                       // may be null
 
         // dast
-        VarDeclStmnt*   parentRef       = nullptr;  // reference to the AST node's parent declaration statement (this is already decorated inside the parser)
-        unsigned int    memoryOffset    = 0;        // memory offset (in bytes) inside a class instance or global scope (only used for member variables).
+        VarDeclStmnt*   parentRef       = nullptr;      // reference to the AST node's parent declaration statement (this is already decorated inside the parser).
+        Vis             visibility      = Vis::Public;  // variable visibility within a class declaration.
+        unsigned int    memoryOffset    = 0;            // memory offset (in bytes) inside a class instance or global scope (only used for member variables).
 
 };
 

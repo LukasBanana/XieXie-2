@@ -173,11 +173,6 @@ DEF_VISIT_PROC(GraphGenerator, Attrib)
     // do nothing
 }
 
-DEF_VISIT_PROC(GraphGenerator, ClassBodySegment)
-{
-    Visit(ast->declStmnts);
-}
-
 DEF_VISIT_PROC(GraphGenerator, ArrayAccess)
 {
 }
@@ -676,8 +671,7 @@ DEF_VISIT_PROC(GraphGenerator, ClassDeclStmnt)
     if (!ast->isExtern && !ast->isModule)
     {
         CreateClassTree(*ast);
-        Visit(&(ast->publicSegment));
-        Visit(&(ast->privateSegment));
+        Visit(ast->declStmnts);
     }
 }
 

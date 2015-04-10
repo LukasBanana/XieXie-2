@@ -12,7 +12,7 @@
 #include "Scanner.h"
 #include "ASTDeclarations.h"
 #include "BinaryExpr.h"
-#include "ClassBodySegment.h"
+#include "ClassDeclStmnt.h"
 #include "ProcDeclStmnt.h"
 
 #include <string>
@@ -45,10 +45,10 @@ class Parser
 
         struct StateContainer
         {
-            std::string         filename;                               //!< Current filename.
-            ClassDeclStmnt*     classDecl   = nullptr;                  //!< Reference to the current class declaration.
-            std::string         procIdent;                              //!< Identifier of the current procedure declaration.
-            ProcDeclStmnt::Vis  procVis = ProcDeclStmnt::Vis::Public;   //!< Procedure visibility within a class declaration.
+            std::string                     filename;                               //!< Current filename.
+            ClassDeclStmnt*                 classDecl   = nullptr;                  //!< Reference to the current class declaration.
+            ClassDeclStmnt::Visibilities    classVis = ProcDeclStmnt::Vis::Public;  //!< Current visibility within a class declaration.
+            std::string                     procIdent;                              //!< Identifier of the current procedure declaration.
         };
 
         /* === Functions === */
@@ -85,7 +85,7 @@ class Parser
         /* --- Common AST nodes --- */
 
         void                    ParseProgram(Program& ast);
-        void                    ParseClassBodySegment(ClassDeclStmnt& ast, ClassBodySegment::Visibilities& vis);
+        void                    ParseClassBodySegment(ClassDeclStmnt& ast, ClassDeclStmnt::Visibilities& vis);
 
         CodeBlockPtr            ParseCodeBlock();
         VarNamePtr              ParseVarName(TokenPtr identTkn = nullptr, bool hasArrayAccess = false);

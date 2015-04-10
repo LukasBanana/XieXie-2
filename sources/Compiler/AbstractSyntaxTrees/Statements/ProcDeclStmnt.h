@@ -11,7 +11,7 @@
 
 #include "ScopedStmnt.h"
 #include "ProcOverloadSwitch.h"
-#include "ClassBodySegment.h"
+#include "ClassDeclStmnt.h"
 
 
 namespace AbstractSyntaxTrees
@@ -23,7 +23,7 @@ class ProcDeclStmnt : public ScopedStmnt
     
     public:
         
-        using Vis = ClassBodySegment::Visibilities;
+        using Vis = ClassDeclStmnt::Visibilities;
 
         AST_INTERFACE_EXT(ProcDeclStmnt, ScopedStmnt);
 

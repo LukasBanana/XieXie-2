@@ -14,6 +14,7 @@
 #include "Attrib.h"
 #include "LiteralExpr.h"
 #include "CompilerMessage.h"
+#include "MapTypeSpell.h"
 
 
 namespace AbstractSyntaxTrees
@@ -24,19 +25,40 @@ ClassDeclStmnt::ClassDeclStmnt(const SourceCodePtr& source) :
     source_{ source }
 {
     thisTypeDenoter_.declRef = this;
-    privateSegment.visibility = ClassBodySegment::Visibilities::Private;
 }
 ClassDeclStmnt::ClassDeclStmnt(const SourceArea& area, const SourceCodePtr& source) :
     ScopedStmnt { area   },
     source_     { source }
 {
     thisTypeDenoter_.declRef = this;
-    privateSegment.visibility = ClassBodySegment::Visibilities::Private;
 }
 
 const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const
 {
     return &thisTypeDenoter_;
+}
+
+static std::map<std::string, ClassDeclStmnt::Visibilities> MapClassVisibility()
+{
+    using Ty = ClassDeclStmnt::Visibilities;
+    return std::map<std::string, Ty>
+    {
+        { "public",    Ty::Public    },
+        { "protected", Ty::Protected },
+        { "private",   Ty::Private   },
+    };
+}
+
+ClassDeclStmnt::Visibilities ClassDeclStmnt::GetVisibility(const std::string& spell)
+{
+    return MapSpellToType<Visibilities>(
+        spell, MapClassVisibility(), "invalid class visibility \"" + spell + "\""
+    );
+}
+
+std::string ClassDeclStmnt::GetVisibilitySpell(const Visibilities vis)
+{
+    return MapTypeToSpell<Visibilities>(vis, MapClassVisibility());
 }
 
 void ClassDeclStmnt::BindBaseClassRef(ClassDeclStmnt* classDeclStmnt)
@@ -178,14 +200,10 @@ void ClassDeclStmnt::GenerateRTTI(
     globalEndOffset_    = globalEndOffset;
 
     /* Increase instance size by (non-static) member variables */
-    AssignAllMemberVariableLocations(publicSegment);
-    AssignAllMemberVariableLocations(protectedSegment);
-    AssignAllMemberVariableLocations(privateSegment);
+    AssignAllMemberVariableLocations();
     
     /* Incease static size by static variables */
-    AssignAllStaticVariableLocations(publicSegment);
-    AssignAllStaticVariableLocations(protectedSegment);
-    AssignAllStaticVariableLocations(privateSegment);
+    AssignAllStaticVariableLocations();
 
     /* Generate vtable */
     GenerateVtable(&setupVtable, errorReporter);
@@ -212,16 +230,16 @@ void ClassDeclStmnt::GenerateRTTI(
 This function assigns the memory location of a member variable inside a class.
 It also accumulates the instance size (see 'GetInstanceSize').
 */
-void ClassDeclStmnt::AssignAllMemberVariableLocations(ClassBodySegment& segment)
+void ClassDeclStmnt::AssignAllMemberVariableLocations()
 {
-    for (auto& stmnt : segment.declStmnts)
+    for (auto& stmnt : declStmnts)
     {
         if (stmnt->Type() == AST::Types::VarDeclStmnt)
         {
-            auto& declStmnt = static_cast<VarDeclStmnt&>(*stmnt);
-            if (!declStmnt.isStatic)
+            auto& varDeclStmnt = static_cast<VarDeclStmnt&>(*stmnt);
+            if (!varDeclStmnt.isStatic)
             {
-                for (auto& varDecl : declStmnt.varDecls)
+                for (auto& varDecl : varDeclStmnt.varDecls)
                     AssignMemberVariableLocation(*varDecl);
             }
         }
@@ -234,16 +252,16 @@ void ClassDeclStmnt::AssignMemberVariableLocation(VarDecl& varDecl)
     instanceSize_ += varDecl.MemorySize();
 }
 
-void ClassDeclStmnt::AssignAllStaticVariableLocations(ClassBodySegment& segment)
+void ClassDeclStmnt::AssignAllStaticVariableLocations()
 {
-    for (auto& stmnt : segment.declStmnts)
+    for (auto& stmnt : declStmnts)
     {
         if (stmnt->Type() == AST::Types::VarDeclStmnt)
         {
-            auto& declStmnt = static_cast<VarDeclStmnt&>(*stmnt);
-            if (declStmnt.isStatic)
+            auto& varDeclStmnt = static_cast<VarDeclStmnt&>(*stmnt);
+            if (varDeclStmnt.isStatic)
             {
-                for (auto& varDecl : declStmnt.varDecls)
+                for (auto& varDecl : varDeclStmnt.varDecls)
                     AssignStaticVariableLocation(*varDecl);
             }
         }
@@ -267,9 +285,7 @@ void ClassDeclStmnt::GenerateVtable(const Vtable* setupVtable, ErrorReporter* er
         vtable_.procs = setupVtable->procs;
 
     /* Assign all procedures of all segments to the vtable */
-    AssignAllProceduresToVtable(publicSegment, errorReporter);
-    AssignAllProceduresToVtable(protectedSegment, errorReporter);
-    AssignAllProceduresToVtable(privateSegment, errorReporter);
+    AssignAllProceduresToVtable(errorReporter);
 
     /* Check if this class has any abstract procedure */
     if (!isExtern)
@@ -297,13 +313,13 @@ static void Warning(ErrorReporter* errorReporter, const std::string& msg, const 
         errorReporter->Add<CompilerWarning>(msg, ast);
 };
 
-void ClassDeclStmnt::AssignAllProceduresToVtable(ClassBodySegment& segment, ErrorReporter* errorReporter)
+void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
 {
     const auto setupVtableSize = vtable_.Size();
     auto vtableOffset = setupVtableSize;
 
     /* Iterate over all procedure declaration statements in the class */
-    for (auto& stmnt : segment.declStmnts)
+    for (auto& stmnt : declStmnts)
     {
         /* Get procedure declaration AST node */
         auto procDecl = AST::Cast<ProcDeclStmnt>(stmnt.get());

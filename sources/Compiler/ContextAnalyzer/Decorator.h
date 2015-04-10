@@ -19,6 +19,7 @@
 #include "ExprTypeChecker.h"
 #include "ExprNamespaceFinder.h"
 #include "ProcOverloadSwitch.h"
+#include "ClassDeclStmnt.h"
 #include "SourceCode.h"
 
 #include <functional>
@@ -101,9 +102,10 @@ class Decorator final : private Visitor
         void DecorateVarNameSub(VarName& ast, StmntSymbolTable& symTab, const std::string& fullName);
         void VerifyVarNameMutable(VarName& ast);
         void DeduceNamespaceFromTypeDenoter(const TypeDenoter* varType, StmntSymbolTable::SymbolType*& symbol, const VarName& ast);
+        bool VerifyVisibility(const ClassDeclStmnt::Visibilities varNameVis, const ClassDeclStmnt* varNameParentClass) const;
 
         void RegisterProcSymbol(ProcDeclStmnt& ast);
-        void DecorateProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch);
+        void DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch);
         void DecorateMainProc(ProcSignature& ast);
 
         /* --- Symbol table --- */

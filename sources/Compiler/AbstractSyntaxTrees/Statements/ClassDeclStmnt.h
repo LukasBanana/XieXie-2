@@ -13,7 +13,6 @@
 #include "PointerTypeDenoter.h"
 #include "Attrib.h"
 #include "SourceCode.h"
-#include "ClassBodySegment.h"
 #include "ErrorReporter.h"
 
 #include <set>
@@ -32,6 +31,14 @@ class ClassDeclStmnt : public ScopedStmnt
     
     public:
         
+        //! Class visibilites enumeration.
+        enum class Visibilities
+        {
+            Public,     // default visibility
+            Protected,
+            Private,
+        };
+
         //! Structure for a class virtual-table (vtable).
         struct Vtable
         {
@@ -48,6 +55,9 @@ class ClassDeclStmnt : public ScopedStmnt
         ClassDeclStmnt(const SourceArea& area, const SourceCodePtr& source);
 
         const TypeDenoter* GetTypeDenoter() const override;
+
+        static Visibilities GetVisibility(const std::string& spell);
+        static std::string GetVisibilitySpell(const Visibilities vis);
 
         //! Binds the base class reference and the fallback symbol table.
         void BindBaseClassRef(ClassDeclStmnt* classDeclStmnt);
@@ -125,18 +135,17 @@ class ClassDeclStmnt : public ScopedStmnt
             return isAbstract_;
         }
 
-        bool                            isBuiltin           = false;    // is this a built-in class (e.g. "Object", "String", etc.)?
-        bool                            isExtern            = false;    // is this an extern class?
-        bool                            isModule            = false;    // is this a module class?
-        bool                            isAnonymous         = false;    // is this an anonymous class?
+        /* === Members === */
 
-        AttribPrefixPtr                 attribPrefix;                   // may be null
-        std::string                     ident;
-        std::string                     baseClassIdent;                 // may be empty
+        bool                    isBuiltin       = false;    // is this a built-in class (e.g. "Object", "String", etc.)?
+        bool                    isExtern        = false;    // is this an extern class?
+        bool                    isModule        = false;    // is this a module class?
+        bool                    isAnonymous     = false;    // is this an anonymous class?
 
-        ClassBodySegment                publicSegment;
-        ClassBodySegment                protectedSegment;
-        ClassBodySegment                privateSegment;
+        AttribPrefixPtr         attribPrefix;               // may be null
+        std::string             ident;
+        std::string             baseClassIdent;             // may be empty
+        std::vector<StmntPtr>   declStmnts;
 
     private:
         
@@ -153,16 +162,18 @@ class ClassDeclStmnt : public ScopedStmnt
             ErrorReporter* errorReporter
         );
         
-        void AssignAllMemberVariableLocations(ClassBodySegment& segment);
+        void AssignAllMemberVariableLocations();
         void AssignMemberVariableLocation(VarDecl& varDecl);
 
-        void AssignAllStaticVariableLocations(ClassBodySegment& segment);
+        void AssignAllStaticVariableLocations();
         void AssignStaticVariableLocation(VarDecl& varDecl);
 
         void GenerateVtable(const Vtable* setupVtable, ErrorReporter* errorReporter);
-        void AssignAllProceduresToVtable(ClassBodySegment& segment, ErrorReporter* errorReporter);
+        void AssignAllProceduresToVtable(ErrorReporter* errorReporter);
 
         void ProcessClassAttributes(ErrorReporter* errorReporter);
+
+        /* === Members === */
 
         SourceCodePtr                   source_;                        // Reference to the source where this class is declared.
 

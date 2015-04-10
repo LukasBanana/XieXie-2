@@ -20,7 +20,6 @@
 #include "ProcSignature.h"
 #include "AttribPrefix.h"
 #include "Attrib.h"
-#include "ClassBodySegment.h"
 #include "ArrayAccess.h"
 #include "ProcCall.h"
 #include "SwitchCase.h"

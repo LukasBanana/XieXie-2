@@ -23,11 +23,11 @@ class Hello {
 		IO.writeLine(hello())
 	}
 	
-	protected void protProc() {}
-	protected int protVar
+	protected String protProc() { return protVar }
+	protected String protVar
 	
-	private void privProc() {}
-	private int privVar
+	private String privProc() { return privVar }
+	private String privVar
 }
 
 //[[deprecated("use anonymous classes instead")]]
@@ -41,6 +41,7 @@ class EnglishHello : Hello {
 	//void print() {} // error, "Hello.print" is 'final'
 }
 
+//class Test {
 class Test : EnglishHello {
 	
 	static void say(Hello sentence) {
@@ -63,8 +64,10 @@ class Test : EnglishHello {
 		
 		// Private access
 		var v := new EnglishHello()
-		v.protProc()
-		var x := v.protVar
+		var a := v.protProc().size()
+		var b := v.protVar
+		//var c := v.privProc().size()
+		//var d := v.privVar
 		
 		// Procedure calls
 		EnglishHello.hello() // error, "hello" is not static!

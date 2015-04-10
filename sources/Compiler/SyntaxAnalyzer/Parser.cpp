@@ -350,6 +350,8 @@ VarDeclPtr Parser::ParseVarDecl(const TokenPtr& identTkn)
 {
     auto ast = Make<VarDecl>();
 
+    ast->visibility = state_.classVis;
+
     if (identTkn)
     {
         ast->ident = identTkn->Spell();
@@ -493,27 +495,15 @@ EnumEntryPtr Parser::ParseEnumEntry()
 // class_body_segment: class_visibility? decl_stmnt_list?;
 // class_visibility: class_visibility_type ':';
 // class_visibility_type: 'public' | 'private';
-void Parser::ParseClassBodySegment(ClassDeclStmnt& ast, ClassBodySegment::Visibilities& vis)
+void Parser::ParseClassBodySegment(ClassDeclStmnt& ast, ClassDeclStmnt::Visibilities& vis)
 {
     auto segmentVis = vis;
-
-    auto GetSegment = [&segmentVis, &ast]()
-    {
-        switch (segmentVis)
-        {
-            case ClassBodySegment::Visibilities::Private:
-                return &(ast.privateSegment);
-            case ClassBodySegment::Visibilities::Protected:
-                return &(ast.protectedSegment);
-        }
-        return &(ast.publicSegment);
-    };
 
     /* Parse segment visibility */
     if (Is(Tokens::Visibility))
     {
-        segmentVis = ClassBodySegment::GetVisibility(AcceptIt()->Spell());
-        state_.procVis = segmentVis;
+        segmentVis = ClassDeclStmnt::GetVisibility(AcceptIt()->Spell());
+        state_.classVis = segmentVis;
 
         /* Check if visibility is for all following statements */
         if (Is(Tokens::Colon))
@@ -525,7 +515,7 @@ void Parser::ParseClassBodySegment(ClassDeclStmnt& ast, ClassBodySegment::Visibi
         else
         {
             /* Parse only a single statement with the current segment visibility */
-            GetSegment()->declStmnts.push_back(ParseDeclStmnt());
+            ast.declStmnts.push_back(ParseDeclStmnt());
             return;
         }
     }
@@ -534,8 +524,7 @@ void Parser::ParseClassBodySegment(ClassDeclStmnt& ast, ClassBodySegment::Visibi
     auto declStmnts = ParseDeclStmntList();
 
     /* Insert declaration statements into class body segment */
-    auto segment = GetSegment();
-    segment->declStmnts.insert(segment->declStmnts.end(), declStmnts.begin(), declStmnts.end());
+    ast.declStmnts.insert(ast.declStmnts.end(), declStmnts.begin(), declStmnts.end());
 }
 
 // array_access: '[' expr ']' array_access?;
@@ -1078,7 +1067,7 @@ ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
     if (!attribPrefix && Is(Tokens::LDParen))
         attribPrefix = ParseAttribPrefix();
 
-    state_.procVis = ProcDeclStmnt::Vis::Public;
+    state_.classVis = ProcDeclStmnt::Vis::Public;
 
     if (Is(Tokens::Extern))
     {
@@ -1093,7 +1082,9 @@ ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
 ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
+
     state_.classDecl = ast.get();
+    state_.classVis = ProcDeclStmnt::Vis::Public;
 
     /* Setup attribute prefix */
     ast->attribPrefix = attribPrefix;
@@ -1110,7 +1101,7 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
         ast->baseClassIdent = "Object";
     
     /* Parse class body segments */
-    auto vis = ClassBodySegment::Visibilities::Public;
+    auto vis = ClassDeclStmnt::Visibilities::Public;
 
     Accept(Tokens::LCurly);
     while (!Is(Tokens::RCurly))
@@ -1124,7 +1115,9 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
 ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
+
     state_.classDecl = ast.get();
+    state_.classVis = ProcDeclStmnt::Vis::Public;
 
     ast->isExtern = true;
     ast->attribPrefix = attribPrefix;
@@ -1139,7 +1132,7 @@ ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attri
     
     Accept(Tokens::LCurly);
     if (!Is(Tokens::RCurly))
-        ast->publicSegment.declStmnts = ParseExternDeclStmntList();
+        ast->declStmnts = ParseExternDeclStmntList();
     Accept(Tokens::RCurly);
 
     return ast;
@@ -1149,7 +1142,9 @@ ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attri
 ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
+
     state_.classDecl = ast.get();
+    state_.classVis = ProcDeclStmnt::Vis::Public;
 
     if (!attribPrefix && Is(Tokens::LDParen))
         attribPrefix = ParseAttribPrefix();
@@ -1162,7 +1157,7 @@ ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix)
 
     Accept(Tokens::LCurly);
     if (!Is(Tokens::RCurly))
-        ast->publicSegment.declStmnts = ParseExternProcDeclStmntList();
+        ast->declStmnts = ParseExternProcDeclStmntList();
     Accept(Tokens::RCurly);
 
     return ast;
@@ -1179,7 +1174,7 @@ ClassDeclStmntPtr Parser::ParseAnonymousClass(const std::string& baseClassIdent)
     ast->baseClassIdent = baseClassIdent;
 
     /* Parse class body segments */
-    auto vis = ClassBodySegment::Visibilities::Public;
+    auto vis = ClassDeclStmnt::Visibilities::Public;
 
     Accept(Tokens::LCurly);
     while (!Is(Tokens::RCurly))
@@ -1194,7 +1189,8 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TokenPtr& identTkn, bool hasArra
 {
     auto ast = Make<VarDeclStmnt>();
 
-    ast->isStatic = isStatic;
+    ast->isStatic   = isStatic;
+    ast->parentRef  = state_.classDecl;
 
     if (Is(Tokens::Var))
     {
@@ -1215,7 +1211,10 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TokenPtr& identTkn, bool hasArra
 
     /* Forward decoration */
     for (auto& decl : ast->varDecls)
-        decl->parentRef = ast.get();
+    {
+        decl->parentRef     = ast.get();
+        decl->visibility    = state_.classVis;
+    }
 
     return ast;
 }
@@ -1226,8 +1225,9 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, con
 {
     auto ast = Make<VarDeclStmnt>();
 
-    ast->isStatic = isStatic;
-    ast->typeDenoter = typeDenoter;
+    ast->isStatic       = isStatic;
+    ast->typeDenoter    = typeDenoter;
+    ast->parentRef      = state_.classDecl;
 
     auto varDecl = ParseVarDecl(identTkn);
     if (Is(Tokens::Comma))
@@ -1297,7 +1297,7 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPt
     auto ast = Make<ProcDeclStmnt>();
 
     ast->parentRef  = state_.classDecl;
-    ast->visibility = state_.procVis;
+    ast->visibility = state_.classVis;
 
     if (attribPrefix)
         ast->attribPrefix = attribPrefix;
@@ -1329,7 +1329,7 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, c
     auto ast = Make<ProcDeclStmnt>();
 
     ast->parentRef  = state_.classDecl;
-    ast->visibility = state_.procVis;
+    ast->visibility = state_.classVis;
 
     ast->procSignature = ParseProcSignature(typeDenoter, identTkn, isStatic);
     state_.procIdent = ast->procSignature->ident;
@@ -1355,7 +1355,7 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
     auto ast = Make<ProcDeclStmnt>();
 
     ast->parentRef  = state_.classDecl;
-    ast->visibility = state_.procVis;
+    ast->visibility = state_.classVis;
 
     /* Setup procedure signature */
     ast->procSignature = Make<ProcSignature>();
@@ -1413,7 +1413,7 @@ ProcDeclStmntPtr Parser::ParseReleaseDeclStmnt()
     auto ast = Make<ProcDeclStmnt>();
 
     ast->parentRef  = state_.classDecl;
-    ast->visibility = state_.procVis;
+    ast->visibility = state_.classVis;
 
     ast->procSignature = Make<ProcSignature>();
 

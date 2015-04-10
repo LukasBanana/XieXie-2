@@ -183,7 +183,7 @@ static void GenMemberProc(
         ast->attribPrefix   = attribPrefix;
         ast->parentRef      = &classDecl;
     }
-    classDecl.publicSegment.declStmnts.push_back(ast);
+    classDecl.declStmnts.push_back(ast);
 }
 
 // Generate static procedure AST
@@ -198,7 +198,7 @@ static void GenStaticProc(
         ast->attribPrefix               = attribPrefix;
         ast->parentRef                  = &classDecl;
     }
-    classDecl.publicSegment.declStmnts.push_back(ast);
+    classDecl.declStmnts.push_back(ast);
 }
 
 // Generate constructor procedure AST
@@ -210,7 +210,7 @@ static void GenInitProc(ClassDeclStmnt& classDecl, const ParamList& params = {})
         ast->procSignature->isCtor  = true;
         ast->parentRef              = &classDecl;
     }
-    classDecl.publicSegment.declStmnts.push_back(ast);
+    classDecl.declStmnts.push_back(ast);
 }
 
 // Generate destructor procedure AST
@@ -222,7 +222,7 @@ static void GenReleaseProc(ClassDeclStmnt& classDecl)
         ast->procSignature->isDtor  = true;
         ast->parentRef              = &classDecl;
     }
-    classDecl.publicSegment.declStmnts.push_back(ast);
+    classDecl.declStmnts.push_back(ast);
 }
 
 // Generate class declaration statement AST
