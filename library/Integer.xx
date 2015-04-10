@@ -79,12 +79,14 @@ class Integer {
 				return 0
 			}
 			
+			// Shift previous digit to left (base 10)
+			v *= 10
+			
+			// Append digit to integer
 			v += (digit - ASCII.DIGIT0)
-			if i + 1 < len {
-				v *= 10
-			}
 		}
 		
+		// Negate value
 		if neg {
 			v := -v
 		}
