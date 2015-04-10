@@ -625,50 +625,50 @@ Calling convention:
 typedef enum
 {
     /* --- Dynamic memory intrinsics --- */
-    INSC_ALLOC_MEM = 0, // void* AllocMem(uint sizeInBytes).
-    INSC_FREE_MEM,      // void FreeMem(void* memoryAddr).
-    INSC_COPY_MEM,      // void CopyMem(void* dstMemAddr, const void* srcMemAddr, uint sizeInBytes).
-    
+    INSC_ALLOC_MEM = 0, // void* AllocMem(uint sizeInBytes)
+    INSC_FREE_MEM,      // void FreeMem(void* memoryAddr)
+    INSC_COPY_MEM,      // void CopyMem(void* dstMemAddr, const void* srcMemAddr, uint sizeInBytes)
+    INSC_FILL_MEM,      // void FillMem(void* memoryAddr, uint sizeInBytes, int value)
+
     /* --- Console intrinsics --- */
-    INSC_SYS_CALL,      // void SysCall(const byte* stringAddr).
-    INSC_CLEAR,         // void ClearTerm().
-    INSC_PRINT,         // void Print(const byte* stringAddr).
-    INSC_PRINT_LN,      // void PrintLn(const byte* stringAddr).
-    INSC_PRINT_INT,     // void PrintInt(int value);
-    INSC_PRINT_FLOAT,   // void PrintFloat(float value);
-    INSC_INPUT,         // void Input(byte* stringAddr, int maxLen);
-    INSC_INPUT_INT,     // int InputInt();
-    INSC_INPUT_FLOAT,   // float InputFloat();
+    INSC_SYS_CALL,      // void SysCall(const byte* stringAddr)
+    INSC_PRINT,         // void Print(const byte* stringAddr)
+    INSC_PRINT_LN,      // void PrintLn(const byte* stringAddr)
+    INSC_PRINT_INT,     // void PrintInt(int value)
+    INSC_PRINT_FLOAT,   // void PrintFloat(float value)
+    INSC_INPUT,         // void Input(byte* stringAddr, int maxLen)
+    INSC_INPUT_INT,     // int InputInt()
+    INSC_INPUT_FLOAT,   // float InputFloat()
 
     /* --- File intrinsics --- */
-    INSC_CREATE_FILE,   // int CreateFile(const byte* stringAddress).
-    INSC_DELETE_FILE,   // int DeleteFile(const byte* stringAddress).
-    INSC_OPEN_FILE,     // void* OpenFile(const byte* stringAddress).
-    INSC_CLOSE_FILE,    // void CloseFile(void* fileHandle).
-    INSC_FILE_SIZE,     // int FileSize(const void* fileHandle).
-    INSC_SET_FILE_POS,  // void FileSetPos(const void* fileHandle, int pos).
-    INSC_GET_FILE_POS,  // int FileGetPos(const void* fileHandle).
-    INSC_FILE_EOF,      // int FileEOF(const void* fileHandle).
-    INSC_WRITE_BYTE,    // void WriteByte(const void* fileHandle, const void* memoryAddress).
-    INSC_WRITE_WORD,    // void WriteWord(const void* fileHandle, const void* memoryAddress).
-    INSC_READ_BYTE,     // void ReadByte(const void* fileHandle, void* memoryAddress).
-    INSC_READ_WORD,     // void ReadWord(const void* fileHandle, void* memoryAddress).
+    INSC_CREATE_FILE,   // int CreateFile(const byte* stringAddress)
+    INSC_DELETE_FILE,   // int DeleteFile(const byte* stringAddress)
+    INSC_OPEN_FILE,     // void* OpenFile(const byte* stringAddress)
+    INSC_CLOSE_FILE,    // void CloseFile(void* fileHandle)
+    INSC_FILE_SIZE,     // int FileSize(const void* fileHandle)
+    INSC_SET_FILE_POS,  // void FileSetPos(const void* fileHandle, int pos)
+    INSC_GET_FILE_POS,  // int FileGetPos(const void* fileHandle)
+    INSC_FILE_EOF,      // int FileEOF(const void* fileHandle)
+    INSC_WRITE_BYTE,    // void WriteByte(const void* fileHandle, const void* memoryAddress)
+    INSC_WRITE_WORD,    // void WriteWord(const void* fileHandle, const void* memoryAddress)
+    INSC_READ_BYTE,     // void ReadByte(const void* fileHandle, void* memoryAddress)
+    INSC_READ_WORD,     // void ReadWord(const void* fileHandle, void* memoryAddress)
 
     /* --- Math intrinsics --- */
-    INSC_SIN,           // float Sin(float x).
-    INSC_COS,           // float Cos(float x).
-    INSC_TAN,           // float Tan(float x).
-    INSC_ASIN,          // float ASin(float x).
-    INSC_ACOS,          // float ACos(float x).
-    INSC_ATAN,          // float ATan(float x).
-    INSC_POW,           // float Pow(float base, float exp).
-    INSC_SQRT,          // float Sqrt(float x).
+    INSC_SIN,           // float Sin(float x)
+    INSC_COS,           // float Cos(float x)
+    INSC_TAN,           // float Tan(float x)
+    INSC_ASIN,          // float ASin(float x)
+    INSC_ACOS,          // float ACos(float x)
+    INSC_ATAN,          // float ATan(float x)
+    INSC_POW,           // float Pow(float base, float exp)
+    INSC_SQRT,          // float Sqrt(float x)
 
     /* --- Other intrinsics --- */
-    INSC_RAND_INT,      // int RandInt() -> In range [0 .. MAX_INT].
-    INSC_RAND_FLOAT,    // float RandFloat() -> In range [0.0 .. 1.0].
-    INSC_TIME,          // int Time() -> Ellapsed time since program start (in ms.).
-    INSC_SLEEP,         // void Sleep(int duration).
+    INSC_RAND_INT,      // int RandInt() -> In range [0 .. MAX_INT]
+    INSC_RAND_FLOAT,    // float RandFloat() -> In range [0.0 .. 1.0]
+    INSC_TIME,          // int Time() -> Ellapsed time since program start (in ms.)
+    INSC_SLEEP,         // void Sleep(int duration)
 }
 xvm_intrinsic_id;
 
@@ -682,11 +682,11 @@ STATIC const char* xvm_intrinsic_get_ident(const xvm_intrinsic_id addr)
         case INSC_ALLOC_MEM:    return "AllocMem";
         case INSC_FREE_MEM:     return "FreeMem";
         case INSC_COPY_MEM:     return "CopyMem";
+        case INSC_FILL_MEM:     return "FillMem";
     
         /* --- Console intrinsics --- */
 
         case INSC_SYS_CALL:     return "SysCall";
-        case INSC_CLEAR:        return "Clear";
         case INSC_PRINT:        return "Print";
         case INSC_PRINT_LN:     return "PrintLn";
         case INSC_PRINT_INT:    return "PrintInt";
@@ -2659,18 +2659,22 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // void FillMem(void* memoryAddress, uint sizeInByzes, int value)
+        case INSC_FILL_MEM:
+        {
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int arg2 = xvm_stack_pop(stack, reg_sp);
+            memset((void*)arg0, arg2, (size_t)arg1);
+        }
+        break;
+
         /* --- Console intrinsics --- */
 
         case INSC_SYS_CALL:
         {
             int arg0 = xvm_stack_pop(stack, reg_sp);
             system(INT_TO_STR_REINTERPRET(arg0));
-        }
-        break;
-
-        case INSC_CLEAR:
-        {
-            //todo...
         }
         break;
 
