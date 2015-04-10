@@ -210,7 +210,7 @@ may change over time. Here is a rough ToDo-list:
 	\hline
 	Static and Non-Static Procedure Behavior & \incompl \\
 	\hline
-	Class and Procedure Attributes & \notimpl \\
+	Class and Procedure Attributes & \almdone \\
 	
 	\hline \hline
 	\multicolumn{2}{|c|}{\textsc{Code Generator}} \\
@@ -711,13 +711,13 @@ do {
 \xiexie does not support the declaration of macros. However, there are a few built-in macros, which represent additional
 reserved identifiers:
 \begin{itemize}
-	\item \texttt{\_\_FILE\_\_} String which contains the current filename.
-	\item \texttt{\_\_CLASS\_\_} String which contains the current class name.
-	\item \texttt{\_\_PROC\_\_} String which contains the current procedure name.
-	\item \texttt{\_\_LINE\_\_} String which contains the current line number.
-	\item \texttt{\_\_DATE\_\_} String which contains the current date and time.
+	\item \textbf{\texttt{\_\_FILE\_\_}} String which contains the current filename.
+	\item \textbf{\texttt{\_\_CLASS\_\_}} String which contains the current class name.
+	\item \textbf{\texttt{\_\_PROC\_\_}} String which contains the current procedure name.
+	\item \textbf{\texttt{\_\_LINE\_\_}} Integer which contains the current line number.
+	\item \textbf{\texttt{\_\_DATE\_\_}} String which contains the current date and time.
+	\item \textbf{\texttt{\_\_VERSION\_\_}} Integer which contains the compiler version number (e.g. 200 for version "2.00").
 \end{itemize}
-
 
 
 %----------------------------------------------------------------------------------------
@@ -854,6 +854,7 @@ This works because the \textit{context analyzer} of the compiler works in severa
 	\item Class signatures are analyzed (attributes and base class).
 	\item Class inheritance is verified (check for cycles).
 	\item Class member symbols are registred in respective class scope (procedures, variables, etc.).
+	\item Run-time type information (RTTI) for the entire class hierarchy is generated.
 	\item Procedure code is analyzed.
 \end{enumerate}
 
@@ -988,6 +989,80 @@ Here is a summary of all attributes:
 	\item \textbf{\texttt{override}} Overrides a procedure from a class in its inheritance hierarchy.
 	\item \textbf{\texttt{final}} Makes a class final, which disables to inherit from this class.
 \end{itemize}
+
+
+%----------------------------------------------------------------------------------------
+%	ANONYMOUS CLASSES
+%----------------------------------------------------------------------------------------
+
+\section{Anonymous Classes}
+
+\xiexie supports the declaration of anonymous classes. This can be quite comfortable when a class needs to be
+instantiated only once:
+\begin{lstlisting}
+class Hello {
+    // No code block after procedure declaration inside 
+    // a non-extern class implies an abstract procedure
+    String say()
+}
+
+class EnglishHello : Hello {
+    [[override]]
+    String say() { return "Hello" }
+}
+
+class Main {
+    static void main() {
+        // Allocate class "EnglishHello"
+        var englishHello = new EnglishHello()
+        
+        // Allocate anonymous class (internal name "__xx__AnonymousClass0")
+        var germanHello = new Hello() {
+            [[override]]
+            String say() { return "Hallo" }
+        }
+    }
+}
+\end{lstlisting}
+Now it should be clear why identifiers with the prefix "\_\_xx\_\_" are reserved.
+
+
+%----------------------------------------------------------------------------------------
+%	CLASS VISIBILITES
+%----------------------------------------------------------------------------------------
+
+\section{Class Visibilites}
+
+Like in \cpp and \java, \xiexie provides visibilites for all members within a class. The syntax for these visibilites
+are a mixture of \cpp and \java. You can declare the visibility for each class member like in \java and/or for a
+whole bunch of members like in \cpp:
+\begin{lstlisting}
+class C {
+public:
+              int     publicVar0
+              float   publicVar1
+    private   int     privateVar0
+              String  publicVar2
+    protected int     protectedVar0
+    private   float[] privateVar1
+              int[]   publicVar3
+private:
+              int     privateVar2
+    public    bool    publicVar4
+              bool[]  privateVar3
+}
+\end{lstlisting}
+Unlike in common object-oriented languages, the default visibility in \xiexie is \texttt{public}.
+This is because there are only classes and no structures like in \cpp. So a small class, which only has variables and
+acts like a data structure can be written with as less effort as possible:
+\begin{lstlisting}
+// Examples of simple data structures
+class Vector3 { float x, y, z }
+class FileHeader {
+    int magicNumber
+    int formatVersion
+}
+\end{lstlisting}
 
 
 %----------------------------------------------------------------------------------------
@@ -1141,6 +1216,17 @@ outputs here:
 	\item The identifier 'y' is undeclared, so the appearance in the initializer expression is invalid.
 	\item The type of the initializer expression for the declaration of 'x' can not be deduced, so the type check fails.
 \end{enumerate}
+
+\subsection{Script}
+
+If \xxc has no arguments, it will switch to the \textit{immediate script} mode. This allows the user to immediately
+script \xiexie code inside the command line (see Figure \ref{fig:compiler-script}).
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.45 \textwidth]{images/compiler-script-win32}
+	\caption{Compiler immediate script mode.}
+	\label{fig:compiler-script}
+\end{figure}
 
 
 %----------------------------------------------------------------------------------------
