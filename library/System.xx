@@ -7,10 +7,13 @@
 
 import IOStream
 
+/// Basic system class.
 class System {
 	
-	static OutputStream out := new OutputStream()
-	static InputStream in := new InputStream()
+	/// Basic sytsem input instance.
+	static InputStream in := new StdInputStream()
+	/// Basic sytsem output instance.
+	static OutputStream out := new StdOutputStream()
 	
 }
 

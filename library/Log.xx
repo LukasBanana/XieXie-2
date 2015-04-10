@@ -6,39 +6,48 @@
  */
 
 import Integer
+import Stack
+import IOStream
 
 class Log {
 	
 public:
 	
-	static void write(String s) {
-		Intrinsics.print(s.ptr())
+	init(OutputStream stream) {
+		this.stream := stream
 	}
 	
-	static void writeLine(String s) {
-		Intrinsics.printLn(s.ptr())
+	void message(String s) {
+		if s != null {
+			stream.write(indentState)
+			stream.writeLine(s)
+		}
 	}
 	
-	static void message(String s) {
-		writeLine(indentState.add(s))
+	void error(String s) {
+		if s != null {
+			stream.write(indentState)
+			stream.write("error: ")
+			stream.writeLine(s)
+		}
 	}
 	
-	static void error(String s) {
-		message("error: ".add(s).add("!"))
+	void warning(String s) {
+		if s != null {
+			stream.write(indentState)
+			stream.write("warning: ")
+			stream.writeLine(s)
+		}
 	}
 	
-	static void warning(String s) {
-		message("warning: ".add(s).add("!"))
-	}
-	
-	static void incIndent() {
+	void incIndent() {
 		if indent != null {
 			indentStack.push(new Integer(indent.size()))
 			indentState.add(indent)
 		}
 	}
 	
-	static void decIndent() {
+	void decIndent() {
 		if not indentStack.empty() {
 			Integer len := (Integer)indentStack.top()
 			indentState.resize(indentState.size() - len.value)
@@ -46,11 +55,12 @@ public:
 		}
 	}
 	
-	static String indent := "  "
+	String indent := "  "
 	
 private:
 	
-	static String indentState := ""
-	static Stack indentStack := new Stack()
+	OutputStream stream
+	String indentState := ""
+	Stack indentStack := new Stack()
 	
 }

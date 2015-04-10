@@ -45,8 +45,12 @@ extern class String {
 	
 	String copy()
 	
+	/// Returns the size (or rather length) of the string.
 	int size()
+	/// Resizes the string to the specified size (excluding the null terminator).
 	void resize(int size)
+	/// Adjusts the string size to the first appearance of a null terminator.
+	void adjust()
 	
 	bool empty()
 	
@@ -171,7 +175,7 @@ extern class Intrinsics {
 	static void printLn(int textPtr)
 	static void printInt(int value)
 	static void printFloat(float value)
-	static int input()
+	static void input(int stringPtr, int maxLen)
 	static int inputInt()
 	static float inputFloat()
 	

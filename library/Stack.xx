@@ -7,8 +7,6 @@
 
 class Stack {
 
-public:
-	
 	//! Pushes object 'o' onto the stack.
 	void push(Object o) {
 		container.resize(container.size() + 1)
@@ -36,8 +34,6 @@ public:
 		return container.empty()
 	}
 	
-private:
-	
-	Object[] container
+	private Object[] container
 	
 }

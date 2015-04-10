@@ -299,7 +299,8 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     GenMemberProc(*ast, String(), "toString", ParamList(), AttrOverride());
     GenMemberProc(*ast, String(), "copy");
     GenMemberProc(*ast, Int(), "size");
-    GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
+    GenMemberProc(*ast, Void(), "resize", GenParam(Int(), "size"));
+    GenMemberProc(*ast, Void(), "adjust");
     GenMemberProc(*ast, Bool(), "empty");
     GenMemberProc(*ast, String(), "add", GenParam(String(), "rhs"));
     GenMemberProc(*ast, String(), "add", GenParam(Bool(), "rhs"));
@@ -373,7 +374,7 @@ static std::unique_ptr<ClassDeclStmnt> GenIntrinsicsClass()
     GenStaticProc(*ast, voidType, "printLn", GenParam(intType, "textPtr"));
     GenStaticProc(*ast, voidType, "printInt", GenParam(intType, "value"));
     GenStaticProc(*ast, voidType, "printFloat", GenParam(floatType, "value"));
-    GenStaticProc(*ast, intType, "input");
+    GenStaticProc(*ast, voidType, "input", ( GenParam(intType, "stringPtr"), GenParam(intType, "maxLen") ));
     GenStaticProc(*ast, intType, "inputInt");
     GenStaticProc(*ast, floatType, "inputFloat");
 

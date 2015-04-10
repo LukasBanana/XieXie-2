@@ -1,0 +1,62 @@
+/*
+ * SystemInfo.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+//! System information module.
+module SysInfo {
+	
+	static void querySystemInfo(
+		int platformStringPtr,
+		int cpuArchStringPtr,
+		int cpuTypeStringPtr,
+		int cpuNameStringPtr
+	)
+	
+}
+
+/// System information structure.
+class SystemInfo {
+	
+	/// Queries the system information from the "SysInfo" module.
+	static SystemInfo query() {
+		var info := new SystemInfo()
+		
+		/*static*/ const maxLen := 100
+		
+		// Allocate strings
+		info.platform	:= new String(maxLen)
+		info.cpuArch	:= new String(maxLen)
+		info.cpuType	:= new String(maxLen)
+		info.cpuName	:= new String(maxLen)
+		
+		// Query system information from module
+		SysInfo.querySystemInfo(
+			info.platform.pointer(),
+			info.cpuArch.pointer(),
+			info.cpuType.pointer(),
+			info.cpuName.pointer()
+		)
+		
+		// Adjust strings
+		info.platform.adjust()
+		info.cpuArch.adjust()
+		info.cpuType.adjust()
+		info.cpuName.adjust()
+		
+		return info
+	}
+	
+	/// Platform name, e.g. "Windows 7".
+	String platform
+	/// CPU architecture, e.g. "x86-64".
+	String cpuArch
+	/// CPU type, e.g. "64 bit".
+	String cpuType
+	/// CPU name, e.g. "Intel Core i7-3770K"
+	String cpuName
+	
+}
+

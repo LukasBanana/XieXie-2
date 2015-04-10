@@ -7,6 +7,7 @@
 
 import ASCII
 
+/// Integer class.
 class Integer {
 
 	init() {}

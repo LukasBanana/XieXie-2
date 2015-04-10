@@ -2708,7 +2708,9 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_INPUT:
         {
-            //todo...
+            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg1 = xvm_stack_pop(stack, reg_sp);
+            fgets((char*)arg0, arg1, stdin);
         }
         break;
 
