@@ -7,100 +7,155 @@
 
 //!!! INCOMPLETE !!!
 
-// ASCII chart enumeration
+/**
+Original "Americal Standard Code for Information Interchange" (ASCII) enumeration with 128 elements.
+@see http://www.ascii-code.com/
+*/
 class ASCII {
-	// Special characters
-	static const TAB			:= 9	///< Tabulator
-	static const NL				:= 10	///< New Line
 	
-	static const PLUS			:= 43	///< +
-	static const COMMA			:= 44	///< ,
-	static const HYPHEN			:= 45	///< -
-	static const PERIOD			:= 45	///< .
+	// Special characters
+	static const NUL				:= 0x00	///< Null character
+	static const SOH				:= 0x01	///< Start of Heading
+	static const STX				:= 0x02	///< Start of Text
+	static const ETX				:= 0x03	///< End of Text
+	static const EOT				:= 0x04	///< End of Transmission
+	static const ENQ				:= 0x05	///< Enquiry
+	static const ACK				:= 0x06	///< Acknowledgment
+	static const BEL				:= 0x07	///< Bell
+	static const BS					:= 0x08	///< Back Space
+	static const HT					:= 0x09	///< Horizontal Tabulator
+	static const LF					:= 0x0a	///< Line Feed (or rather new-line character)
+	static const VT					:= 0x0b	///< Vertical Tabulator
+	static const FF					:= 0x0c	///< Form Feed
+	static const CR					:= 0x0d	///< Carriage Return
+	static const SO					:= 0x0e	///< Shift Out / X-On
+	static const SI					:= 0x0f	///< Shift In / X-Off
+	static const DLE				:= 0x10	///< Data Line Escape
+	static const DC1				:= 0x11	///< Device Control 1 (oft. XON)
+	static const DC2				:= 0x12	///< Device Control 2
+	static const DC3				:= 0x13	///< Device Control 3 (oft. XOFF)
+	static const DC4				:= 0x14	///< Device Control 4
+	static const NAK				:= 0x15	///< Negative Acknowledgment
+	static const SYN				:= 0x16	///< Synchronous Idle
+	static const ETB				:= 0x17	///< End of Transmit Block
+	static const CAN				:= 0x18	///< Cancel
+	static const EM					:= 0x19	///< End of Medium
+	static const SUB				:= 0x1a	///< Substitute
+	static const ESC				:= 0x1b	///< Escape
+	static const FS					:= 0x1c	///< File Separator
+	static const GS					:= 0x1d	///< Group Separator
+	static const RS					:= 0x1e	///< Record Separator
+	static const US					:= 0x1f	///< Unit Separator
+	
+	// Punctuation
+	static const space				:= 0x20 ///< Space ' '
+	static const exclamationMark	:= 0x21 ///< Exclamation Mark '!'
+	static const doubleQuotes		:= 0x22 ///< Double Quotes (or speech marks) '"'
+	static const number				:= 0x23 ///< Number '#'
+	static const dollar				:= 0x24 ///< Dollar '$'
+	static const percent			:= 0x25 ///< Percent '%'
+	static const ampersand			:= 0x26 ///< Ampersand '&'
+	static const singleQuote		:= 0x27 ///< Single Quote '\''
+	static const openBracket		:= 0x28 ///< Open Bracket '('
+	static const closeBracket		:= 0x29 ///< Close Bracket ')'
+	static const asterisk			:= 0x2a ///< Asterisk '*'
+	static const plus				:= 0x2b	///< Plus '+'
+	static const comma				:= 0x2c	///< Comma ','
+	static const hyphen				:= 0x2d	///< Hyphen '-'
+	static const period				:= 0x2e	///< Period '.'
+	static const slash				:= 0x2f	///< Slash '/'
 	
 	// Digits
-	static const DIGIT0			:= 48
-	static const DIGIT1			:= 49
-	static const DIGIT2			:= 50
-	static const DIGIT3			:= 51
-	static const DIGIT4			:= 52
-	static const DIGIT5			:= 53
-	static const DIGIT6			:= 54
-	static const DIGIT7			:= 55
-	static const DIGIT8			:= 56
-	static const DIGIT9			:= 57
+	static const digit0				:= 0x30 ///< Digit '0'
+	static const digit1				:= 0x31 ///< Digit '1'
+	static const digit2				:= 0x32 ///< Digit '2'
+	static const digit3				:= 0x33 ///< Digit '3'
+	static const digit4				:= 0x34 ///< Digit '4'
+	static const digit5				:= 0x35 ///< Digit '5'
+	static const digit6				:= 0x36 ///< Digit '6'
+	static const digit7				:= 0x37 ///< Digit '7'
+	static const digit8				:= 0x38 ///< Digit '8'
+	static const digit9				:= 0x39 ///< Digit '9'
+	
+	// Further punctuation
+	static const colon				:= 0x3a ///< Colon ':'
+	static const semicolon			:= 0x3b ///< Semicolon ';'
+	static const less				:= 0x3c ///< Less Then '<'
+	static const equal				:= 0x3d ///< Euqal '='
+	static const greater			:= 0x3e ///< Greater Then '>'
+	static const questionMark		:= 0x3f ///< Question Mark '?'
+	static const at					:= 0x40 ///< At '@'
+	
+	// Uppercases
+	static const A					:= 0x41 ///< Uppercase 'A'
+	static const B					:= 0x42 ///< Uppercase 'B'
+	static const C					:= 0x43 ///< Uppercase 'C'
+	static const D					:= 0x44 ///< Uppercase 'D'
+	static const E					:= 0x45 ///< Uppercase 'E'
+	static const F					:= 0x46 ///< Uppercase 'F'
+	static const G					:= 0x47 ///< Uppercase 'G'
+	static const H					:= 0x48 ///< Uppercase 'H'
+	static const I					:= 0x49 ///< Uppercase 'I'
+	static const J					:= 0x4a ///< Uppercase 'J'
+	static const K					:= 0x4b ///< Uppercase 'K'
+	static const L					:= 0x4c ///< Uppercase 'L'
+	static const M					:= 0x4d ///< Uppercase 'M'
+	static const N					:= 0x4e ///< Uppercase 'N'
+	static const O					:= 0x4f ///< Uppercase 'O'
+	static const P					:= 0x50 ///< Uppercase 'P'
+	static const Q					:= 0x51 ///< Uppercase 'Q'
+	static const R					:= 0x52 ///< Uppercase 'R'
+	static const S					:= 0x53 ///< Uppercase 'S'
+	static const T					:= 0x54 ///< Uppercase 'T'
+	static const U					:= 0x55 ///< Uppercase 'U'
+	static const V					:= 0x56 ///< Uppercase 'V'
+	static const W					:= 0x57 ///< Uppercase 'W'
+	static const X					:= 0x58 ///< Uppercase 'X'
+	static const Y					:= 0x59 ///< Uppercase 'Y'
+	static const Z					:= 0x5a ///< Uppercase 'Z'
 	
 	// Special characters
-	static const COLON			:= 58
-	static const SEMICOLON		:= 59
-	static const LESS			:= 60
-	static const EQUAL			:= 61
-	static const GREATER		:= 62
-	static const QUESTION_MARK	:= 63
-	static const AT				:= 64
-	
-	// Upper case letters
-	static const A				:= 65
-	static const B				:= 66
-	static const C				:= 67
-	static const D				:= 68
-	static const E				:= 69
-	static const F				:= 70
-	static const G				:= 71
-	static const H				:= 72
-	static const I				:= 73
-	static const J				:= 74
-	static const K				:= 75
-	static const L				:= 76
-	static const M				:= 77
-	static const N				:= 78
-	static const O				:= 79
-	static const P				:= 80
-	static const Q				:= 81
-	static const R				:= 82
-	static const S				:= 83
-	static const T				:= 84
-	static const U				:= 85
-	static const V				:= 86
-	static const W				:= 87
-	static const X				:= 88
-	static const Y				:= 89
-	static const Z				:= 90
-	
-	// Special characters
-	static const LPAREN			:= 91
-	static const BACKSLASH		:= 92
-	static const RPAREN			:= 93
-	static const EXPONENT		:= 94
-	static const UNDERSCORE		:= 95
-	static const GRAVE_ACCENT	:= 96
+	static const openParen			:= 0x5b ///< Open Paren '['
+	static const backslash			:= 0x5c ///< Backslash '\\'
+	static const closeParen			:= 0x5d ///< Close Paren ']'
+	static const caret				:= 0x5e ///< Caret/ Circumflex '^'
+	static const underscore			:= 0x5f ///< Underscore '_'
+	static const graveAccent		:= 0x60 ///< Grave Accent '`'
 	
 	// Lower case letters
-	static const a				:= 97
-	static const b				:= 98
-	static const c				:= 99
-	static const d				:= 100
-	static const e				:= 101
-	static const f				:= 102
-	static const g				:= 103
-	static const h				:= 104
-	static const i				:= 105
-	static const j				:= 106
-	static const k				:= 107
-	static const l				:= 108
-	static const m				:= 109
-	static const n				:= 110
-	static const o				:= 111
-	static const p				:= 112
-	static const q				:= 113
-	static const r				:= 114
-	static const s				:= 115
-	static const t				:= 116
-	static const u				:= 117
-	static const v				:= 118
-	static const w				:= 119
-	static const x				:= 120
-	static const y				:= 121
-	static const z				:= 122
+	static const a					:= 0x61 ///< Lowercase 'a'
+	static const b					:= 0x62 ///< Lowercase 'b'
+	static const c					:= 0x63 ///< Lowercase 'c'
+	static const d					:= 0x64 ///< Lowercase 'd'
+	static const e					:= 0x65 ///< Lowercase 'e'
+	static const f					:= 0x66 ///< Lowercase 'f'
+	static const g					:= 0x67 ///< Lowercase 'g'
+	static const h					:= 0x68 ///< Lowercase 'h'
+	static const i					:= 0x69 ///< Lowercase 'i'
+	static const j					:= 0x6a ///< Lowercase 'j'
+	static const k					:= 0x6b ///< Lowercase 'k'
+	static const l					:= 0x6c ///< Lowercase 'l'
+	static const m					:= 0x6d ///< Lowercase 'm'
+	static const n					:= 0x6e ///< Lowercase 'n'
+	static const o					:= 0x6f ///< Lowercase 'o'
+	static const p					:= 0x70 ///< Lowercase 'p'
+	static const q					:= 0x71 ///< Lowercase 'q'
+	static const r					:= 0x72 ///< Lowercase 'r'
+	static const s					:= 0x73 ///< Lowercase 's'
+	static const t					:= 0x74 ///< Lowercase 't'
+	static const u					:= 0x75 ///< Lowercase 'u'
+	static const v					:= 0x76 ///< Lowercase 'v'
+	static const w					:= 0x77 ///< Lowercase 'w'
+	static const x					:= 0x78 ///< Lowercase 'x'
+	static const y					:= 0x79 ///< Lowercase 'y'
+	static const z					:= 0x7a ///< Lowercase 'z'
+	
+	// Special characters
+	static const openBrace			:= 0x7b ///< Open Brace/ Curly Brakcet '{'
+	static const verticalBar		:= 0x7c ///< Vertical Bar '|'
+	static const closeBrace			:= 0x7d ///< Open Brace/ Curly Brakcet '}'
+	static const tilde				:= 0x7e ///< Tilde/ Equivalence Sign '~'
+	static const delete				:= 0x7f ///< Delete
+	
 }
 
