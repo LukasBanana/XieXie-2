@@ -6,6 +6,7 @@
  */
 
 #include "Shell.h"
+#include "AppPath.h"
 
 #include <sstream>
 #include <iostream>
@@ -13,9 +14,12 @@
 
 int main(int argc, char* argv[])
 {
-    Shell shell;
+    /* Initialize application path */
+    AppPath::Set(argv[0]);
 
     /* Execute all program arguments as shell commands */
+    Shell shell;
+
     if (argc > 1)
     {
         /* Get argument stream */
