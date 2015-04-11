@@ -27,10 +27,10 @@ Programming Guide
 Take a look into the [XièXie Programming Guide](docu/TeX/xiexie-programming-guide.pdf)
 to get started with this new object-oriented programming language.
 
-Hello World
------------
+Examples
+--------
 
-Here is a small *Hello World* example:
+This is a small *Hello World* example:
 ```java
 import System
 class HelloWorld {
@@ -39,3 +39,23 @@ class HelloWorld {
 	}
 }
 ```
+
+And this computes the fibonacci series:
+```java
+import System
+class Fibonacci {
+	static void fib(int n) {
+		int a := 0, b := 1, prev
+		while a < n {
+			System.out.writeLine(a)
+			prev := a
+			a := b
+			b += prev
+		}
+	}
+	static void main() {
+		Fibonacci.fib(1000)
+	}
+}
+```
+
