@@ -534,6 +534,8 @@ void Parser::ParseClassBodySegment(ClassDeclStmnt& ast, ClassDeclStmnt::Visibili
         }
     }
 
+    state_.classVis = segmentVis;
+
     /* Parse declaration statements */
     auto declStmnts = ParseDeclStmntList();
 

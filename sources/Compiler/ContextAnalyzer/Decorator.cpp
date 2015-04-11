@@ -100,17 +100,16 @@ Analyze signature of all classes (decorate attributes and type inheritance).
 Verify that the inheritance tree of all classes are free of cycles.
 
 (Phase 4)
-For all classes: Register all class member identifiers (procedures, variables, enumerations, flags)
-in the scope of the current class. Identifiers of procedures can be overloaded.
+Register all class member procedures. Identifiers of procedures can be overloaded.
 
 (Phase 5)
-Generate run-time type information (RTTI) for entire class hierarchy, i.e. recursively for the root class "Object".
+Register all class member variables.
 
 (Phase 6)
-For all classes: For all member variables: Analyze variable declaration.
+Generate run-time type information (RTTI) for entire class hierarchy, i.e. recursively for the root class "Object".
 
 (Phase 7)
-For all classes: For all procedure: Analyze the code.
+Analyze all procedure code blocks.
 */
 DEF_VISIT_PROC(Decorator, Program)
 {
@@ -130,22 +129,22 @@ DEF_VISIT_PROC(Decorator, Program)
     state_ = States::VerifyClassInheritance;
     Visit(ast->classDeclStmnts);
 
-    /* (4) Register all class member symbols inside the classes (procedures, variables, enumerations, flags) */
-    state_ = States::RegisterMemberSymbols;
+    /* (4) Register member procedures */
+    state_ = States::RegisterMemberProcs;
     Visit(ast->classDeclStmnts);
 
-    /* (5) Generate RTTI for the entire class hierarchy */
+    /* (5) Register member variables */
+    state_ = States::RegisterMemberVars;
+    Visit(ast->classDeclStmnts);
+
+    /* (6) Generate RTTI for the entire class hierarchy */
     auto rootClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope("Object", ast->symTab, ast));
     if (rootClassDecl)
         rootClassDecl->GenerateRTTI(errorReporter_);
     else
         Error("missing root class \"Object\"");
 
-    /* (6) Analyze the member variables */
-    state_ = States::AnalyzeMemberVars;
-    Visit(ast->classDeclStmnts);
-
-    /* (7) Analyze the actual code */
+    /* (7) Analyze procedure code blocks */
     state_ = States::AnalyzeCode;
     Visit(ast->classDeclStmnts);
 }
@@ -174,7 +173,7 @@ DEF_VISIT_PROC(Decorator, VarName)
 DEF_VISIT_PROC(Decorator, VarDecl)
 {
     RegisterSymbol(ast->ident, ast);
-    Visit(ast->initExpr);
+    DecorateExpr(*ast->initExpr);
 }
 
 DEF_VISIT_PROC(Decorator, Param)
@@ -247,12 +246,9 @@ DEF_VISIT_PROC(Decorator, ProcCall)
     Visit(ast->args);
 
     /* Decorate procedure call with procedure declaration reference */
-    auto declRef = ast->procName->GetLast().declRef;
-    if (declRef && declRef->Type() == AST::Types::ProcOverloadSwitch)
-    {
-        auto overloadSwitch = static_cast<ProcOverloadSwitch*>(declRef);
+    auto overloadSwitch = AST::Cast<ProcOverloadSwitch>(ast->procName->GetLast().declRef);
+    if (overloadSwitch)
         DecorateOverloadedProcCall(*ast, *overloadSwitch);
-    }
     else
         Error("identifier \"" + ast->procName->FullName() + "\" does not refer to a procedure declaration", ast);
 }
@@ -386,8 +382,8 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
             VerifyClassInheritance(*ast);
             break;
 
-        case States::RegisterMemberSymbols:
-        case States::AnalyzeMemberVars:
+        case States::RegisterMemberProcs:
+        case States::RegisterMemberVars:
         case States::AnalyzeCode:
             PushSymTab(*ast);
             {
@@ -402,14 +398,8 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
 {
     auto ownerType = symTab_->GetOwner().Type();
 
-    if (IsRegisterMemberSymbols())
-    {
-        /* Register symbols of class member variables */
-        for (auto& varDecl : ast->varDecls)
-            RegisterVarDecl(*varDecl);
-    }
-    else if ( ( IsAnalyzeCode() && ownerType == AST::Types::ProcDeclStmnt ) ||
-              ( IsAnalyzeMemberVars() && ownerType == AST::Types::ClassDeclStmnt ) )
+    if ( ( IsRegisterMemberVars() && ownerType == AST::Types::ClassDeclStmnt ) ||
+         ( IsAnalyzeCode() && ownerType == AST::Types::ProcDeclStmnt ) )
     {
         switch (ownerType)
         {
@@ -417,15 +407,18 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
                 /* Declaration statement for local variables */
                 for (auto& varDecl : ast->varDecls)
                 {
-                    RegisterVarDecl(*varDecl);
                     DecorateVarDeclLocal(*varDecl);
+                    RegisterVarDecl(*varDecl);
                 }
                 break;
 
             case AST::Types::ClassDeclStmnt:
                 /* Declaration statement for member variables */
                 for (auto& varDecl : ast->varDecls)
+                {
                     DecorateVarDeclMember(*varDecl);
+                    RegisterVarDecl(*varDecl);
+                }
                 break;
         }
 
@@ -460,7 +453,7 @@ DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
 
     switch (state_)
     {
-        case States::RegisterMemberSymbols:
+        case States::RegisterMemberProcs:
             RegisterProcSymbol(*ast);
             Visit(ast->attribPrefix);
             break;
@@ -1023,7 +1016,7 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
 
     switch (symbol->Type())
     {
-        #if 0 /// !!!DEAD CODE!!!
+        #if 0///!!!DEAD CODE!!!
         case AST::Types::ProcDeclStmnt:
         {
             auto procDecl = static_cast<ProcDeclStmnt*>(symbol);
