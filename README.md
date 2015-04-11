@@ -1,4 +1,4 @@
-XièXiè Compiler and VirtualMachine (Version 2)
+XièXie Compiler and VirtualMachine (Version 2)
 ==============================================
 
 Features
@@ -17,10 +17,12 @@ License
 Status
 ------
 
-*Work in Program*
+**Work in Progress**
+
 See "ToDo" list in Programming Guide for more information.
 
 Programming Guide
 -----------------
 
-Take a look into the [Programming Guide](docu/TeX/xiexie-programming-guide.pdf)
+Take a look into the [XièXie Programming Guide](docu/TeX/xiexie-programming-guide.pdf)
+to get started with this new object-oriented programming language.
