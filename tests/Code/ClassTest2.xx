@@ -10,24 +10,19 @@ class B : A {
 	protected
 	[[override]]
 	void f() { super.f() }
-	static const x := 5
 }
 
 class C : B {
 	protected
 	[[override]]
-	void f() { A.f() }
+	void f() { super.f() }
 	
-	static void f(int x) {}
+	//static void f(int x) {} // error, mixture of static and non-static procedures
 	
 	void g() {
 		f()
-		var x := C.a
+		//int f // warning, identifier already used for procedures
 	}
-	
-	static const a := 2 + 5
-	static const b := C.a
-	static var c := B.x//new String()
 }
 
 
@@ -38,7 +33,7 @@ class Test {
 		var obj := new C()
 		
 		obj.g() // ok, member procedure call
-		C.g() // error, "g" is non static
+		//C.g() // error, "g" is non static
 		
 	}
 	

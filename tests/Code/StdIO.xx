@@ -13,13 +13,13 @@ class InputStream {
 }
 
 class StandardOutputStream : OutputStream {
-	void write(String s) {}
-	void writeLine(String s) {}
+	[[override]] void write(String s) {}
+	[[override]] void writeLine(String s) {}
 }
 
 class StandardInputStream : InputStream {
-	String read() { return "" }
-	String readLine() { return "" }
+	[[override]] String read() { return "" }
+	[[override]] String readLine() { return "" }
 }
 
 class System {

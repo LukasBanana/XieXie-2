@@ -172,8 +172,7 @@ DEF_VISIT_PROC(Decorator, VarName)
 
 DEF_VISIT_PROC(Decorator, VarDecl)
 {
-    RegisterSymbol(ast->ident, ast);
-    DecorateExpr(*ast->initExpr);
+    // do nothing -> variable declaration is done in "DecorateVarDeclMember" and "DecorateVarDeclLocal"
 }
 
 DEF_VISIT_PROC(Decorator, Param)
@@ -728,6 +727,12 @@ void Decorator::DecorateVarDeclMember(VarDecl& ast)
 
 void Decorator::DecorateVarDeclLocal(VarDecl& ast)
 {
+    /* Check if variable hides accessibility of member procedure */
+    auto symbol = class_->symTab.Fetch(ast.ident);
+    if (symbol && symbol->Type() == AST::Types::ProcOverloadSwitch)
+        Warning("identifier \"" + ast.ident + "\" hides procedure accessibility", &ast);
+
+    /* Decoreate initializer expression */
     if (ast.initExpr)
         DecorateExpr(*ast.initExpr);
 }
@@ -1016,18 +1021,28 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
 
     switch (symbol->Type())
     {
-        #if 0///!!!DEAD CODE!!!
-        case AST::Types::ProcDeclStmnt:
+        case AST::Types::ProcOverloadSwitch:
         {
-            auto procDecl = static_cast<ProcDeclStmnt*>(symbol);
+            /* Check if procedure call has correct static or non-static semantics */
+            auto overloadSwitch = static_cast<ProcOverloadSwitch*>(symbol);
 
-            if (!procDecl->procSignature->isStatic && requireStaticMembers)
-                Error("procedure \"" + procDecl->procSignature->ident + "\" is not declared as 'static'", &ast);
-            else if (procDecl->procSignature->isStatic && !requireStaticMembers)
-                Error("procedure \"" + procDecl->procSignature->ident + "\" is declared as 'static'", &ast);
+            if (!overloadSwitch->procDeclRefs.empty())
+            {
+                auto procDecl = overloadSwitch->procDeclRefs.front();
+                const auto& procIdent = procDecl->procSignature->ident;
+                auto isStatic = procDecl->procSignature->isStatic;
+
+                /* Make an exception for special "init" and "release" procedures */
+                if (procIdent != "init" && procIdent != "release")
+                {
+                    if (!isStatic && requireStaticMembers)
+                        Error("procedure \"" + procIdent + "\" is not declared as 'static'", &ast);
+                    else if (isStatic && !requireStaticMembers)
+                        Error("procedure \"" + procIdent + "\" is declared as 'static'", &ast);
+                }
+            }
         }
         break;
-        #endif
 
         case AST::Types::VarDecl:
         {
@@ -1197,6 +1212,11 @@ void Decorator::RegisterProcSymbol(ProcDeclStmnt& ast)
                 "can not overload procedure \"" + ast.procSignature->ident +
                 "\" with similar signature, defined at (" + prevDeclRef->sourceArea.ToString() + ")", &ast
             );
+            return;
+        }
+        if (prevDeclRef->procSignature->isStatic != ast.procSignature->isStatic)
+        {
+            Error("can not overload mixture of static and non-static procedures", &ast);
             return;
         }
     }

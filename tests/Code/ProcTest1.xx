@@ -86,7 +86,7 @@ class ProcTest : Base {
 	
 	static int[] intArray := { 1, 2, 3 }
 	
-	static String f(int x, int y) {
+	static String g(int x, int y) {
 		return null
 	}
 	static B makeB() {
@@ -104,16 +104,16 @@ class ProcTest : Base {
 	void test1(int p) {
 		
 		int		a := f(2)
-		float[]	b := ProcTest.f(2.0)
+		float[]	b := f(2.0)
 		float[]	c := this.f(2.5)
-		String	d := f(1, 2)
+		String	d := ProcTest.g(1, 2)
 		int[] 	e := super.f(0, 1, 2)
-		float[] f := g(0.0) // note: variable f overrides the procedure f -> this.f is required now
+		float[] h := super.g(0.0) // note: variable f overrides the procedure f -> this.f is required now
 		
 		a := x + super.x
 		
-		int		g := this.f(p*2) + ProcTest.f(p+3)
-		float	h := this.f((float)p*4.0)[0]
+		int		i := this.f(p*2) + this.f(p+3)
+		float	j := this.f((float)p*4.0)[0]
 		
 		// expression statements
 		new B().print()
