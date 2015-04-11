@@ -6,6 +6,7 @@
  */
 
 #include "CommandFactory.h"
+#include "CompileCommand.h"
 #include "MakeUnique.h"
 
 

@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "CommandFactory.h"
+#include "CompileCommand.h"
 #include "SourceStream.h"
 #include "AppPath.h"
 #include "FileHelper.h"
@@ -26,78 +26,17 @@
 
 void CompileCommand::Execute(StreamParser& input, Log& output)
 {
-    /* <----- PARSE INPUT -----> */
+    /* Parse input stream */
+    ParseFilenames(input);
+    ParseOptions(input);
 
-    /* Get source filenames from input stream */
-    std::vector<std::string> sources, nextSources;
-    std::set<std::string> passedSources;
-    std::string outputFilename;
-
-    while (input.Get() == "-f" || input.Get() == "--file")
-    {
-        /* Parse filename */
-        input.Accept();
-        auto filename = input.Accept();
-
-        if (outputFilename.empty())
-            outputFilename = filename;
-
-        /* Add filename to list */
-        sources.push_back(filename);
-        passedSources.insert(ToLower(filename));
-    }
-
-    /* Parse options */
-    bool hasError       = false;
-    bool showAST        = false;
-    bool showCFG        = false;
-    bool optimize       = false;
-    bool warnings       = false;
-    bool forceOverride  = false;
-
-    while (true)
-    {
-        if (input.Get() == "--show-ast" && !showAST)
-        {
-            input.Accept();
-            showAST = true;
-        }
-        else if (input.Get() == "--show-cfg" && !showCFG)
-        {
-            input.Accept();
-            showCFG = true;
-        }
-        else if ( ( input.Get() == "-O" || input.Get() == "--optimize" ) && !optimize)
-        {
-            input.Accept();
-            optimize = true;
-        }
-        else if ( ( input.Get() == "-W" || input.Get() == "--warn" ) && !warnings)
-        {
-            input.Accept();
-            warnings = true;
-        }
-        else if ( ( input.Get() == "-fo" || input.Get() == "--force-override" ) && !forceOverride)
-        {
-            input.Accept();
-            forceOverride = true;
-        }
-        else if (input.Get() == "-out" || input.Get() == "--output")
-        {
-            input.Accept();
-            outputFilename = input.Accept();
-        }
-        else
-            break;
-    }
-
-    if (outputFilename.empty())
+    if (outputFilename_.empty())
     {
         output.Error("missing output filename for code generation");
         return;
     }
 
-    ErrorReporter::showWarnings = warnings;
+    ErrorReporter::showWarnings = options_.warnings;
 
     /* <----- COMPILATION -----> */
 
@@ -111,16 +50,18 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     ContextAnalyzer::StdClassGenerator::GenerateBuiltinClasses(program);
     
     /* Parse input filenames */
-    while (!sources.empty())
+    std::vector<std::string> nextSources;
+
+    while (!sources_.empty())
     {
-        for (const auto& filename : sources)
+        for (const auto& filename : sources_)
         {
             if (output.verbose)
                 output.Message("parse file \"" + ExtractFilename(filename) + "\" ...");
 
             /* Parse source file */
             if (!parser.ParseSource(program, std::make_shared<SyntaxAnalyzer::SourceStream>(filename), errorReporter))
-                hasError = true;
+                hasError_ = true;
         }
 
         /* Collect import filenames */
@@ -128,31 +69,31 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
         {
             /* Check if filename has already been parsed */
             auto importLower = ToLower(import);
-            if (passedSources.find(importLower) == passedSources.end())
+            if (passedSources_.find(importLower) == passedSources_.end())
             {
                 nextSources.push_back(import);
-                passedSources.insert(importLower);
+                passedSources_.insert(importLower);
             }
         }
         program.importFilenames.clear();
 
         /* Process next sources */
-        sources = std::move(nextSources);
+        sources_ = std::move(nextSources);
     }
 
     /* Decorate program */
-    if (!hasError)
+    if (!hasError_)
     {
         if (output.verbose)
             output.Message("context analysis ...");
 
         ContextAnalyzer::Decorator decorator;
         if (!decorator.DecorateProgram(program, errorReporter))
-            hasError = true;
+            hasError_ = true;
     }
 
     /* Show syntax tree */
-    if (showAST)
+    if (options_.showAST)
     {
         AbstractSyntaxTrees::ASTViewer viewer(output);
         viewer.ViewProgram(program);
@@ -161,10 +102,10 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     /* Transform to CFG */
     ControlFlowGraph::CFGProgramPtr cfgProgram;
 
-    if (!hasError)
+    if (!hasError_)
     {
         #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!
-        if (showCFG){
+        if (options_.showCFG){
         #endif
 
         if (output.verbose)
@@ -174,8 +115,8 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
         cfgProgram = converter.GenerateCFG(program, errorReporter);
 
         if (errorReporter.HasErrors())
-            hasError = true;
-        else if (optimize)
+            hasError_ = true;
+        else if (options_.optimize)
         {
             /* Optimize CFG */
             if (output.verbose)
@@ -189,20 +130,20 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     }
 
     /* Generate assembler code */
-    if (!hasError && cfgProgram)
+    if (!hasError_ && cfgProgram)
     {
         #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!
-        if (showCFG){
+        if (options_.showCFG){
         #endif
 
         /* Create output file */
         std::string fileId;
-        auto OutFile = [&outputFilename, &fileId]()
+        auto OutFile = [&]()
         {
-            return outputFilename + fileId + ".xasm";
+            return outputFilename_ + fileId + ".xasm";
         };
 
-        if (!forceOverride && FileHelper::DoesFileExist(OutFile()))
+        if (!options_.forceOverride && FileHelper::DoesFileExist(OutFile()))
         {
             /* Ask user to override file */
             output.Warning("output file \"" + OutFile() + "\" already exists! override? (y/n)");
@@ -230,7 +171,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
 
         CodeGenerator::XASMGenerator generator(outputFile);
         if (!generator.GenerateAsm(*cfgProgram, errorReporter))
-            hasError = true;
+            hasError_ = true;
 
         #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!!!
         }
@@ -238,7 +179,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     }
 
     /* Show flow graph */
-    if (showCFG && cfgProgram)
+    if (options_.showCFG && cfgProgram)
     {
         ControlFlowGraph::CFGViewer viewer;
 
@@ -254,10 +195,73 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     /* Print out errors */
     errorReporter.Flush(output);
 
-    if (!hasError)
+    if (!hasError_)
         output.Success("compilation successful");
 
     ErrorReporter::showWarnings = false;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void CompileCommand::ParseFilenames(StreamParser& input)
+{
+    /* Get source filenames from input stream */
+    while (input.Get() == "-f" || input.Get() == "--file")
+    {
+        /* Parse filename */
+        input.Accept();
+        auto filename = input.Accept();
+
+        if (outputFilename_.empty())
+            outputFilename_ = filename;
+
+        /* Add filename to list */
+        sources_.push_back(filename);
+        passedSources_.insert(ToLower(filename));
+    }
+}
+
+void CompileCommand::ParseOptions(StreamParser& input)
+{
+    /* Parse options */
+    while (true)
+    {
+        if (input.Get() == "--show-ast" && !options_.showAST)
+        {
+            input.Accept();
+            options_.showAST = true;
+        }
+        else if (input.Get() == "--show-cfg" && !options_.showCFG)
+        {
+            input.Accept();
+            options_.showCFG = true;
+        }
+        else if ( ( input.Get() == "-O" || input.Get() == "--optimize" ) && !options_.optimize)
+        {
+            input.Accept();
+            options_.optimize = true;
+        }
+        else if ( ( input.Get() == "-W" || input.Get() == "--warn" ) && !options_.warnings)
+        {
+            input.Accept();
+            options_.warnings = true;
+        }
+        else if ( ( input.Get() == "-fo" || input.Get() == "--force-override" ) && !options_.forceOverride)
+        {
+            input.Accept();
+            options_.forceOverride = true;
+        }
+        else if (input.Get() == "-out" || input.Get() == "--output")
+        {
+            input.Accept();
+            outputFilename_ = input.Accept();
+        }
+        else
+            break;
+    }
 }
 
 

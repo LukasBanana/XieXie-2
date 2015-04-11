@@ -35,7 +35,6 @@ std::unique_ptr<Command> InstantiateCommand(const std::string& cmdName);
 DECL_COMMAND_IMPL( Log      );
 DECL_COMMAND_IMPL( Pause    );
 DECL_COMMAND_IMPL( Prompt   );
-DECL_COMMAND_IMPL( Compile  );
 DECL_COMMAND_IMPL( Assemble );
 DECL_COMMAND_IMPL( Reply    );
 DECL_COMMAND_IMPL( Version  );
