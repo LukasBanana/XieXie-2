@@ -1,0 +1,45 @@
+
+// Class Test 2
+// 11/04/2015
+
+class A {
+	protected void f() {}
+}
+
+class B : A {
+	protected
+	[[override]]
+	void f() { super.f() }
+	static const x := 5
+}
+
+class C : B {
+	protected
+	[[override]]
+	void f() { A.f() }
+	
+	static void f(int x) {}
+	
+	void g() {
+		f()
+		var x := C.a
+	}
+	
+	static const a := 2 + 5
+	static const b := C.a
+	static var c := B.x//new String()
+}
+
+
+class Test {
+	
+	static void main() {
+		
+		var obj := new C()
+		
+		obj.g() // ok, member procedure call
+		C.g() // error, "g" is non static
+		
+	}
+	
+}
