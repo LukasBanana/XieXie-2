@@ -70,34 +70,36 @@ DEF_VISIT_PROC(ExprTypeChecker, UnaryExpr)
     /* Visit sub expression */
     Visit(ast->expr);
 
-    switch (ast->unaryOperator)
+    auto exprType = ast->expr->GetTypeDenoter();
+
+    if (exprType)
     {
-        case UnaryExpr::Operators::LogicNot:
+        switch (ast->unaryOperator)
         {
-            /* Check if sub-expression has boolean type */
-            auto exprType = ast->expr->GetTypeDenoter();
-            if (!exprType->IsBoolean())
-                Error("unary <logic-not> expression requires boolean sub expression", *ast);
-        }
-        break;
+            case UnaryExpr::Operators::LogicNot:
+            {
+                /* Check if sub-expression has boolean type */
+                if (!exprType->IsBoolean())
+                    Error("unary <logic-not> expression requires boolean sub expression", *ast);
+            }
+            break;
 
-        case UnaryExpr::Operators::Negate:
-        {
-            /* Check if sub-expression has arithmetic type */
-            auto exprType = ast->expr->GetTypeDenoter();
-            if (!exprType->IsArithmetic())
-                Error("unary <negate> expression requires arithmetic sub expression", *ast);
-        }
-        break;
+            case UnaryExpr::Operators::Negate:
+            {
+                /* Check if sub-expression has arithmetic type */
+                if (!exprType->IsArithmetic())
+                    Error("unary <negate> expression requires arithmetic sub expression", *ast);
+            }
+            break;
 
-        case UnaryExpr::Operators::BitwiseNot:
-        {
-            /* Check if sub-expression has integral type */
-            auto exprType = ast->expr->GetTypeDenoter();
-            if (!exprType->IsIntegral())
-                Error("unary <bitwise-not> expression requires integral sub expression", *ast);
+            case UnaryExpr::Operators::BitwiseNot:
+            {
+                /* Check if sub-expression has integral type */
+                if (!exprType->IsIntegral())
+                    Error("unary <bitwise-not> expression requires integral sub expression", *ast);
+            }
+            break;
         }
-        break;
     }
 }
 
