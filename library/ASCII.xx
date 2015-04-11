@@ -5,11 +5,11 @@
  * See "LICENSE.txt" for license information.
  */
 
-//!!! INCOMPLETE !!!
-
 /**
 Original "Americal Standard Code for Information Interchange" (ASCII) enumeration with 128 elements.
 @see http://www.ascii-code.com/
+@since 2.00
+@author Lukas Hermanns
 */
 class ASCII {
 	

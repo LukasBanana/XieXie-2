@@ -69,7 +69,7 @@ DEF_VISIT_PROC(ExprConstChecker, PostfixValueExpr)
 
 DEF_VISIT_PROC(ExprConstChecker, AllocExpr)
 {
-    throw ast;
+    // dummy
 }
 
 DEF_VISIT_PROC(ExprConstChecker, VarAccessExpr)

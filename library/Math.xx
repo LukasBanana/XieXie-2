@@ -27,9 +27,9 @@ class Math {
 		return Intrinsics.sqrt(x)
 	}
 	
-	//! \todo Not yet implemented!
-	static float fmod(float x) {
-		return x
+	//! Returns the floating-pointer remainder of number/denom (rounded towards zero).
+	static float fmod(float number, float denom) {
+		return number % denom
 	}
 	
 }

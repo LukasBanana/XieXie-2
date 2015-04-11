@@ -25,16 +25,13 @@ extern class Object {
 	String toString()
 	
 	/**
-	Returns a 32-bit pointer of this object with the specified offset.
-	@param offset Specifies the offset (in bytes) added to the origin pointer of this instance.
-	If this is zero, the pointer refers to the first member variable in this instance,
-	excluding the run-time type information (RTTI) of the class "Object".
+	Returns a 32-bit pointer of this object.
+	@return Pointer to the first member variable of this object.
 	@remarks XieXie actually has no support for pointer arithmetic,
 	but this procedure can be used for interoperability with modules.
 	@note This is only for low-level programming and for experienced XieXie programmers!
 	*/
-	[[final]]
-	int pointerOffset(int offset)
+	int pointer()
 	
 }
 
@@ -83,7 +80,7 @@ extern class String {
 	Returns the raw pointer (as integer) which points to
 	the first character in this null terminated string.
 	*/
-	[[final]]
+	[[override, final]]
 	int pointer()
 	
 }
@@ -119,7 +116,7 @@ extern class Array {
 	bool contains(Object entry)
 	
 	//! Returns the raw pointer (as integer) of this array.
-	[[final]]
+	[[override, final]]
 	int pointer()
 	
 }
@@ -169,6 +166,7 @@ extern class Buffer {
 	void readBuffer(int offset, int size, Buffer subBuffer)
 	
 	//! Returns the raw pointer (as integer) of this buffer.
+	[[override, final]]
 	int pointer()
 	
 }

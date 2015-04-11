@@ -153,6 +153,12 @@ CObject.PtoString,R@Object:
 	mov $ar, 0	; return null pointer
 	ret 1
 
+; int Object.pointer(Object this)
+CObject.Ppointer,R@Object:
+	ldw $ar, ($lb) -4	; load this pointer
+	add $ar, $ar, 12	; return pointer to first member variables of derived class
+	ret 1
+
 Object.vtable:
 	.word @CObject.Prelease,R@Object
 	.word @CObject.Pinit,R@Object
@@ -160,6 +166,7 @@ Object.vtable:
 	.word @CObject.PrefCount,R@Object
 	.word @CObject.Pequals,R@Object,R@Object
 	.word @CObject.PtoString,R@Object
+	.word @CObject.Ppointer,R@Object
 
 
 ; ------- String Class -------
@@ -265,8 +272,8 @@ CString.PgetChar,R@String,I:
 	; ...
 	ret 2
 
-; int String.pointer(String this)
-CString.Ppointer,R@String:
+; int String.pointer(Object this)
+CString.Ppointer,R@Object:
 	ldw $ar, ($lb) -4	; load this pointer
 	ldw $ar, ($ar) 20	; load and return member this.buffer
 	ret 1
@@ -274,8 +281,11 @@ CString.Ppointer,R@String:
 String.vtable:
 	.word @CString.Prelease,R@Object
 	.word @CString.Pinit,R@Object
+	.word @CObject.PtypeID,R@Object
+	.word @CObject.PrefCount,R@Object
+	.word @CObject.Pequals,R@Object,R@Object
 	.word @CString.PtoString,R@Object
-	.word @CString.Pinit,R@String,R@String
+	.word @CString.Ppointer,R@Object
 	.word @CString.Pcopy,R@String
 	.word @CString.Psize,R@String
 	.word @CString.Presize,R@String,I

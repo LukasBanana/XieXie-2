@@ -7,7 +7,11 @@
 
 import ASCII
 
-/// Integer class.
+/**
+Integer class.
+@since 2.00
+@author Lukas Hermanns
+*/
 class Integer {
 
 	init() {}
@@ -93,12 +97,6 @@ class Integer {
 		}
 		
 		return v
-	}
-	
-	/// Returns a pointer to the integer value.
-	[[final]]
-	int pointer() {
-		return pointerOffset(0)
 	}
 	
 	int value

@@ -665,15 +665,20 @@ void XASMGenerator::GenerateStartUpCode(const ClassDeclStmnt& rootClass)
 
     CommentHeadline("PROGRAM START-UP");
 
-    /* Allocate space for global variables */
-    Line("mov $gp, $sp");
-    Line("add $sp, $sp, " + std::to_string(globalSize));
+    if (globalSize > 0)
+    {
+        /* Allocate space for global variables */
+        Line("mov $gp, $sp");
+        Line("add $sp, $sp, " + std::to_string(globalSize));
 
-    /* Initialize global variables with zeros */
-    Line("push 0");
-    Line("push " + std::to_string(globalSize));
-    Line("push $gp");
-    Line("insc FillMem");
+        /* Initialize global variables with zeros */
+        Line("push 0");
+        Line("push " + std::to_string(globalSize));
+        Line("push $gp");
+        Line("insc FillMem");
+    }
+    else
+        Line("mov $gp, 0");
 
     /* Initialize global variables with specific values */
     //...

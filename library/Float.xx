@@ -5,6 +5,13 @@
  * See "LICENSE.txt" for license information.
  */
 
+import ASCII
+
+/**
+Floating-point class.
+@since 2.00
+@author Lukas Hermanns
+*/
 class Float {
 
 	init() {}
@@ -12,12 +19,18 @@ class Float {
 		this.value := value
 	}
 	init(String s) {
-		//todo: parse from string ...
+		value := Float.parseFrom(s)
 	}
 	
+	[[override]]
 	String toString() {
 		//todo: convert to string ...
 		return null
+	}
+	
+	static float parseFrom(String s) {
+		//todo: convert to float ...
+		return 0.0
 	}
 	
 	float value
