@@ -95,6 +95,12 @@ class Integer {
 		return v
 	}
 	
+	/// Returns a pointer to the integer value.
+	[[final]]
+	int pointer() {
+		return pointerOffset(0)
+	}
+	
 	int value
 	
 }

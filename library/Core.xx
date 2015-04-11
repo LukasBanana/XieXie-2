@@ -11,16 +11,30 @@ Root base object for all classes.
 */
 extern class Object {
 	
-	//! Returns the type ID of this object
+	/// Returns the type ID of this object
 	[[final]]
 	int typeID()
 	
-	//! Returns the reference count of this object
+	/// Returns the reference count of this object
 	[[final]]
 	int refCount()
 	
+	/// Returns true if this instance is equal to 'rhs' (right-hand-side).
 	bool equals(Object rhs)
+	/// Returns a string representation of this instance.
 	String toString()
+	
+	/**
+	Returns a 32-bit pointer of this object with the specified offset.
+	@param offset Specifies the offset (in bytes) added to the origin pointer of this instance.
+	If this is zero, the pointer refers to the first member variable in this instance,
+	excluding the run-time type information (RTTI) of the class "Object".
+	@remarks XieXie actually has no support for pointer arithmetic,
+	but this procedure can be used for interoperability with modules.
+	@note This is only for low-level programming and for experienced XieXie programmers!
+	*/
+	[[final]]
+	int pointerOffset(int offset)
 	
 }
 

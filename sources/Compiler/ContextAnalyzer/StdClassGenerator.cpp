@@ -252,6 +252,7 @@ extern class Object {
     int refCount()
     bool equals(Object rhs)
     String toString()
+    int pointerOffset(int offset)
 }
 */
 static std::unique_ptr<ClassDeclStmnt> GenObjectClass()
@@ -265,6 +266,7 @@ static std::unique_ptr<ClassDeclStmnt> GenObjectClass()
     GenMemberProc(*ast, Int(), "refCount", ParamList(), AttrFinal());
     GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"));
     GenMemberProc(*ast, String(), "toString");
+    GenMemberProc(*ast, Int(), "pointerOffset", GenParam(Int(), "offset"), AttrFinal());
 
     return ast;
 }

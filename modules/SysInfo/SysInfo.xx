@@ -5,6 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
+import Integer
+
 //! System information module.
 module SysInfo {
 	
@@ -12,7 +14,9 @@ module SysInfo {
 		int platformStringPtr,
 		int cpuArchStringPtr,
 		int cpuTypeStringPtr,
-		int cpuNameStringPtr
+		int cpuNameStringPtr,
+		int cpuCountIntegerPtr,
+		int cpuSpeedIntegerPtr
 	)
 	
 }
@@ -24,21 +28,29 @@ class SystemInfo {
 	static SystemInfo query() {
 		var info := new SystemInfo()
 		
-		/*static*/ const maxLen := 100
+		/*static*/ const maxLen := 64
 		
 		// Allocate strings
 		info.platform	:= new String(maxLen)
 		info.cpuArch	:= new String(maxLen)
 		info.cpuType	:= new String(maxLen)
 		info.cpuName	:= new String(maxLen)
+		var cpuCount	:= new Integer()
+		var cpuSpeed	:= new Integer()
 		
 		// Query system information from module
 		SysInfo.querySystemInfo(
 			info.platform.pointer(),
 			info.cpuArch.pointer(),
 			info.cpuType.pointer(),
-			info.cpuName.pointer()
+			info.cpuName.pointer(),
+			cpuCount.pointer(),
+			cpuSpeed.pointer()
 		)
+		
+		// Copy integer values
+		info.cpuCount := cpuCount.value
+		info.cpuSpeed := cpuSpeed.value
 		
 		// Adjust strings
 		info.platform.adjust()
@@ -57,6 +69,10 @@ class SystemInfo {
 	String cpuType
 	/// CPU name, e.g. "Intel Core i7-3770K"
 	String cpuName
+	/// Number of processors.
+	int cpuCount
+	/// Processor speed (in MHz).
+	int cpuSpeed
 	
 }
 
