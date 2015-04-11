@@ -134,6 +134,7 @@ void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
     globalEndOffset_    = 0;
 
     /* Generate vtable */
+    errorReporter->source = GetSource();
     GenerateVtable(nullptr, errorReporter);
 
     /* Generate RTTI for sub classes */
@@ -207,6 +208,7 @@ void ClassDeclStmnt::GenerateRTTI(
     AssignAllStaticVariableLocations();
 
     /* Generate vtable */
+    errorReporter->source = GetSource();
     GenerateVtable(&setupVtable, errorReporter);
 
     /* Process attributes of this class */

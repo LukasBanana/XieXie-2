@@ -49,6 +49,7 @@ class Decorator final : private Visitor
             AnalyzeClassSignature,
             VerifyClassInheritance,
             RegisterMemberSymbols,
+            AnalyzeMemberVars,
             AnalyzeCode,
         };
 
@@ -128,11 +129,15 @@ class Decorator final : private Visitor
         //! Returns true if the current procedure declaration statement is static.
         bool IsProcStatic() const;
 
-        inline bool IsRegisterMemberSymbols() const
+        bool IsRegisterMemberSymbols() const
         {
             return state_ == States::RegisterMemberSymbols;
         }
-        inline bool IsAnalyzeCode() const
+        bool IsAnalyzeMemberVars() const
+        {
+            return state_ == States::AnalyzeMemberVars;
+        }
+        bool IsAnalyzeCode() const
         {
             return state_ == States::AnalyzeCode;
         }

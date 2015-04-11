@@ -36,7 +36,7 @@ static const std::string arrayClassIdent    = "Array";
 
 static const std::string& SelectString(const std::string& a, const std::string& b, bool first)
 {
-    return first ? a : b;
+    return (first ? a : b);
 }
 
 
@@ -100,14 +100,17 @@ Analyze signature of all classes (decorate attributes and type inheritance).
 Verify that the inheritance tree of all classes are free of cycles.
 
 (Phase 4)
-In all classes: Register all class member identifiers (procedures, variables, enumerations, flags)
+For all classes: Register all class member identifiers (procedures, variables, enumerations, flags)
 in the scope of the current class. Identifiers of procedures can be overloaded.
 
 (Phase 5)
 Generate run-time type information (RTTI) for entire class hierarchy, i.e. recursively for the root class "Object".
 
 (Phase 6)
-In all classes: In all members of the current class: Analyze the declaration of the current member.
+For all classes: For all member variables: Analyze variable declaration.
+
+(Phase 7)
+For all classes: For all procedure: Analyze the code.
 */
 DEF_VISIT_PROC(Decorator, Program)
 {
@@ -134,14 +137,15 @@ DEF_VISIT_PROC(Decorator, Program)
     /* (5) Generate RTTI for the entire class hierarchy */
     auto rootClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope("Object", ast->symTab, ast));
     if (rootClassDecl)
-    {
-        errorReporter_->source = GetCurrentSource();
         rootClassDecl->GenerateRTTI(errorReporter_);
-    }
     else
         Error("missing root class \"Object\"");
 
-    /* (6) Analyze the actual code */
+    /* (6) Analyze the member variables */
+    state_ = States::AnalyzeMemberVars;
+    Visit(ast->classDeclStmnts);
+
+    /* (7) Analyze the actual code */
     state_ = States::AnalyzeCode;
     Visit(ast->classDeclStmnts);
 }
@@ -383,13 +387,7 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
             break;
 
         case States::RegisterMemberSymbols:
-            PushSymTab(*ast);
-            {
-                Visit(ast->declStmnts);
-            }
-            PopSymTab();
-            break;
-
+        case States::AnalyzeMemberVars:
         case States::AnalyzeCode:
             PushSymTab(*ast);
             {
@@ -402,15 +400,18 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
 
 DEF_VISIT_PROC(Decorator, VarDeclStmnt)
 {
+    auto ownerType = symTab_->GetOwner().Type();
+
     if (IsRegisterMemberSymbols())
     {
         /* Register symbols of class member variables */
         for (auto& varDecl : ast->varDecls)
             RegisterVarDecl(*varDecl);
     }
-    else if (IsAnalyzeCode())
+    else if ( ( IsAnalyzeCode() && ownerType == AST::Types::ProcDeclStmnt ) ||
+              ( IsAnalyzeMemberVars() && ownerType == AST::Types::ClassDeclStmnt ) )
     {
-        switch (symTab_->GetOwner().Type())
+        switch (ownerType)
         {
             case AST::Types::ProcDeclStmnt:
                 /* Declaration statement for local variables */
@@ -1143,22 +1144,25 @@ is valid from the current class to the specified base class.
 */
 bool Decorator::VerifyVisibility(const ClassDeclStmnt::Visibilities varNameVis, const ClassDeclStmnt* varNameParentClass) const
 {
+    using Vis = ClassDeclStmnt::Visibilities;
+    
     switch (varNameVis)
     {
-        case ProcDeclStmnt::Vis::Protected:
+        case Vis::Protected:
         {
             if (varNameParentClass != class_ && !class_->IsSubClassOf(*varNameParentClass))
                 return false;
         }
         break;
 
-        case ProcDeclStmnt::Vis::Private:
+        case Vis::Private:
         {
             if (varNameParentClass != class_)
                 return false;
         }
         break;
     }
+
     return true;
 }
 
