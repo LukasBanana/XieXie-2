@@ -16,7 +16,6 @@
 #include "StdClassGenerator.h"
 #include "CodeGenerators/XASM/XASMGenerator.h"
 
-#include "Program.h"
 #include "ASTViewer.h"
 #include "CFGViewer.h"
 #include "Optimizer.h"
@@ -24,11 +23,15 @@
 
 #define _DEB_DISABLE_CFG_PER_DEFAULT_//!!!
 
+using namespace AbstractSyntaxTrees;
+using namespace SyntaxAnalyzer;
+using namespace ControlFlowGraph;
+
 void CompileCommand::Execute(StreamParser& input, Log& output)
 {
     /* Parse input stream */
-    ParseFilenames(input);
-    ParseOptions(input);
+    ReadFilenames(input);
+    ReadOptions(input);
 
     if (outputFilename_.empty())
     {
@@ -38,162 +41,41 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
 
     ErrorReporter::showWarnings = options_.warnings;
 
-    /* <----- COMPILATION -----> */
-
-    ErrorReporter errorReporter;
-
     /* Parse program */
-    AbstractSyntaxTrees::Program program;
-    SyntaxAnalyzer::Parser parser;
-
-    /* Generate built-in class declarations */
-    ContextAnalyzer::StdClassGenerator::GenerateBuiltinClasses(program);
-    
-    /* Parse input filenames */
-    std::vector<std::string> nextSources;
-
-    while (!sources_.empty())
-    {
-        for (const auto& filename : sources_)
-        {
-            if (output.verbose)
-                output.Message("parse file \"" + ExtractFilename(filename) + "\" ...");
-
-            /* Parse source file */
-            if (!parser.ParseSource(program, std::make_shared<SyntaxAnalyzer::SourceStream>(filename), errorReporter))
-                hasError_ = true;
-        }
-
-        /* Collect import filenames */
-        for (const auto& import : program.importFilenames)
-        {
-            /* Check if filename has already been parsed */
-            auto importLower = ToLower(import);
-            if (passedSources_.find(importLower) == passedSources_.end())
-            {
-                nextSources.push_back(import);
-                passedSources_.insert(importLower);
-            }
-        }
-        program.importFilenames.clear();
-
-        /* Process next sources */
-        sources_ = std::move(nextSources);
-    }
+    Program program;
+    ParseProgram(program, output);
 
     /* Decorate program */
     if (!hasError_)
-    {
-        if (output.verbose)
-            output.Message("context analysis ...");
+        DecorateProgram(program, output);
 
-        ContextAnalyzer::Decorator decorator;
-        if (!decorator.DecorateProgram(program, errorReporter))
-            hasError_ = true;
-    }
-
-    /* Show syntax tree */
+    /* Show syntax tree (AST) */
     if (options_.showAST)
-    {
-        AbstractSyntaxTrees::ASTViewer viewer(output);
-        viewer.ViewProgram(program);
-    }
+        ShowAST(program, output);
 
+    #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!
+    if (options_.showCFG){
+    #endif
+        
     /* Transform to CFG */
-    ControlFlowGraph::CFGProgramPtr cfgProgram;
-
+    CFGProgramPtr cfgProgram;
     if (!hasError_)
-    {
-        #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!
-        if (options_.showCFG){
-        #endif
-
-        if (output.verbose)
-            output.Message("AST to CFG conversion ...");
-
-        ControlFlowGraph::GraphGenerator converter;
-        cfgProgram = converter.GenerateCFG(program, errorReporter);
-
-        if (errorReporter.HasErrors())
-            hasError_ = true;
-        else if (options_.optimize)
-        {
-            /* Optimize CFG */
-            if (output.verbose)
-                output.Message("optimize CFG ...");
-            Optimization::Optimizer::OptimizeProgram(*cfgProgram);
-        }
-
-        #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!!!
-        }
-        #endif
-    }
+        cfgProgram = GenerateCFG(program, output);
 
     /* Generate assembler code */
     if (!hasError_ && cfgProgram)
-    {
-        #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!
-        if (options_.showCFG){
-        #endif
+        GenerateCode(*cfgProgram, output);
 
-        /* Create output file */
-        std::string fileId;
-        auto OutFile = [&]()
-        {
-            return outputFilename_ + fileId + ".xasm";
-        };
-
-        if (!options_.forceOverride && FileHelper::DoesFileExist(OutFile()))
-        {
-            /* Ask user to override file */
-            output.Warning("output file \"" + OutFile() + "\" already exists! override? (y/n)");
-
-            char answer = 0;
-            std::cin >> answer;
-
-            if (answer != 'y' && answer != 'Y')
-            {
-                /* Find available filename */
-                size_t i = 0;
-                do
-                {
-                    fileId = std::to_string(++i);
-                }
-                while (FileHelper::DoesFileExist(OutFile()));
-            }
-        }
-
-        std::ofstream outputFile(OutFile());
-
-        /* Generate code */
-        if (output.verbose)
-            output.Message("generate code file \"" + OutFile() + "\" ...");
-
-        CodeGenerator::XASMGenerator generator(outputFile);
-        if (!generator.GenerateAsm(*cfgProgram, errorReporter))
-            hasError_ = true;
-
-        #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!!!
-        }
-        #endif
-    }
-
-    /* Show flow graph */
+    /* Show flow graph (CFG) */
     if (options_.showCFG && cfgProgram)
-    {
-        ControlFlowGraph::CFGViewer viewer;
+        ShowCFG(*cfgProgram, output);
 
-        size_t i = 0;
-        for (const auto& tree : cfgProgram->classTrees)
-        {
-            if (output.verbose)
-                output.Message("dump CFG class tree \"" + tree->GetClassDeclAST()->ident + "\"");
-            viewer.ViewGraph(*tree, "cfg-dump/");
-        }
+    #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!!!
     }
+    #endif
 
     /* Print out errors */
-    errorReporter.Flush(output);
+    errorReporter_.Flush(output);
 
     if (!hasError_)
         output.Success("compilation successful");
@@ -206,7 +88,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
  * ======= Private: =======
  */
 
-void CompileCommand::ParseFilenames(StreamParser& input)
+void CompileCommand::ReadFilenames(StreamParser& input)
 {
     /* Get source filenames from input stream */
     while (input.Get() == "-f" || input.Get() == "--file")
@@ -224,7 +106,7 @@ void CompileCommand::ParseFilenames(StreamParser& input)
     }
 }
 
-void CompileCommand::ParseOptions(StreamParser& input)
+void CompileCommand::ReadOptions(StreamParser& input)
 {
     /* Parse options */
     while (true)
@@ -261,6 +143,136 @@ void CompileCommand::ParseOptions(StreamParser& input)
         }
         else
             break;
+    }
+}
+
+void CompileCommand::ParseProgram(AbstractSyntaxTrees::Program& program, Log& output)
+{
+    Parser parser;
+
+    /* Generate built-in class declarations */
+    ContextAnalyzer::StdClassGenerator::GenerateBuiltinClasses(program);
+    
+    /* Parse input filenames */
+    std::vector<std::string> nextSources;
+
+    while (!sources_.empty())
+    {
+        for (const auto& filename : sources_)
+        {
+            if (output.verbose)
+                output.Message("parse file \"" + ExtractFilename(filename) + "\" ...");
+
+            /* Parse source file */
+            if (!parser.ParseSource(program, std::make_shared<SourceStream>(filename), errorReporter_))
+                hasError_ = true;
+        }
+
+        /* Collect import filenames */
+        for (const auto& import : program.importFilenames)
+        {
+            /* Check if filename has already been parsed */
+            auto importLower = ToLower(import);
+            if (passedSources_.find(importLower) == passedSources_.end())
+            {
+                nextSources.push_back(import);
+                passedSources_.insert(importLower);
+            }
+        }
+        program.importFilenames.clear();
+
+        /* Process next sources */
+        sources_ = std::move(nextSources);
+    }
+}
+
+void CompileCommand::DecorateProgram(AbstractSyntaxTrees::Program& program, Log& output)
+{
+    if (output.verbose)
+        output.Message("context analysis ...");
+
+    ContextAnalyzer::Decorator decorator;
+    if (!decorator.DecorateProgram(program, errorReporter_))
+        hasError_ = true;
+}
+
+CFGProgramPtr CompileCommand::GenerateCFG(Program& program, Log& output)
+{
+    if (output.verbose)
+        output.Message("graph generation ...");
+
+    GraphGenerator converter;
+    auto cfgProgram = converter.GenerateCFG(program, errorReporter_);
+
+    if (errorReporter_.HasErrors())
+        hasError_ = true;
+    else if (options_.optimize)
+    {
+        /* Optimize CFG */
+        if (output.verbose)
+            output.Message("optimization ...");
+        Optimization::Optimizer::OptimizeProgram(*cfgProgram);
+    }
+
+    return cfgProgram;
+}
+
+void CompileCommand::GenerateCode(const CFGProgram& cfgProgram, Log& output)
+{
+    /* Create output file */
+    std::string fileId;
+    auto OutFile = [&]()
+    {
+        return outputFilename_ + fileId + ".xasm";
+    };
+
+    if (!options_.forceOverride && FileHelper::DoesFileExist(OutFile()))
+    {
+        /* Ask user to override file */
+        output.Warning("output file \"" + OutFile() + "\" already exists! override? (y/n)");
+
+        char answer = 0;
+        std::cin >> answer;
+
+        if (answer != 'y' && answer != 'Y')
+        {
+            /* Find available filename */
+            size_t i = 0;
+            do
+            {
+                fileId = std::to_string(++i);
+            }
+            while (FileHelper::DoesFileExist(OutFile()));
+        }
+    }
+
+    std::ofstream outputFile(OutFile());
+
+    /* Generate code */
+    if (output.verbose)
+        output.Message("generate code file \"" + OutFile() + "\" ...");
+
+    CodeGenerator::XASMGenerator generator(outputFile);
+    if (!generator.GenerateAsm(cfgProgram, errorReporter_))
+        hasError_ = true;
+}
+
+void CompileCommand::ShowAST(Program& program, Log& output)
+{
+    ASTViewer viewer(output);
+    viewer.ViewProgram(program);
+}
+
+void CompileCommand::ShowCFG(const CFGProgram& cfgProgram, Log& output)
+{
+    CFGViewer viewer;
+
+    size_t i = 0;
+    for (const auto& tree : cfgProgram.classTrees)
+    {
+        if (output.verbose)
+            output.Message("dump CFG class tree \"" + tree->GetClassDeclAST()->ident + "\"");
+        viewer.ViewGraph(*tree, "cfg-dump/");
     }
 }
 

@@ -10,11 +10,18 @@
 
 
 #include "Command.h"
+#include "Program.h"
+#include "ErrorReporter.h"
+#include "CFGProgram.h"
 
 #include <string>
 #include <vector>
 #include <set>
 
+
+using AbstractSyntaxTrees::Program;
+using ControlFlowGraph::CFGProgram;
+using ControlFlowGraph::CFGProgramPtr;
 
 class CompileCommand : public Command
 {
@@ -35,8 +42,22 @@ class CompileCommand : public Command
             bool forceOverride  = false;
         };
 
-        void ParseFilenames(StreamParser& input);
-        void ParseOptions(StreamParser& input);
+        /* === Functions === */
+
+        void ReadFilenames(StreamParser& input);
+        void ReadOptions(StreamParser& input);
+
+        void ParseProgram(Program& program, Log& output);
+        void DecorateProgram(Program& program, Log& output);
+        CFGProgramPtr GenerateCFG(Program& program, Log& output);
+        void GenerateCode(const CFGProgram& cfgProgram, Log& output);
+
+        void ShowAST(Program& program, Log& output);
+        void ShowCFG(const CFGProgram& cfgProgram, Log& output);
+
+        /* === Members === */
+
+        ErrorReporter               errorReporter_;
 
         std::vector<std::string>    sources_;
         std::set<std::string>       passedSources_;
