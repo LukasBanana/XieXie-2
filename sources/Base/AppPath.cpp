@@ -6,13 +6,14 @@
  */
 
 #include "AppPath.h"
+#include "StringModifier.h"
 
 
 static std::string appPath;
 
 void AppPath::Set(const std::string& path)
 {
-    appPath = path;
+    appPath = ExtractFilePath(path);
 }
 
 const std::string& AppPath::Get()

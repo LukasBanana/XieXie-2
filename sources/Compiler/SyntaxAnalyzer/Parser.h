@@ -78,6 +78,7 @@ class Parser
         std::string AcceptIdent();
         std::string AcceptBaseClassIdent();
         std::string AcceptImport();
+        std::string ParseImport();
 
         int AcceptSignedIntLiteral();
         unsigned int AcceptUnsignedIntLiteral();
@@ -239,6 +240,9 @@ class Parser
         bool IsAny(const std::initializer_list<Tokens>& types) const;
 
         std::string GenAnonymousClassIdent();
+
+        //! Returns this the import filename with possible path augmentation.
+        bool FindImport(std::string& filename) const;
 
         inline Tokens TknType() const
         {

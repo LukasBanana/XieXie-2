@@ -42,13 +42,13 @@ class Integer {
 		
 		if v < 0 {
 			// Append sign to string
-			s.setChar(0, ASCII.HYPHEN)
+			s.setChar(0, ASCII.hyphen)
 			v := -v
 		}
 		
 		// Append digits to string
 		for int i := len - 1 ; i >= firstDigit ; i-- {
-			s.setChar(i, ASCII.DIGIT0 + (v & 9))
+			s.setChar(i, ASCII.digit0 + (v & 9))
 			v /= 10
 		}
 		
@@ -66,7 +66,7 @@ class Integer {
 		bool neg
 		
 		// Check if integer is negative
-		if len > 0 and s.getChar(0) = ASCII.HYPHEN {
+		if len > 0 and s.getChar(0) = ASCII.hyphen {
 			neg := true
 			i++
 		}
@@ -75,7 +75,7 @@ class Integer {
 		for ; i < len ; i++ {
 			digit := s.getChar(i)
 			
-			if digit < ASCII.DIGIT0 or digit > ASCII.DIGIT9 {
+			if digit < ASCII.digit0 or digit > ASCII.digit9 {
 				// Error while parsing
 				return 0
 			}
@@ -84,7 +84,7 @@ class Integer {
 			v *= 10
 			
 			// Append digit to integer
-			v += (digit - ASCII.DIGIT0)
+			v += (digit - ASCII.digit0)
 		}
 		
 		// Negate value

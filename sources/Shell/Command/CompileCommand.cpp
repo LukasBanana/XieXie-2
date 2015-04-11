@@ -7,6 +7,8 @@
 
 #include "CommandFactory.h"
 #include "SourceStream.h"
+#include "AppPath.h"
+#include "FileHelper.h"
 
 #include "Parser.h"
 #include "Decorator.h"
@@ -22,16 +24,30 @@
 
 #define _DEB_DISABLE_CFG_PER_DEFAULT_//!!!
 
-static bool DoesFileExist(const std::string& filename)
-{
-    std::ifstream file(filename);
-    return file.good();
-}
-
 void CompileCommand::Execute(StreamParser& input, Log& output)
 {
-    ErrorReporter errorReporter;
+    /* <----- PARSE INPUT -----> */
 
+    /* Get source filenames from input stream */
+    std::vector<std::string> sources, nextSources;
+    std::set<std::string> passedSources;
+    std::string outputFilename;
+
+    while (input.Get() == "-f" || input.Get() == "--file")
+    {
+        /* Parse filename */
+        input.Accept();
+        auto filename = input.Accept();
+
+        if (outputFilename.empty())
+            outputFilename = filename;
+
+        /* Add filename to list */
+        sources.push_back(filename);
+        passedSources.insert(ToLower(filename));
+    }
+
+    /* Parse options */
     bool hasError       = false;
     bool showAST        = false;
     bool showCFG        = false;
@@ -39,33 +55,6 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     bool warnings       = false;
     bool forceOverride  = false;
 
-    std::string outputFilename;
-
-    /* Parse program */
-    AbstractSyntaxTrees::Program program;
-    SyntaxAnalyzer::Parser parser;
-
-    /* Generate built-in class declarations */
-    ContextAnalyzer::StdClassGenerator::GenerateBuiltinClasses(program);
-    
-    /* Parse input filenames */
-    while (input.Get() == "-f" || input.Get() == "--file")
-    {
-        input.Accept();
-        auto filename = input.Accept();
-
-        if (outputFilename.empty())
-            outputFilename = filename;
-
-        if (output.verbose)
-            output.Message("parse file \"" + filename + "\" ...");
-
-        /* Parse source file */
-        if (!parser.ParseSource(program, std::make_shared<SyntaxAnalyzer::SourceStream>(filename), errorReporter))
-            hasError = true;
-    }
-
-    /* Parse options */
     while (true)
     {
         if (input.Get() == "--show-ast" && !showAST)
@@ -109,6 +98,47 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     }
 
     ErrorReporter::showWarnings = warnings;
+
+    /* <----- COMPILATION -----> */
+
+    ErrorReporter errorReporter;
+
+    /* Parse program */
+    AbstractSyntaxTrees::Program program;
+    SyntaxAnalyzer::Parser parser;
+
+    /* Generate built-in class declarations */
+    ContextAnalyzer::StdClassGenerator::GenerateBuiltinClasses(program);
+    
+    /* Parse input filenames */
+    while (!sources.empty())
+    {
+        for (const auto& filename : sources)
+        {
+            if (output.verbose)
+                output.Message("parse file \"" + ExtractFilename(filename) + "\" ...");
+
+            /* Parse source file */
+            if (!parser.ParseSource(program, std::make_shared<SyntaxAnalyzer::SourceStream>(filename), errorReporter))
+                hasError = true;
+        }
+
+        /* Collect import filenames */
+        for (const auto& import : program.importFilenames)
+        {
+            /* Check if filename has already been parsed */
+            auto importLower = ToLower(import);
+            if (passedSources.find(importLower) == passedSources.end())
+            {
+                nextSources.push_back(import);
+                passedSources.insert(importLower);
+            }
+        }
+        program.importFilenames.clear();
+
+        /* Process next sources */
+        sources = std::move(nextSources);
+    }
 
     /* Decorate program */
     if (!hasError)
@@ -172,7 +202,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             return outputFilename + fileId + ".xasm";
         };
 
-        if (!forceOverride && DoesFileExist(OutFile()))
+        if (!forceOverride && FileHelper::DoesFileExist(OutFile()))
         {
             /* Ask user to override file */
             output.Warning("output file \"" + OutFile() + "\" already exists! override? (y/n)");
@@ -188,7 +218,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
                 {
                     fileId = std::to_string(++i);
                 }
-                while (DoesFileExist(OutFile()));
+                while (FileHelper::DoesFileExist(OutFile()));
             }
         }
 

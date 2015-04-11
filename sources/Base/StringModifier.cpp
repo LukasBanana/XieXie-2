@@ -102,12 +102,31 @@ std::string ExtractFilePath(const std::string& filename)
 std::string ExtractFileExtension(const std::string& filename)
 {
     /* Return file extension only */
-    auto pos = filename.find_last_of('.');
+    for (size_t i = filename.size(); i + 1 >= 0; --i)
+    {
+        auto chr = filename[i - 1];
+        if (chr == '/' || chr == '\\')
+            break;
+        if (chr == '.')
+            return filename.substr(i);
+    }
+    return "";
+}
 
-    if (pos == std::string::npos)
-        return filename;
+std::string ExtractFileIdent(const std::string& filename)
+{
+    /* Return file identifier only */
+    auto filePart = ExtractFilename(filename);
+    auto extPart = ExtractFileExtension(filename);
 
-    return filename.substr(pos + 1, filename.size() - pos - 1);
+    if (!extPart.empty())
+    {
+        if (extPart.size() + 1 < filePart.size())
+            filePart.resize(filePart.size() - extPart.size() - 1);
+        return filePart;
+    }
+
+    return filePart;
 }
 
 std::string ReplaceString(

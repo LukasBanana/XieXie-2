@@ -42,6 +42,8 @@ std::string ExtractFilename(const std::string& filename);
 std::string ExtractFilePath(const std::string& filename);
 //! Returns the file extension part (e.g. from "C:/Program Files/Programming/App.xx" to "xx").
 std::string ExtractFileExtension(const std::string& filename);
+//! Returns the identifier of the specified full path (e.g. from "C:/Program Files/Programming/App.xx" to "App").
+std::string ExtractFileIdent(const std::string& filename);
 
 std::string ReplaceString(
     std::string subject, const std::string& search, const std::string& replace

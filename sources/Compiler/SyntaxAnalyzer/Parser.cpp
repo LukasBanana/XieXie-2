@@ -12,6 +12,8 @@
 #include "BuiltinTypeDenoter.h"
 #include "Timer.h"
 #include "Version.h"
+#include "AppPath.h"
+#include "FileHelper.h"
 
 #include <algorithm>
 
@@ -237,6 +239,17 @@ std::string Parser::AcceptImport()
     return "";
 }
 
+std::string Parser::ParseImport()
+{
+    auto tkn = tkn_;
+    auto import = AcceptImport();
+
+    if (!FindImport(import))
+        Error("can not find import file \"" + import + "\"", tkn);
+
+    return import;
+}
+
 int Parser::AcceptSignedIntLiteral()
 {
     /* Parse optional negative number */
@@ -269,7 +282,7 @@ void Parser::ParseProgram(Program& ast)
     while (!Is(Tokens::EndOfFile))
     {
         if (Is(Tokens::Import))
-            ast.importFilenames.push_back(AcceptImport());
+            ast.importFilenames.push_back(ParseImport());
         else
             ast.classDeclStmnts.push_back(ParseClassDeclOrModuleDeclStmnt());
     }
@@ -2163,6 +2176,39 @@ bool Parser::IsAny(const std::initializer_list<Tokens>& types) const
 std::string Parser::GenAnonymousClassIdent()
 {
     return "__xx__AnonymousClass" + std::to_string(anonymousClassCounter_++);
+}
+
+/*
+Searchs the specified import file. The search order is:
+(1) "./" (current) directory
+(2) "library/" directory
+(3) "modules/<FILE>/" directory
+*/
+bool Parser::FindImport(std::string& filename) const
+{
+    static const std::string libBasePath = "/../repository/";
+
+    /* (1) Search file is "./" (current) directory */
+    if (FileHelper::DoesFileExist(filename))
+        return true;
+
+    /* (2) Search file is "library/" directory */
+    auto libraryFile = AppPath::Get() + libBasePath + "library/" + filename;
+    if (FileHelper::DoesFileExist(libraryFile))
+    {
+        filename = std::move(libraryFile);
+        return true;
+    }
+
+    /* (3) Search file is "modules/<FILE>/" directory */
+    auto moduleFile = AppPath::Get() + libBasePath + "modules/" + ExtractFileIdent(filename) + "/" + filename;
+    if (FileHelper::DoesFileExist(moduleFile))
+    {
+        filename = std::move(moduleFile);
+        return true;
+    }
+
+    return false;
 }
 
 
