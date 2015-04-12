@@ -636,13 +636,17 @@ class Intrinsics
             });
         }
 
-        //! Returns the intrinsic address by the specified intrinsic name or 0 if the name is invalid.
+        /**
+        Returns the intrinsic address by the specified intrinsic name or 0 if the name is invalid.
+        \param[in] name Specifies the intrinsic name.
+        \throws std::invalid_argument If 'name' is invalid.
+        */
         unsigned int AddressByName(const std::string& name)
         {
             AddressMapType::iterator it = addresses_.find(name);
-            if (it != addresses_.end())
-                return it->second;
-            return 0u;
+            if (it == addresses_.end())
+                throw std::invalid_argument("unknown intrinsic \"" + name + "\"");
+            return it->second;
         }
 
     private:

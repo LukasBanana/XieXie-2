@@ -1128,9 +1128,21 @@ std::pair<std::string, unsigned int> Assembler::ParseExportAddress()
 
 unsigned int Assembler::ParseIntrinsicID()
 {
-    /* Parse intrinsic address label */
+    /* Parse intrinsic identifier */
     auto label = Accept(Token::Types::Ident).spell;
-    return intrinsics_->AddressByName(label);
+    unsigned int inscID = 0;
+    
+    /* Get intrinsic ID by its name */
+    try
+    {
+        inscID = intrinsics_->AddressByName(label);
+    }
+    catch (const std::exception& err)
+    {
+        Error(err.what());
+    }
+
+    return inscID;
 }
 
 /* ------- Assembler ------- */

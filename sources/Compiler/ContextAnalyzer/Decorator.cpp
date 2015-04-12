@@ -1322,8 +1322,14 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
         auto procDecl = ast.declStmntRef;
 
         /* Check if procedure is deprecated */
-        if (procDecl->IsDeprecated())
-            Warning("call of deprecated procedure", &ast);
+        std::string hint;
+        if (procDecl->IsDeprecated(&hint))
+        {
+            std::string info = "call of deprecated procedure";
+            if (!hint.empty())
+                info += ": " + hint;
+            Warning(info, &ast);
+        }
 
         /* Check procedure visibility */
         if (!VerifyVisibility(procDecl->visibility, procDecl->parentRef))
