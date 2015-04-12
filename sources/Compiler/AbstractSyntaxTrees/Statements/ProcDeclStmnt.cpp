@@ -8,6 +8,7 @@
 #include "ProcDeclStmnt.h"
 #include "ProcSignature.h"
 #include "AttribPrefix.h"
+#include "Attrib.h"
 #include "ClassDeclStmnt.h"
 
 
@@ -30,9 +31,14 @@ bool ProcDeclStmnt::IsOverride() const
     return HasAttrib("override");
 }
 
-bool ProcDeclStmnt::IsDeprecated() const
+bool ProcDeclStmnt::IsDeprecated(std::string* arg) const
 {
-    return HasAttrib("deprecated");
+    return HasAttrib("deprecated", arg);
+}
+
+bool ProcDeclStmnt::IsExport(std::string* arg) const
+{
+    return HasAttrib("export", arg);
 }
 
 bool ProcDeclStmnt::IsAbstract() const
@@ -43,6 +49,11 @@ bool ProcDeclStmnt::IsAbstract() const
 bool ProcDeclStmnt::HasAttrib(const std::string& attribIdent) const
 {
     return attribPrefix != nullptr ? attribPrefix->HasAttrib(attribIdent) : false;
+}
+
+bool ProcDeclStmnt::HasAttrib(const std::string& attribIdent, std::string* arg) const
+{
+    return attribPrefix != nullptr ? attribPrefix->HasAttrib(attribIdent, arg) : false;
 }
 
 

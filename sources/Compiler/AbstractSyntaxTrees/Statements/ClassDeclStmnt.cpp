@@ -330,7 +330,8 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
             continue;
 
         /* Validate procedure attributes */
-        bool isStatic = procDecl->procSignature->isStatic;
+        auto procSig = procDecl->procSignature.get();
+        bool isStatic = procSig->isStatic;
 
         if (procDecl->attribPrefix)
         {
@@ -341,12 +342,14 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
                 validAttribs.insert("override");
                 validAttribs.insert("final");
             }
+            else if (procSig->params.empty())
+                validAttribs.insert("export");
 
             for (auto attr : procDecl->attribPrefix->FindDuplicateAttribs())
-                Error(errorReporter, "duplicate attribute '" + attr->ident + "' for procedure declaration", attr);
+                Error(errorReporter, "duplicate attribute '" + attr->ident + "' for procedure \"" + procSig->ident + "\"", attr);
 
             for (auto attr : procDecl->attribPrefix->FindInvalidAttribs(validAttribs))
-                Error(errorReporter, "invalid attribute '" + attr->ident + "' for procedure declaration", attr);
+                Error(errorReporter, "invalid attribute '" + attr->ident + "' for procedure \"" + procSig->ident + "\"", attr);
         }
         
         /* Check if this procedure overrides a procedure from its base class */

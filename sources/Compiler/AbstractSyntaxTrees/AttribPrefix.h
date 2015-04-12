@@ -30,6 +30,13 @@ class AttribPrefix : public AST
         const Attrib* FindAttrib(const std::string& attribIdent) const;
         //! Returns true if this attribute prefix has the specified attribute identifier.
         bool HasAttrib(const std::string& attribIdent) const;
+        /**
+        Returns true if this attribute prefix has the specified attribute identifier.
+        \param[in] attribIdent Specifies the attribute identifier which is to be searched.
+        \param[out] arg Output argument of the attribute. If the attribute has no argument,
+        return value of 'arg' is an empty string. This parameter may also be null.
+        */
+        bool HasAttrib(const std::string& attribIdent, std::string* arg) const;
 
         //! Returns a list of all duplicate attributes.
         std::vector<const Attrib*> FindDuplicateAttribs() const;

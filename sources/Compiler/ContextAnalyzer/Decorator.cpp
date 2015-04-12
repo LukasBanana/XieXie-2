@@ -210,10 +210,10 @@ DEF_VISIT_PROC(Decorator, Attrib)
     /* Verify attribute argument */
     try
     {
-        if (ast->ident == "deprecated")
+        if (ast->ident == "deprecated" || ast->ident == "export")
         {
             if (ast->arg && ast->arg->GetType() != Arg::String)
-                throw std::string("attribute 'deprecated' can only have a string as argument");
+                throw std::string("attribute '" + ast->ident + "' can only have a string as argument");
         }
         else if (ast->ident == "final" || ast->ident == "override")
         {

@@ -35,7 +35,9 @@ class ProcDeclStmnt : public ScopedStmnt
         //! Returns true if this procedure has the "override" attribute.
         bool IsOverride() const;
         //! Returns true if this procedure has the "deprecated" attribute.
-        bool IsDeprecated() const;
+        bool IsDeprecated(std::string* arg = nullptr) const;
+        //! Returns true if this procedure has the "export" attribute.
+        bool IsExport(std::string* arg = nullptr) const;
         //! Returns true if this procedure is abstract, i.e. 'codeBlock' is null and its parent class is not an extern class.
         bool IsAbstract() const;
 
@@ -52,6 +54,7 @@ class ProcDeclStmnt : public ScopedStmnt
     private:
 
         bool HasAttrib(const std::string& attribIdent) const;
+        bool HasAttrib(const std::string& attribIdent, std::string* arg) const;
 
 };
 

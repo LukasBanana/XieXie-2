@@ -7,6 +7,7 @@
 
 #include "ClassTree.h"
 #include "MakeUnique.h"
+#include "ProcSignature.h"
 
 #include <exception>
 #include <algorithm>
@@ -32,13 +33,13 @@ BasicBlock* ClassTree::CreateBasicBlock(const std::string& label)
     return bb;
 }
 
-BasicBlock* ClassTree::CreateRootBasicBlock(const ProcSignature& procSignature, const std::string& label)
+BasicBlock* ClassTree::CreateRootBasicBlock(const ProcDeclStmnt& procDecl, const std::string& label)
 {
     /* Check if identifier has already been used */
-    if (rootBasicBlocks_.find(&procSignature) != rootBasicBlocks_.end())
+    if (rootBasicBlocks_.find(&procDecl) != rootBasicBlocks_.end())
     {
         throw std::invalid_argument(
-            "procedure signature \"" + procSignature.ident +
+            "procedure signature \"" + procDecl.procSignature->ident +
             "\" has already been used for a CFG basic block"
         );
     }
@@ -49,7 +50,7 @@ BasicBlock* ClassTree::CreateRootBasicBlock(const ProcSignature& procSignature, 
     /* Register identifier */
     auto bb = basicBlocks_.back().get();
     bb->label = label;
-    rootBasicBlocks_[(&procSignature)] = bb;
+    rootBasicBlocks_[(&procDecl)] = bb;
 
     return bb;
 }

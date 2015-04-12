@@ -133,7 +133,7 @@ class XASMGenerator final : public AsmGenerator
         /* --- Code Generation --- */
 
         void GenerateClassTree(const ClassTree& classTree);
-        void GenerateProcedure(BasicBlock& cfg, const ProcSignature& procSignature);
+        void GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& procDecl);
         void GenerateBlock(const BasicBlock& bb);
 
         void GenerateInst(const TACInst& inst);
@@ -153,6 +153,7 @@ class XASMGenerator final : public AsmGenerator
         void GenerateVtable(const ClassDeclStmnt& classDecl);
         void GenerateClassRTTI(const BuiltinClasses::ClassRTTI& typeInfo);
         void GenerateStartUpCode(const ClassDeclStmnt& rootClass);
+        void GenerateExportLabels();
 
         void GenerateStringLiteral(const CFGProgram::StringLiteral& constStr);
         void GenerateBoolArrayLiteral(const CFGProgram::BoolArrayLiteral& constArray);
@@ -169,6 +170,7 @@ class XASMGenerator final : public AsmGenerator
         const BasicBlock*                       nextBlock_    = nullptr;
 
         std::stack<const BasicBlock*>           blockIndentStack_;
+        std::vector<std::string>                exportLabels_;
 
 };
 

@@ -696,7 +696,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     procSig.label = UniqueLabel(*ast);
     auto procDisplay = DisplayLabel(procSig.label);
     
-    auto root = CT()->CreateRootBasicBlock(procSig, procDisplay);
+    auto root = CT()->CreateRootBasicBlock(*ast, procDisplay);
 
     /* Fetch parameters */
     size_t argIndex = 0;

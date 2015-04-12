@@ -11,7 +11,7 @@
 
 #include "BasicBlock.h"
 #include "ClassDeclStmnt.h"
-#include "ProcSignature.h"
+#include "ProcDeclStmnt.h"
 
 #include <map>
 
@@ -26,13 +26,13 @@ class ClassTree
     
     public:
         
-        using RootBasicBocks = std::map<const AbstractSyntaxTrees::ProcSignature*, BasicBlock*>;
+        using RootBasicBocks = std::map<const AbstractSyntaxTrees::ProcDeclStmnt*, BasicBlock*>;
 
         ClassTree(AbstractSyntaxTrees::ClassDeclStmnt& classDeclAST);
 
         BasicBlock* CreateBasicBlock(const std::string& label = "");
         //! \throws std::invalid_argument If "ident" has already been used.
-        BasicBlock* CreateRootBasicBlock(const AbstractSyntaxTrees::ProcSignature& procSignature, const std::string& label = "");
+        BasicBlock* CreateRootBasicBlock(const AbstractSyntaxTrees::ProcDeclStmnt& procDecl, const std::string& label = "");
 
         void DeleteBasicBlock(BasicBlock* basicBlock);
 

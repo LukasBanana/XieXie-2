@@ -32,6 +32,7 @@ class Test {
 	
 	static int state := 5
 	
+	[[export("mainProc")]]
 	static void main() {
 		
 		System.out.printLn("Hello, World!")

@@ -87,6 +87,9 @@ bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorR
         GenerateFloatArrayLiteral({ "PrimArray.const.1", { -12345.6789f, 0.5f, 2.5f, 0.3f, 0.00000001f, 3.141592654f } });
         #endif
 
+        /* Generate export labels */
+        GenerateExportLabels();
+
         /* Write last empty line, so that assembler parser works correct */
         Line("");
 
@@ -310,16 +313,29 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
     Blank();
 }
 
-void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcSignature& procSignature)
+void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& procDecl)
 {
     regAlloc_.Reset();
 
-    const auto& label = procSignature.label;
+    const auto& procSig = *procDecl.procSignature;
+    const auto& label = procSig.label;
     Comment(NameMangling::DisplayLabel(label));
 
-    if (procSignature.isEntryPoint)
+    /* Check if label for main entry must be added */
+    if (procSig.isEntryPoint)
         GlobalLabel(mainProcIdent);
 
+    /* Check if export label must be added */
+    std::string expLabel;
+    if (procDecl.IsExport(&expLabel))
+    {
+        if (expLabel.empty())
+            expLabel = procDecl.parentRef->ident + '.' + procSig.ident;
+        GlobalLabel(expLabel);
+        exportLabels_.push_back(expLabel);
+    }
+
+    /* Genrate procedure code */
     GlobalLabel(label);
     IncIndent();
     {
@@ -693,6 +709,19 @@ void XASMGenerator::GenerateStartUpCode(const ClassDeclStmnt& rootClass)
     Line("stop");
 
     Blanks(2);
+}
+
+void XASMGenerator::GenerateExportLabels()
+{
+    if (!exportLabels_.empty())
+    {
+        CommentHeadline("EXPORT LABELS");
+    
+        for (const auto& label : exportLabels_)
+            Line(".export " + label);
+
+        Blanks(2);
+    }
 }
 
 void XASMGenerator::GenerateStringLiteral(const CFGProgram::StringLiteral& constStr)

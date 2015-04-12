@@ -28,6 +28,18 @@ bool AttribPrefix::HasAttrib(const std::string& attribIdent) const
     return FindAttrib(attribIdent) != nullptr;
 }
 
+bool AttribPrefix::HasAttrib(const std::string& attribIdent, std::string* arg) const
+{
+    auto attr = FindAttrib(attribIdent);
+    if (attr)
+    {
+        if (arg)
+            *arg = (attr->arg != nullptr ? attr->arg->value : "");
+        return true;
+    }
+    return false;
+}
+
 std::vector<const Attrib*> AttribPrefix::FindDuplicateAttribs() const
 {
     std::set<std::string> attribSet;
