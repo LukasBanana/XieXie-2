@@ -33,6 +33,10 @@ class Test {
 	static int state := 5
 	static bool boolean
 	
+	static bool getBoolean() {
+		return Test.boolean
+	}
+	
 	[[export]]
 	static void main() {
 		
@@ -45,7 +49,7 @@ class Test {
 		
 		bool a := Test.boolean, b := false
 		
-		if a or not a {
+		if a or not Test.getBoolean() {
 			b := true
 		}
 		

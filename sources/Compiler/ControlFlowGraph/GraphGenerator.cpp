@@ -914,8 +914,18 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
     /* Make instruction */
     auto inst = BB()->MakeInst<TACCopyInst>();
 
-    inst->dest      = TempVar();
-    inst->src       = ast->value;
+    inst->dest = TempVar();
+
+    switch (ast->GetType())
+    {
+        case LiteralExpr::Literals::Bool:
+            inst->src = (ast->value == "false" ? "0" : "1");
+            break;
+
+        default:
+            inst->src = ast->value;
+            break;
+    }
 
     PushVar(inst->dest);
 }
