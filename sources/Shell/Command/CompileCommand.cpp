@@ -272,7 +272,11 @@ void CompileCommand::ShowCFG(const CFGProgram& cfgProgram, Log& output)
     {
         if (output.verbose)
             output.Message("dump CFG class tree \"" + tree->GetClassDeclAST()->ident + "\"");
+        #ifdef _DEBUG
         viewer.ViewGraph(*tree, "cfg-dump/");
+        #else
+        viewer.ViewGraph(*tree);
+        #endif
     }
 }
 
