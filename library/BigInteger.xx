@@ -1,0 +1,121 @@
+/*
+ * BigInteger.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+import ASCII
+
+/**
+BigInteger class for arbitrary large integral numbers.
+@since 2.00
+@author Lukas Hermanns
+*/
+class BigInteger {
+
+	init() {}
+	init(int value) {
+        //todo...
+	}
+	init(String s) {
+        //todo...
+	}
+	
+	[[override]]
+	String toString() {	
+	    return null
+	}
+	
+	BigInteger bitAnd(BigInteger rhs) {
+	    return null // todo...
+	}
+	
+	BigInteger bitOr(BigInteger rhs) {
+	    return null // todo...
+	}
+	
+	BigInteger bitXOr(BigInteger rhs) {
+	    return null // todo...
+	}
+	
+	BigInteger bitNot() {
+	    return null // todo...
+	}
+	
+	BigInteger shiftLeft(int n) {
+	    return null // todo...
+	}
+	
+	BigInteger shiftRight(int n) {
+	    return null // todo...
+	}
+	
+	BigInteger add(BigInteger rhs) {
+	    return null // todo...
+	}
+	
+	BigInteger sub(BigInteger rhs) {
+	    return null // todo...
+	}
+	
+	BigInteger mul(BigInteger rhs) {
+	    return null // todo...
+	}
+	
+	BigInteger div(BigInteger rhs) {
+	    return null // todo...
+	}
+	
+	BigInteger mod(BigInteger rhs) {
+	    return null // todo...
+	}
+	
+	BigInteger pow(int exp) {
+	    return null // todo...
+	}
+	
+	BigInteger modPow(BigInteger exp, BitInteger m) {
+	    return null // todo...
+	}
+	
+	BigInteger negate() {
+	    return null // todo...
+	}
+	
+	/**
+	Compares this integer with 'rhs' and returns:
+	- -1 iff this integer is less then 'rhs'.
+	-  0 iff this integer is equal to 'rhs'.
+	- +1 iff this integer is greater then 'rhs'.
+	*/
+	int compare(BigInteger rhs) {
+	    return 0 // todo...
+	}
+	
+	/// Parses an integer from the specified string
+	static BigInteger parseFrom(String s) {
+		if s = null {
+			// Invalid argument
+			return null
+		}
+		
+		//todo...
+		
+		return null
+	}
+	
+	[[override, final]]
+	int pointer() {
+	    return bits.pointer()
+	}
+	
+	/// Returns the size (in bytes) of the bit-fields of this BigInteger.
+	[[final]]
+	int size() {
+	    return bits.size()*4
+	}
+	
+	private int[] bits
+	
+}
