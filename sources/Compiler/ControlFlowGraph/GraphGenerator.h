@@ -15,6 +15,7 @@
 #include "TACVar.h"
 #include "TACVarManager.h"
 #include "ErrorReporter.h"
+#include "BitMask.h"
 
 #include <vector>
 
@@ -38,16 +39,25 @@ class GraphGenerator final : private Visitor
         
         using IDType = TACVar::IDType;
 
-        struct BlockRef
+        /*struct VisitFlags
         {
-            BlockRef() = default;
-            BlockRef(BasicBlock* bb);
-            BlockRef(BasicBlock* in, BasicBlock* out);
-            BlockRef(BasicBlock* in, BasicBlock* out, BasicBlock* outAlt);
+            enum
+            {
+                RequireBoolBranch = (1 << 0), //!< Boolean variable access requires a conditional branch.
+            };
+        };*/
 
-            BasicBlock* in      = nullptr;
-            BasicBlock* out     = nullptr; // default out/ true branch.
-            BasicBlock* outAlt  = nullptr; // alternative out/ false branch.
+        struct VisitIO
+        {
+            VisitIO() = default;
+            VisitIO(BasicBlock* bb);
+            VisitIO(BasicBlock* in, BasicBlock* out);
+            VisitIO(BasicBlock* in, BasicBlock* out, BasicBlock* outAlt);
+
+            //BitMask     flags;              // visit input flags.
+            BasicBlock* in      = nullptr;  // input block
+            BasicBlock* out     = nullptr;  // default out/ true branch.
+            BasicBlock* outAlt  = nullptr;  // alternative out/ false branch.
         };
 
         /* === Functions === */
@@ -61,8 +71,11 @@ class GraphGenerator final : private Visitor
 
         /* --- Generation --- */
 
-        void GenerateLogicOrBinaryExpr(BinaryExpr* ast, void* args);
+        VisitIO GenerateBooleanExpr(Expr& ast);
+        VisitIO GenerateConditionalBinaryExpr(Expr& ast);
+
         void GenerateLogicAndBinaryExpr(BinaryExpr* ast, void* args);
+        void GenerateLogicOrBinaryExpr(BinaryExpr* ast, void* args);
         void GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args);
         void GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args);
 
@@ -75,8 +88,8 @@ class GraphGenerator final : private Visitor
 
         /* --- CFG Generation --- */
 
-        template <typename T> BlockRef VisitAndLink(T ast);
-        template <typename T> BlockRef VisitAndLink(const std::vector<std::shared_ptr<T>>& astList);
+        template <typename T> VisitIO VisitAndLink(T ast);
+        template <typename T> VisitIO VisitAndLink(const std::vector<std::shared_ptr<T>>& astList);
 
         void CreateClassTree(ClassDeclStmnt& ast);
         BasicBlock* MakeBlock(const std::string& label = "");

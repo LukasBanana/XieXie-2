@@ -66,10 +66,12 @@ CFGProgramPtr GraphGenerator::GenerateCFG(Program& program, ErrorReporter& error
  * ======= Private: =======
  */
 
-#define RETURN_BLOCK_REF(expr)                          \
-    auto&& _result = expr;                              \
-    if (args)                                           \
-        *reinterpret_cast<BlockRef*>(args) = _result
+//#define VISIT_FLAGS reinterpret_cast<const VisitIO*>(args)->flags
+
+#define RETURN_BLOCK_REF(expr)                      \
+    auto&& _result = expr;                          \
+    if (args)                                       \
+        *reinterpret_cast<VisitIO*>(args) = _result
 
 void GraphGenerator::ErrorIntern(const std::string& msg, const AST* ast)
 {
@@ -305,7 +307,7 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
         }
 
         /* Build branch CFG */
-        auto condCFG = VisitAndLink(ast->condExpr);
+        auto condCFG = GenerateBooleanExpr(*ast->condExpr);
 
         in->AddSucc(*condCFG.in);
         condCFG.out->AddSucc(*thenBranch.in, "true");
@@ -314,7 +316,7 @@ DEF_VISIT_PROC(GraphGenerator, IfStmnt)
         if (!thenBranch.out->flags(BasicBlock::Flags::HasCtrlTransfer))
             thenBranch.out->AddSucc(*out);
 
-        RETURN_BLOCK_REF(BlockRef(in, out));
+        RETURN_BLOCK_REF(VisitIO(in, out));
     }
     else
     {
@@ -364,7 +366,7 @@ DEF_VISIT_PROC(GraphGenerator, SwitchStmnt)
     }
     PopBreakBB();
 
-    RETURN_BLOCK_REF(BlockRef(in, out));
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 /*
@@ -386,7 +388,7 @@ DEF_VISIT_PROC(GraphGenerator, DoWhileStmnt)
     PushBB(in);
     {
         /* Build condition CFG */
-        auto condCFG = VisitAndLink(ast->condExpr);
+        auto condCFG = GenerateBooleanExpr(*ast->condExpr);
 
         condCFG.out->AddSucc(*in, "true");
         condCFG.outAlt->AddSucc(*out, "false");
@@ -415,7 +417,7 @@ DEF_VISIT_PROC(GraphGenerator, DoWhileStmnt)
     }
     PopBB();
 
-    RETURN_BLOCK_REF(BlockRef(in, out));
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 /*
@@ -436,7 +438,7 @@ DEF_VISIT_PROC(GraphGenerator, WhileStmnt)
     PushBB(in);
     {
         /* Build condition CFG */
-        auto condCFG = VisitAndLink(ast->condExpr);
+        auto condCFG = GenerateBooleanExpr(*ast->condExpr);
         in->AddSucc(*condCFG.in);
 
         /* Build loop body CFG */
@@ -460,7 +462,7 @@ DEF_VISIT_PROC(GraphGenerator, WhileStmnt)
     }
     PopBB();
 
-    RETURN_BLOCK_REF(BlockRef(in, out));
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 /*
@@ -500,7 +502,7 @@ DEF_VISIT_PROC(GraphGenerator, ForStmnt)
 
         if (ast->condExpr)
         {
-            auto condCFG = VisitAndLink(ast->condExpr);
+            auto condCFG = GenerateBooleanExpr(*ast->condExpr);
 
             condIn = condCFG.in;
             condOut = condCFG.out;
@@ -563,7 +565,7 @@ DEF_VISIT_PROC(GraphGenerator, ForStmnt)
     }
     PopBB();
 
-    RETURN_BLOCK_REF(BlockRef(in, out));
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 /*
@@ -626,7 +628,7 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
 
     cond->AddSucc(*out, "false");
 
-    RETURN_BLOCK_REF(BlockRef(in, out));
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
@@ -663,7 +665,7 @@ DEF_VISIT_PROC(GraphGenerator, RepeatStmnt)
     }
     PopBreakBB();
 
-    RETURN_BLOCK_REF(BlockRef(in, out));
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, ClassDeclStmnt)
@@ -728,7 +730,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
             Error("not all execution paths in \"" + procSig.ident + "\" end with a valid procedure return", ast);
     }
 
-    RETURN_BLOCK_REF(BlockRef(root, graph.out));
+    RETURN_BLOCK_REF(VisitIO(root, graph.out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
@@ -1017,6 +1019,62 @@ DEF_VISIT_PROC(GraphGenerator, PointerTypeDenoter)
 
 /* --- Generation --- */
 
+GraphGenerator::VisitIO GraphGenerator::GenerateBooleanExpr(Expr& ast)
+{
+    /* Check if this is a boolean variable */
+    if (ast.Type() == AST::Types::VarAccessExpr)
+    {
+        auto& varExpr = *AST::Cast<VarAccessExpr>(&ast);
+        auto exprType = varExpr.GetTypeDenoter();
+        if (exprType && exprType->IsBoolean())
+        {
+            /* Build condition 'var != false' */
+            return GenerateConditionalBinaryExpr(ast);
+        }
+        else
+            ErrorIntern("boolean type expected for variable access", &ast);
+    }
+
+    /* Check if this is a boolean procedure call */
+    if (ast.Type() == AST::Types::ProcCall)
+    {
+        auto& procExpr = *AST::Cast<ProcCall>(&ast);
+        auto exprType = procExpr.GetTypeDenoter();
+        if (exprType && exprType->IsBoolean())
+        {
+            /* Build condition 'proc() != false' */
+            return GenerateConditionalBinaryExpr(ast);
+        }
+        else
+            ErrorIntern("boolean type expected for procedure call", &ast);
+    }
+
+    /* Otherwise, it must be a binary expression */
+    return VisitAndLink(&ast);
+}
+
+GraphGenerator::VisitIO GraphGenerator::GenerateConditionalBinaryExpr(Expr& ast)
+{
+    auto bb = MakeBlock();
+    PushBB(bb);
+    {
+        Visit(&ast);
+        auto srcLhs = Var();
+
+        /* Make instruction */
+        auto inst = BB()->MakeInst<TACRelationInst>();
+
+        inst->srcLhs = srcLhs;
+        inst->srcRhs = TACVar("0");
+        inst->opcode = OpCodes::CMPNE;
+
+        PopVar();
+    }
+    PopBB();
+
+    return bb;
+}
+
 static OpCodes OperatorToOpCode(const BinaryExpr::Operators op, bool isFloat)
 {
     using Ty = BinaryExpr::Operators;
@@ -1069,8 +1127,8 @@ static OpCodes OperatorToOpCode(const BinaryExpr::Operators op, bool isFloat)
 
 void GraphGenerator::GenerateLogicAndBinaryExpr(BinaryExpr* ast, void* args)
 {
-    auto lhs = VisitAndLink(ast->lhsExpr);
-    auto rhs = VisitAndLink(ast->rhsExpr);
+    auto lhs = GenerateBooleanExpr(*ast->lhsExpr);
+    auto rhs = GenerateBooleanExpr(*ast->rhsExpr);
 
     auto thenBranch = MakeBlock();
     auto elseBranch = MakeBlock();
@@ -1081,13 +1139,13 @@ void GraphGenerator::GenerateLogicAndBinaryExpr(BinaryExpr* ast, void* args)
     rhs.out->AddSucc(*thenBranch, "true");
     rhs.outAlt->AddSucc(*elseBranch, "false");
 
-    RETURN_BLOCK_REF(BlockRef(lhs.in, thenBranch, elseBranch));
+    RETURN_BLOCK_REF(VisitIO(lhs.in, thenBranch, elseBranch));
 }
 
 void GraphGenerator::GenerateLogicOrBinaryExpr(BinaryExpr* ast, void* args)
 {
-    auto lhs = VisitAndLink(ast->lhsExpr);
-    auto rhs = VisitAndLink(ast->rhsExpr);
+    auto lhs = GenerateBooleanExpr(*ast->lhsExpr);
+    auto rhs = GenerateBooleanExpr(*ast->rhsExpr);
 
     auto thenBranch = MakeBlock();
     auto elseBranch = MakeBlock();
@@ -1098,7 +1156,7 @@ void GraphGenerator::GenerateLogicOrBinaryExpr(BinaryExpr* ast, void* args)
     rhs.out->AddSucc(*thenBranch, "true");
     rhs.outAlt->AddSucc(*elseBranch, "false");
 
-    RETURN_BLOCK_REF(BlockRef(lhs.in, thenBranch, elseBranch));
+    RETURN_BLOCK_REF(VisitIO(lhs.in, thenBranch, elseBranch));
 }
 
 void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
@@ -1165,7 +1223,7 @@ static OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isFloat)
 
 void GraphGenerator::GenerateLogicNotUnaryExpr(UnaryExpr* ast, void* args)
 {
-    auto expr = VisitAndLink(ast->expr);
+    auto expr = GenerateConditionalBinaryExpr(*ast->expr);
 
     auto trueBranch = MakeBlock();
     auto falseBranch = MakeBlock();
@@ -1174,7 +1232,7 @@ void GraphGenerator::GenerateLogicNotUnaryExpr(UnaryExpr* ast, void* args)
     expr.outAlt->AddSucc(*falseBranch, "false");
 
     /* Swap true/false branches to negate expression */
-    RETURN_BLOCK_REF(BlockRef(expr.in, falseBranch, trueBranch));
+    RETURN_BLOCK_REF(VisitIO(expr.in, falseBranch, trueBranch));
 }
 
 void GraphGenerator::GenerateBitwiseNotUnaryExpr(UnaryExpr* ast, void* args)
@@ -1242,21 +1300,22 @@ void GraphGenerator::GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, v
 }
 
 #undef RETURN_BLOCK_REF
+//#undef VISIT_FLAGS
 
 /* --- CFG Generation --- */
 
-template <typename T> GraphGenerator::BlockRef GraphGenerator::VisitAndLink(T ast)
+template <typename T> GraphGenerator::VisitIO GraphGenerator::VisitAndLink(T ast)
 {
-    BlockRef ref;
+    VisitIO ref;
     if (ast)
         ast->Visit(this, &ref);
     return ref;
 }
 
-template <typename T> GraphGenerator::BlockRef GraphGenerator::VisitAndLink(const std::vector<std::shared_ptr<T>>& astList)
+template <typename T> GraphGenerator::VisitIO GraphGenerator::VisitAndLink(const std::vector<std::shared_ptr<T>>& astList)
 {
     BasicBlock* first = nullptr;
-    BlockRef prev;
+    VisitIO prev;
 
     for (size_t i = 0, n = astList.size(); i < n; ++i)
     {
@@ -1390,22 +1449,22 @@ TACVar GraphGenerator::LocalVarFromVarName(const VarName& ast)
 
 
 /*
- * BlockRef structure
+ * VisitIO structure
  */
 
-GraphGenerator::BlockRef::BlockRef(BasicBlock* bb) :
+GraphGenerator::VisitIO::VisitIO(BasicBlock* bb) :
     in      { bb },
     out     { bb },
     outAlt  { bb }
 {
 }
-GraphGenerator::BlockRef::BlockRef(BasicBlock* in, BasicBlock* out) :
+GraphGenerator::VisitIO::VisitIO(BasicBlock* in, BasicBlock* out) :
     in      { in  },
     out     { out },
     outAlt  { out }
 {
 }
-GraphGenerator::BlockRef::BlockRef(BasicBlock* in, BasicBlock* out, BasicBlock* outAlt) :
+GraphGenerator::VisitIO::VisitIO(BasicBlock* in, BasicBlock* out, BasicBlock* outAlt) :
     in      { in     },
     out     { out    },
     outAlt  { outAlt }

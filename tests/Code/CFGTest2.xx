@@ -31,6 +31,7 @@ class System {
 class Test {
 	
 	static int state := 5
+	static bool boolean
 	
 	[[export]]
 	static void main() {
@@ -40,6 +41,12 @@ class Test {
 		for Test.state := 0 ; Test.state < 5 ; Test.state++ {
 			System.out.print(Test.state)
 			System.out.printLn("")
+		}
+		
+		bool a := Test.boolean, b := false
+		
+		if a or not a {
+			b := true
 		}
 		
 	}
