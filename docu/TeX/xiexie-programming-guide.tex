@@ -1107,11 +1107,14 @@ class MyClass {
 \section{Creating Modules}
 
 Modules must be written in plain C or \cpp. A minimal module would consist of three files.
-Supposed our example module is named ``MyModule'' and we work on \windows we would have these files:
+Supposed our example module is named ``MyModule'' we would have these files:
 \begin{itemize}
-	\item \textbf{\texttt{MyModule.c}} Module code written in C.
-	\item \textbf{\texttt{MyModule.dll}}/ \textbf{\texttt{.so}} Shared library which runs the module code.
-	\item \textbf{\texttt{MyModule.xx}} \xiexie code file which declares the module. 
+	\item \textbf{\texttt{MyModule.c}}
+		Module code written in C.
+	\item \textbf{\texttt{MyModule.dll}} (\windows)/ \textbf{\texttt{*.so}} (\linux)
+		Shared library which runs the module code.
+	\item \textbf{\texttt{MyModule.xx}}
+		\xiexie code file which declares the module interface.
 \end{itemize}
 The C code file must implement the following function interfaces to be a valid \xiexie module:
 \begin{lstlisting}
@@ -1126,23 +1129,24 @@ const char* xx_module_fetch_ident(int index);
 \end{lstlisting}
 Our simple module example from above could be implemented as follows:
 \begin{lstlisting}
-#include "../xx_module.h"
+// Include XieXie module header
+#include <xiexie/xx_module.h>
 
-// This is our module procedure "soSomething".
-// All module procedures must have this interface.
-void doSomething(xvm_env env) {
+// This is our module procedure "soSomething",
+// all module procedures must have this interface
+void doSomething(XVM_Env env) {
     // Get 1st parameter from XVM environment
-    int x = xvm_param_int(env, 1);
+    int x = XVM_ParamInt(env, 1);
     
     // Do something with 'x'
     printf("input parameter 'x' is %i\n", i);
     
     // Pop arguments from stack (1 for the single parameter 'x')
-    xvm_return_void(env, 1);
+    XVM_ReturnVoid(env, 1);
 }
 
 // Implement the module interface
-static xvm_invocation procList[] = {
+static XVM_INVOCATION_PROC procList[] = {
     { "doSomething", doSomething },
 };
 
