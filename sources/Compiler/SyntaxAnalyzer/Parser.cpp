@@ -673,6 +673,8 @@ StmntPtr Parser::ParseDeclStmnt()
         case Tokens::Var:
         case Tokens::Const:
             return ParseVarDeclStmnt();
+        case Tokens::Friend:
+            return ParseFriendDeclStmnt();
     }
     return ParseVarDeclOrProcDeclStmnt();
 }
@@ -1441,6 +1443,28 @@ ProcDeclStmntPtr Parser::ParseReleaseDeclStmnt()
 
     Accept(Tokens::Release);
     ast->codeBlock = ParseCodeBlock();
+
+    return ast;
+}
+
+// friend_decl_stmnt:   'friend' friend_list;
+// friend_list:         IDENT (',' IDENT)*;
+FriendDeclStmntPtr Parser::ParseFriendDeclStmnt()
+{
+    auto ast = Make<FriendDeclStmnt>();
+
+    ast->visibility = state_.classVis;
+
+    Accept(Tokens::Friend);
+
+    while (true)
+    {
+        ast->idents.push_back(AcceptIdent());
+        if (Is(Tokens::Comma))
+            AcceptIt();
+        else
+            break;
+    }
 
     return ast;
 }

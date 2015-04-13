@@ -76,6 +76,11 @@ class ClassDeclStmnt : public ScopedStmnt
         bool IsSuperClassOf(const ClassDeclStmnt& classDeclStmnt) const;
         bool IsSubClassOf(const ClassDeclStmnt& classDeclStmnt) const;
 
+        //! Appends the specified class as a friend to this class.
+        void AppendFriend(const ClassDeclStmnt& classDeclStmnt, const Visibilities vis);
+        //! Returns the friendship visibility of the specified class for this class.
+        Visibilities Friendship(const ClassDeclStmnt& classDeclStmnt) const;
+
         std::string HierarchyString(const std::string& separator = " -> ") const;
 
         /**
@@ -180,21 +185,22 @@ class ClassDeclStmnt : public ScopedStmnt
 
         /* === Members === */
 
-        SourceCodePtr                   source_;                        // Reference to the source where this class is declared.
+        SourceCodePtr                                   source_;                        // Reference to the source where this class is declared.
 
         // dast
-        PointerTypeDenoter              thisTypeDenoter_;               // type denoter for this class declaration
-        ClassDeclStmnt*                 baseClassRef_       = nullptr;  // reference to base class (or null if the base class is "Object").
-        std::vector<ClassDeclStmnt*>    subClassesRef_;                 // reference to all sub classes.
-        Vtable                          vtable_;                        // list of all class procedures (including the procedures from its base class).
+        PointerTypeDenoter                              thisTypeDenoter_;               // type denoter for this class declaration
+        ClassDeclStmnt*                                 baseClassRef_       = nullptr;  // reference to base class (or null if the base class is "Object").
+        std::vector<ClassDeclStmnt*>                    subClassesRef_;                 // reference to all sub classes.
+        Vtable                                          vtable_;                        // list of all class procedures (including the procedures from its base class).
+        std::map<const ClassDeclStmnt*, Visibilities>   friendClassesRef_;              // reference to all friend classes.
 
-        bool                            isAbstract_         = false;    // is this an abstract class, i.e. has it abstract procedures?
+        bool                                            isAbstract_         = false;    // is this an abstract class, i.e. has it abstract procedures?
 
-        unsigned int                    typeID_             = 0;        // type ID of this class.
-        unsigned int                    numSubClasses_      = 0;        // total number of sub classes in the inheritance hierarchy.
-        unsigned int                    instanceSize_       = 0;        // size (in bytes) of an instance of this class.
-        unsigned int                    globalStartOffset_  = 0;        // start offset (in bytes) of all global (or rather 'static') members of this class and all sub classes.
-        unsigned int                    globalEndOffset_    = 0;        // end offset
+        unsigned int                                    typeID_             = 0;        // type ID of this class.
+        unsigned int                                    numSubClasses_      = 0;        // total number of sub classes in the inheritance hierarchy.
+        unsigned int                                    instanceSize_       = 0;        // size (in bytes) of an instance of this class.
+        unsigned int                                    globalStartOffset_  = 0;        // start offset (in bytes) of all global (or rather 'static') members of this class and all sub classes.
+        unsigned int                                    globalEndOffset_    = 0;        // end offset
 
 };
 

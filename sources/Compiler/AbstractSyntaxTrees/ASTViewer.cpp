@@ -243,6 +243,14 @@ DEF_VISIT_PROC(ASTViewer, ProcDeclStmnt)
     Visit(ast->codeBlock);
 }
 
+DEF_VISIT_PROC(ASTViewer, FriendDeclStmnt)
+{
+    AST_INFO_COLOR("FriendDeclStmnt", colorStmnt);
+    size_t i = 0;
+    for (const auto& ident : ast->idents)
+        String("ident" + std::to_string(i++), ident);
+}
+
 DEF_VISIT_PROC(ASTViewer, CopyAssignStmnt)
 {
     AST_INFO_COLOR("CopyAssignStmnt", colorStmnt);

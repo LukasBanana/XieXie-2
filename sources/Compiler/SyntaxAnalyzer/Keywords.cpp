@@ -61,6 +61,7 @@ static KeywordMapType GenerateKeywordMap()
         { "static",      Ty::Static         },
         { "init",        Ty::Init           },
         { "release",     Ty::Release        },
+        { "friend",      Ty::Friend         },
 
         { "enum",        Ty::Enum           },
         { "flags",       Ty::Flags          },

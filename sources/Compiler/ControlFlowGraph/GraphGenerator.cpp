@@ -733,6 +733,11 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     RETURN_BLOCK_REF(VisitIO(root, graph.out));
 }
 
+DEF_VISIT_PROC(GraphGenerator, FriendDeclStmnt)
+{
+    // do nothing
+}
+
 DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
 {
     /* Make basic block */

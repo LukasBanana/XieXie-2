@@ -36,7 +36,8 @@ decl_stmnt	: var_decl_stmnt
 			| flags_decl_stmnt*/
 			| proc_decl_stmnt
 			| init_decl_stmnt
-			| release_decl_stmnt;
+			| release_decl_stmnt
+			| friend_decl_stmnt;
 
 extern_decl_stmnt	: /*extern_class_decl_stmnt
 					|*/ extern_proc_decl_stmnt
@@ -117,6 +118,10 @@ array_index:		expr;
 
 // IMPORTS
 import_stmnt:	'import' (STRING_LITERAL | IDENT);
+
+// FRIENDS
+friend_decl_stmnt:	'friend' friend_list;
+friend_list:		IDENT (',' IDENT)*;
 
 // CLASSES
 class_decl_stmnt:			attrib_prefix? (intern_class_decl_stmnt | extern_class_decl_stmnt);

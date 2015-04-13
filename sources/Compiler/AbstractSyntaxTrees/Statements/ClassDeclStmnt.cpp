@@ -117,6 +117,19 @@ bool ClassDeclStmnt::IsSubClassOf(const ClassDeclStmnt& classDeclStmnt) const
     return false;
 }
 
+void ClassDeclStmnt::AppendFriend(const ClassDeclStmnt& classDeclStmnt, const Visibilities vis)
+{
+    friendClassesRef_[&classDeclStmnt] = vis;
+}
+
+ClassDeclStmnt::Visibilities ClassDeclStmnt::Friendship(const ClassDeclStmnt& classDeclStmnt) const
+{
+    auto it = friendClassesRef_.find(&classDeclStmnt);
+    if (it != friendClassesRef_.end())
+        return it->second;
+    return Visibilities::Public;
+}
+
 std::string ClassDeclStmnt::HierarchyString(const std::string& separator) const
 {
     if (baseClassRef_)

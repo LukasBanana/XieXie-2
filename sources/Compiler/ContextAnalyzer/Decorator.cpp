@@ -129,7 +129,7 @@ DEF_VISIT_PROC(Decorator, Program)
     state_ = States::VerifyClassInheritance;
     Visit(ast->classDeclStmnts);
 
-    /* (4) Register member procedures */
+    /* (4) Register member procedures (and friends) */
     state_ = States::RegisterMemberProcs;
     Visit(ast->classDeclStmnts);
 
@@ -468,6 +468,32 @@ DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
     }
 
     procDeclStmnt_ = nullptr;
+}
+
+DEF_VISIT_PROC(Decorator, FriendDeclStmnt)
+{
+    if (IsRegisterMemberProcs())
+    {
+        if (ast->visibility == FriendDeclStmnt::Vis::Public)
+            Warning("friend declaration with public visibility has no effect", ast);
+        else
+        {
+            for (const auto& ident : ast->idents)
+            {
+                /* Search friend identifier in global scope */
+                auto symbol = FetchSymbolFromScope(ident, program_->symTab, ident, ast);
+                if (symbol)
+                {
+                    /* Append friend to current class declaration */
+                    auto classDecl = AST::Cast<ClassDeclStmnt>(symbol);
+                    if (classDecl)
+                        class_->AppendFriend(*classDecl, ast->visibility);
+                    else
+                        Error("friend \"" + ident + "\" does not refer to a class declaration", ast);
+                }
+            }
+        }
+    }
 }
 
 DEF_VISIT_PROC(Decorator, CopyAssignStmnt)
@@ -1158,14 +1184,16 @@ bool Decorator::VerifyVisibility(const ClassDeclStmnt::Visibilities varNameVis, 
     {
         case Vis::Protected:
         {
-            if (varNameParentClass != class_ && !class_->IsSubClassOf(*varNameParentClass))
+            auto friendVis = varNameParentClass->Friendship(*class_);
+            if (varNameParentClass != class_ && !class_->IsSubClassOf(*varNameParentClass) && friendVis == Vis::Public)
                 return false;
         }
         break;
 
         case Vis::Private:
         {
-            if (varNameParentClass != class_)
+            auto friendVis = varNameParentClass->Friendship(*class_);
+            if (varNameParentClass != class_ && friendVis != Vis::Private)
                 return false;
         }
         break;

@@ -143,6 +143,7 @@ class Parser
         ProcDeclStmntPtr        ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
         ProcDeclStmntPtr        ParseInitDeclStmnt(bool isExtern = false);
         ProcDeclStmntPtr        ParseReleaseDeclStmnt();
+        FriendDeclStmntPtr      ParseFriendDeclStmnt();
 
         StmntPtr                ParseAssignStmnt(VarNamePtr varName = nullptr);
         CopyAssignStmntPtr      ParseCopyAssignStmnt(const VarNamePtr& varName = nullptr);

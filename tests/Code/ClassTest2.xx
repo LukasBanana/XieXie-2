@@ -17,6 +17,8 @@ class C : B {
 	[[override]]
 	void f() { super.f() }
 	
+	private friend Test
+	
 	//static void f(int x) {} // error, mixture of static and non-static procedures
 	
 	void g() {
@@ -34,6 +36,8 @@ class Test {
 		
 		obj.g() // ok, member procedure call
 		//C.g() // error, "g" is non static
+		
+		obj.f() // ok, "Test" is a friend of "C"
 		
 	}
 	

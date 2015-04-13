@@ -118,6 +118,7 @@ class Token
             Static,         //!< static
             Init,           //!< init
             Release,        //!< release
+            Friend,         //!< friend
 
             Enum,           //!< enum
             Flags,          //!< flags

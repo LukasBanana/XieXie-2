@@ -58,6 +58,7 @@ DECL_SHR_PTR( RepeatStmnt        );
 DECL_SHR_PTR( ClassDeclStmnt     );
 DECL_SHR_PTR( VarDeclStmnt       );
 DECL_SHR_PTR( ProcDeclStmnt      );
+DECL_SHR_PTR( FriendDeclStmnt    );
 
 DECL_SHR_PTR( CopyAssignStmnt    );
 DECL_SHR_PTR( ModifyAssignStmnt  );

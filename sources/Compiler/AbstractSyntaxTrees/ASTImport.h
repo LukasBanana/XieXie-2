@@ -44,6 +44,7 @@
 #include "ClassDeclStmnt.h"
 #include "VarDeclStmnt.h"
 #include "ProcDeclStmnt.h"
+#include "FriendDeclStmnt.h"
 
 #include "CopyAssignStmnt.h"
 #include "ModifyAssignStmnt.h"
