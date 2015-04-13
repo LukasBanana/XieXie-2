@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "xvm.h"
+#include <xiexie/xvm.h>
 
 
 void xvm_shell_print_help()

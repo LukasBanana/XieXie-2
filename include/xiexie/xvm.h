@@ -14,12 +14,6 @@
 
 /* ----- Compilation configuration ----- */
 
-//! Makes all functions non-static
-//#define _NON_STATIC_FUNCTIONS_
-
-//! Enables force inlining
-#define _ENABLE_INLINEING_
-
 //! Enables runtimer debugger in virtual machine
 //#define _ENABLE_RUNTIME_DEBUGGER_
 
@@ -33,23 +27,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* ----- Helper macros ----- */
-
-#define _XVM_MIN(a, b) ((a) < (b) ? (a) : (b))
-
-#ifdef _NON_STATIC_FUNCTIONS_
-#   define STATIC // No static functions
-#else
-#   define STATIC static
-#endif
-
-#ifdef _ENABLE_INLINEING_
-#   define INLINE __inline
-#else
-#   define INLINE // No inlining
-#endif
-
 
 /* ----- Registers ----- */
 
@@ -850,11 +827,6 @@ xvm_exit_codes xvm_execute_program_entry_point(
     xvm_stack* const stack,
     const char* entry_point
 );
-
-
-// Undefine internal macros
-#undef INLINE
-#undef STATIC
 
 
 #ifdef __cplusplus

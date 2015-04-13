@@ -8,8 +8,8 @@
 #include "Assembler.h"
 #include "StringModifier.h"
 #include "Log.h"
-#include "VirtualMachine/XVMWrapper.h"
 
+#include <xiexie/xvm_wrapper.h>
 #include <exception>
 #include <algorithm>
 

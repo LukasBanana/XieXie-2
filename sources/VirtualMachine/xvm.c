@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "xvm.h"
+#include <xiexie/xvm.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -70,13 +70,7 @@ extern "C" {
 
 /* ----- Helper macros ----- */
 
-#define _XVM_MIN(a, b) ((a) < (b) ? (a) : (b))
-
-#ifdef _NON_STATIC_FUNCTIONS_
-#   define STATIC // No static functions
-#else
-#   define STATIC static
-#endif
+#define _ENABLE_INLINEING_
 
 #ifdef _ENABLE_INLINEING_
 #   define INLINE __inline
@@ -87,7 +81,7 @@ extern "C" {
 
 /* ----- Helper functions ----- */
 
-INLINE STATIC int _xvm_flt2int_signum(float val)
+INLINE static int _xvm_flt2int_signum(float val)
 {
     if (val > 0.0f)
         return 1;
@@ -480,7 +474,7 @@ const char* xvm_intrinsic_get_ident(const xvm_intrinsic_id addr)
 /* ----- Instruction ----- */
 
 // Returns the instruction opcode.
-INLINE STATIC opcode_t _xvm_instr_get_opcode(const instr_t instr)
+INLINE static opcode_t _xvm_instr_get_opcode(const instr_t instr)
 {
     #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
     /*
@@ -499,25 +493,25 @@ opcode_t xvm_instr_get_opcode(const instr_t instr)
 }
 
 // Returns the 26-bit unsigned value of the specified instruction.
-INLINE STATIC unsigned int _xvm_instr_get_value26(const instr_t instr)
+INLINE static unsigned int _xvm_instr_get_value26(const instr_t instr)
 {
     return (instr & XVM_VALUE26_MAX);
 }
 
 // Returns the 21-bit unsigned value of the specified instruction.
-INLINE STATIC unsigned int _xvm_instr_get_value21(const instr_t instr)
+INLINE static unsigned int _xvm_instr_get_value21(const instr_t instr)
 {
     return (instr & XVM_VALUE21_MAX);
 }
 
 // Returns the 16-bit unsigned value of the specified instruction.
-INLINE STATIC unsigned int _xvm_instr_get_value16(const instr_t instr)
+INLINE static unsigned int _xvm_instr_get_value16(const instr_t instr)
 {
     return (instr & XVM_VALUE16_MAX);
 }
 
 // Returns the 26-bit signed value of the specified instruction.
-INLINE STATIC int _xvm_instr_get_sgn_value26(const instr_t instr)
+INLINE static int _xvm_instr_get_sgn_value26(const instr_t instr)
 {
     unsigned int val = _xvm_instr_get_value26(instr);
 
@@ -529,7 +523,7 @@ INLINE STATIC int _xvm_instr_get_sgn_value26(const instr_t instr)
 }
 
 // Returns the 21-bit signed value of the specified instruction.
-INLINE STATIC int _xvm_instr_get_sgn_value21(const instr_t instr)
+INLINE static int _xvm_instr_get_sgn_value21(const instr_t instr)
 {
     unsigned int val = _xvm_instr_get_value21(instr);
 
@@ -541,7 +535,7 @@ INLINE STATIC int _xvm_instr_get_sgn_value21(const instr_t instr)
 }
 
 // Returns the 16-bit signed value of the specified instruction.
-INLINE STATIC int _xvm_instr_get_sgn_value16(const instr_t instr)
+INLINE static int _xvm_instr_get_sgn_value16(const instr_t instr)
 {
     unsigned int val = _xvm_instr_get_value16(instr);
 
@@ -553,25 +547,25 @@ INLINE STATIC int _xvm_instr_get_sgn_value16(const instr_t instr)
 }
 
 // Returns the extra value of the special instruction RET.
-INLINE STATIC int _xvm_instr_get_extra_value10(const instr_t instr)
+INLINE static int _xvm_instr_get_extra_value10(const instr_t instr)
 {
     return (instr & 0x03ff0000) >> 16;
 }
 
 // Returns the index of the register 0.
-INLINE STATIC reg_t _xvm_instr_get_reg0(const instr_t instr)
+INLINE static reg_t _xvm_instr_get_reg0(const instr_t instr)
 {
     return (instr & 0x03e00000) >> 21;
 }
 
 // Returns the index of the register 1.
-INLINE STATIC reg_t _xvm_instr_get_reg1(const instr_t instr)
+INLINE static reg_t _xvm_instr_get_reg1(const instr_t instr)
 {
     return (instr & 0x001f0000) >> 16;
 }
 
 // Returns the index of the register 2.
-INLINE STATIC reg_t _xvm_instr_get_reg2(const instr_t instr)
+INLINE static reg_t _xvm_instr_get_reg2(const instr_t instr)
 {
     return (instr & 0x0000f800) >> 11;
 }
@@ -647,7 +641,7 @@ const char* xvm_instr_get_mnemonic(const opcode_t opcode)
 Prints debug information for the specified instruction
 with the current state of the specified register set.
 */
-STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, const regi_t* reg_ptr)
+static void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index, const regi_t* reg_ptr)
 {
     const opcode_t opcode = _xvm_instr_get_opcode(instr);
 
@@ -895,17 +889,17 @@ instr_t xvm_instr_make_special2(xvm_opcode opcode, unsigned int result_size, uns
     );
 }
 
-STATIC instr_t _xvm_instr_patch_value26(instr_t instr, unsigned int value)
+static instr_t _xvm_instr_patch_value26(instr_t instr, unsigned int value)
 {
     return (instr & 0xfc000000) | (value & XVM_VALUE26_MAX);
 }
 
-STATIC instr_t _xvm_instr_patch_value21(instr_t instr, unsigned int value)
+static instr_t _xvm_instr_patch_value21(instr_t instr, unsigned int value)
 {
     return (instr & 0xffe00000) | (value & XVM_VALUE21_MAX);
 }
 
-STATIC instr_t _xvm_instr_patch_value16(instr_t instr, unsigned int value)
+static instr_t _xvm_instr_patch_value16(instr_t instr, unsigned int value)
 {
     return (instr & 0xffff0000) | (value & XVM_VALUE16_MAX);
 }
@@ -1002,19 +996,19 @@ int xvm_string_write_to_file(xvm_string string, FILE* file)
 static jmp_buf _xvm_exception_envbuf;
 static const char* _xvm_exception_err = "";
 
-STATIC void _xvm_exception_throw(const char* error_message, int error_code)
+static void _xvm_exception_throw(const char* error_message, int error_code)
 {
     // Setup exception error message and make a long jump
     _xvm_exception_err = error_message;
     longjmp(_xvm_exception_envbuf, error_code);
 }
 
-STATIC void _xvm_exception_stack_overflow()
+static void _xvm_exception_stack_overflow()
 {
     _xvm_exception_throw("stack overflow", EXITCODE_STACK_OVERFLOW);
 }
 
-STATIC void _xvm_exception_stack_underflow()
+static void _xvm_exception_stack_underflow()
 {
     _xvm_exception_throw("stack underflow", EXITCODE_STACK_UNDERFLOW);
 }
@@ -1072,7 +1066,7 @@ int xvm_stack_free(xvm_stack* stack)
     return 0;
 }
 
-INLINE STATIC void _xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t value)
+INLINE static void _xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t value)
 {
     stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
     if (stack_ptr < stack->storage + stack->stack_size)
@@ -1084,7 +1078,7 @@ INLINE STATIC void _xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_
         _xvm_exception_stack_overflow();
 }
 
-INLINE STATIC stack_word_t _xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
+INLINE static stack_word_t _xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
 {
     stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
     if (stack_ptr > stack->storage)
@@ -1106,7 +1100,7 @@ typedef struct
 _xvm_env_internal;
 
 //! Null invocation procedure -> throws EXITCODE_INVOCATION_VIOLATION.
-STATIC void _xvm_null_invocation(xvm_env env)
+static void _xvm_null_invocation(xvm_env env)
 {
     _xvm_exception_throw("invocation of unbound external procedure", EXITCODE_INVOCATION_VIOLATION);
 }
@@ -1742,7 +1736,7 @@ int xvm_module_unload(xvm_module* module)
     return 0;
 }
 
-STATIC int _xvm_bytecode_bind_module_ext(xvm_bytecode* byte_code, const xvm_module* module, int unbindFlag)
+static int _xvm_bytecode_bind_module_ext(xvm_bytecode* byte_code, const xvm_module* module, int unbindFlag)
 {
     if (byte_code == NULL || module == NULL)
         return 0;
@@ -1855,7 +1849,7 @@ int xvm_module_container_add(xvm_module_container* container, xvm_module module)
     return 0;
 }
 
-STATIC int _xvm_module_container_node_free(_xvm_module_container_node* node)
+static int _xvm_module_container_node_free(_xvm_module_container_node* node)
 {
     if (node != NULL)
     {
@@ -1922,7 +1916,7 @@ xvm_module* xvm_module_iteration_next()
 
 /* ----- Virtual machine ----- */
 
-STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, regi_t* const reg_sp, regi_t* const reg_ar)
+static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, regi_t* const reg_sp, regi_t* const reg_ar)
 {
     switch (intrsc_id)
     {
@@ -2931,6 +2925,10 @@ xvm_exit_codes xvm_execute_program_entry_point(
     // Execute program from entry point
     return xvm_execute_program_ext(byte_code, stack, entry_point_addr);
 }
+
+
+// Undefine temporary macros
+#undef INLINE
 
 
 #ifdef __cplusplus

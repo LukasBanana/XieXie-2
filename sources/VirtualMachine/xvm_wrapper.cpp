@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "XVMWrapper.h"
+#include <xiexie/xvm_wrapper.h>
 
 
 namespace XieXie

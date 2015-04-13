@@ -9,6 +9,8 @@ project(XieXie2)
 
 set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build CACHE PATH "Build Directory")
 
+set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/../include")
+
 
 # === Preprocessor definitions ===
 
@@ -60,7 +62,7 @@ set(
 set(
 	FilesXVM
 	${PROJECT_SOURCE_DIR}/VirtualMachine/xvm.c
-	${PROJECT_SOURCE_DIR}/VirtualMachine/xvm.h
+	${PROJECT_INCLUDE_DIR}/xiexie/xvm.h
 )
 
 set(
@@ -70,8 +72,8 @@ set(
 
 set(
 	FilesXVMWrapper
-	${PROJECT_SOURCE_DIR}/VirtualMachine/XVMWrapper.cpp
-	${PROJECT_SOURCE_DIR}/VirtualMachine/XVMWrapper.h
+	${PROJECT_INCLUDE_DIR}/xiexie/xvm_wrapper.h
+	${PROJECT_SOURCE_DIR}/VirtualMachine/xvm_wrapper.cpp
 )
 
 
@@ -119,6 +121,7 @@ source_group(
 
 # === Include directories ===
 
+include_directories("${PROJECT_INCLUDE_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/Base")
 include_directories("${PROJECT_SOURCE_DIR}/Compiler")
@@ -142,7 +145,7 @@ include_directories("${PROJECT_SOURCE_DIR}/Shell/Command")
 add_executable(xxc ${FilesAll})
 add_executable(xvm ${FilesXVMShell})
 add_library(xvmlib STATIC ${FilesXVM})
-add_library(XVMWrapper STATIC ${FilesXVMWrapper})
+add_library(xvm_wrapper STATIC ${FilesXVMWrapper})
 
 set_target_properties(
 	xxc PROPERTIES
@@ -181,7 +184,7 @@ set_target_properties(
 )
 
 set_target_properties(
-	XVMWrapper PROPERTIES
+	xvm_wrapper PROPERTIES
 	LINKER_LANGUAGE CXX
 	DEBUG_POSTFIX "D"
 	ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
@@ -193,11 +196,11 @@ set_target_properties(
 )
 
 target_link_libraries(xvm xvmlib)
-target_link_libraries(XVMWrapper xvmlib)
-target_link_libraries(xxc XVMWrapper)
+target_link_libraries(xvm_wrapper xvmlib)
+target_link_libraries(xxc xvm_wrapper)
 
 if(UNIX)
-	target_link_libraries(XVMWrapper dl m)
+	target_link_libraries(xvm_wrapper dl m)
 	target_link_libraries(xvm dl m)
 	target_link_libraries(xvmlib dl m)
 	target_link_libraries(xxc dl m)
