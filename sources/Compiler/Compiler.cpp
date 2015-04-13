@@ -11,9 +11,11 @@
 namespace Compiler
 {
 
+
 //...
 
-};
+
+} // /namespace Compiler
 
 
 

@@ -12,7 +12,7 @@
 #include "BuiltinTypeDenoter.h"
 #include "Timer.h"
 #include "Version.h"
-#include "AppPath.h"
+#include "LibPaths.h"
 #include "FileHelper.h"
 
 #include <algorithm>
@@ -2188,14 +2188,12 @@ Searchs the specified import file. The search order is:
 */
 bool Parser::FindImport(std::string& filename) const
 {
-    static const std::string libBasePath = "/../repository/";
-
     /* (1) Search file is "./" (current) directory */
     if (FileHelper::DoesFileExist(filename))
         return true;
 
     /* (2) Search file is "library/" directory */
-    auto libraryFile = AppPath::Get() + libBasePath + "library/" + filename;
+    auto libraryFile = LibPaths::LibraryPath() + filename;
     if (FileHelper::DoesFileExist(libraryFile))
     {
         filename = std::move(libraryFile);
@@ -2203,7 +2201,7 @@ bool Parser::FindImport(std::string& filename) const
     }
 
     /* (3) Search file is "modules/<FILE>/" directory */
-    auto moduleFile = AppPath::Get() + libBasePath + "modules/" + ExtractFileIdent(filename) + "/" + filename;
+    auto moduleFile = LibPaths::ModulesPath() + ExtractFileIdent(filename) + "/" + filename;
     if (FileHelper::DoesFileExist(moduleFile))
     {
         filename = std::move(moduleFile);

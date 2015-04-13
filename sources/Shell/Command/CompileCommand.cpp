@@ -7,7 +7,6 @@
 
 #include "CompileCommand.h"
 #include "SourceStream.h"
-#include "AppPath.h"
 #include "FileHelper.h"
 
 #include "Parser.h"
