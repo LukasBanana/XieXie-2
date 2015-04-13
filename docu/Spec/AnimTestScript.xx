@@ -1,0 +1,95 @@
+
+module GameIO {
+	
+	static void updateDoor(Door door)
+	
+}
+
+class Vector3 {
+	init(float size) {
+		x, y, z := size
+	}
+	init(float x, float y, float z) {
+		this.x := x
+		this.y := y
+		this.z := z
+	}
+	float x, y, z
+}
+
+class Quaternion {
+	float x, y, z, w
+}
+
+class GameObject {
+	
+	Vector3 position := new Vector3()
+	Quaternion rotation := new Quaternion()
+	Vector3 scale := new Vector3(1.0)
+	
+}
+
+class Door : GameObject {
+	static const opened := 1
+	static const closed := 0
+	
+	int getState() { return state }
+	
+	void updateAnimation() {
+		if isAnim {
+			if state = Door.opened {
+				if position.x > Door.openPos {
+					position.x -= Door.moveSpeed
+				} else {
+					isAnim := false
+				}
+			} else {
+				if position.x < Door.closePos {
+					position.x += Door.moveSpeed
+				} else {
+					isAnim := false
+				}
+			}
+			GameIO.updateDoor(this)
+		}
+	}
+	
+	void open() {
+		state := Door.opened
+	}
+	void close() {
+		state := Door.closed
+	}
+	
+private:
+	
+	int state := Door.closed
+	bool isAnim := false
+	static const moveSpeed := 0.1
+	static const openPos := -5.0
+	static const closePos := 3.0
+	
+}
+
+class DoorScript {
+	
+	static var doors := new Door[](10)
+	
+	[[export]]
+	static void openDoor(int doorIdx) {
+		DoorScript.doors[doorIdx].open()
+	}
+	
+	[[export]]
+	static void closeDoor(int doorIdx) {
+		DoorScript.doors[doorIdx].close()
+	}
+	
+	[[export]]
+	static void updateAnimation() {
+		foreach door : DoorScript.doors {
+			door.updateAnimation()
+		}
+	}
+	
+}
