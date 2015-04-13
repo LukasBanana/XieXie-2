@@ -27,20 +27,6 @@
 //! XVM boolean 'false' literal.
 #define XVM_False   0
 
-#define XVM_FLT_TO_INT_REINTERPRET(x)       (*((int*)(&x)))
-#define XVM_INT_TO_FLT_REINTERPRET(x)       (*((float*)(&x)))
-#define XVM_INT_TO_STR_REINTERPRET(x)       ((const char*)(x))
-
-#define XVM_PARAM_INT(ident, index)         int ident = XVM_ParamInt(env, index)
-#define XVM_PARAM_FLOAT(ident, index)       float ident = XVM_ParanFloat(env, index)
-#define XVM_PARAM_STRING(ident, index)      char* ident = XVM_ParamString(env, index)
-#define XVM_PARAM_POINTER(ident, index)     void* ident = XVM_ParamPointer(env, index)
-#define XVM_PARAM_OBJECT(ident, index)      XVM_Object ident = XVM_ParamObject(env, index)
-
-#define XVM_RETURN_VOID(argSize)            XVM_ReturnVoid(env, argSize)
-#define XVM_RETURN_INT(argSize, value)      XVM_ReturnInt(env, argSize, value)
-#define XVM_RETURN_FLOAT(argSize, value)    XVM_ReturnFloat(env, argSize, value)
-
 #define XVM_IMPLEMENT_MODULE_INTERFACE(procList)                                \
     _XVM_EXPORT int xx_module_proc_count()                                      \
     {                                                                           \
@@ -187,7 +173,8 @@ int XVM_ReturnInt(XVM_Env env, unsigned int argSize, int value)
 // Pop 'argSize' words from the stack and push 'value' onto the stack.
 int XVM_ReturnFloat(XVM_Env env, unsigned int argSize, float value)
 {
-    return XVM_ReturnInt(env, argSize, XVM_FLT_TO_INT_REINTERPRET(value));
+    int valueInt = *((int*)(&value));
+    return XVM_ReturnInt(env, argSize, valueInt);
 }
 
 static _XVM_Object* _XVM_AllocObject(size_t size, unsigned typeID, void* vtable)
