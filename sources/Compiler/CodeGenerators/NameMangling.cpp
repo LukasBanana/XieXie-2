@@ -123,7 +123,7 @@ std::string UniqueLabel(const AbstractSyntaxTrees::ProcDeclStmnt& procDecl)
                 const auto& procSig = *procDecl.procSignature;
                 return (
                     "C" + procDecl.parentRef->ident + "." +
-                    UniqueLabel(procSig, procSig.isStatic ? nullptr : &(procDecl.parentRef->ident))
+                    UniqueLabel(procSig)//, procSig.isStatic ? nullptr : &(procDecl.parentRef->ident))
                 );
             }
         }

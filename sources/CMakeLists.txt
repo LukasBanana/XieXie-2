@@ -7,9 +7,7 @@ project(XieXie2)
 
 # === Build path ===
 
-set(dir ${CMAKE_CURRENT_BINARY_DIR}/build)
-set(EXECUTABLE_OUTPUT_PATH ${dir} CACHE PATH "Build directory" FORCE)
-set(LIBRARY_OUTPUT_PATH ${dir} CACHE PATH "Build directory" FORCE)
+set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build CACHE PATH "Build Directory")
 
 
 # === Preprocessor definitions ===
@@ -22,7 +20,6 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 file(GLOB_RECURSE FilesBaseAll					${PROJECT_SOURCE_DIR}/Base/*.*)
 file(GLOB_RECURSE FilesCompilerAll				${PROJECT_SOURCE_DIR}/Compiler/*.*)
 file(GLOB_RECURSE FilesShellAll					${PROJECT_SOURCE_DIR}/Shell/*.*)
-file(GLOB_RECURSE FilesVirtualMachineAll		${PROJECT_SOURCE_DIR}/VirtualMachine/*.*)
 
 file(GLOB FilesCompiler							${PROJECT_SOURCE_DIR}/Compiler/*.*)
 file(GLOB FilesCompilerAssembler				${PROJECT_SOURCE_DIR}/Compiler/Assembler/*.*)
@@ -60,6 +57,23 @@ set(
 	${FilesPlatformDependent}
 )
 
+set(
+	FilesXVM
+	${PROJECT_SOURCE_DIR}/VirtualMachine/xvm.c
+	${PROJECT_SOURCE_DIR}/VirtualMachine/xvm.h
+)
+
+set(
+	FilesXVMShell
+	${PROJECT_SOURCE_DIR}/VirtualMachine/xvm_shell.c
+)
+
+set(
+	FilesXVMWrapper
+	${PROJECT_SOURCE_DIR}/VirtualMachine/XVMWrapper.cpp
+	${PROJECT_SOURCE_DIR}/VirtualMachine/XVMWrapper.h
+)
+
 
 # === Source group folders ===
 
@@ -95,7 +109,12 @@ source_group("Platform" FILES ${FilesPlatform} ${FilesPlatformDependent})
 
 # --- Virtual Machine ---
 
-source_group("VirtualMachine" FILES ${FilesVirtualMachineAll})
+source_group(
+	"VirtualMachine" FILES
+	${FilesXVM}
+	${FilesXVMShell}
+	${FilesXVMWrapper}
+)
 
 
 # === Include directories ===
@@ -121,13 +140,66 @@ include_directories("${PROJECT_SOURCE_DIR}/Shell/Command")
 # === Executable ===
 
 add_executable(xxc ${FilesAll})
-add_executable(xvm ${FilesVirtualMachineAll})
+add_executable(xvm ${FilesXVMShell})
+add_library(xvmlib STATIC ${FilesXVM})
+add_library(XVMWrapper STATIC ${FilesXVMWrapper})
 
-set_target_properties(xxc PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(xvm PROPERTIES LINKER_LANGUAGE C)
+set_target_properties(
+	xxc PROPERTIES
+	LINKER_LANGUAGE CXX
+	DEBUG_POSTFIX "D"
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+)
+
+set_target_properties(
+	xvmlib PROPERTIES
+	LINKER_LANGUAGE C
+	DEBUG_POSTFIX "D"
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+)
+
+set_target_properties(
+	xvm PROPERTIES
+	LINKER_LANGUAGE C
+	DEBUG_POSTFIX "D"
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+)
+
+set_target_properties(
+	XVMWrapper PROPERTIES
+	LINKER_LANGUAGE CXX
+	DEBUG_POSTFIX "D"
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+)
+
+target_link_libraries(xvm xvmlib)
+target_link_libraries(XVMWrapper xvmlib)
+target_link_libraries(xxc XVMWrapper)
 
 if(UNIX)
+	target_link_libraries(XVMWrapper dl m)
 	target_link_libraries(xvm dl m)
+	target_link_libraries(xvmlib dl m)
 	target_link_libraries(xxc dl m)
 endif()
 

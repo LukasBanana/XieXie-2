@@ -1,12 +1,11 @@
 /*
- * XieXie 2.0 VirtualMachine (xvm) main ANSI-C file
+ * xvm.c
  * 
- * Copyright (C) 2014 Lukas Hermanns
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms
- * of the BSD license.  See the LICENSE file for details.
+ * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
  */
+
+#include "xvm.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -14,27 +13,6 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-
-/* ----- Compilation configuration ----- */
-
-//! Disables the shell (and the "main" function)
-//#define _DISABLE_SHELL_
-
-//! Makes all functions non-static
-//#define _NON_STATIC_FUNCTIONS_
-
-//! Enables force inlining
-#define _ENABLE_INLINEING_
-
-//! Enables runtimer debugger in virtual machine
-//#define _ENABLE_RUNTIME_DEBUGGER_
-
-//! Shows the instruction indices as hex numbers.
-//#define _SHOW_RUNTIME_HEXLINES_
-
-//! Enables opcode extraction optimization (safes one SLL instruction in x86 code)
-#define _OPTIMIZE_OPCODE_EXTRACTION_
-
 
 /* ----- OS specific includes ----- */
 
@@ -79,6 +57,7 @@
 #   define NODEFERWINDOWPOS
 #   define NOMCX
 #   include <Windows.h>
+#   define MODULE_GET_HANDLE(hndl) (HMODULE)(hndl)
 #elif defined(__linux__)
 #   include <unistd.h>
 #   include <dlfcn.h>
@@ -91,8 +70,7 @@ extern "C" {
 
 /* ----- Helper macros ----- */
 
-#define XVM_MIN(a, b) ((a) < (b) ? (a) : (b))
-#define XVM_MAX(a, b) ((a) > (b) ? (a) : (b))
+#define _XVM_MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #ifdef _NON_STATIC_FUNCTIONS_
 #   define STATIC // No static functions
@@ -109,7 +87,7 @@ extern "C" {
 
 /* ----- Helper functions ----- */
 
-INLINE STATIC int xvm_flt2int_signum(float val)
+INLINE STATIC int _xvm_flt2int_signum(float val)
 {
     if (val > 0.0f)
         return 1;
@@ -121,73 +99,7 @@ INLINE STATIC int xvm_flt2int_signum(float val)
 
 /* ----- Registers ----- */
 
-typedef unsigned char   reg_t;  //!< Register index type (8-bit unsigned integral type).
-typedef int             regi_t; //!< Integer register type (32-bit signed integral type).
-typedef float           regf_t; //!< Float register type (32-bit IEEE 754 floating-point type).
-
-typedef char            byte_t; //!< Byte type (8-bit).
-typedef short           half_t; //!< Half-word type (16-bit).
-typedef int             word_t; //!< Word type (32-bit).
-
-#define XVM_NUM_REGISTERS           32
-#define REG_TO_STACK_PTR(r)         ((stack_word_t*)(*(r)))
-#define GET_PARAM_FROM_STACK(p, i)  (*((p) - (i)))
-
-#define FLT_TO_INT_REINTERPRET(x)   (*((int*)(&x)))
-#define INT_TO_FLT_REINTERPRET(x)   (*((float*)(&x)))
-#define INT_TO_STR_REINTERPRET(x)   ((const char*)(x))
-
-/*
-All registers can be used for integral and floating-point data.
-*/
-
-typedef enum
-{
-    /* --- General purpose registers --- */
-    REG_R0  = 0x00, // $r0   ->  General purpose register 0.
-    REG_R1  = 0x01, // $r1   ->  General purpose register 1.
-    REG_R2  = 0x02, // $r2   ->  General purpose register 2.
-    REG_R3  = 0x03, // $r3   ->  General purpose register 3.
-    REG_R4  = 0x04, // $r4   ->  General purpose register 4.
-    REG_R5  = 0x05, // $r5   ->  General purpose register 5.
-    REG_R6  = 0x06, // $r6   ->  General purpose register 6.
-    REG_R7  = 0x07, // $r7   ->  General purpose register 7.
-    REG_R8  = 0x08, // $r8   ->  General purpose register 8.
-    REG_R9  = 0x09, // $r9   ->  General purpose register 9.
-    REG_R10 = 0x0a, // $r10  ->  General purpose register 10.
-    REG_R11 = 0x0b, // $r11  ->  General purpose register 11.
-    REG_R12 = 0x0c, // $r12  ->  General purpose register 12.
-    REG_R13 = 0x0d, // $r13  ->  General purpose register 13.
-    REG_R14 = 0x0e, // $r14  ->  General purpose register 14.
-    REG_R15 = 0x0f, // $r15  ->  General purpose register 15.
-    REG_R16 = 0x10, // $r16  ->  General purpose register 16.
-    REG_R17 = 0x11, // $r17  ->  General purpose register 17.
-    REG_R18 = 0x12, // $r18  ->  General purpose register 18.
-    REG_R19 = 0x13, // $r19  ->  General purpose register 19.
-    REG_R20 = 0x14, // $r20  ->  General purpose register 20.
-    REG_R21 = 0x15, // $r21  ->  General purpose register 21.
-    REG_R22 = 0x16, // $r22  ->  General purpose register 22.
-    REG_R23 = 0x17, // $r23  ->  General purpose register 23.
-    REG_R24 = 0x18, // $r24  ->  General purpose register 24.
-
-    /* --- Special purpose registers --- */
-    REG_AR  = 0x19, // $ar   ->  Argument return: can be used as 32-bit return value.
-    REG_XR  = 0x1a, // $xr   ->  Extended register: register for special purposes (e.g. assembler temporary or 'this' pointer).
-    REG_GP  = 0x1b, // $gp   ->  Global pointer: POINTER to the global variables in the stack.
-
-    /* --- Register for internal use --- */
-    REG_CF  = 0x1c, // $cf   ->  Conditional flags: used for jump conditions.
-    REG_LB  = 0x1d, // $lb   ->  Local base pointer: POINTER to the base of the current stack frame.
-    REG_SP  = 0x1e, // $sp   ->  Stack pointer: POINTER to the top of the stack storage.
-    REG_PC  = 0x1f, // $pc   ->  Program counter: POINTER to the current instruction in the byte-code.
-}
-register_id;
-
-/**
-Returns the name of the specified register or an empty string if the ID is invalid.
-\see register_id
-*/
-STATIC const char* xvm_register_get_name(reg_t reg)
+const char* xvm_register_get_name(reg_t reg)
 {
     switch (reg)
     {
@@ -232,7 +144,7 @@ STATIC const char* xvm_register_get_name(reg_t reg)
 
 /* ----- OP-codes ----- */
 
-/**
+/*
 
 This is full documentation of the 32-bit instruction set of the XieXie 2.0 VirtualMachine.
 Currently only single precision floats are supported. There are also no instructions that can handle 64 bit integers.
@@ -425,119 +337,10 @@ FLOATS are 32 bits wide.
 
 */
 
-#ifdef _OPTIMIZE_OPCODE_EXTRACTION_
-typedef unsigned int opcode_t;
-#else
-typedef unsigned char opcode_t;
-#endif
-
-#ifdef _OPTIMIZE_OPCODE_EXTRACTION_
-#   define GEN_OPCODE(op) ((op) << 26)
-#else
-#   define GEN_OPCODE(op) (op)
-#endif
-
-//! XASM instruction opcodes.
-typedef enum
-{
-    /* --- 3 register opcodes --- */
-    OPCODE_AND3     = GEN_OPCODE(0x01), // AND  reg0, reg1, reg2  ->  reg0 = reg1 & reg2
-    OPCODE_OR3      = GEN_OPCODE(0x02), // OR   reg0, reg1, reg2  ->  reg0 = reg1 | reg2
-    OPCODE_XOR3     = GEN_OPCODE(0x03), // XOR  reg0, reg1, reg2  ->  reg0 = reg1 ^ reg2
-    OPCODE_ADD3     = GEN_OPCODE(0x04), // ADD  reg0, reg1, reg2  ->  reg0 = reg1 + reg2
-    OPCODE_SUB3     = GEN_OPCODE(0x05), // SUB  reg0, reg1, reg2  ->  reg0 = reg1 - reg2
-    OPCODE_MUL3     = GEN_OPCODE(0x06), // MUL  reg0, reg1, reg2  ->  reg0 = reg1 * reg2
-    OPCODE_DIV3     = GEN_OPCODE(0x07), // DIV  reg0, reg1, reg2  ->  reg0 = reg1 / reg2
-    OPCODE_MOD3     = GEN_OPCODE(0x08), // MOD  reg0, reg1, reg2  ->  reg0 = reg1 % reg2
-    OPCODE_SLL3     = GEN_OPCODE(0x09), // SLL  reg0, reg1, reg2  ->  reg0 = reg1 << reg2
-    OPCODE_SLR3     = GEN_OPCODE(0x0a), // SLR  reg0, reg1, reg2  ->  reg0 = reg1 >> reg2
-    OPCODE_ADDF     = GEN_OPCODE(0x0b), // ADDF reg0, reg1, reg2  ->  reg0 = reg1 + reg2
-    OPCODE_SUBF     = GEN_OPCODE(0x0c), // SUBF reg0, reg1, reg2  ->  reg0 = reg1 - reg2
-    OPCODE_MULF     = GEN_OPCODE(0x0d), // MULF reg0, reg1, reg2  ->  reg0 = reg1 * reg2
-    OPCODE_DIVF     = GEN_OPCODE(0x0e), // DIVF reg0, reg1, reg2  ->  reg0 = reg1 / reg2
-    OPCODE_MODF     = GEN_OPCODE(0x0f), // MODF reg0, reg1, reg2  ->  reg0 = fmodf(reg1, reg2)
-
-    /* --- 2 register opcodes --- */
-    OPCODE_MOV2     = GEN_OPCODE(0x10), // MOV  reg0, reg1     ->  reg0 = reg1
-    OPCODE_NOT      = GEN_OPCODE(0x11), // NOT  reg0, reg1     ->  reg0 = ~reg1
-    OPCODE_FTI      = GEN_OPCODE(0x12), // FTI  reg0, reg1     ->  reg0 = (int)reg1
-    OPCODE_ITF      = GEN_OPCODE(0x13), // ITF  reg0, reg1     ->  reg0 = (float)reg1
-    OPCODE_AND2     = GEN_OPCODE(0x14), // AND  reg0, reg1, c  ->  reg0 = reg1 & c
-    OPCODE_OR2      = GEN_OPCODE(0x15), // OR   reg0, reg1, c  ->  reg0 = reg1 | c
-    OPCODE_XOR2     = GEN_OPCODE(0x16), // XOR  reg0, reg1, c  ->  reg0 = reg1 ^ c
-    OPCODE_ADD2     = GEN_OPCODE(0x17), // ADD  reg0, reg1, c  ->  reg0 = reg1 + c
-    OPCODE_SUB2     = GEN_OPCODE(0x18), // SUB  reg0, reg1, c  ->  reg0 = reg1 - c
-    OPCODE_MUL2     = GEN_OPCODE(0x19), // MUL  reg0, reg1, c  ->  reg0 = reg1 * c
-    OPCODE_DIV2     = GEN_OPCODE(0x1a), // DIV  reg0, reg1, c  ->  reg0 = reg1 / c
-    OPCODE_MOD2     = GEN_OPCODE(0x1b), // MOD  reg0, reg1, c  ->  reg0 = reg1 % c
-    OPCODE_SLL2     = GEN_OPCODE(0x1c), // SLL  reg0, reg1, c  ->  reg0 = reg1 << c
-    OPCODE_SLR2     = GEN_OPCODE(0x1d), // SLR  reg0, reg1, c  ->  reg0 = reg1 >> c
-    OPCODE_CMP      = GEN_OPCODE(0x1e), // CMP  reg0, reg1     ->  REG_CF = (reg0 - reg1)
-    OPCODE_CMPF     = GEN_OPCODE(0x1f), // CMPF reg0, reg1     ->  REG_CF = signum(reg0 - reg1)
-
-    /* --- 1 register opcodes --- */
-    OPCODE_PUSH     = GEN_OPCODE(0x20), // PUSH reg        ->  stack.push(reg)
-    OPCODE_POP      = GEN_OPCODE(0x21), // POP  reg        ->  reg = stack.pop()
-    OPCODE_INC      = GEN_OPCODE(0x22), // INC  reg        ->  ++reg
-    OPCODE_DEC      = GEN_OPCODE(0x23), // DEC  reg        ->  --reg
-    OPCODE_MOV1     = GEN_OPCODE(0x24), // MOV  reg, c     ->  reg = c
-    OPCODE_LDA      = GEN_OPCODE(0x25), // LDA  reg, addr  ->  reg = programMemoryStartWorldAligned[addr]
-    OPCODE_MOVI     = GEN_OPCODE(0x26), // MOVI reg        ->  reg = programMemoryStartWorldAligned[pc + 1]; ++pc
-    //Reserved      = GEN_OPCODE(0x27),
-
-    /* --- jump opcodes --- */
-    OPCODE_JMP      = GEN_OPCODE(0x28), // JMP  addr  ->  goto addr
-    OPCODE_JE       = GEN_OPCODE(0x29), // JE   addr  ->  if (REG_CF == 0) then goto addr
-    OPCODE_JNE      = GEN_OPCODE(0x2a), // JNE  addr  ->  if (REG_CF != 0) then goto addr
-    OPCODE_JG       = GEN_OPCODE(0x2b), // JG   addr  ->  if (REG_CF  > 0) then goto addr
-    OPCODE_JL       = GEN_OPCODE(0x2c), // JL   addr  ->  if (REG_CF  < 0) then goto addr
-    OPCODE_JGE      = GEN_OPCODE(0x2d), // JGE  addr  ->  if (REG_CF >= 0) then goto addr
-    OPCODE_JLE      = GEN_OPCODE(0x2e), // JLE  addr  ->  if (REG_CF <= 0) then goto addr
-    OPCODE_CALL     = GEN_OPCODE(0x2f), // CALL addr  ->  PUSH $pc; PUSH $lb; MOV $lb, $sp; JMP addr;
-
-    /* --- load/store opcodes --- */
-    OPCODE_LDB      = GEN_OPCODE(0x30), // LDB reg0, (reg1) c  ->  reg0 = globalMemoryByteAligned[reg1 + c] (load byte)
-    OPCODE_STB      = GEN_OPCODE(0x31), // STB reg0, (reg1) c  ->  globalMemoryByteAligned[reg1 + c] = reg0 (store byte)
-    OPCODE_LDH      = GEN_OPCODE(0x32), // LDH reg0, (reg1) c  ->  reg0 = globalMemoryByteAligned[reg1 + c] (load half-word)
-    OPCODE_STH      = GEN_OPCODE(0x33), // STH reg0, (reg1) c  ->  globalMemoryByteAligned[reg1 + c] = reg0 (store half-word)
-    OPCODE_LDW      = GEN_OPCODE(0x34), // LDW reg0, (reg1) c  ->  reg0 = globalMemoryByteAligned[reg1 + c] (load word)
-    OPCODE_STW      = GEN_OPCODE(0x35), // STW reg0, (reg1) c  ->  globalMemoryByteAligned[reg1 + c] = reg0 (store word)
-    //Reserved      = GEN_OPCODE(0x36),
-    //Reserved      = GEN_OPCODE(0x37),
-
-    /* --- special opcodes --- */
-    OPCODE_STOP     = GEN_OPCODE(0x00), // STOP          ->  exit(0)
-    OPCODE_PUSHC    = GEN_OPCODE(0x38), // PUSH value    ->  stack.push(value)
-    OPCODE_INVK     = GEN_OPCODE(0x39), // INVK addr     ->  invoke external procedure
-    OPCODE_INSC     = GEN_OPCODE(0x3a), // INSC value    ->  call intrinsic
-    OPCODE_RET      = GEN_OPCODE(0x3b), // RET  (c0) c1  ->  return
-    //Reserved      = GEN_OPCODE(0x3c),
-    //Reserved      = GEN_OPCODE(0x3d),
-    //Reserved      = GEN_OPCODE(0x3e),
-    //Reserved      = GEN_OPCODE(0x3f),
-}
-xvm_opcode;
-
 
 /* ----- Virtual machine exit codes ----- */
 
-typedef enum
-{
-    EXITCODE_SUCCESS                =  0,
-    EXITCODE_INVALID_BYTECODE       = -1,
-    EXITCODE_INVALID_STACK          = -2,
-    EXITCODE_INVALID_OPCODE         = -3,
-    EXITCODE_INVALID_INTRINSIC      = -4,
-    EXITCODE_STACK_OVERFLOW         = -5,
-    EXITCODE_STACK_UNDERFLOW        = -6,
-    EXITCODE_DIVISION_BY_ZERO       = -7,
-    EXITCODE_UNKNOWN_ENTRY_POINT    = -8,
-    EXITCODE_INVOCATION_VIOLATION   = -9,
-  //EXITCODE_MEMORY_VIOLATION       = -10,
-}
-xvm_exit_codes;
-
-STATIC const char* xvm_exitcode_to_string(const xvm_exit_codes exit_code)
+const char* xvm_exitcode_to_string(const xvm_exit_codes exit_code)
 {
     switch (exit_code)
     {
@@ -568,27 +371,27 @@ STATIC const char* xvm_exitcode_to_string(const xvm_exit_codes exit_code)
 
 /* ----- Debug log ----- */
 
-INLINE STATIC void xvm_log_print(const char* str)
+void xvm_log_print(const char* str)
 {
     printf("%s", str);
 }
 
-INLINE STATIC void xvm_log_println(const char* str)
+void xvm_log_println(const char* str)
 {
     puts(str);
 }
 
-INLINE STATIC void xvm_log_error(const char* str)
+void xvm_log_error(const char* str)
 {
     printf("error: %s\n", str);
 }
 
-INLINE STATIC void xvm_log_readfile_error(const char* filename)
+void xvm_log_readfile_error(const char* filename)
 {
     printf("error: reading file \"%s\" failed\n", filename);
 }
 
-INLINE STATIC void xvm_log_exitcode_error(const xvm_exit_codes exit_code)
+void xvm_log_exitcode_error(const xvm_exit_codes exit_code)
 {
     const char* err = xvm_exitcode_to_string(exit_code);
     if (err != NULL)
@@ -598,7 +401,7 @@ INLINE STATIC void xvm_log_exitcode_error(const xvm_exit_codes exit_code)
 
 /* ----- File helper ----- */
 
-STATIC unsigned int xvm_file_read_uint(FILE* file)
+unsigned int xvm_file_read_uint(FILE* file)
 {
     unsigned int value = 0;
     if (file != NULL)
@@ -606,7 +409,7 @@ STATIC unsigned int xvm_file_read_uint(FILE* file)
     return value;
 }
 
-STATIC void xvm_file_write_uint(FILE* file, unsigned int value)
+void xvm_file_write_uint(FILE* file, unsigned int value)
 {
     if (file != NULL)
         fwrite(&value, sizeof(value), 1, file);
@@ -615,65 +418,7 @@ STATIC void xvm_file_write_uint(FILE* file, unsigned int value)
 
 /* ----- Intrinsics ----- */
 
-/*
-Calling convention:
-- CALLER pushes all arguments from RIGHT-to-LEFT onto stack.
-- CALLEE pops all arguments from the stack.
-- CALLEE stores result in '$ar' register.
-*/
-
-typedef enum
-{
-    /* --- Dynamic memory intrinsics --- */
-    INSC_ALLOC_MEM = 0, // void* AllocMem(uint sizeInBytes)
-    INSC_FREE_MEM,      // void FreeMem(void* memoryAddr)
-    INSC_COPY_MEM,      // void CopyMem(void* dstMemAddr, const void* srcMemAddr, uint sizeInBytes)
-    INSC_FILL_MEM,      // void FillMem(void* memoryAddr, uint sizeInBytes, int value)
-
-    /* --- Console intrinsics --- */
-    INSC_SYS_CALL,      // void SysCall(const byte* stringAddr)
-    INSC_PRINT,         // void Print(const byte* stringAddr)
-    INSC_PRINT_LN,      // void PrintLn(const byte* stringAddr)
-    INSC_PRINT_INT,     // void PrintInt(int value)
-    INSC_PRINT_FLOAT,   // void PrintFloat(float value)
-    INSC_INPUT,         // void Input(byte* stringAddr, int maxLen)
-    INSC_INPUT_INT,     // int InputInt()
-    INSC_INPUT_FLOAT,   // float InputFloat()
-
-    /* --- File intrinsics --- */
-    INSC_CREATE_FILE,   // int CreateFile(const byte* stringAddress)
-    INSC_DELETE_FILE,   // int DeleteFile(const byte* stringAddress)
-    INSC_OPEN_FILE,     // void* OpenFile(const byte* stringAddress)
-    INSC_CLOSE_FILE,    // void CloseFile(void* fileHandle)
-    INSC_FILE_SIZE,     // int FileSize(const void* fileHandle)
-    INSC_SET_FILE_POS,  // void FileSetPos(const void* fileHandle, int pos)
-    INSC_GET_FILE_POS,  // int FileGetPos(const void* fileHandle)
-    INSC_FILE_EOF,      // int FileEOF(const void* fileHandle)
-    INSC_WRITE_BYTE,    // void WriteByte(const void* fileHandle, const void* memoryAddress)
-    INSC_WRITE_WORD,    // void WriteWord(const void* fileHandle, const void* memoryAddress)
-    INSC_READ_BYTE,     // void ReadByte(const void* fileHandle, void* memoryAddress)
-    INSC_READ_WORD,     // void ReadWord(const void* fileHandle, void* memoryAddress)
-
-    /* --- Math intrinsics --- */
-    INSC_SIN,           // float Sin(float x)
-    INSC_COS,           // float Cos(float x)
-    INSC_TAN,           // float Tan(float x)
-    INSC_ASIN,          // float ASin(float x)
-    INSC_ACOS,          // float ACos(float x)
-    INSC_ATAN,          // float ATan(float x)
-    INSC_POW,           // float Pow(float base, float exp)
-    INSC_SQRT,          // float Sqrt(float x)
-
-    /* --- Other intrinsics --- */
-    INSC_RAND_INT,      // int RandInt() -> In range [0 .. MAX_INT]
-    INSC_RAND_FLOAT,    // float RandFloat() -> In range [0.0 .. 1.0]
-    INSC_TIME,          // int Time() -> Ellapsed time since program start (in ms.)
-    INSC_SLEEP,         // void Sleep(int duration)
-}
-xvm_intrinsic_id;
-
-//! Returns the identifier of the specified intrinsic.
-STATIC const char* xvm_intrinsic_get_ident(const xvm_intrinsic_id addr)
+const char* xvm_intrinsic_get_ident(const xvm_intrinsic_id addr)
 {
     switch (addr)
     {
@@ -734,25 +479,7 @@ STATIC const char* xvm_intrinsic_get_ident(const xvm_intrinsic_id addr)
 
 /* ----- Instruction ----- */
 
-#define XVM_VALUE26_MAX     (0x03ffffff)
-#define XVM_VALUE21_MAX     (0x001fffff)
-#define XVM_VALUE16_MAX     (0x0000ffff)
-
-#define XVM_VALUE26_MIN     (0)
-#define XVM_VALUE21_MIN     (0)
-#define XVM_VALUE16_MIN     (0)
-
-#define XVM_SGN_VALUE26_MAX (0x01ffffff)
-#define XVM_SGN_VALUE21_MAX (0x000fffff)
-#define XVM_SGN_VALUE16_MAX (0x0007ffff)
-
-#define XVM_SGN_VALUE26_MIN (-0x02000000)
-#define XVM_SGN_VALUE21_MIN (-0x00100000)
-#define XVM_SGN_VALUE16_MIN (-0x00008000)
-
-typedef unsigned int instr_t;
-
-//! Returns the instruction opcode.
+// Returns the instruction opcode.
 INLINE STATIC opcode_t _xvm_instr_get_opcode(const instr_t instr)
 {
     #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -766,25 +493,30 @@ INLINE STATIC opcode_t _xvm_instr_get_opcode(const instr_t instr)
     #endif
 }
 
-//! Returns the 26-bit unsigned value of the specified instruction.
+opcode_t xvm_instr_get_opcode(const instr_t instr)
+{
+    return _xvm_instr_get_opcode(instr);
+}
+
+// Returns the 26-bit unsigned value of the specified instruction.
 INLINE STATIC unsigned int _xvm_instr_get_value26(const instr_t instr)
 {
     return (instr & XVM_VALUE26_MAX);
 }
 
-//! Returns the 21-bit unsigned value of the specified instruction.
+// Returns the 21-bit unsigned value of the specified instruction.
 INLINE STATIC unsigned int _xvm_instr_get_value21(const instr_t instr)
 {
     return (instr & XVM_VALUE21_MAX);
 }
 
-//! Returns the 16-bit unsigned value of the specified instruction.
+// Returns the 16-bit unsigned value of the specified instruction.
 INLINE STATIC unsigned int _xvm_instr_get_value16(const instr_t instr)
 {
     return (instr & XVM_VALUE16_MAX);
 }
 
-//! Returns the 26-bit signed value of the specified instruction.
+// Returns the 26-bit signed value of the specified instruction.
 INLINE STATIC int _xvm_instr_get_sgn_value26(const instr_t instr)
 {
     unsigned int val = _xvm_instr_get_value26(instr);
@@ -796,7 +528,7 @@ INLINE STATIC int _xvm_instr_get_sgn_value26(const instr_t instr)
     return (int)val;
 }
 
-//! Returns the 21-bit signed value of the specified instruction.
+// Returns the 21-bit signed value of the specified instruction.
 INLINE STATIC int _xvm_instr_get_sgn_value21(const instr_t instr)
 {
     unsigned int val = _xvm_instr_get_value21(instr);
@@ -808,7 +540,7 @@ INLINE STATIC int _xvm_instr_get_sgn_value21(const instr_t instr)
     return (int)val;
 }
 
-//! Returns the 16-bit signed value of the specified instruction.
+// Returns the 16-bit signed value of the specified instruction.
 INLINE STATIC int _xvm_instr_get_sgn_value16(const instr_t instr)
 {
     unsigned int val = _xvm_instr_get_value16(instr);
@@ -820,35 +552,31 @@ INLINE STATIC int _xvm_instr_get_sgn_value16(const instr_t instr)
     return (int)val;
 }
 
-//! Returns the extra value of the special instruction RET.
+// Returns the extra value of the special instruction RET.
 INLINE STATIC int _xvm_instr_get_extra_value10(const instr_t instr)
 {
     return (instr & 0x03ff0000) >> 16;
 }
 
-//! Returns the index of the register 0.
+// Returns the index of the register 0.
 INLINE STATIC reg_t _xvm_instr_get_reg0(const instr_t instr)
 {
     return (instr & 0x03e00000) >> 21;
 }
 
-//! Returns the index of the register 1.
+// Returns the index of the register 1.
 INLINE STATIC reg_t _xvm_instr_get_reg1(const instr_t instr)
 {
     return (instr & 0x001f0000) >> 16;
 }
 
-//! Returns the index of the register 2.
+// Returns the index of the register 2.
 INLINE STATIC reg_t _xvm_instr_get_reg2(const instr_t instr)
 {
     return (instr & 0x0000f800) >> 11;
 }
 
-/**
-Returns the mnemonic of the specified instruction opcode or an empty string if the opcode is invalid.
-If the opcode is valid, the returned string will always consist of 4 characters plus the null terminator '\0'.
-*/
-STATIC const char* xvm_instr_get_mnemonic(const opcode_t opcode)
+const char* xvm_instr_get_mnemonic(const opcode_t opcode)
 {
     switch (opcode)
     {
@@ -915,7 +643,7 @@ STATIC const char* xvm_instr_get_mnemonic(const opcode_t opcode)
 
 #ifdef _ENABLE_RUNTIME_DEBUGGER_
 
-/**
+/*
 Prints debug information for the specified instruction
 with the current state of the specified register set.
 */
@@ -997,7 +725,7 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
         float lhs = INT_TO_FLT_REINTERPRET(reg_ptr[reg0]);
         float rhs = INT_TO_FLT_REINTERPRET(reg_ptr[reg1]);
 
-        printf("%s, %s       ($cf = %i)", reg0name, reg1name, xvm_flt2int_signum(lhs - rhs));
+        printf("%s, %s       ($cf = %i)", reg0name, reg1name, _xvm_flt2int_signum(lhs - rhs));
     }
     else if (opcode >= OPCODE_JMP && opcode <= OPCODE_JLE)
     {
@@ -1091,8 +819,7 @@ STATIC void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
 
 /* ----- Instruction constructors ----- */
 
-//! Makes a 3-register instruction.
-STATIC instr_t xvm_instr_make_reg3(xvm_opcode opcode, reg_t reg0, reg_t reg1, reg_t reg2)
+instr_t xvm_instr_make_reg3(xvm_opcode opcode, reg_t reg0, reg_t reg1, reg_t reg2)
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -1106,8 +833,7 @@ STATIC instr_t xvm_instr_make_reg3(xvm_opcode opcode, reg_t reg0, reg_t reg1, re
     );
 }
 
-//! Makes a 2-register instruction.
-STATIC instr_t xvm_instr_make_reg2(xvm_opcode opcode, reg_t reg0, reg_t reg1, unsigned int value)
+instr_t xvm_instr_make_reg2(xvm_opcode opcode, reg_t reg0, reg_t reg1, unsigned int value)
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -1121,8 +847,7 @@ STATIC instr_t xvm_instr_make_reg2(xvm_opcode opcode, reg_t reg0, reg_t reg1, un
     );
 }
 
-//! Makes a 1-register instruction.
-STATIC instr_t xvm_instr_make_reg1(xvm_opcode opcode, reg_t reg, unsigned int value)
+instr_t xvm_instr_make_reg1(xvm_opcode opcode, reg_t reg, unsigned int value)
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -1135,20 +860,17 @@ STATIC instr_t xvm_instr_make_reg1(xvm_opcode opcode, reg_t reg, unsigned int va
     );
 }
 
-//! Makes a jump instruction.
-STATIC instr_t xvm_instr_make_jump(xvm_opcode opcode, reg_t reg, unsigned int offset)
+instr_t xvm_instr_make_jump(xvm_opcode opcode, reg_t reg, unsigned int offset)
 {
     return xvm_instr_make_reg1(opcode, reg, offset);
 }
 
-//! Makes a load/store instruction.
-STATIC instr_t xvm_instr_make_loadstore(xvm_opcode opcode, reg_t reg0, reg_t reg1, unsigned int offset)
+instr_t xvm_instr_make_loadstore(xvm_opcode opcode, reg_t reg0, reg_t reg1, unsigned int offset)
 {
     return xvm_instr_make_reg2(opcode, reg0, reg1, offset);
 }
 
-//! Makes a special-1 instruction.
-STATIC instr_t xvm_instr_make_special1(xvm_opcode opcode, unsigned int value)
+instr_t xvm_instr_make_special1(xvm_opcode opcode, unsigned int value)
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -1160,8 +882,7 @@ STATIC instr_t xvm_instr_make_special1(xvm_opcode opcode, unsigned int value)
     );
 }
 
-//! Makes a special-2 instruction.
-STATIC instr_t xvm_instr_make_special2(xvm_opcode opcode, unsigned int result_size, unsigned int arg_size)
+instr_t xvm_instr_make_special2(xvm_opcode opcode, unsigned int result_size, unsigned int arg_size)
 {
     return (instr_t)(
         #ifdef _OPTIMIZE_OPCODE_EXTRACTION_
@@ -1189,7 +910,7 @@ STATIC instr_t _xvm_instr_patch_value16(instr_t instr, unsigned int value)
     return (instr & 0xffff0000) | (value & XVM_VALUE16_MAX);
 }
 
-STATIC instr_t xvm_instr_patch_value(instr_t instr, unsigned int value)
+instr_t xvm_instr_patch_value(instr_t instr, unsigned int value)
 {
     opcode_t opcode = _xvm_instr_get_opcode(instr);
 
@@ -1206,16 +927,7 @@ STATIC instr_t xvm_instr_patch_value(instr_t instr, unsigned int value)
 
 /* ----- String ----- */
 
-//! XVM string structure.
-typedef struct
-{
-    size_t  len;
-    char*   str;
-}
-xvm_string;
-
-//! Returns an empty string object
-STATIC xvm_string xvm_string_init()
+xvm_string xvm_string_init()
 {
     xvm_string string;
     string.len = 0;
@@ -1223,8 +935,7 @@ STATIC xvm_string xvm_string_init()
     return string;
 }
 
-//! Creates a new string object with the specified length (plus the null terminator '\0').
-STATIC xvm_string xvm_string_create(size_t len)
+xvm_string xvm_string_create(size_t len)
 {
     xvm_string string;
 
@@ -1238,8 +949,7 @@ STATIC xvm_string xvm_string_create(size_t len)
     return string;
 }
 
-//! Creates a string from the specified string literal.
-STATIC xvm_string xvm_string_create_from(const char* str)
+xvm_string xvm_string_create_from(const char* str)
 {
     // Create string and copy data
     size_t len = strlen(str);
@@ -1248,8 +958,7 @@ STATIC xvm_string xvm_string_create_from(const char* str)
     return string;
 }
 
-//! Frees the memory of the specified string.
-STATIC int xvm_string_free(xvm_string* string)
+int xvm_string_free(xvm_string* string)
 {
     if (string != NULL && string->str != NULL)
     {
@@ -1262,8 +971,7 @@ STATIC int xvm_string_free(xvm_string* string)
     return 0;
 }
 
-//! Reads a string from the specified file
-STATIC xvm_string xvm_string_read_from_file(FILE* file)
+xvm_string xvm_string_read_from_file(FILE* file)
 {
     if (file != NULL)
     {
@@ -1276,8 +984,7 @@ STATIC xvm_string xvm_string_read_from_file(FILE* file)
     return xvm_string_init();
 }
 
-//! Reads a string from the specified file
-STATIC int xvm_string_write_to_file(xvm_string string, FILE* file)
+int xvm_string_write_to_file(xvm_string string, FILE* file)
 {
     if (file != NULL && string.str != NULL)
     {
@@ -1315,20 +1022,7 @@ STATIC void _xvm_exception_stack_underflow()
 
 /* ----- Stack ----- */
 
-typedef int stack_word_t;
-
-typedef struct
-{
-    size_t          stack_size; // Number of entries in the stack.
-    stack_word_t*   storage;    // Stack data storage.
-}
-xvm_stack;
-
-/**
-Initializes the specified stack object.
-\see xvm_stack_create
-*/
-STATIC int xvm_stack_init(xvm_stack* stack)
+int xvm_stack_init(xvm_stack* stack)
 {
     if (stack != NULL)
     {
@@ -1340,11 +1034,7 @@ STATIC int xvm_stack_init(xvm_stack* stack)
     return 0;
 }
 
-/**
-Clears all entries in the stack with the specified value
-\see xvm_stack_create
-*/
-STATIC int xvm_stack_clear(xvm_stack* stack, stack_word_t value)
+int xvm_stack_clear(xvm_stack* stack, stack_word_t value)
 {
     if (stack != NULL && stack->stack_size > 0 && stack->storage != NULL)
     {
@@ -1355,20 +1045,7 @@ STATIC int xvm_stack_clear(xvm_stack* stack, stack_word_t value)
     return 0;
 }
 
-/**
-Creats a new stack for the virtual machine.
-\param[out] stack Pointer to the resulting stack object.
-\param[in] stack_size Specifies the stack size or rather the number of WORD (32-bit) entries.
-\remarks Example:
-\code
-xvm_stack stack;
-xvm_stack_init(&stack);
-xvm_stack_create(&stack, 256);
-// ...
-xvm_stack_free(&stack);
-\endcode
-*/
-STATIC int xvm_stack_create(xvm_stack* stack, size_t stack_size)
+int xvm_stack_create(xvm_stack* stack, size_t stack_size)
 {
     if (stack != NULL && stack->storage == NULL && stack_size != 0)
     {
@@ -1379,7 +1056,7 @@ STATIC int xvm_stack_create(xvm_stack* stack, size_t stack_size)
     return 0;
 }
 
-STATIC int xvm_stack_free(xvm_stack* stack)
+int xvm_stack_free(xvm_stack* stack)
 {
     if (stack != NULL)
     {
@@ -1395,7 +1072,7 @@ STATIC int xvm_stack_free(xvm_stack* stack)
     return 0;
 }
 
-INLINE STATIC void xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t value)
+INLINE STATIC void _xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t value)
 {
     stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
     if (stack_ptr < stack->storage + stack->stack_size)
@@ -1407,7 +1084,7 @@ INLINE STATIC void xvm_stack_push(xvm_stack* stack, regi_t* reg_sp, stack_word_t
         _xvm_exception_stack_overflow();
 }
 
-INLINE STATIC stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
+INLINE STATIC stack_word_t _xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
 {
     stack_word_t* stack_ptr = REG_TO_STACK_PTR(reg_sp);
     if (stack_ptr > stack->storage)
@@ -1417,48 +1094,8 @@ INLINE STATIC stack_word_t xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
     return *REG_TO_STACK_PTR(reg_sp);
 }
 
-INLINE STATIC stack_word_t xvm_stack_read(regi_t reg_sp, int word_offset)
-{
-    stack_word_t* stack_ptr = (stack_word_t*)reg_sp;
-    return stack_ptr[word_offset];
-}
-
-INLINE STATIC void xvm_stack_write(regi_t reg_sp, int word_offset, stack_word_t value)
-{
-    stack_word_t* stack_ptr = (stack_word_t*)reg_sp;
-    stack_ptr[word_offset] = value;
-}
-
-STATIC void xvm_stack_debug(xvm_stack* stack, size_t first_entry, size_t num_entries)
-{
-    if (stack != NULL)
-    {
-        // Print all n-th stack entries
-        const size_t n = XVM_MIN(first_entry + num_entries, stack->stack_size);
-        for (size_t i = first_entry; i < n; ++i)
-            printf("stack[%i] = %i\n", i, stack->storage[i]);
-    }
-}
-
-STATIC void xvm_stack_debug_float(xvm_stack* stack, size_t first_entry, size_t num_entries)
-{
-    if (stack != NULL)
-    {
-        // Print all n-th stack entries
-        const size_t n = XVM_MIN(first_entry + num_entries, stack->stack_size);
-        for (size_t i = first_entry; i < n; ++i)
-        {
-            stack_word_t* entry = (stack->storage + i);
-            printf("stack[%i] = %f\n", i, *((float*)entry));
-        }
-    }
-}
-
 
 /* ----- Stack Environment ----- */
-
-//! XVM environment state type.
-typedef void* xvm_env;
 
 typedef struct
 {
@@ -1468,113 +1105,16 @@ typedef struct
 }
 _xvm_env_internal;
 
-/**
-Invocation procedure signature. This is the signature for external procedure invocations in ANSI C.
-\param[in] env Environment handle to access the program state (e.g. the virtual stack).
-*/
-typedef void (*xvm_invocation_proc)(xvm_env env);
-
 //! Null invocation procedure -> throws EXITCODE_INVOCATION_VIOLATION.
 STATIC void _xvm_null_invocation(xvm_env env)
 {
     _xvm_exception_throw("invocation of unbound external procedure", EXITCODE_INVOCATION_VIOLATION);
 }
 
-#if 0
-
-//! Returns the argument as integer, specified by the parameter index (beginning with 1).
-STATIC int xvm_env_param_int(xvm_env env, unsigned int param_index)
-{
-    stack_word_t* ptr = *((_xvm_env_internal*)env)->ptr_ref;
-    return *(int*)(ptr - param_index);
-}
-
-//! Returns the argument as float, specified by the parameter index (beginning with 1).
-STATIC float xvm_env_param_float(xvm_env env, unsigned int param_index)
-{
-    stack_word_t* ptr = *((_xvm_env_internal*)env)->ptr_ref;
-    return *(float*)(ptr - param_index);
-}
-
-//! Returns the argument as null-terminated C string, specified by the parameter index (beginning with 1).
-STATIC char* xvm_env_param_string(xvm_env env, unsigned int param_index)
-{
-    stack_word_t* ptr = *((_xvm_env_internal*)env)->ptr_ref;
-    return (char*)*(ptr - param_index);
-}
-
-//! Returns the argument as raw pointer, specified by the parameter index (beginning with 1).
-STATIC void* xvm_env_param_pointer(xvm_env env, unsigned int param_index)
-{
-    stack_word_t* ptr = *((_xvm_env_internal*)env)->ptr_ref;
-    return (void*)*(ptr - param_index);
-}
-
-// Pop 'arg_size' words from the stack.
-STATIC void xvm_env_return_void(xvm_env env, unsigned int arg_size)
-{
-    _xvm_env_internal* stack_env = (_xvm_env_internal*)env;
-
-    // Pop arguments from stack
-    *stack_env->ptr_ref -= arg_size;
-    if (*stack_env->ptr_ref < stack_env->begin)
-        _xvm_exception_stack_underflow();
-}
-
-// Pop 'arg_size' words from the stack and push 'value' onto the stack.
-STATIC void xvm_env_return_int(xvm_env env, unsigned int arg_size, int value)
-{
-    _xvm_env_internal* stack_env = (_xvm_env_internal*)env;
-
-    // Pop arguments from stack
-    *stack_env->ptr_ref -= arg_size;
-    if (*stack_env->ptr_ref < stack_env->begin)
-        _xvm_exception_stack_underflow();
-
-    // Push result onto stack
-    **stack_env->ptr_ref = value;
-    ++*stack_env->ptr_ref;
-    if (*stack_env->ptr_ref > stack_env->end)
-        _xvm_exception_stack_overflow();
-}
-
-// Pop 'arg_size' words from the stack and push 'value' onto the stack.
-STATIC void xvm_env_return_float(xvm_env env, unsigned int arg_size, float value)
-{
-    xvm_env_return_int(env, arg_size, FLT_TO_INT_REINTERPRET(value));
-}
-
-#define XVM_PARAM_INT(ident, index) int ident = xvm_env_param_int(env, index)
-#define XVM_PARAM_FLOAT(ident, index) float ident = xvm_env_param_float(env, index)
-#define XVM_PARAM_STRING(ident, index) char* ident = xvm_env_param_string(env, index)
-
-#define XVM_RETURN_INT(value) xvm_env_push_int(env, value)
-#define XVM_RETURN_FLOAT(value) xvm_env_push_float(env, value)
-
-#endif
-
 
 /* ----- Export Address ----- */
 
-//! XVM export procedure address structure.
-typedef struct
-{
-    /**
-    Export procedure address. This is the instruction
-    INDEX where the procedure starts. By default 0.
-    */
-    unsigned int    addr;
-    
-    /**
-    Procedure ID name. This depends on the 'name mangling' of
-    the high-level compiler (e.g. "main" or "_ZN@main"). By default empty.
-    */
-    xvm_string      label;
-}
-xvm_export_address;
-
-//! Initializes the export address with its default values.
-STATIC int xvm_export_address_init(xvm_export_address* export_address)
+int xvm_export_address_init(xvm_export_address* export_address)
 {
     if (export_address != NULL)
     {
@@ -1585,8 +1125,7 @@ STATIC int xvm_export_address_init(xvm_export_address* export_address)
     return 0;
 }
 
-//! Initializes the export address with the specified startup values.
-STATIC int xvm_export_address_setup(xvm_export_address* export_address, unsigned int addr, xvm_string label)
+int xvm_export_address_setup(xvm_export_address* export_address, unsigned int addr, xvm_string label)
 {
     if (export_address != NULL)
     {
@@ -1597,8 +1136,7 @@ STATIC int xvm_export_address_setup(xvm_export_address* export_address, unsigned
     return 0;
 }
 
-//! Frees the memory for the specified export address object.
-STATIC int xvm_export_address_free(xvm_export_address* export_address)
+int xvm_export_address_free(xvm_export_address* export_address)
 {
     if (export_address != NULL)
     {
@@ -1612,17 +1150,7 @@ STATIC int xvm_export_address_free(xvm_export_address* export_address)
 
 /* ----- Import Address ----- */
 
-//! XVM import procedure address structure.
-typedef struct
-{
-    unsigned int    num_indices;    //!< Number of instructions which must be back-patched.
-    unsigned int*   indices;        //!< Instruction indices which require to be back-patched.
-    xvm_string      label;          //!< Address label to import. This must match any of the export addresses.
-}
-xvm_import_address;
-
-//! Initializes the import address with its default values.
-STATIC int xvm_import_address_init(xvm_import_address* import_address)
+int xvm_import_address_init(xvm_import_address* import_address)
 {
     if (import_address != NULL)
     {
@@ -1634,11 +1162,7 @@ STATIC int xvm_import_address_init(xvm_import_address* import_address)
     return 0;
 }
 
-/**
-Initializes the import address with the specified startup values.
-\note All indices are uninitialized!
-*/
-STATIC int xvm_import_address_setup(xvm_import_address* import_address, unsigned int num_indices)
+int xvm_import_address_setup(xvm_import_address* import_address, unsigned int num_indices)
 {
     if (import_address != NULL)
     {
@@ -1650,8 +1174,7 @@ STATIC int xvm_import_address_setup(xvm_import_address* import_address, unsigned
     return 0;
 }
 
-//! Frees the memory for the specified import address object.
-STATIC int xvm_import_address_free(xvm_import_address* import_address)
+int xvm_import_address_free(xvm_import_address* import_address)
 {
     if (import_address != NULL)
     {
@@ -1670,37 +1193,7 @@ STATIC int xvm_import_address_free(xvm_import_address* import_address)
 
 /* ----- Byte Code ----- */
 
-//! XVM byte code structure.
-typedef struct
-{
-    unsigned int            num_instructions;       //!< Number of instructions. By default 0.
-    instr_t*                instructions;           //!< Instruction array. By default NULL.
-
-    unsigned int            num_export_addresses;   //!< Number of export addresses. By default 0.
-    xvm_export_address*     export_addresses;       //!< Export address array. By default NULL.
-
-    unsigned int            num_import_addresses;   //!< Number of import addresses. By default 0.
-    xvm_import_address*     import_addresses;       //!< Import address array. By default NULL.
-
-    unsigned int            num_invoke_idents;      //!< Number of invocation identifiers. By default 0.
-    xvm_string*             invoke_idents;          //!< Invocation identifiers. By default NULL.
-    xvm_invocation_proc*    invoke_bindings;        //!< Invocation procedure bindings. By default NULL.
-}
-xvm_bytecode;
-
-/**
-Initializes the specified byte code structure.
-\code
-xvm_bytecode byte_code;
-xvm_bytecode_init(&byte_code);
-xvm_bytecode_create_instructions(&byte_code, num_instructions);
-xvm_bytecode_create_export_addresses(&byte_code, num_export_addresses);
-xvm_bytecode_create_import_addresses(&byte_code, num_import_addresses);
-// ...
-xvm_bytecode_free(&byte_code);
-\endcode
-*/
-STATIC int xvm_bytecode_init(xvm_bytecode* byte_code)
+int xvm_bytecode_init(xvm_bytecode* byte_code)
 {
     if (byte_code != NULL)
     {
@@ -1722,14 +1215,7 @@ STATIC int xvm_bytecode_init(xvm_bytecode* byte_code)
     return 0;
 }
 
-/**
-Allocates memory for the specified amount of byte code instructions.
-\param[in,out] byte_code Pointer to the byte code object.
-\param[in] num_instructions Specifies the number of instruction to allocate for the byte code.
-\see xvm_bytecode_init
-\note All instructions are uninitialized!
-*/
-STATIC int xvm_bytecode_create_instructions(xvm_bytecode* byte_code, unsigned int num_instructions)
+int xvm_bytecode_create_instructions(xvm_bytecode* byte_code, unsigned int num_instructions)
 {
     if (byte_code != NULL && byte_code->instructions == NULL && num_instructions > 0)
     {
@@ -1740,15 +1226,7 @@ STATIC int xvm_bytecode_create_instructions(xvm_bytecode* byte_code, unsigned in
     return 0;
 }
 
-/**
-Allocates memory for the specified amount of byte code export addresses.
-\param[in,out] byte_code Pointer to the byte code object.
-\param[in] num_export_addresses Specifies the number of export addresses to allocate for the byte code.
-\see xvm_bytecode_init
-\see xvm_export_address
-\note All export addresses are uninitialized!
-*/
-STATIC int xvm_bytecode_create_export_addresses(xvm_bytecode* byte_code, unsigned int num_export_addresses)
+int xvm_bytecode_create_export_addresses(xvm_bytecode* byte_code, unsigned int num_export_addresses)
 {
     if (byte_code != NULL && byte_code->export_addresses == NULL && num_export_addresses > 0)
     {
@@ -1759,15 +1237,7 @@ STATIC int xvm_bytecode_create_export_addresses(xvm_bytecode* byte_code, unsigne
     return 0;
 }
 
-/**
-Allocates memory for the specified amount of byte code import addresses.
-\param[in,out] byte_code Pointer to the byte code object.
-\param[in] num_export_addresses Specifies the number of export addresses to allocate for the byte code.
-\see xvm_bytecode_init
-\see xvm_import_address
-\note All import addresses are uninitialized!
-*/
-STATIC int xvm_bytecode_create_import_addresses(xvm_bytecode* byte_code, unsigned int num_import_addresses)
+int xvm_bytecode_create_import_addresses(xvm_bytecode* byte_code, unsigned int num_import_addresses)
 {
     if (byte_code != NULL && byte_code->import_addresses == NULL && num_import_addresses > 0)
     {
@@ -1778,8 +1248,7 @@ STATIC int xvm_bytecode_create_import_addresses(xvm_bytecode* byte_code, unsigne
     return 0;
 }
 
-//! Returns the export address with the specified label or NULL if there is no such export address.
-STATIC const xvm_export_address* xvm_bytecode_find_export_address(const xvm_bytecode* byte_code, const char* label)
+const xvm_export_address* xvm_bytecode_find_export_address(const xvm_bytecode* byte_code, const char* label)
 {
     if (byte_code != NULL && byte_code->export_addresses != NULL)
     {
@@ -1795,15 +1264,7 @@ STATIC const xvm_export_address* xvm_bytecode_find_export_address(const xvm_byte
 
 #if 0 // !INCOMPLETE!
 
-/**
-Dynamically links the client byte-code to the main byte-code.
-This function will resolve as much import address (from both sides) as possible.
-\note If the program termination of 'byte_code' only works when the program counter
-runs at the end of the code, this may no longer work, when the client code is appended!
-\see xvm_bytecode_create_export_addresses
-\see xvm_bytecode_create_import_addresses
-*/
-STATIC int xvm_bytecode_dynamic_link(xvm_bytecode* byte_code, xvm_bytecode* client_byte_code)
+int xvm_bytecode_dynamic_link(xvm_bytecode* byte_code, xvm_bytecode* client_byte_code)
 {
     if ( byte_code == NULL || byte_code->instructions == NULL ||
          client_byte_code == NULL || client_byte_code->instructions == NULL )
@@ -1823,15 +1284,7 @@ STATIC int xvm_bytecode_dynamic_link(xvm_bytecode* byte_code, xvm_bytecode* clie
 
 #endif
 
-/**
-Allocates memory for the specified amount of byte code invocation identifiers and bindings.
-\param[in,out] byte_code Pointer to the byte code object.
-\param[in] num_invoke_idents Specifies the number of invocation identifiers to allocate for the byte code.
-\see xvm_bytecode_init
-\note All invocation identifiers are uninitialized!
-But all invocation bindings will be initialized to a default procedure.
-*/
-STATIC int xvm_bytecode_create_invocations(xvm_bytecode* byte_code, unsigned int num_invoke_idents)
+int xvm_bytecode_create_invocations(xvm_bytecode* byte_code, unsigned int num_invoke_idents)
 {
     if (byte_code != NULL && byte_code->invoke_idents == NULL && num_invoke_idents > 0)
     {
@@ -1848,7 +1301,7 @@ STATIC int xvm_bytecode_create_invocations(xvm_bytecode* byte_code, unsigned int
     return 0;
 }
 
-STATIC int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ident, xvm_invocation_proc proc)
+int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ident, xvm_invocation_proc proc)
 {
     if (byte_code != NULL && ident != NULL)
     {
@@ -1878,8 +1331,7 @@ STATIC int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ide
     return 0;
 }
 
-//! Frees the memory for the specified byte code object.
-STATIC int xvm_bytecode_free(xvm_bytecode* byte_code)
+int xvm_bytecode_free(xvm_bytecode* byte_code)
 {
     if (byte_code != NULL)
     {
@@ -1938,30 +1390,7 @@ STATIC int xvm_bytecode_free(xvm_bytecode* byte_code)
     return 0;
 }
 
-/**
-Inserts an ASCII data field into the byte code instructions.
-In XASM this could look like this:
-\code
-str0: .ascii "Hello, World!\n"
-\endcode
-\param[in,out] byte_code Pointer to the byte code whose instructions will be filled with the data field.
-\param[in] instr_offset Index offset of the first instruction where the data field is to be inserted.
-\param[in] text Constant pointer to the string which is to be filled into the data field.
-\param[out] num_instructions Optional pointer to the number of instruction which are used for this data field.
-This may also be NULL.
-\return Non zero on success otherwise 0 when the byte code is NULL or it has not enough instructions or 'text' is NULL.
-If the byte code has not enough instruction, the output parameter 'num_instructions' will still
-contain the number of instruction which are required to fill the data field.
-\remarks This function can also be used to only determine the number of required instructions for the data field.
-This could look like this:
-\code
-size_t num_instr = 0;
-xvm_bytecode_datafield_ascii(NULL, "Hello, World\n", &num_instr);
-// num_instr == 4  ->  { "Hell", "o, W", "orld", "\n\0\0\0" }
-xvm_bytecode_datafield_ascii(byte_code.instructions + current_instr_offset, "Hello, World\n", NULL);
-\endcode
-*/
-STATIC int xvm_bytecode_datafield_ascii(instr_t* instr_ptr, const char* text, size_t* num_instructions)
+int xvm_bytecode_datafield_ascii(instr_t* instr_ptr, const char* text, size_t* num_instructions)
 {
     char* instr_byte;
     size_t num_instr, remainder;
@@ -2002,85 +1431,7 @@ STATIC int xvm_bytecode_datafield_ascii(instr_t* instr_ptr, const char* text, si
     return 1;
 }
 
-/*
-
-WORD: 32-bit unsigned integer
-STR:
-    WORD:           length
-    Byte[length]:   data
-
---- XBC file format spec (Version 1.31): ---
-
-WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 131 for "1.31")
-WORD: number of instructions (n)
-n times:
-    WORD: instruction
-
---- XBC file format spec (Version 1.32): ---
-
-WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 132 for "1.32")
-WORD: number of instructions (n1)
-n1 times:
-    WORD: instruction
-WORD: number of export addresses (n2)
-n2 times:
-    WORD: address
-    STR: name
-
---- XBC file format spec (Version 1.33): ---
-
-WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 133 for "1.33")
-WORD: number of instructions (n1)
-n1 times:
-    WORD: instruction
-WORD: number of export addresses (n2)
-n2 times:
-    WORD: address
-    STR: name
-WORD: number of invoke identifiers (n3)
-n3 times:
-    STR: identifier
-
---- XBC file format spec (Version 1.34): ---
-
-WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 134 for "1.34")
-WORD: number of instructions (n1)
-n1 times:
-    WORD: instruction
-WORD: number of export addresses (n2)
-n2 times:
-    WORD: address
-    STR: name
-WORD: number of import addresses (n3)
-n3 times:
-    WORD: number of instruction indices (n3b)
-    n3b times:
-        WORD: index
-    STR: name
-WORD: number of invoke identifiers (n4)
-n4 times:
-    STR: identifier
-
-*/
-
-#define XBC_FORMAT_MAGIC            (*((int*)("XBCF")))
-#define XBC_FORMAT_VERSION_1_31     131
-#define XBC_FORMAT_VERSION_1_32     132
-#define XBC_FORMAT_VERSION_1_33     133
-#define XBC_FORMAT_VERSION_1_34     134//!INCOMPLETE!
-#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_33
-
-/**
-Reads a byte code form file.
-\param[out] byte_code Specifies the resulting byte code object.
-\param[in] filename Specifies the filename from which the byte code is to be read.
-\return Zero on failure and non-zero otherwise.
-*/
-STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
+int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
 {
     // Check arguments
     if (byte_code == NULL || filename == NULL)
@@ -2212,15 +1563,7 @@ STATIC int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* file
     return 1;
 }
 
-/**
-Writes the specified byte code to file.
-\param[in] byte_code specifies the byte code which is to be written to file.
-\param[in] filename Specifies the filename which is to be used to create the file.
-\param[in] version Specifies the format version. Must be one of the following values:
-XBC_FORMAT_VERSION_1_11, XBC_FORMAT_VERSION_1_12, XBC_FORMAT_VERSION_1_13, or XBC_FORMAT_VERSION_LATEST.
-\return Zero on failure and non-zero otherwise.
-*/
-STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filename, unsigned int version)
+int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filename, unsigned int version)
 {
     // Check arguments
     if (byte_code == NULL || byte_code->instructions == NULL || filename == NULL)
@@ -2309,34 +1652,11 @@ STATIC int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char*
 
 /* ----- Module ----- */
 
-typedef int (*xvm_module_proc_count_fnc)(void);
-typedef xvm_invocation_proc (*xvm_module_fetch_proc_fnc)(int); 
-typedef const char* (*xvm_module_fetch_ident_fnc)(int); 
-
-//! XVM module library structure.
-typedef struct
-{
-    #if defined(_WIN32)
-    HMODULE                     handle;
-    #elif defined(__linux__)
-    void*                       handle;
-    #endif
-    xvm_module_proc_count_fnc   proc_count;
-    xvm_module_fetch_proc_fnc   fetch_proc;
-    xvm_module_fetch_ident_fnc  fetch_ident;
-}
-xvm_module;
-
-//! Initializes the specified module with its default values.
-STATIC int xvm_module_init(xvm_module* module)
+int xvm_module_init(xvm_module* module)
 {
     if (module != NULL)
     {
-        #if defined(_WIN32)
-        module->handle      = 0;
-        #elif defined(__linux__)
         module->handle      = NULL;
-        #endif
         module->proc_count  = NULL;
         module->fetch_proc  = NULL;
         module->fetch_ident = NULL;
@@ -2345,18 +1665,7 @@ STATIC int xvm_module_init(xvm_module* module)
     return 0;
 }
 
-/**
-Loads the specified module library filename.
-\param[in] filename Specifies the XieXie module.
-This must be a dynamic library (*.dll file on Win32, *.so file on GNU/Linux).
-The library must contain functions with the following interfaces:
-\code
-int xx_module_proc_count();
-xvm_invocation_proc xx_module_fetch_proc(int index);
-const char* xx_module_fetch_ident(int index);
-\endcode
-*/
-STATIC int xvm_module_load(xvm_module* module, const char* filename)
+int xvm_module_load(xvm_module* module, const char* filename)
 {
     if (module == NULL || filename == NULL)
         return 0;
@@ -2372,9 +1681,9 @@ STATIC int xvm_module_load(xvm_module* module, const char* filename)
     }
 
     // Load module interface
-    module->proc_count = (xvm_module_proc_count_fnc)GetProcAddress(module->handle, "xx_module_proc_count");
-    module->fetch_proc = (xvm_module_fetch_proc_fnc)GetProcAddress(module->handle, "xx_module_fetch_proc");
-    module->fetch_ident = (xvm_module_fetch_ident_fnc)GetProcAddress(module->handle, "xx_module_fetch_ident");
+    module->proc_count = (xvm_module_proc_count_fnc)GetProcAddress(MODULE_GET_HANDLE(module->handle), "xx_module_proc_count");
+    module->fetch_proc = (xvm_module_fetch_proc_fnc)GetProcAddress(MODULE_GET_HANDLE(module->handle), "xx_module_fetch_proc");
+    module->fetch_ident = (xvm_module_fetch_ident_fnc)GetProcAddress(MODULE_GET_HANDLE(module->handle), "xx_module_fetch_ident");
 
     #elif defined(__linux__)
 
@@ -2402,7 +1711,7 @@ STATIC int xvm_module_load(xvm_module* module, const char* filename)
     return 1;
 }
 
-STATIC int xvm_module_unload(xvm_module* module)
+int xvm_module_unload(xvm_module* module)
 {
     if (module != NULL)
     {
@@ -2410,7 +1719,7 @@ STATIC int xvm_module_unload(xvm_module* module)
 
         if (module->handle != 0)
         {
-            FreeLibrary(module->handle);
+            FreeLibrary(MODULE_GET_HANDLE(module->handle));
             module->handle = 0;
         }
 
@@ -2484,12 +1793,12 @@ STATIC int _xvm_bytecode_bind_module_ext(xvm_bytecode* byte_code, const xvm_modu
     return 1;
 }
 
-STATIC int xvm_bytecode_bind_module(xvm_bytecode* byte_code, const xvm_module* module)
+int xvm_bytecode_bind_module(xvm_bytecode* byte_code, const xvm_module* module)
 {
     return _xvm_bytecode_bind_module_ext(byte_code, module, 0);
 }
 
-STATIC int xvm_bytecode_unbind_module(xvm_bytecode* byte_code, const xvm_module* module)
+int xvm_bytecode_unbind_module(xvm_bytecode* byte_code, const xvm_module* module)
 {
     return _xvm_bytecode_bind_module_ext(byte_code, module, 1);
 }
@@ -2504,15 +1813,7 @@ typedef struct _xvm_module_container_node
 }
 _xvm_module_container_node;
 
-//! XVM module contianer structure.
-typedef struct xvm_module_container
-{
-    _xvm_module_container_node* first;
-}
-xvm_module_container;
-
-//! Initializes the specified module container with its default values.
-STATIC int xvm_module_container_init(xvm_module_container* container)
+int xvm_module_container_init(xvm_module_container* container)
 {
     if (container != NULL)
     {
@@ -2522,7 +1823,7 @@ STATIC int xvm_module_container_init(xvm_module_container* container)
     return 0;
 }
 
-STATIC int xvm_module_container_add(xvm_module_container* container, xvm_module module)
+int xvm_module_container_add(xvm_module_container* container, xvm_module module)
 {
     if (container != NULL)
     {
@@ -2575,11 +1876,7 @@ STATIC int _xvm_module_container_node_free(_xvm_module_container_node* node)
     return 0;
 }
 
-/**
-Clears the specified container and unloads all modules.
-\note No byte code must then use any module which was loaded with this container!
-*/
-STATIC int xvm_module_container_clear(xvm_module_container* container)
+int xvm_module_container_clear(xvm_module_container* container)
 {
     if (container != NULL)
     {
@@ -2601,7 +1898,7 @@ STATIC int xvm_module_container_clear(xvm_module_container* container)
 
 static _xvm_module_container_node* _xvm_module_iterator = NULL;
 
-STATIC int xvm_module_iteration_start(const xvm_module_container* container)
+int xvm_module_iteration_start(const xvm_module_container* container)
 {
     if (container != NULL)
     {
@@ -2611,7 +1908,7 @@ STATIC int xvm_module_iteration_start(const xvm_module_container* container)
     return 0;
 }
 
-STATIC xvm_module* xvm_module_iteration_next()
+xvm_module* xvm_module_iteration_next()
 {
     if (_xvm_module_iterator != NULL)
     {
@@ -2634,7 +1931,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         // void* AllocMem(uint sizeInBytes)
         case INSC_ALLOC_MEM:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             void* result = malloc((size_t)arg0);
             *reg_ar = (regi_t)result;
         }
@@ -2643,7 +1940,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         // void FreeMem(void* memoryAddress)
         case INSC_FREE_MEM:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             if (arg0 != 0)
                 free((void*)arg0);
         }
@@ -2652,9 +1949,9 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         // void CopyMem(void* dstMemAddr, const void* srcMemAddr, uint sizeInBytes)
         case INSC_COPY_MEM:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
-            int arg2 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            int arg1 = _xvm_stack_pop(stack, reg_sp);
+            int arg2 = _xvm_stack_pop(stack, reg_sp);
             memcpy((void*)arg0, (const void*)arg1, (size_t)arg2);
         }
         break;
@@ -2662,9 +1959,9 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         // void FillMem(void* memoryAddress, uint sizeInByzes, int value)
         case INSC_FILL_MEM:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
-            int arg2 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            int arg1 = _xvm_stack_pop(stack, reg_sp);
+            int arg2 = _xvm_stack_pop(stack, reg_sp);
             memset((void*)arg0, arg2, (size_t)arg1);
         }
         break;
@@ -2673,43 +1970,43 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_SYS_CALL:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             system(INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
         case INSC_PRINT:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             printf("%s", INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
         case INSC_PRINT_LN:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             puts(INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
         case INSC_PRINT_INT:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             printf("%i", arg0);
         }
         break;
 
         case INSC_PRINT_FLOAT:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             printf("%f", INT_TO_FLT_REINTERPRET(arg0));
         }
         break;
 
         case INSC_INPUT:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            int arg1 = _xvm_stack_pop(stack, reg_sp);
             fgets((char*)arg0, arg1, stdin);
         }
         break;
@@ -2747,7 +2044,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_SIN:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             float result = sinf(INT_TO_FLT_REINTERPRET(arg0));
             *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
@@ -2755,7 +2052,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_COS:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             float result = cosf(INT_TO_FLT_REINTERPRET(arg0));
             *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
@@ -2763,7 +2060,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_TAN:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             float result = tanf(INT_TO_FLT_REINTERPRET(arg0));
             *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
@@ -2771,7 +2068,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_ASIN:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             float result = asinf(INT_TO_FLT_REINTERPRET(arg0));
             *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
@@ -2779,7 +2076,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_ACOS:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             float result = acosf(INT_TO_FLT_REINTERPRET(arg0));
             *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
@@ -2787,7 +2084,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_ATAN:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             float result = atanf(INT_TO_FLT_REINTERPRET(arg0));
             *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
@@ -2795,8 +2092,8 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_POW:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
-            int arg1 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            int arg1 = _xvm_stack_pop(stack, reg_sp);
             float result = powf(INT_TO_FLT_REINTERPRET(arg0), INT_TO_FLT_REINTERPRET(arg1));
             *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
@@ -2804,7 +2101,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_SQRT:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             float result = sqrtf(INT_TO_FLT_REINTERPRET(arg0));
             *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
@@ -2836,7 +2133,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         case INSC_SLEEP:
         {
-            int arg0 = xvm_stack_pop(stack, reg_sp);
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
             #if defined(_WIN32)
             Sleep((DWORD)arg0);
             #elif defined(__linux__)
@@ -2853,18 +2150,7 @@ STATIC void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
     }
 }
 
-/**
-Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Virtual Machine).
-\param[in] byte_code Pointer to the byte code to execute.
-\param[in] stack Pointer to the stack which is to be used during execution.
-\param[in] entry_point Optional pointer to the entry point address.
-This may also be NULL to start the program at the top.
-\remarks This is the main function for the entire virtual machine.
-All instructions are implemented inside this function and its large switch-case statement.
-\see xvm_bytecode_create_instructions
-\see xvm_stack_create
-*/
-STATIC xvm_exit_codes xvm_execute_program_ext(
+xvm_exit_codes xvm_execute_program_ext(
     const xvm_bytecode* const byte_code,
     xvm_stack* const stack,
     const xvm_export_address* entry_point)
@@ -3261,7 +2547,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             {
                 reg0 = _xvm_instr_get_reg0(instr);
                 reg1 = _xvm_instr_get_reg1(instr);
-                *reg_cf = xvm_flt2int_signum(reg.f[reg0] - reg.f[reg1]);
+                *reg_cf = _xvm_flt2int_signum(reg.f[reg0] - reg.f[reg1]);
             }
             break;
 
@@ -3270,14 +2556,14 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             case OPCODE_PUSH:
             {
                 reg0 = _xvm_instr_get_reg0(instr);
-                xvm_stack_push(stack, reg_sp, reg.i[reg0]);
+                _xvm_stack_push(stack, reg_sp, reg.i[reg0]);
             }
             break;
 
             case OPCODE_POP:
             {
                 reg0 = _xvm_instr_get_reg0(instr);
-                reg.i[reg0] = xvm_stack_pop(stack, reg_sp);
+                reg.i[reg0] = _xvm_stack_pop(stack, reg_sp);
             }
             break;
 
@@ -3438,8 +2724,8 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
                 // Push dynamic link (lb and pc registers)
                 extra_value = *reg_lb;
                 *reg_lb = *reg_sp;
-                xvm_stack_push(stack, reg_sp, extra_value);
-                xvm_stack_push(stack, reg_sp, *reg_pc);
+                _xvm_stack_push(stack, reg_sp, extra_value);
+                _xvm_stack_push(stack, reg_sp, *reg_pc);
 
                 reg0 = _xvm_instr_get_reg0(instr);
 
@@ -3571,7 +2857,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
             case OPCODE_PUSHC:
             {
                 sgn_value = _xvm_instr_get_sgn_value26(instr);
-                xvm_stack_push(stack, reg_sp, sgn_value);
+                _xvm_stack_push(stack, reg_sp, sgn_value);
             }
             break;
 
@@ -3615,7 +2901,7 @@ STATIC xvm_exit_codes xvm_execute_program_ext(
 Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Virtual Machine) from the beginning.
 \see xvm_execute_program_ext
 */
-STATIC xvm_exit_codes xvm_execute_program(
+xvm_exit_codes xvm_execute_program(
     const xvm_bytecode* const byte_code,
     xvm_stack* const stack)
 {
@@ -3627,7 +2913,7 @@ Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Vir
 \param[in] entry_point Specifies the entry point. If this is an unkown entry point, the return value is EXITCODE_UNKNOWN_ENTRY_POINT.
 \see xvm_execute_program_ext
 */
-STATIC xvm_exit_codes xvm_execute_program_entry_point(
+xvm_exit_codes xvm_execute_program_entry_point(
     const xvm_bytecode* const byte_code,
     xvm_stack* const stack,
     const char* entry_point)
@@ -3645,193 +2931,6 @@ STATIC xvm_exit_codes xvm_execute_program_entry_point(
     // Execute program from entry point
     return xvm_execute_program_ext(byte_code, stack, entry_point_addr);
 }
-
-
-#ifndef _DISABLE_SHELL_
-
-/* ----- Shell ----- */
-
-STATIC void _xvm_shell_print_help()
-{
-    xvm_log_println("usage:");
-    xvm_log_println("  xvm [options] FILE         Executes the specified virtual program");
-    xvm_log_println("options:");
-    xvm_log_println("  -h, --help, help           Prints the help information");
-    xvm_log_println("  --version                  Prints the version and license note");
-    xvm_log_println("  --verbose                  Prints additional output before and after program execution");
-    xvm_log_println("  -st, --stack-size SIZE     Sets the stack size (by default 256)");
-    xvm_log_println("  -mod, --load-module FILE   Loads the module, specified by FILE");
-}
-
-STATIC void _xvm_shell_print_version()
-{
-    #ifdef _ENABLE_RUNTIME_DEBUGGER_
-    xvm_log_println("XieXie 2.0 (Rev.1) VirtualMachine (XVM) with RuntimeDebugger (RTD)");
-    #else
-    xvm_log_println("XieXie 2.0 (Rev.1) VirtualMachine (XVM)");
-    #endif
-    xvm_log_println("");
-    xvm_log_println("Copyright (C) 2014 Lukas Hermanns");
-    xvm_log_println("All rights reserved.");
-    xvm_log_println("");
-    xvm_log_println("This software may be modified and distributed under the terms");
-    xvm_log_println("of the BSD license.  See the LICENSE file for details.");
-}
-
-STATIC int _xvm_shell_parse_args(int argc, char* argv[])
-{
-    // Configuration memory
-    int verbose = 0;
-    const char* filename = NULL;
-    size_t stack_size = 256;
-
-    // Initialize module container
-    xvm_module_container module_cont;
-    xvm_module_container_init(&module_cont);
-
-    // Check if there are any arguments
-    const char* arg;
-
-    if (argc <= 0)
-    {
-        xvm_log_println("no input: enter \"help\" for information");
-        return 0;
-    }
-
-    // Parse all arguments
-    while (argc > 0)
-    {
-        // Store current argument
-        arg = *argv;
-
-        // Get next argument
-        ++argv;
-        --argc;
-
-        // Parse current argument
-        if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0 || strcmp(arg, "help") == 0)
-            _xvm_shell_print_help();
-        else if (strcmp(arg, "--version") == 0)
-            _xvm_shell_print_version();
-        else if (strcmp(arg, "--verbose") == 0)
-            verbose = 1;
-        else if (strcmp(arg, "-mod") == 0 || strcmp(arg, "--load-module") == 0)
-        {
-            if (argc > 0)
-            {
-                // Get parameter from next argument
-                arg = *argv;
-
-                // Load module
-                xvm_module module;
-                xvm_module_init(&module);
-                
-                if (xvm_module_load(&module, arg) != 0)
-                    xvm_module_container_add(&module_cont, module);
-
-                ++argv;
-                --argc;
-            }
-            else
-            {
-                xvm_log_error("expected argument after \"-mod\" and \"--load-module\" flag");
-                return 0;
-            }
-        }
-        else if (strcmp(arg, "-st") == 0 || strcmp(arg, "--stack-size") == 0)
-        {
-            if (argc > 0)
-            {
-                // Get parameter from next argument
-                arg = *argv;
-                int param = atoi(arg);
-
-                if (param <= 0)
-                {
-                    xvm_log_error("stack size must be greater than zero");
-                    return 0;
-                }
-                else
-                    stack_size = (size_t)param;
-
-                // Get next argument
-                ++argv;
-                --argc;
-            }
-            else
-            {
-                xvm_log_error("expected argument after \"-st\" and \"--stack-size\" flag");
-                return 0;
-            }
-        }
-        else if (strlen(arg) > 0)
-        {
-            if (filename != NULL)
-            {
-                xvm_log_error("only a single program can be executed at a time");
-                return 0;
-            }
-            else
-                filename = arg;
-        }
-    }
-
-    // Execute shell command
-    if (filename != NULL)
-    {
-        // Read byte code from file
-        xvm_bytecode byte_code;
-        xvm_bytecode_init(&byte_code);
-
-        if (xvm_bytecode_read_from_file(&byte_code, filename) == 0)
-        {
-            xvm_log_readfile_error(filename);
-            return 0;
-        }
-
-        // Bind modules
-        if (xvm_module_iteration_start(&module_cont) != 0)
-        {
-            xvm_module* module = NULL;
-            while ( ( module = xvm_module_iteration_next() ) != NULL )
-                xvm_bytecode_bind_module(&byte_code, module);
-        }
-
-        // Create stack
-        xvm_stack stack;
-        xvm_stack_init(&stack);
-        xvm_stack_create(&stack, stack_size);
-
-        // Execute program
-        const xvm_exit_codes exit_code = xvm_execute_program(&byte_code, &stack);
-
-        if (exit_code != EXITCODE_SUCCESS)
-            xvm_log_exitcode_error(exit_code);
-        else if (verbose != 0)
-            xvm_log_println("program terminated successful");
-
-        // Clean up
-        xvm_bytecode_free(&byte_code);
-        xvm_stack_free(&stack);
-    }
-
-    return 1;
-}
-
-// Main function for the shell
-int main(int argc, char* argv[])
-{
-    // Ignore program path argument, then parse all other arguments
-    _xvm_shell_parse_args(--argc, ++argv);
-    return 0;
-}
-
-#endif // /_DISABLE_SHELL_
-
-
-// Undefine internal macros
-#undef INLINE
-#undef STATIC
 
 
 #ifdef __cplusplus
