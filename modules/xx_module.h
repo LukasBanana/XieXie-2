@@ -16,30 +16,32 @@
 #include <string.h>
 
 
-#ifdef WIN32
-#   define _XVM_EXPORT __declspec(dllexport)
-#else
-#   define _XVM_EXPORT
-#endif
-
 //! XVM boolean 'true' literal.
 #define XVM_True    1
 //! XVM boolean 'false' literal.
 #define XVM_False   0
 
+#ifdef _WIN32
+#   define _XVM_EXPORT __declspec(dllexport)
+#else
+#   define _XVM_EXPORT
+#endif
+
 #define XVM_IMPLEMENT_MODULE_INTERFACE(procList)                                \
     _XVM_EXPORT int xx_module_proc_count()                                      \
     {                                                                           \
-        return sizeof(procList)/sizeof(XVM_Invocation);                         \
+        return (sizeof(procList)/sizeof(XVM_Invocation));                       \
     }                                                                           \
     _XVM_EXPORT XVM_INVOCATION_PROC xx_module_fetch_proc(int index)             \
     {                                                                           \
-        return index < xx_module_proc_count() ? procList[index].proc : NULL;    \
+        return (index < xx_module_proc_count() ? procList[index].proc : NULL);  \
     }                                                                           \
     _XVM_EXPORT const char* xx_module_fetch_ident(int index)                    \
     {                                                                           \
-        return index < xx_module_proc_count() ? procList[index].ident : NULL;   \
+        return (index < xx_module_proc_count() ? procList[index].ident : NULL); \
     }
+
+#undef _XVM_EXPORT
 
 
 //! XVM environment state type.

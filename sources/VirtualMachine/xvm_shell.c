@@ -11,13 +11,18 @@
 void xvm_shell_print_help()
 {
     xvm_log_println("usage:");
-    xvm_log_println("  xvm [options] FILE         Executes the specified virtual program");
+    #ifdef _ENABLE_RUNTIME_DEBUGGER_
+    xvm_log_println("  xvm-rtd [options] FILE ... executes the specified virtual program");
+    #else
+    xvm_log_println("  xvm [options] FILE ....... executes the specified virtual program");
+    #endif
     xvm_log_println("options:");
-    xvm_log_println("  -h, --help, help           Prints the help information");
-    xvm_log_println("  --version                  Prints the version and license note");
-    xvm_log_println("  --verbose                  Prints additional output before and after program execution");
-    xvm_log_println("  -st, --stack-size SIZE     Sets the stack size (by default 256)");
-    xvm_log_println("  -mod, --load-module FILE   Loads the module, specified by FILE");
+    xvm_log_println("  help ..................... prints the help information");
+    xvm_log_println("  version .................. prints the version and license note");
+    xvm_log_println("  -v, --verbose ............ prints additional output before and after program execution");
+    xvm_log_println("  -s, --stack SIZE ......... sets the stack size (by default 256)");
+    xvm_log_println("  -m, --module FILE ........ loads the module, specified by FILE");
+    xvm_log_println("  -e, --entry LABEL ........ sets the main entry point, specified by LABEL");
 }
 
 void xvm_shell_print_version()
@@ -38,10 +43,11 @@ void xvm_shell_print_version()
 int xvm_shell_parse_args(int argc, char* argv[])
 {
     // Configuration memory
-    int verbose = 0;
-    const char* filename = NULL;
-    size_t stack_size = 256;
-
+    int         verbose     = 0;
+    const char* filename    = NULL;
+    const char* entry       = NULL;
+    size_t      stack_size  = 256;
+    
     // Initialize module container
     xvm_module_container module_cont;
     xvm_module_container_init(&module_cont);
@@ -66,13 +72,13 @@ int xvm_shell_parse_args(int argc, char* argv[])
         --argc;
 
         // Parse current argument
-        if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0 || strcmp(arg, "help") == 0)
+        if (strcmp(arg, "help") == 0)
             xvm_shell_print_help();
-        else if (strcmp(arg, "--version") == 0)
+        else if (strcmp(arg, "version") == 0)
             xvm_shell_print_version();
-        else if (strcmp(arg, "--verbose") == 0)
+        else if (strcmp(arg, "-v") == 0 || strcmp(arg, "--verbose") == 0)
             verbose = 1;
-        else if (strcmp(arg, "-mod") == 0 || strcmp(arg, "--load-module") == 0)
+        else if (strcmp(arg, "-m") == 0 || strcmp(arg, "--module") == 0)
         {
             if (argc > 0)
             {
@@ -86,16 +92,34 @@ int xvm_shell_parse_args(int argc, char* argv[])
                 if (xvm_module_load(&module, arg) != 0)
                     xvm_module_container_add(&module_cont, module);
 
+                // Get next argument
                 ++argv;
                 --argc;
             }
             else
             {
-                xvm_log_error("expected argument after \"-mod\" and \"--load-module\" flag");
+                xvm_log_error("expected argument after \"-m\" and \"--module\" flag");
                 return 0;
             }
         }
-        else if (strcmp(arg, "-st") == 0 || strcmp(arg, "--stack-size") == 0)
+        else if (strcmp(arg, "-e") == 0 || strcmp(arg, "--entry") == 0)
+        {
+            if (argc > 0)
+            {
+                // Get parameter from next argument
+                entry = *argv;
+
+                // Get next argument
+                ++argv;
+                --argc;
+            }
+            else
+            {
+                xvm_log_error("expected argument after \"-e\" and \"--entry\" flag");
+                return 0;
+            }
+        }
+        else if (strcmp(arg, "-s") == 0 || strcmp(arg, "--stack") == 0)
         {
             if (argc > 0)
             {
@@ -117,7 +141,7 @@ int xvm_shell_parse_args(int argc, char* argv[])
             }
             else
             {
-                xvm_log_error("expected argument after \"-st\" and \"--stack-size\" flag");
+                xvm_log_error("expected argument after \"-s\" and \"--stack\" flag");
                 return 0;
             }
         }
@@ -160,7 +184,12 @@ int xvm_shell_parse_args(int argc, char* argv[])
         xvm_stack_create(&stack, stack_size);
 
         // Execute program
-        const xvm_exit_codes exit_code = xvm_execute_program(&byte_code, &stack);
+        xvm_exit_codes exit_code = EXITCODE_SUCCESS;
+        
+        if (entry != NULL)
+            exit_code = xvm_execute_program_entry_point(&byte_code, &stack, entry);
+        else
+            exit_code = xvm_execute_program(&byte_code, &stack);
 
         if (exit_code != EXITCODE_SUCCESS)
             xvm_log_exitcode_error(exit_code);

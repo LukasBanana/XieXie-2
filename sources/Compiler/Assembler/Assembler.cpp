@@ -8,11 +8,10 @@
 #include "Assembler.h"
 #include "StringModifier.h"
 #include "Log.h"
+#include "VirtualMachine/XVMWrapper.h"
 
 #include <exception>
 #include <algorithm>
-
-#include "VirtualMachine/XVMWrapper.h"
 
 
 namespace XieXie
@@ -1306,6 +1305,8 @@ void Assembler::AcceptPragma(const std::string& cmd)
         pragma_.exportAll = true;
     else if (cmd == "export none")
         pragma_.exportAll = false;
+    else
+        Error("unknown pragma \"" + cmd + "\"");
 }
 
 
