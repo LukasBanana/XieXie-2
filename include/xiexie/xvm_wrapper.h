@@ -490,7 +490,6 @@ class ByteCode
 
         //! Reads the instructions from the specified file.
         bool ReadFromFile(const std::string& filename);
-
         //! Writes the instructions to the specified file.
         bool WriteToFile(const std::string& filename);
 
@@ -499,28 +498,23 @@ class ByteCode
 
         //! Returns the instruction at the specified index.
         const Instruction& GetInstr(size_t index) const;
-
         //! Returns the instruction at the specified index.
         Instruction& GetInstr(size_t index);
 
         //! Returns the number of instructions.
         size_t NumInstr() const;
-
         //! Returns the index for the next instruction.
         size_t NextInstrIndex() const;
 
         //! Adds the specified integer literal word as instruction data field.
         void AddDataField(int wordDataField);
-
         //! Adds the specified floating-point literal word as instruction data field.
         void AddDataField(float floatDataField);
-
         //! Adds the specified ascii literal as instruction data fields.
         void AddDataField(const std::string& asciiDataField);
 
         //! Adds a new export address.
         void AddExportAddress(const std::string& label, unsigned int address);
-
         //! Adds a new import address.
         void AddImportAddress(const std::string& label);
 
@@ -530,13 +524,15 @@ class ByteCode
         //! Adds a new invocation identifier.
         void AddInvokeIdent(const std::string& ident);
 
+        //! Adds a new module name.
+        void AddModuleName(const std::string& name);
+
         /**
         Binds an procedure to an invocation identifier.
         \param[in] ident Specifies the invocation identifier.
         \param[in] proc Specifies the procedure callback. If this is null, the default dummy procedure is used.
         */
         bool BindInvocation(const std::string& ident, xvm_invocation_proc proc);
-
         /**
         Binds all procedure invocations from the specified module to this byte code.
         \see Module
@@ -571,6 +567,11 @@ class ByteCode
         {
             return invokeIdentifiers_;
         }
+        //! Returns the module names.
+        const std::vector<std::string>& GetModuleNames() const
+        {
+            return moduleNames_;
+        }
 
     private:
         
@@ -593,6 +594,9 @@ class ByteCode
 
         //! Array list of all invocation identifiers.
         std::vector<std::string>                invokeIdentifiers_;
+
+        //! Array list of all module names.
+        std::vector<std::string>                moduleNames_;
 
 };
 

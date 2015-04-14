@@ -948,8 +948,33 @@ xvm_string xvm_string_create_from(const char* str)
     // Create string and copy data
     size_t len = strlen(str);
     xvm_string string = xvm_string_create(len);
-    strcpy(string.str, str);
+    memcpy(string.str, str, sizeof(char)*(len + 1));
     return string;
+}
+
+xvm_string xvm_string_create_from_sub(const char* str, size_t len)
+{
+    // Create string and copy sub data
+    size_t maxlen = strlen(str);
+    xvm_string string;
+    if (len > maxlen)
+        len = maxlen;
+    string = xvm_string_create(len);
+    memcpy(string.str, str, sizeof(char)*(len + 1));
+    return string;
+}
+
+int xvm_string_append(xvm_string* string, const char* append_str)
+{
+    if (string != NULL && append_str != NULL)
+    {
+        size_t append_len = strlen(append_str);
+
+        //todo...
+
+        return 1;
+    }
+    return 0;
 }
 
 int xvm_string_free(xvm_string* string)
@@ -1204,6 +1229,9 @@ int xvm_bytecode_init(xvm_bytecode* byte_code)
         byte_code->num_invoke_idents    = 0;
         byte_code->invoke_idents        = NULL;
         byte_code->invoke_bindings      = NULL;
+
+        byte_code->num_module_names     = 0;
+        byte_code->module_names         = NULL;
         return 1;
     }
     return 0;
@@ -1325,6 +1353,18 @@ int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ident, xvm
     return 0;
 }
 
+int xvm_bytecode_create_module_names(xvm_bytecode* byte_code, unsigned int num_module_names)
+{
+    if (byte_code != NULL && byte_code->invoke_idents == NULL && num_module_names > 0)
+    {
+        // Create module names
+        byte_code->num_module_names = num_module_names;
+        byte_code->module_names     = (xvm_string*)malloc(sizeof(xvm_string)*num_module_names);
+        return 1;
+    }
+    return 0;
+}
+
 int xvm_bytecode_free(xvm_bytecode* byte_code)
 {
     if (byte_code != NULL)
@@ -1378,6 +1418,14 @@ int xvm_bytecode_free(xvm_bytecode* byte_code)
             // Free invocation bindings vector
             free(byte_code->invoke_bindings);
             byte_code->invoke_bindings = NULL;
+        }
+
+        if (byte_code->module_names != NULL)
+        {
+            // Free module names
+            free(byte_code->module_names);
+            byte_code->module_names     = NULL;
+            byte_code->num_module_names = 0;
         }
         return 1;
     }

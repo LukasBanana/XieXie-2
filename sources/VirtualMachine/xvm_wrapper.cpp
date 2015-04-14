@@ -374,7 +374,6 @@ ByteCode::~ByteCode()
     xvm_bytecode_free(&byteCode_);
 }
 
-//! Reads the instructions from the specified file.
 bool ByteCode::ReadFromFile(const std::string& filename)
 {
     /* Read byte-code from file */
@@ -392,56 +391,47 @@ bool ByteCode::ReadFromFile(const std::string& filename)
     return true;
 }
 
-//! Writes the instructions to the specified file.
 bool ByteCode::WriteToFile(const std::string& filename)
 {
     /* Write byte-code to file */
     return xvm_bytecode_write_to_file(&byteCode_, filename.c_str(), XBC_FORMAT_VERSION_LATEST) != 0;
 }
 
-//! Adds the specifies instruction
 void ByteCode::AddInstr(const Instruction& instr)
 {
     instructions_.push_back(instr);
 }
 
-//! Returns the instruction at the specified index.
 const Instruction& ByteCode::GetInstr(size_t index) const
 {
     return instructions_.at(index);
 }
 
-//! Returns the instruction at the specified index.
 Instruction& ByteCode::GetInstr(size_t index)
 {
     return instructions_.at(index);
 }
 
-//! Returns the number of instructions.
 size_t ByteCode::NumInstr() const
 {
     return instructions_.size();
 }
 
-//! Returns the index for the next instruction.
 size_t ByteCode::NextInstrIndex() const
 {
     return NumInstr();
 }
 
-//! Adds the specified integer literal word as instruction data field.
 void ByteCode::AddDataField(int wordDataField)
 {
     AddInstr(wordDataField);
 }
 
-//! Adds the specified floating-point literal word as instruction data field.
 void ByteCode::AddDataField(float floatDataField)
 {
     AddInstr(*reinterpret_cast<int*>(&floatDataField));
 }
 
-//! Adds the specified ascii literal as instruction data fields.
 void ByteCode::AddDataField(const std::string& asciiDataField)
 {
     size_t numInstr = 0;
@@ -457,19 +447,16 @@ void ByteCode::AddDataField(const std::string& asciiDataField)
     );
 }
 
-//! Adds a new export address.
 void ByteCode::AddExportAddress(const std::string& label, unsigned int address)
 {
     exportAddresses_.push_back({ label, address });
 }
 
-//! Adds a new import address.
 void ByteCode::AddImportAddress(const std::string& label)
 {
     importAddresses_[label];
 }
 
-//! Assigns the specified instruction index to the import address specified by 'label'.
 void ByteCode::AssignImportAddress(const std::string& label, unsigned int index)
 {
     auto it = importAddresses_.find(label);
@@ -477,37 +464,26 @@ void ByteCode::AssignImportAddress(const std::string& label, unsigned int index)
         it->second.indices.push_back(index);
 }
 
-//! Adds a new invocation identifier.
 void ByteCode::AddInvokeIdent(const std::string& ident)
 {
     invokeIdentifiers_.push_back(ident);
 }
 
-/**
-Binds an procedure to an invocation identifier.
-\param[in] ident Specifies the invocation identifier.
-\param[in] proc Specifies the procedure callback. If this is null, the default dummy procedure is used.
-*/
+void ByteCode::AddModuleName(const std::string& name)
+{
+    moduleNames_.push_back(name);
+}
+
 bool ByteCode::BindInvocation(const std::string& ident, xvm_invocation_proc proc)
 {
     return xvm_bytecode_bind_invocation(&byteCode_, ident.c_str(), proc) != 0;
 }
 
-/**
-Binds all procedure invocations from the specified module to this byte code.
-\see Module
-\see BindInvocation
-*/
 bool ByteCode::BindModule(const Module& module)
 {
     return xvm_bytecode_bind_module(&byteCode_, &(module.module_)) != 0;
 }
 
-/**
-Finalizes the instruction building. After this call no further
-instructions can be added to this byte code object.
-\see instructions
-*/
 bool ByteCode::Finalize()
 {
     /* Copy instructions into XVM byte code */
@@ -552,8 +528,23 @@ bool ByteCode::Finalize()
         for (size_t i = 0; i < numInvokeIdents; ++i)
         {
             /* Setup final invocation identifier */
-            const char* ident = invokeIdentifiers_[i].c_str();
+            auto ident = invokeIdentifiers_[i].c_str();
             byteCode_.invoke_idents[i] = xvm_string_create_from(ident);
+        }
+    }
+
+    /* Copy module names into XVM byte code */
+    auto numModuleNames = moduleNames_.size();
+    if (numModuleNames > 0)
+    {
+        if (xvm_bytecode_create_module_names(&byteCode_, static_cast<unsigned int>(numModuleNames)) == 0)
+            return false;
+
+        for (size_t i = 0; i < numModuleNames; ++i)
+        {
+            /* Setup final module names */
+            auto name = moduleNames_[i].c_str();
+            byteCode_.module_names[i] = xvm_string_create_from(name);
         }
     }
 

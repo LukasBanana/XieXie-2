@@ -2,6 +2,12 @@
 ; Invoke Test 1
 ; 20/03/2015
 
+; assembler pragma arguments
+.pragma("export all", "export none")
+
+; import module "MsgBox.dll"
+.module "MsgBox"
+
 push 1
 lda $r0, @msg
 push $r0

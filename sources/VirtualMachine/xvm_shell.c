@@ -8,7 +8,7 @@
 #include <xiexie/xvm.h>
 
 
-void xvm_shell_print_help()
+static void shell_print_help()
 {
     xvm_log_println("usage:");
     #ifdef _ENABLE_RUNTIME_DEBUGGER_
@@ -25,7 +25,7 @@ void xvm_shell_print_help()
     xvm_log_println("  -e, --entry LABEL ........ sets the main entry point, specified by LABEL");
 }
 
-void xvm_shell_print_version()
+static void shell_print_version()
 {
     #ifdef _ENABLE_RUNTIME_DEBUGGER_
     xvm_log_println("XieXie 2.0 (Rev.1) VirtualMachine (XVM) with RuntimeDebugger (RTD)");
@@ -40,13 +40,36 @@ void xvm_shell_print_version()
     xvm_log_println("of the BSD license.  See the LICENSE file for details.");
 }
 
-int xvm_shell_parse_args(int argc, char* argv[])
+static xvm_string extract_file_path(const char* filename)
+{
+    // Determine path length
+    size_t pos = strlen(filename);
+    if (pos > 0)
+    {
+        do
+        {
+            --pos;
+        }
+        while (filename[pos] != '/' && filename[pos] != '\\');
+    }
+    
+    // Create path string
+    xvm_string path = xvm_string_create_from_sub(filename, pos);
+
+    // Append "module/" to path string
+    xvm_string_append(&path, "module/");
+
+    return path;
+}
+
+static int shell_parse_args(int argc, char* argv[])
 {
     // Configuration memory
     int         verbose     = 0;
     const char* filename    = NULL;
     const char* entry       = NULL;
     size_t      stack_size  = 256;
+    xvm_string  module_path = extract_file_path(argv[0]);
     
     // Initialize module container
     xvm_module_container module_cont;
@@ -73,9 +96,9 @@ int xvm_shell_parse_args(int argc, char* argv[])
 
         // Parse current argument
         if (strcmp(arg, "help") == 0)
-            xvm_shell_print_help();
+            shell_print_help();
         else if (strcmp(arg, "version") == 0)
-            xvm_shell_print_version();
+            shell_print_version();
         else if (strcmp(arg, "-v") == 0 || strcmp(arg, "--verbose") == 0)
             verbose = 1;
         else if (strcmp(arg, "-m") == 0 || strcmp(arg, "--module") == 0)
@@ -170,6 +193,24 @@ int xvm_shell_parse_args(int argc, char* argv[])
             return 0;
         }
 
+        // Load automatic modules
+        for (size_t i = 0; i < byte_code.num_module_names; ++i)
+        {
+            // Setup module filename
+            xvm_string filename = xvm_string_create_from(module_path.str);
+            xvm_string_append(&filename, byte_code.module_names[i].str);
+
+            // Load module
+            xvm_module module;
+            xvm_module_init(&module);
+                
+            if (xvm_module_load(&module, filename.str) != 0)
+                xvm_module_container_add(&module_cont, module);
+
+            // Free module filename
+            xvm_string_free(&filename);
+        }
+
         // Bind modules
         if (xvm_module_iteration_start(&module_cont) != 0)
         {
@@ -196,10 +237,13 @@ int xvm_shell_parse_args(int argc, char* argv[])
         else if (verbose != 0)
             xvm_log_println("program terminated successful");
 
-        // Clean up
+        // Clean up byte code
         xvm_bytecode_free(&byte_code);
         xvm_stack_free(&stack);
     }
+
+    // Clean up shell
+    xvm_string_free(&module_path);
 
     return 1;
 }
@@ -208,7 +252,7 @@ int xvm_shell_parse_args(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
     // Ignore program path argument, then parse all other arguments
-    xvm_shell_parse_args(--argc, ++argv);
+    shell_parse_args(--argc, ++argv);
     return 0;
 }
 

@@ -111,6 +111,7 @@ class Assembler
                 Export,         //!< '.export'
                 Import,         //!< '.import'
                 Pragma,         //!< '.pragma'
+                Module,         //!< '.module'
                 Mnemonic,       //!< ( 'mov' | 'call' | ... )
             };
 
@@ -213,6 +214,7 @@ class Assembler
         void ParseExportField();
         void ParseImportField();
         void ParsePragmaField();
+        void ParseModuleField();
 
         void ParseDataField();
         void ParseDataFieldWord();

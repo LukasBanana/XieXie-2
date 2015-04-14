@@ -461,6 +461,8 @@ Assembler::Token Assembler::ScanIdentifier()
         return std::move(Token(Token::Types::Import, spell));
     if (spell == ".pragma")
         return std::move(Token(Token::Types::Pragma, spell));
+    if (spell == ".module")
+        return std::move(Token(Token::Types::Module, spell));
 
     /* Check for mnemonics */
     auto it = mnemonicTable_.find(spell);
@@ -626,6 +628,9 @@ void Assembler::ParseLine()
         case Token::Types::Pragma:
             ParsePragmaField();
             break;
+        case Token::Types::Module:
+            ParseModuleField();
+            break;
         default:
             ErrorUnexpectedToken();
             break;
@@ -690,6 +695,12 @@ void Assembler::ParsePragmaField()
     }
 
     Accept(Token::Types::RBracket);
+}
+
+void Assembler::ParseModuleField()
+{
+    Accept(Token::Types::Module);
+    auto moduleName = ParseStringLiteral();
 }
 
 void Assembler::ParseDataField()

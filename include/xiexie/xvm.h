@@ -382,6 +382,12 @@ xvm_string xvm_string_create(size_t len);
 //! Creates a string from the specified string literal.
 xvm_string xvm_string_create_from(const char* str);
 
+//! Creates a string from the specified string literal of the first 'len' characters.
+xvm_string xvm_string_create_from_sub(const char* str, size_t len);
+
+//! Appends the string 'append_str' to the specified string object.
+int xvm_string_append(xvm_string* string, const char* append_str);
+
 //! Frees the memory of the specified string.
 int xvm_string_free(xvm_string* string);
 
@@ -516,6 +522,9 @@ typedef struct
     unsigned int            num_invoke_idents;      //!< Number of invocation identifiers. By default 0.
     xvm_string*             invoke_idents;          //!< Invocation identifiers. By default NULL.
     xvm_invocation_proc*    invoke_bindings;        //!< Invocation procedure bindings. By default NULL.
+
+    unsigned int            num_module_names;       //!< Number of module names. By default 0.
+    xvm_string*             module_names;           //!< Module name array. By default NULL.
 }
 xvm_bytecode;
 
@@ -591,12 +600,20 @@ int xvm_bytecode_create_invocations(xvm_bytecode* byte_code, unsigned int num_in
 
 /**
 Binds a single invocation callback with the identifier 'ident to the specified byte code.
-\param[in,out] byte_code Pointer tot he byte code object.
+\param[in,out] byte_code Pointer to the byte code object.
 \param[in] ident String which specifies the invocation identifier.
 \param[in] proc Function pointer to the invocation callback.
 \see xvm_invocation_proc
 */
 int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ident, xvm_invocation_proc proc);
+
+/**
+Allocates memory for the specified amount of byte code module names.
+\param[in,out] byte_code Pointer to the byte code object.
+\param[in] num_module_names Specifies the number of module names to allocate for the byte code.
+\note All module names are uninitialized!
+*/
+int xvm_bytecode_create_module_names(xvm_bytecode* byte_code, unsigned int num_module_names);
 
 //! Frees the memory for the specified byte code object.
 int xvm_bytecode_free(xvm_bytecode* byte_code);
