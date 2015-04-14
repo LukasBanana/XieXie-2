@@ -210,7 +210,7 @@ DEF_VISIT_PROC(Decorator, Attrib)
     /* Verify attribute argument */
     try
     {
-        if (ast->ident == "deprecated" || ast->ident == "export")
+        if (ast->ident == "deprecated" || ast->ident == "export" || ast->ident == "bind")
         {
             if (ast->arg && ast->arg->GetType() != Arg::String)
                 throw std::string("attribute '" + ast->ident + "' can only have a string as argument");
@@ -1184,6 +1184,12 @@ bool Decorator::VerifyVisibility(const ClassDeclStmnt::Visibilities varNameVis, 
     {
         case Vis::Protected:
         {
+            /*
+            Visibility is valid iff:
+            - current class is the parent class or,
+            - current class is a sub class of the parent class or,
+            - the current class is a non-public friend of the parent class.
+            */
             auto friendVis = varNameParentClass->Friendship(*class_);
             if (varNameParentClass != class_ && !class_->IsSubClassOf(*varNameParentClass) && friendVis == Vis::Public)
                 return false;
@@ -1192,6 +1198,11 @@ bool Decorator::VerifyVisibility(const ClassDeclStmnt::Visibilities varNameVis, 
 
         case Vis::Private:
         {
+            /*
+            Visibility is valid iff:
+            - current class is the parent class or,
+            - the current class is a private friend of the parent class.
+            */
             auto friendVis = varNameParentClass->Friendship(*class_);
             if (varNameParentClass != class_ && friendVis != Vis::Private)
                 return false;

@@ -432,7 +432,9 @@ void ClassDeclStmnt::ProcessClassAttributes(ErrorReporter* errorReporter)
         std::set<std::string> validAttribs { "deprecated" };
 
         std::string typeName = (isModule ? "module" : "class");
-        if (!isModule)
+        if (isModule)
+            validAttribs.insert("bind");
+        else
             validAttribs.insert("final");
 
         for (auto attr : attribPrefix->FindDuplicateAttribs())

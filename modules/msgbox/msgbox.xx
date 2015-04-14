@@ -9,7 +9,7 @@
 Message box module.
 @note Because the file is "msgbox" and not "MsgBox", this attribute is required!
 */
-//[[file("MsgBox")]]
+[[bind]]
 module MsgBox {
 	
 	/**

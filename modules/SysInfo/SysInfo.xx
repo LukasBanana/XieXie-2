@@ -8,6 +8,7 @@
 import Integer
 
 //! System information module.
+[[bind]]
 module SysInfo {
 	
 	static void querySystemInfo(

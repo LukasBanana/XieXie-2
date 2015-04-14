@@ -1,0 +1,16 @@
+
+// Module Test 1
+// 14/04/2015
+
+import MsgBox
+
+class Test {
+	
+	static void main() {
+		
+		MsgBox.messageBox("Info", "Hello, World!")
+		
+	}
+	
+}
+

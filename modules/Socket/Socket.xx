@@ -6,6 +6,7 @@
  */
 
 //! Socket API module.
+[[bind]]
 module Socket {
 	
 	static int open(int domain, int type, int protocol)
