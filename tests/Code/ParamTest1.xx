@@ -2,6 +2,19 @@
 // Param Test 1
 // 14/04/2015
 
+class Person {
+	static const today := 2015
+	
+	init(int age) {
+		this.age := age
+	}
+	init(int year) {
+		age := Person.today - year
+	}
+	
+	private int age
+}
+
 class Test {
 	
 	static void f(int x := 1, int y := 2, int z := 3) {}
@@ -10,11 +23,22 @@ class Test {
 	static void g(int x, float y) {}
 	static void g(float y, int x) {}
 	
+	static void h(int x, int y) {}
+	static void h(int width, int height) {}
+	
+	[[export]]
 	static void main() {
 		
 		int y := -5
 		Test.f(y: y)
+		
 		Test.g(1.0, x: 0)
+		
+		Test.h(x: 3, y: 4)
+		Test.h(width: 5, height: 6)
+		
+		var personA := new Person(age: 25)
+		var personB := new Person(year: 1990)
 		
 	}
 	

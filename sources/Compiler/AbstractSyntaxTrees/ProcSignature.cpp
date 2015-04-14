@@ -87,10 +87,13 @@ bool ProcSignature::AreSimilar(const ProcSignature& lhs, const ProcSignature& rh
     /* Compare parameter types */
     for (size_t i = 0, n = lhs.params.size(); i < n; ++i)
     {
-        auto typeLhs = lhs.params[i]->GetTypeDenoter();
-        auto typeRhs = rhs.params[i]->GetTypeDenoter();
+        const auto& paramLhs = *lhs.params[i];
+        const auto& paramRhs = *rhs.params[i];
 
-        if (!typeLhs || !typeRhs || !TypeDenoter::AreEqual(*typeLhs, *typeRhs))
+        auto typeLhs = paramLhs.GetTypeDenoter();
+        auto typeRhs = paramRhs.GetTypeDenoter();
+
+        if (!typeLhs || !typeRhs || !TypeDenoter::AreEqual(*typeLhs, *typeRhs) || paramLhs.ident != paramRhs.ident)
             return false;
     }
 

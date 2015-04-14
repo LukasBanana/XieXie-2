@@ -82,7 +82,7 @@ static std::string GenerateSubLabel(const Param& param, size_t index)
 {
     try
     {
-        return GenerateAbstractTypeLabel(param.typeDenoter.get());
+        return GenerateAbstractTypeLabel(param.typeDenoter.get()) + '?' + param.ident;
     }
     catch (const std::string& err)
     {
@@ -215,14 +215,8 @@ static void ExtractParamArray(const std::string& label, size_t& pos, std::string
     str += "[]";
 }
 
-static void ExtractParamPointer(const std::string& label, size_t& pos, std::string& str)
+static void ExtractIdent(const std::string& label, size_t& pos, const size_t end, std::string& str)
 {
-    if (label[pos] != '@')
-        throw std::invalid_argument("expected '@' after pointer type denoter in label \"" + label + "\"");
-
-    ++pos;
-    auto end = label.find(',', pos);
-
     if (end == std::string::npos)
     {
         str += label.substr(pos);
@@ -233,6 +227,31 @@ static void ExtractParamPointer(const std::string& label, size_t& pos, std::stri
         str += label.substr(pos, end - pos);
         pos = end;
     }
+}
+
+static void ExtractParamPointer(const std::string& label, size_t& pos, std::string& str)
+{
+    if (label[pos] != '@')
+        throw std::invalid_argument("expected '@' after pointer type denoter in label \"" + label + "\"");
+
+    ++pos;
+    auto end = label.find('?', pos);
+    if (end == std::string::npos)
+        end = label.find(',', pos);
+
+    ExtractIdent(label, pos, end, str);
+}
+
+static void ExtractParamIdent(const std::string& label, size_t& pos, std::string& str)
+{
+    if (label[pos] != '?')
+        throw std::invalid_argument("expected '?' after parameter type in label \"" + label + "\"");
+
+    ++pos;
+    auto end = label.find(',', pos);
+
+    str += ' ';
+    ExtractIdent(label, pos, end, str);
 }
 
 static void ExtractParam(const std::string& label, size_t& pos, std::string& str, bool* hasParam)
@@ -261,14 +280,17 @@ static void ExtractParam(const std::string& label, size_t& pos, std::string& str
             ExtractParamPointer(label, pos, str);
             break;
     }
+
+    if (pos < label.size() && label[pos] == '?')
+        ExtractParamIdent(label, pos, str);
 }
 
 /*
 example conversion:
-    "CWidget.PdoSomething,I,A@R@String"
+    "CWidget.PdoSomething,I?age,A@R@String?name"
                     |
                     v
-    "Widget.doSomething(int, String[])"
+    "Widget.doSomething(int age, String[] name)"
 */
 std::string DisplayLabel(const std::string& label)
 {
