@@ -1,0 +1,20 @@
+
+// Param Test 1
+// 14/04/2015
+
+class Test {
+	
+	static void f(int x := 0, int y := 0, int z := 0) {}
+	static void f(float x := 0.0, float y := 0.0, float z := 0.0) {}
+	
+	static void g(int x, float y) {}
+	static void g(float y, int x) {}
+	
+	static void main() {
+		
+		Test.f(0)
+		Test.g(1, x: 0)
+		
+	}
+	
+}

@@ -159,67 +159,6 @@ void LiteralExpr::SetType(const Literals type)
 }
 
 
-/* --- ProcSignature --- */
-
-const TypeDenoter* ProcSignature::GetTypeDenoter() const
-{
-    return returnTypeDenoter.get();
-}
-
-std::string ProcSignature::ToString() const
-{
-    std::string str;
-
-    if (returnTypeDenoter)
-        str += returnTypeDenoter->ToString() + ' ';
-    
-    str += ident;
-    str += '(';
-
-    for (size_t i = 0, n = params.size(); i < n; ++i)
-    {
-        const auto& param = *params[i];
-
-        str += param.typeDenoter->ToString();
-        str += ' ';
-        str += param.ident;
-
-        if (param.defaultArgExpr)
-            str += " := <default>";
-
-        if (i + 1 < n)
-            str += ", ";
-    }
-
-    str += ')';
-
-    return str;
-}
-
-bool ProcSignature::AreSimilar(const ProcSignature& lhs, const ProcSignature& rhs)
-{
-    /* Compare parameter counts */
-    if (lhs.params.size() != rhs.params.size())
-        return false;
-
-    /* Compare identifiers */
-    if (lhs.ident != rhs.ident)
-        return false;
-
-    /* Compare parameter types */
-    for (size_t i = 0, n = lhs.params.size(); i < n; ++i)
-    {
-        auto typeLhs = lhs.params[i]->GetTypeDenoter();
-        auto typeRhs = rhs.params[i]->GetTypeDenoter();
-
-        if (!typeLhs || !typeRhs || !TypeDenoter::AreEqual(*typeLhs, *typeRhs))
-            return false;
-    }
-
-    return true;
-}
-
-
 /* --- ProcCall --- */
 
 const TypeDenoter* ProcCall::GetTypeDenoter() const

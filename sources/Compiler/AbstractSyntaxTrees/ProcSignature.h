@@ -28,6 +28,9 @@ class ProcSignature : public AST
         //! Returns a string representation of this procedure signature.
         std::string ToString() const;
 
+        //! Returns the parameter with the specified identifier.
+        Param* FindParam(const std::string& ident) const;
+
         /**
         Returns true if the two procedure signatures are too similar, to be used as overloaded procedures.
         This ignores the return type and only compares the identifier and parameter types.

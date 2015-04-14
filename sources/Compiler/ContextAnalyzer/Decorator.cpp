@@ -1287,47 +1287,8 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
     const auto& procDeclRefs = overloadSwitch.procDeclRefs;
 
     /* Find suitable procedure declaration */
-    auto procDecls = overloadSwitch.procDeclRefs;
-    const auto& args = ast.args;
-
-    size_t argIndex = 0;
-
-    for (auto n = args.size(); argIndex < n; ++argIndex)
-    {
-        /* Get argument and its type denoter */
-        const auto& arg = args[argIndex];
-
-        auto argType = arg->GetTypeDenoter();
-        if (!argType)
-            continue;
-        
-        /* Compare argument type with current parameter of all potential procedures */
-        for (auto it = procDecls.begin(); it != procDecls.end();)
-        {
-            const auto& params = ((*it)->procSignature)->params;
-
-            if (argIndex < params.size())
-            {
-                if (!TypeChecker::VerifyTypeCompatibility(*params[argIndex]->typeDenoter, *argType))
-                    it = procDecls.erase(it);
-                else
-                    ++it;
-            }
-            else
-                it = procDecls.erase(it);
-        }
-    }
-
-    /* Check if enough arguments were passed */
-    for (auto it = procDecls.begin(); it != procDecls.end();)
-    {
-        const auto& params = ((*it)->procSignature)->params;
-        
-        if (argIndex < params.size() && !(params[argIndex]->defaultArgExpr))
-            it = procDecls.erase(it);
-        else
-            ++it;
-    }
+    auto procDecls = procDeclRefs;
+    DeduceProcedureByArgs(procDecls, ast.args);
 
     /* Check if unique procedure call has found */
     if (procDecls.empty())
@@ -1373,6 +1334,165 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
         /* Check procedure visibility */
         if (!VerifyVisibility(procDecl->visibility, procDecl->parentRef))
             Error("procedure \"" + procDecl->procSignature->ident + "\" is inaccessible from this class", &ast);
+    }
+}
+
+/*
+This functions tries to deduces which overloaded procedure is to be used.
+It also check if the argument types fit to the parameters types.
+Named parameters will be arranged into the correct order.
+*/
+void Decorator::DeduceProcedureByArgs(std::vector<ProcDeclStmnt*>& procDecls, const std::vector<ArgPtr>& args)
+{
+    size_t argIndex = 0;
+
+    for (auto n = args.size(); argIndex < n; ++argIndex)
+    {
+        /* Get argument and its type denoter */
+        const auto& arg = args[argIndex];
+
+        auto argType = arg->GetTypeDenoter();
+        if (!argType)
+            continue;
+        
+        /* Check if arguments continue to use named parameters */
+        if (!arg->paramIdent.empty())
+        {
+            DeduceProcedureByNamedParamArgs(procDecls, args, argIndex);
+            return;
+        }
+        else
+        {
+            /* Compare argument type with current parameter of all potential procedures */
+            for (auto it = procDecls.begin(); it != procDecls.end();)
+            {
+                const auto& params = ((*it)->procSignature)->params;
+
+                if (argIndex < params.size())
+                {
+                    if (!TypeChecker::VerifyTypeCompatibility(*params[argIndex]->typeDenoter, *argType))
+                        it = procDecls.erase(it);
+                    else
+                        ++it;
+                }
+                else
+                    it = procDecls.erase(it);
+            }
+
+            if (procDecls.empty())
+                break;
+        }
+    }
+
+    /* Check if enough arguments were passed */
+    for (auto it = procDecls.begin(); it != procDecls.end();)
+    {
+        const auto& params = ((*it)->procSignature)->params;
+        
+        if (argIndex < params.size() && !(params[argIndex]->defaultArgExpr))
+            it = procDecls.erase(it);
+        else
+            ++it;
+    }
+}
+
+void Decorator::DeduceProcedureByNamedParamArgs(std::vector<ProcDeclStmnt*>& procDecls, const std::vector<ArgPtr>& args, size_t argIndex)
+{
+    for (auto n = args.size(); argIndex < n; ++argIndex)
+    {
+        /* Get argument and its type denoter */
+        const auto& arg = args[argIndex];
+
+        auto argType = arg->GetTypeDenoter();
+        if (!argType)
+            continue;
+        
+        /* Check if arguments continue to use named parameters */
+        if (arg->paramIdent.empty())
+        {
+            Error("unnamed parameter after named parameters are not allowed", arg.get());
+            continue;
+        }
+
+        /* Compare argument type with current parameter of all potential procedures */
+        for (auto it = procDecls.begin(); it != procDecls.end();)
+        {
+            const auto& procSig = *((*it)->procSignature);
+
+            /* Find named parameter in procedure signature */
+            auto prm = procSig.FindParam(arg->paramIdent);
+
+            if (prm)
+            {
+                if (!TypeChecker::VerifyTypeCompatibility(*prm->typeDenoter, *argType))
+                    it = procDecls.erase(it);
+                else
+                    ++it;
+            }
+            else
+                it = procDecls.erase(it);
+        }
+
+        if (procDecls.empty())
+            break;
+    }
+
+    /* Check if enough arguments were passed */
+    for (auto it = procDecls.begin(); it != procDecls.end();)
+    {
+        /* Get initial set of parameters */
+        const auto& params = ((*it)->procSignature)->params;
+
+        std::vector<const Param*> assignedParams(params.size());
+        for (size_t i = 0, n = params.size(); i < n; ++i)
+            assignedParams[i] = params[i].get();
+        
+        bool isProcSuitable = true;
+
+        /* Remove (i.e. set to null) assigned parameter from temporary set */
+        for (size_t i = 0, n = args.size(); i < n; ++i)
+        {
+            const auto& arg = *args[i];
+            if (!arg.paramIdent.empty())
+            {
+                auto it = std::find_if(
+                    assignedParams.begin(), assignedParams.end(),
+                    [&arg](const Param* prm)
+                    {
+                        return prm != nullptr ? prm->ident == arg.paramIdent : false;
+                    }
+                );
+
+                if (it != assignedParams.end())
+                    *it = nullptr;
+                else
+                {
+                    isProcSuitable = false;
+                    break;
+                }
+            }
+            else
+                assignedParams[i] = nullptr;
+        }
+
+        /* Check if temporary set has only parameters with default values */
+        if (isProcSuitable)
+        {
+            for (auto prm : assignedParams)
+            {
+                if (prm && !prm->defaultArgExpr)
+                {
+                    isProcSuitable = false;
+                    break;
+                }
+            }
+        }
+
+        /* If procedure is not suitable, remove it from the deduced list */
+        if (!isProcSuitable)
+            it = procDecls.erase(it);
+        else
+            ++it;
     }
 }
 
