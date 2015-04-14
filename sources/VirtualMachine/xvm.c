@@ -954,23 +954,40 @@ xvm_string xvm_string_create_from(const char* str)
 
 xvm_string xvm_string_create_from_sub(const char* str, size_t len)
 {
-    // Create string and copy sub data
+    // Determine length of new string
     size_t maxlen = strlen(str);
     xvm_string string;
     if (len > maxlen)
         len = maxlen;
+
+    // Create new string and copy sub data
     string = xvm_string_create(len);
-    memcpy(string.str, str, sizeof(char)*(len + 1));
+    memcpy(string.str, str, sizeof(char)*len);
+    string.str[len] = '\0';
     return string;
 }
 
 int xvm_string_append(xvm_string* string, const char* append_str)
 {
-    if (string != NULL && append_str != NULL)
+    if (string != NULL && string->str != NULL && append_str != NULL)
     {
         size_t append_len = strlen(append_str);
 
-        //todo...
+        // Create new string
+        size_t len = string->len + append_len;
+        char* str = (char*)malloc(sizeof(char)*(len + 1));
+        str[len] = '\0';
+
+        // Copy data from original string
+        memcpy(str, string->str, sizeof(char)*string->len);
+
+        // Copy data from append string
+        memcpy(str + string->len, append_str, append_len);
+
+        // Replace original string
+        free(string->str);
+        string->str = str;
+        string->len = len;
 
         return 1;
     }
@@ -1355,7 +1372,7 @@ int xvm_bytecode_bind_invocation(xvm_bytecode* byte_code, const char* ident, xvm
 
 int xvm_bytecode_create_module_names(xvm_bytecode* byte_code, unsigned int num_module_names)
 {
-    if (byte_code != NULL && byte_code->invoke_idents == NULL && num_module_names > 0)
+    if (byte_code != NULL && byte_code->module_names == NULL && num_module_names > 0)
     {
         // Create module names
         byte_code->num_module_names = num_module_names;
@@ -1473,6 +1490,41 @@ int xvm_bytecode_datafield_ascii(instr_t* instr_ptr, const char* text, size_t* n
     return 1;
 }
 
+/*
+
+WORD: 32-bit unsigned integer
+STR:
+    WORD:           length
+    Byte[length]:   data
+
+--- XBC file format spec (Version 1.34): ---
+
+WORD: magic number (Must be *(int*)"XBCF")
+WORD: version number (Must be 134 for "1.34")
+WORD: number of instructions (n1)
+n1 times:
+    WORD: instruction
+WORD: number of export addresses (n2)
+n2 times:
+    WORD: address
+    STR: name
+WORD: number of invoke identifiers (n3)
+n3 times:
+    STR: identifier
+WORD: number of module names (n4)
+n4 times:
+    STR: name
+
+*/
+
+// Close specified file and print error to the log.
+static int _xvm_close_file_with_error(FILE* file, const char* err)
+{
+    xvm_log_error(err);
+    fclose(file);
+    return 0;
+}
+
 int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
 {
     // Check arguments
@@ -1493,30 +1545,18 @@ int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
     // Read magic number
     unsigned int magic = xvm_file_read_uint(file);
     if (magic != XBC_FORMAT_MAGIC)
-    {
-        xvm_log_error("invalid magic number (must be \"XBCF\")");
-        fclose(file);
-        return 0;
-    }
+        return _xvm_close_file_with_error(file, "invalid magic number (must be \"XBCF\")");
 
     // Read version number
     unsigned int version = xvm_file_read_uint(file);
-    if (version != XBC_FORMAT_VERSION_1_31 && version != XBC_FORMAT_VERSION_1_32 && version != XBC_FORMAT_VERSION_1_33)
-    {
-        xvm_log_error("invalid version number (must be 1.31, 1.32, or 1.33)");
-        fclose(file);
-        return 0;
-    }
+    if (version < XBC_FORMAT_VERSION_1_31 || version > XBC_FORMAT_VERSION_1_34)
+        return _xvm_close_file_with_error(file, "invalid version number (must be 1.31, 1.32, 1.33, or 1.34)");
 
     // Read instructions
     unsigned int num_instr = xvm_file_read_uint(file);
 
     if (xvm_bytecode_create_instructions(byte_code, (int)num_instr) == 0)
-    {
-        xvm_log_error("creating byte code instructions failed");
-        fclose(file);
-        return 0;
-    }
+        return _xvm_close_file_with_error(file, "creating byte code instructions failed");
 
     fread(byte_code->instructions, sizeof(instr_t), num_instr, file);
 
@@ -1528,11 +1568,7 @@ int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
         if (num_export_addr > 0)
         {
             if (xvm_bytecode_create_export_addresses(byte_code, num_export_addr) == 0)
-            {
-                xvm_log_error("creating byte code export addresses failed");
-                fclose(file);
-                return 0;
-            }
+                return _xvm_close_file_with_error(file, "creating byte code export addresses failed");
 
             for (unsigned int i = 0; i < num_export_addr; ++i)
             {
@@ -1548,18 +1584,14 @@ int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
     }
 
     // Read import addresses
-    if (version >= XBC_FORMAT_VERSION_1_34)
+    /*if (version >= ???)
     {
         unsigned int num_import_addr = xvm_file_read_uint(file);
 
         if (num_import_addr > 0)
         {
             if (xvm_bytecode_create_import_addresses(byte_code, num_import_addr) == 0)
-            {
-                xvm_log_error("creating byte code import addresses failed");
-                fclose(file);
-                return 0;
-            }
+                return _xvm_close_file_with_error(file, "creating byte code import addresses failed");
 
             for (unsigned int i = 0; i < num_import_addr; ++i)
             {
@@ -1575,7 +1607,7 @@ int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
                 import_addr->label = xvm_string_read_from_file(file);
             }
         }
-    }
+    }*/
 
     // Read invocation identifiers
     if (version >= XBC_FORMAT_VERSION_1_33)
@@ -1585,17 +1617,27 @@ int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
         if (num_invoke_idents > 0)
         {
             if (xvm_bytecode_create_invocations(byte_code, num_invoke_idents) == 0)
-            {
-                xvm_log_error("creating byte code invocation identifiers failed");
-                fclose(file);
-                return 0;
-            }
+                return _xvm_close_file_with_error(file, "creating byte code invocation identifiers failed");
 
+            // Read strings and store them into the invocation identifier
             for (unsigned int i = 0; i < num_invoke_idents; ++i)
-            {
-                // Read string and store it into the invocation identifier
                 byte_code->invoke_idents[i] = xvm_string_read_from_file(file);
-            }
+        }
+    }
+
+    // Read module names
+    if (version >= XBC_FORMAT_VERSION_1_34)
+    {
+        unsigned int num_module_names = xvm_file_read_uint(file);
+
+        if (num_module_names > 0)
+        {
+            if (xvm_bytecode_create_module_names(byte_code, num_module_names) == 0)
+                return _xvm_close_file_with_error(file, "creating byte code module names failed");
+
+            // Read strings and store them into the module name
+            for (unsigned int i = 0; i < num_module_names; ++i)
+                byte_code->module_names[i] = xvm_string_read_from_file(file);
         }
     }
 
@@ -1613,9 +1655,9 @@ int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filena
         xvm_log_error("invalid arguments to write byte code");
         return 0;
     }
-    if (version != XBC_FORMAT_VERSION_1_31 && version != XBC_FORMAT_VERSION_1_32 && version != XBC_FORMAT_VERSION_1_33)
+    if (version < XBC_FORMAT_VERSION_1_31 || version > XBC_FORMAT_VERSION_1_34)
     {
-        xvm_log_error("invalid version number (must be 1.31, 1.32, or 1.33)");
+        xvm_log_error("invalid version number (must be 1.31, 1.32, 1.33, or 1.34)");
         return 0;
     }
 
@@ -1655,7 +1697,7 @@ int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filena
     }
 
     // Write import addresses
-    if (version >= XBC_FORMAT_VERSION_1_34)
+    /*if (version >= ???)
     {
         unsigned int num_import_addr = byte_code->num_import_addresses;
         xvm_file_write_uint(file, num_import_addr);
@@ -1673,7 +1715,7 @@ int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filena
 
             xvm_string_write_to_file(import_addr->label, file);
         }
-    }
+    }*/
 
     // Write invocation identifiers
     if (version >= XBC_FORMAT_VERSION_1_33)
@@ -1683,6 +1725,16 @@ int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filena
 
         for (unsigned int i = 0; i < num_invoke_idents; ++i)
             xvm_string_write_to_file(byte_code->invoke_idents[i], file);
+    }
+
+    // Write module names
+    if (version >= XBC_FORMAT_VERSION_1_34)
+    {
+        unsigned int num_module_names = byte_code->num_module_names;
+        xvm_file_write_uint(file, num_module_names);
+
+        for (unsigned int i = 0; i < num_module_names; ++i)
+            xvm_string_write_to_file(byte_code->module_names[i], file);
     }
 
     // Close file and return with success

@@ -57,19 +57,23 @@ static xvm_string extract_file_path(const char* filename)
     xvm_string path = xvm_string_create_from_sub(filename, pos);
 
     // Append "module/" to path string
-    xvm_string_append(&path, "module/");
+    #ifndef XIEXIE_RELEASE_VERSION
+    xvm_string_append(&path, "/../repository/modules/");
+    #else
+    xvm_string_append(&path, "/../modules/");
+    #endif
 
     return path;
 }
 
-static int shell_parse_args(int argc, char* argv[])
+static int shell_parse_args(const char* app_path, int argc, char* argv[])
 {
     // Configuration memory
     int         verbose     = 0;
     const char* filename    = NULL;
     const char* entry       = NULL;
     size_t      stack_size  = 256;
-    xvm_string  module_path = extract_file_path(argv[0]);
+    xvm_string  module_path = extract_file_path(app_path);
     
     // Initialize module container
     xvm_module_container module_cont;
@@ -198,7 +202,17 @@ static int shell_parse_args(int argc, char* argv[])
         {
             // Setup module filename
             xvm_string filename = xvm_string_create_from(module_path.str);
-            xvm_string_append(&filename, byte_code.module_names[i].str);
+            const char* module_name = byte_code.module_names[i].str;
+
+            xvm_string_append(&filename, module_name);
+            xvm_string_append(&filename, "/");
+            xvm_string_append(&filename, module_name);
+
+            #if defined(_WIN32)
+            xvm_string_append(&filename, ".dll");
+            #elif defined(__linux__)
+            xvm_string_append(&filename, ".so");
+            #endif
 
             // Load module
             xvm_module module;
@@ -243,6 +257,7 @@ static int shell_parse_args(int argc, char* argv[])
     }
 
     // Clean up shell
+    xvm_module_container_clear(&module_cont);
     xvm_string_free(&module_path);
 
     return 1;
@@ -252,7 +267,8 @@ static int shell_parse_args(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
     // Ignore program path argument, then parse all other arguments
-    shell_parse_args(--argc, ++argv);
+    const char* app_path = argv[0];
+    shell_parse_args(app_path, --argc, ++argv);
     return 0;
 }
 

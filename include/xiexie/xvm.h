@@ -643,77 +643,12 @@ xvm_bytecode_datafield_ascii(byte_code.instructions + current_instr_offset, "Hel
 */
 int xvm_bytecode_datafield_ascii(instr_t* instr_ptr, const char* text, size_t* num_instructions);
 
-/*
-
-WORD: 32-bit unsigned integer
-STR:
-    WORD:           length
-    Byte[length]:   data
-
---- XBC file format spec (Version 1.31): ---
-
-WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 131 for "1.31")
-WORD: number of instructions (n)
-n times:
-    WORD: instruction
-
---- XBC file format spec (Version 1.32): ---
-
-WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 132 for "1.32")
-WORD: number of instructions (n1)
-n1 times:
-    WORD: instruction
-WORD: number of export addresses (n2)
-n2 times:
-    WORD: address
-    STR: name
-
---- XBC file format spec (Version 1.33): ---
-
-WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 133 for "1.33")
-WORD: number of instructions (n1)
-n1 times:
-    WORD: instruction
-WORD: number of export addresses (n2)
-n2 times:
-    WORD: address
-    STR: name
-WORD: number of invoke identifiers (n3)
-n3 times:
-    STR: identifier
-
---- XBC file format spec (Version 1.34): ---
-
-WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 134 for "1.34")
-WORD: number of instructions (n1)
-n1 times:
-    WORD: instruction
-WORD: number of export addresses (n2)
-n2 times:
-    WORD: address
-    STR: name
-WORD: number of import addresses (n3)
-n3 times:
-    WORD: number of instruction indices (n3b)
-    n3b times:
-        WORD: index
-    STR: name
-WORD: number of invoke identifiers (n4)
-n4 times:
-    STR: identifier
-
-*/
-
 #define XBC_FORMAT_MAGIC            (*((int*)("XBCF")))
 #define XBC_FORMAT_VERSION_1_31     131
 #define XBC_FORMAT_VERSION_1_32     132
 #define XBC_FORMAT_VERSION_1_33     133
-#define XBC_FORMAT_VERSION_1_34     134//!INCOMPLETE!
-#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_33
+#define XBC_FORMAT_VERSION_1_34     134
+#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_34
 
 /**
 Reads a byte code form file.

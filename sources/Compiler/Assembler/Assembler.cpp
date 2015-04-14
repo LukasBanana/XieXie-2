@@ -700,7 +700,7 @@ void Assembler::ParsePragmaField()
 void Assembler::ParseModuleField()
 {
     Accept(Token::Types::Module);
-    auto moduleName = ParseStringLiteral();
+    byteCode_->AddModuleName(ParseStringLiteral());
 }
 
 void Assembler::ParseDataField()
