@@ -620,7 +620,7 @@ DEF_VISIT_PROC(Decorator, AllocExpr)
                 }
             }
             /* Check if class is marked as deprecated */
-            else if (classDecl->IsDeprecated(&hint))
+            else if (classDecl->HasAttribDeprecated(&hint))
             {
                 std::string info = "allocation of deprecated class \"" + classDecl->ident + "\"";
                 if (!hint.empty())
@@ -1362,7 +1362,7 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
 
         /* Check if procedure is deprecated */
         std::string hint;
-        if (procDecl->IsDeprecated(&hint))
+        if (procDecl->HasAttribDeprecated(&hint))
         {
             std::string info = "call of deprecated procedure";
             if (!hint.empty())

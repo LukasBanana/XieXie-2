@@ -147,6 +147,7 @@ DEF_VISIT_PROC(GraphGenerator, VarDecl)
 
 DEF_VISIT_PROC(GraphGenerator, Param)
 {
+    // do nothing
 }
 
 DEF_VISIT_PROC(GraphGenerator, Arg)
@@ -163,6 +164,7 @@ DEF_VISIT_PROC(GraphGenerator, Arg)
 
 DEF_VISIT_PROC(GraphGenerator, ProcSignature)
 {
+    // do nothing
 }
 
 DEF_VISIT_PROC(GraphGenerator, AttribPrefix)
@@ -177,6 +179,7 @@ DEF_VISIT_PROC(GraphGenerator, Attrib)
 
 DEF_VISIT_PROC(GraphGenerator, ArrayAccess)
 {
+    //todo...
 }
 
 //!!!INCOMPLETE!!!
@@ -676,6 +679,8 @@ DEF_VISIT_PROC(GraphGenerator, ClassDeclStmnt)
         if (!ast->isExtern)
             Visit(ast->declStmnts);
     }
+    else
+        AppendModuleName(*ast);
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarDeclStmnt)
@@ -1365,6 +1370,18 @@ void GraphGenerator::CreateClassTree(ClassDeclStmnt& ast)
 BasicBlock* GraphGenerator::MakeBlock(const std::string& label)
 {
     return CT()->CreateBasicBlock(label);
+}
+
+void GraphGenerator::AppendModuleName(ClassDeclStmnt& ast)
+{
+    /* Check if module has the "bind" attribute */
+    std::string name;
+    if (ast.HasAttribBind(&name))
+    {
+        if (name.empty())
+            name = ast.ident + "/" + ast.ident;
+        program_->boundModuleNames.push_back(name);
+    }
 }
 
 /* --- Basic Block Stack --- */

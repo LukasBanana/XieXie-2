@@ -31,13 +31,14 @@ class ProcDeclStmnt : public ScopedStmnt
         const TypeDenoter* GetTypeDenoter() const override;
 
         //! Returns true if this procedure has the "final" attribute.
-        bool IsFinal() const;
+        bool HasAttribFinal() const;
         //! Returns true if this procedure has the "override" attribute.
-        bool IsOverride() const;
+        bool HasAttribOverride() const;
         //! Returns true if this procedure has the "deprecated" attribute.
-        bool IsDeprecated(std::string* arg = nullptr) const;
+        bool HasAttribDeprecated(std::string* arg = nullptr) const;
         //! Returns true if this procedure has the "export" attribute.
-        bool IsExport(std::string* arg = nullptr) const;
+        bool HasAttribExport(std::string* arg = nullptr) const;
+
         //! Returns true if this procedure is abstract, i.e. 'codeBlock' is null and its parent class is not an extern class.
         bool IsAbstract() const;
 

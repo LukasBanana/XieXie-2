@@ -39,6 +39,7 @@ class CFGProgram
         using FloatArrayLiteral = Literal<std::vector<float>>;
 
         std::vector<ClassTreePtr>       classTrees;
+        std::vector<std::string>        boundModuleNames;
         std::vector<StringLiteral>      stringLiterals;
         std::vector<BoolArrayLiteral>   boolArrayLiterals;
         std::vector<IntArrayLiteral>    intArrayLiterals;

@@ -21,22 +21,22 @@ const TypeDenoter* ProcDeclStmnt::GetTypeDenoter() const
     return procSignature->GetTypeDenoter();
 }
 
-bool ProcDeclStmnt::IsFinal() const
+bool ProcDeclStmnt::HasAttribFinal() const
 {
     return HasAttrib("final");
 }
 
-bool ProcDeclStmnt::IsOverride() const
+bool ProcDeclStmnt::HasAttribOverride() const
 {
     return HasAttrib("override");
 }
 
-bool ProcDeclStmnt::IsDeprecated(std::string* arg) const
+bool ProcDeclStmnt::HasAttribDeprecated(std::string* arg) const
 {
     return HasAttrib("deprecated", arg);
 }
 
-bool ProcDeclStmnt::IsExport(std::string* arg) const
+bool ProcDeclStmnt::HasAttribExport(std::string* arg) const
 {
     return HasAttrib("export", arg);
 }

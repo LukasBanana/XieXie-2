@@ -136,9 +136,12 @@ class ClassDeclStmnt : public ScopedStmnt
         }
 
         //! Returns true if this class has the "final" attribute.
-        bool IsFinal() const;
+        bool HasAttribFinal() const;
         //! Returns true if this class has the "deprecated" attribute.
-        bool IsDeprecated(std::string* hint = nullptr) const;
+        bool HasAttribDeprecated(std::string* hint = nullptr) const;
+        //! Returns true if this class has the "bind" attribute.
+        bool HasAttribBind(std::string* name = nullptr) const;
+
         //! Returns true if this is an abstract class.
         bool IsAbstract() const
         {

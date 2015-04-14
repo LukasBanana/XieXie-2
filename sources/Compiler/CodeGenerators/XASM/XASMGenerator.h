@@ -76,6 +76,7 @@ class XASMGenerator final : public AsmGenerator
         //! Writes an ASCII data-field, e.g. ".ascii \"text\"".
         void ASCIIField(const std::string& text);
 
+        //! Writes the assembly file header.
         void WriteHeader();
 
         /* --- Conversion --- */
@@ -131,6 +132,9 @@ class XASMGenerator final : public AsmGenerator
         void PopIndentBlock(const BasicBlock& bb);
 
         /* --- Code Generation --- */
+
+        void GenerateModuleImports(const CFGProgram& program);
+        void GenerateStartUpCodeForRootClass(const CFGProgram& program);
 
         void GenerateClassTree(const ClassTree& classTree);
         void GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& procDecl);

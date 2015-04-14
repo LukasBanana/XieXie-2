@@ -162,12 +162,12 @@ void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
     }
 }
 
-bool ClassDeclStmnt::IsFinal() const
+bool ClassDeclStmnt::HasAttribFinal() const
 {
     return HasAttrib("final");
 }
 
-bool ClassDeclStmnt::IsDeprecated(std::string* hint) const
+bool ClassDeclStmnt::HasAttribDeprecated(std::string* hint) const
 {
     if (attribPrefix)
     {
@@ -179,6 +179,25 @@ bool ClassDeclStmnt::IsDeprecated(std::string* hint) const
                 auto literalExpr = AST::Cast<const LiteralExpr>(attr->arg.get());
                 if (literalExpr)
                     *hint = literalExpr->value;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ClassDeclStmnt::HasAttribBind(std::string* name) const
+{
+    if (attribPrefix)
+    {
+        auto attr = attribPrefix->FindAttrib("bind");
+        if (attr)
+        {
+            if (name && attr->arg)
+            {
+                auto literalExpr = AST::Cast<const LiteralExpr>(attr->arg.get());
+                if (literalExpr)
+                    *name = literalExpr->value;
             }
             return true;
         }
@@ -379,7 +398,7 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
                     if (!procDecl->procSignature->isCtor && !procDecl->procSignature->isDtor)
                     {
                         /* Check if procedure can be overridden */
-                        if (baseProc->IsFinal())
+                        if (baseProc->HasAttribFinal())
                         {
                             Error(
                                 errorReporter,
@@ -388,7 +407,7 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
                             );
                         }
                         /* Check if procedure should be overridden */
-                        else if (!procDecl->IsOverride())
+                        else if (!procDecl->HasAttribOverride())
                         {
                             Warning(
                                 errorReporter,
@@ -409,7 +428,7 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
 
         if (!hasOverridden)
         {
-            if (!isStatic && procDecl->IsOverride())
+            if (!isStatic && procDecl->HasAttribOverride())
                 Error(errorReporter, "procedure does not override a procedure from its base class", procDecl);
 
             /* Append new procedure to vtable */
@@ -447,13 +466,13 @@ void ClassDeclStmnt::ProcessClassAttributes(ErrorReporter* errorReporter)
     if (baseClassRef_)
     {
         /* Check if this class can inherit from its base class */
-        if (baseClassRef_->IsFinal())
+        if (baseClassRef_->HasAttribFinal())
             Error(errorReporter, "can not inherit from class with 'final' attribute", this);
-        else if (!IsDeprecated())
+        else if (!HasAttribDeprecated())
         {
             /* Check if base class is marked as deprecated */
             std::string hint;
-            if (baseClassRef_->IsDeprecated(&hint))
+            if (baseClassRef_->HasAttribDeprecated(&hint))
             {
                 std::string info = "class declaration \"" + ident + "\" with deprecated base class";
                 if (!hint.empty())

@@ -52,21 +52,11 @@ bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorR
         /* Write commentary header */
         WriteHeader();
 
+        /* Generate module imports */
+        GenerateModuleImports(program);
+
         /* Generate start-up code */
-        bool hasRootClass = false;
-
-        for (const auto& ct : program.classTrees)
-        {
-            if (ct->GetClassDeclAST()->isBuiltin && ct->GetClassDeclAST()->ident == "Object")
-            {
-                GenerateStartUpCode(*ct->GetClassDeclAST());
-                hasRootClass = true;
-                break;
-            }
-        }
-
-        if (!hasRootClass)
-            ErrorIntern("missing root class \"Object\"");
+        GenerateStartUpCodeForRootClass(program);
 
         /* Generate assembler code for each class tree */
         for (const auto& ct : program.classTrees)
@@ -78,14 +68,6 @@ bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorR
         /* Generate literals */
         for (const auto& sl : program.stringLiterals)
             GenerateStringLiteral(sl);
-
-        #if 0//!!!TEST!!!
-        GenerateStringLiteral({ "String.const.0", "Hello, World!\n" });
-        GenerateStringLiteral({ "String.const.1", "Test" });
-        GenerateBoolArrayLiteral({ "BoolArray.const.0", { true, false, false, true, true, false, true } });
-        GenerateIntArrayLiteral({ "PrimArray.const.0", { 42, -999, 26 } });
-        GenerateFloatArrayLiteral({ "PrimArray.const.1", { -12345.6789f, 0.5f, 2.5f, 0.3f, 0.00000001f, 3.141592654f } });
-        #endif
 
         /* Generate export labels */
         GenerateExportLabels();
@@ -294,6 +276,34 @@ void XASMGenerator::PopIndentBlock(const BasicBlock& bb)
 
 /* --- Code Generation --- */
 
+void XASMGenerator::GenerateModuleImports(const CFGProgram& program)
+{
+    CommentHeadline("MODULE IMPORTS");
+    
+    for (const auto& moduleName : program.boundModuleNames)
+        Line(".module \"" + moduleName + "\"");
+
+    Blanks(2);
+}
+
+void XASMGenerator::GenerateStartUpCodeForRootClass(const CFGProgram& program)
+{
+    bool hasRootClass = false;
+
+    for (const auto& ct : program.classTrees)
+    {
+        if (ct->GetClassDeclAST()->isBuiltin && ct->GetClassDeclAST()->ident == "Object")
+        {
+            GenerateStartUpCode(*ct->GetClassDeclAST());
+            hasRootClass = true;
+            break;
+        }
+    }
+
+    if (!hasRootClass)
+        ErrorIntern("missing root class \"Object\"");
+}
+
 void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
 {
     /* Add commentary for this class */
@@ -327,7 +337,7 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& proc
 
     /* Check if export label must be added */
     std::string expLabel;
-    if (procDecl.IsExport(&expLabel))
+    if (procDecl.HasAttribExport(&expLabel))
     {
         if (expLabel.empty())
             expLabel = procDecl.parentRef->ident + '.' + procSig.ident;

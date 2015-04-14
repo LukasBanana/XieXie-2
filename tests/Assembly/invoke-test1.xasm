@@ -6,7 +6,7 @@
 .pragma("export all", "export none")
 
 ; import module "MsgBox.dll"
-.module "MsgBox"
+.module "MsgBox/MsgBox"
 
 push 1
 lda $r0, @msg

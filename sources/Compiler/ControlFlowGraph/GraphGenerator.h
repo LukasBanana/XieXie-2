@@ -94,6 +94,8 @@ class GraphGenerator final : private Visitor
         void CreateClassTree(ClassDeclStmnt& ast);
         BasicBlock* MakeBlock(const std::string& label = "");
 
+        void AppendModuleName(ClassDeclStmnt& ast);
+
         /* --- Basic Block Stack --- */
 
         void PushBB(BasicBlock* bb);

@@ -205,8 +205,6 @@ static int shell_parse_args(const char* app_path, int argc, char* argv[])
             const char* module_name = byte_code.module_names[i].str;
 
             xvm_string_append(&filename, module_name);
-            xvm_string_append(&filename, "/");
-            xvm_string_append(&filename, module_name);
 
             #if defined(_WIN32)
             xvm_string_append(&filename, ".dll");
