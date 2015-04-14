@@ -12,7 +12,8 @@ class Test {
 	
 	static void main() {
 		
-		Test.f(y: -5)
+		int y := -5
+		Test.f(y: y)
 		Test.g(1.0, x: 0)
 		
 	}
