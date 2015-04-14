@@ -50,6 +50,7 @@
 \def\cpp{\textsc{C++}\xspace}
 \def\cppx{\textsc{C++11}\xspace}
 \def\java{\textsc{Java}\xspace}
+\def\csharp{\textsc{C\#}\xspace}
 \def\python{\textsc{Python}\xspace}
 \def\xxc{\texttt{xxc}\xspace}
 \def\xvm{\texttt{xvm}\xspace}
@@ -206,11 +207,11 @@ may change over time. Here is a rough ToDo-list:
 	\hline
 	Procedure Overriding & \done \\
 	\hline
-	Named Parameters & \notimpl \\
+	Named Parameters & \done \\
 	\hline
-	Static and Non-Static Procedure Behavior & \almdone \\
+	Static and Non-Static Procedure Behavior & \done \\
 	\hline
-	Class and Procedure Attributes & \almdone \\
+	Class and Procedure Attributes & \done \\
 	
 	\hline \hline
 	\multicolumn{2}{|c|}{\textsc{Code Generator}} \\
@@ -461,9 +462,9 @@ a >= b  // Greater Or Equal
 As the interested reader may have noticed, the \textit{equality operator} is different to that in the most languages.
 This is because the \textit{copy assignment} operators is \texttt{:=} and not \texttt{=}.
 \begin{lstlisting}
-x := 5       // ok, set x to 5
-a, b, c := 4 // ok, set a, b, and c to 4
-a := b := 3  // error, b := 3 is not an expression
+x := 5       // OK, set x to 5
+a, b, c := 4 // OK, set a, b, and c to 4
+a := b := 3  // Error, b := 3 is not an expression
 \end{lstlisting}
 In the above example \texttt{a := b := 3} is invalid, because on the right hand side of the first \texttt{:=} must be
 an expression. But per definition in \xiexie \texttt{b := 3} is not an expression, but a statement!
@@ -914,9 +915,9 @@ class Widget {
     float f(float x := 0.0) { /* ... */ }
     
     void caller() {
-        int   a := f()    // error, could be f(), f(int x := 0), or f(float x := 0.0)
-        int   b := f(1)   // ok, argument is from type 'int'
-        float c := f(2.0) // ok, argument is from type 'float'
+        int   a := f()    // Error, could be f(), f(int x := 0), or f(float x := 0.0)
+        int   b := f(1)   // OK, argument is from type 'int'
+        float c := f(2.0) // OK, argument is from type 'float'
     }
 }
 \end{lstlisting}
@@ -945,12 +946,73 @@ class S : B {
         return 3
     }
     void caller() {
-        int a := f(0)          // equivalent to 'this.f(0)'
+        int a := f(0)          // Equivalent to 'this.f(0)'
         int b := super.f(0, 0) // 'super' is required, due to overloaded procedure 'f'
-        int c := g()           // no need for 'super', because 'g' is not overloaded
+        int c := g()           // No need for 'super', because 'g' is not overloaded
     }
 }
 \end{lstlisting}
+
+\subsection{Named Parameters}
+
+Named parameters, like in \csharp, are supported as well. They also have the same rules as in \csharp,
+i.e. if you started to write named parameters in a procedure call, you need to finish it till the last argument.
+Here is an example and counter-example:
+\begin{lstlisting}
+// Example:
+class Widget {
+    void f(int x := 1, int y := 2, int z := 3)
+    void call() {
+        int y := 12
+        f()                 // Use all default arguments
+        f(y: -5)            // Equivalent to f(1, -5, 3)
+        f(y: y)             // Equivalent to f(1, y, 3)
+        f(-1, z: 0)         // Equivalent to f(-1, 2, 0)
+        f(z: 1, y: 2, x: 3) // Equivalent to f(3, 2, 1)
+    }
+}
+
+// Counter-example:
+class Widget {
+    void f(int x := 1, int y := 2, int z := 3)
+    void call() {
+        f(1, x: 1)    // Error, parameter 'x' already assigned
+        f(1, y: 2, 3) // Error, can not start with named parameters and continue with unnamed
+    }
+}
+\end{lstlisting}
+But what are named parameters good for? Consider the following function signature:
+\begin{lstlisting}[numbers=left]
+// User account class.
+class UserAccount {
+    init(
+        String name := "<unnamed>",
+        int age := 0,
+        String location := "",
+        String city := "",
+        int postalCode := 0
+        int flags := 0
+    )
+    /* ... */
+}
+
+// Creates an account, only initialize with basic information.
+class AccountManager() {
+    // Alternative 1
+    UserAccount createAccountAlt1(String name, int flags := 0) {
+        return new UserAccount(name: name, flags: flags)
+    }
+    
+    // Alternative 2
+    UserAccount createAccountAlt2(String name, int flags := 0) {
+        return new UserAccount(name, 0, "", "", 0, flags)
+    }
+}
+\end{lstlisting}
+In this example alternative 2 (Line 23) is not much more to type. But alternative 1 (Line 18) is much better to read :-).
+You see immediately which arguments are passed to which parameters. No matter if the parameter order will change,
+your procedure call will still work as suggested. Moreover, the default arguments in the procedure declaration
+may change, but your procedure call will still use them correctly.
 
 
 %----------------------------------------------------------------------------------------
@@ -985,8 +1047,13 @@ class C : A {}
 \end{lstlisting}
 Here is a summary of all attributes:
 \begin{itemize}
-	\item \textbf{\texttt{deprecated}}, \textbf{\texttt{deprecated(String)}}
-		Marks a class, procedure, or member-variable as deprecated.
+	\item \textbf{\texttt{deprecated}}, \textbf{\texttt{deprecated(String hint)}}
+		Marks a \textit{class}, \textit{procedure}, or \textit{member-variable} as deprecated.
+	\item \textbf{\texttt{export}}, \textbf{\texttt{export(String label)}}
+		Exports the address of a \textit{static procedure}.
+	\item \textbf{\texttt{bind}}, \textbf{\texttt{bind(String name)}}
+		Binds a \textit{module} of the specified name. The default name is: \texttt{"<module-name>/<module-name>"},
+		where \texttt{<module-name>} is the name of the module.
 	\item \textbf{\texttt{override}} Overrides a procedure from a class in its inheritance hierarchy.
 	\item \textbf{\texttt{final}} Makes a class final, which disables to inherit from this class.
 \end{itemize}
