@@ -20,6 +20,8 @@
 #include "TACParamInst.h"
 #include "TACArgInst.h"
 
+#include <algorithm>
+
 
 namespace ControlFlowGraph
 {
@@ -921,23 +923,39 @@ DEF_VISIT_PROC(GraphGenerator, UnaryExpr)
 
 DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
 {
-    /* Make instruction */
-    auto inst = BB()->MakeInst<TACCopyInst>();
-
-    inst->dest = TempVar();
-
-    switch (ast->GetType())
+    if (ast->GetType() == LiteralExpr::Literals::String)
     {
-        case LiteralExpr::Literals::Bool:
-            inst->src = (ast->value == "false" ? "0" : "1");
-            break;
+        /* Append literal to program string literals */
+        auto literalIdent = AppendStringLiteral(ast->value);
+        
+        /* Make instruction */
+        auto inst = BB()->MakeInst<TACCopyInst>();
+        
+        inst->dest = TempVar();
+        inst->src = literalIdent;
 
-        default:
-            inst->src = ast->value;
-            break;
+        PushVar(inst->dest);
     }
+    else
+    {
+        /* Make instruction */
+        auto inst = BB()->MakeInst<TACCopyInst>();
 
-    PushVar(inst->dest);
+        inst->dest = TempVar();
+
+        switch (ast->GetType())
+        {
+            case LiteralExpr::Literals::Bool:
+                inst->src = (ast->value == "false" ? "0" : "1");
+                break;
+
+            default:
+                inst->src = ast->value;
+                break;
+        }
+
+        PushVar(inst->dest);
+    }
 }
 
 DEF_VISIT_PROC(GraphGenerator, CastExpr)
@@ -1382,6 +1400,29 @@ void GraphGenerator::AppendModuleName(ClassDeclStmnt& ast)
             name = ast.ident + "/" + ast.ident;
         program_->boundModuleNames.push_back(name);
     }
+}
+
+std::string GraphGenerator::AppendStringLiteral(const std::string& strLiteral)
+{
+    auto& stringLiterals = program_->stringLiterals;
+    
+    /* Check if string literal has already been added to the set */
+    auto it = std::find_if(
+        stringLiterals.begin(), stringLiterals.end(),
+        [&strLiteral](const CFGProgram::StringLiteral& strLit)
+        {
+            return strLit.value == strLiteral;
+        }
+    );
+
+    if (it != stringLiterals.end())
+        return it->ident;
+
+    /* Generate new literal */
+    auto literalIdent = "String.const." + std::to_string(stringLiterals.size());
+    stringLiterals.push_back({ literalIdent, strLiteral });
+
+    return literalIdent;
 }
 
 /* --- Basic Block Stack --- */

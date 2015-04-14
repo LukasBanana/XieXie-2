@@ -96,6 +96,9 @@ class GraphGenerator final : private Visitor
 
         void AppendModuleName(ClassDeclStmnt& ast);
 
+        //! Appends the specified string literal to the program and returns the identifier.
+        std::string AppendStringLiteral(const std::string& strLiteral);
+
         /* --- Basic Block Stack --- */
 
         void PushBB(BasicBlock* bb);
