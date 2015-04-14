@@ -22,6 +22,6 @@ class D {
 public:
 	void procPublic() {}
 private:
-	member A, B
+	friend A, B
 	void procPrivate() {}
 }
