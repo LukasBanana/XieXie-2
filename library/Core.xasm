@@ -99,6 +99,38 @@ dynamic_cast:
 	mov $ar, 0				; return null pointer
 	ret 3
 
+; String String.copy_literal(String literal)
+String.copy_literal:
+	ldw $r0, ($lb) -4	; load address of string literal
+	
+	; allocate new "String" object
+	push 24
+	insc AllocMem
+	mov $r1, $ar		; store pointer to new string object
+	
+	; copy first 20 bytes from literal
+	push 20				; push size of 20 bytes (excluding the '.buffer' address)
+	push $r0			; push source address of original string literal
+	push $r1			; push destination address of new allocated string object
+	insc CopyMem
+	
+	; allocate buffer for new string
+	ldw $r2, ($r0) 12	; load 'String.size'
+	inc $r2				; increase size for null terminator
+	push $r2
+	insc AllocMem
+	stw $ar, ($r1), 20	; write buffer address to new string object
+	
+	; copy string buffer from literal
+	ldw $r0, ($r0) 20	; load buffer address from literal
+	push $r2			; push buffer size
+	push $r0			; push buffer address of literal
+	push $ar			; push buffer address of new string
+	insc CopyMem
+	
+	mov $ar, $r1		; restore and return pointer to new string object
+	ret 1
+
 
 ; ------- Object Class -------
 
