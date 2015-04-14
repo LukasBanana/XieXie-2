@@ -929,10 +929,11 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
         auto literalIdent = AppendStringLiteral(ast->value);
         
         /* Make instruction */
-        auto inst = BB()->MakeInst<TACCopyInst>();
-        
+        BB()->MakeInst<TACArgInst>('@' + literalIdent);
+        BB()->MakeInst<TACDirectCallInst>("String.copy_literal");
+        auto inst = BB()->MakeInst<TACResultInst>();
+
         inst->dest = TempVar();
-        inst->src = literalIdent;
 
         PushVar(inst->dest);
     }
