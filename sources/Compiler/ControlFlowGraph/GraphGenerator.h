@@ -86,6 +86,8 @@ class GraphGenerator final : private Visitor
         void GenerateBreakCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args);
         void GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args);
 
+        void GenerateArgumentExpr(Expr& ast);
+
         /* --- CFG Generation --- */
 
         template <typename T> VisitIO VisitAndLink(T ast);

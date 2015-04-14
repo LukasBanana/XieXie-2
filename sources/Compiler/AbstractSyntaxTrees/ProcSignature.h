@@ -30,6 +30,11 @@ class ProcSignature : public AST
 
         //! Returns the parameter with the specified identifier.
         Param* FindParam(const std::string& ident) const;
+        /**
+        Returns the index for the specified parameter or
+        'std::numeric_limits<size_t>::max()' if the parameter is not contained in this parameter list.
+        */
+        size_t FindParamIndex(const std::string& ident) const;
 
         /**
         Returns true if the two procedure signatures are too similar, to be used as overloaded procedures.

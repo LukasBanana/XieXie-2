@@ -1321,6 +1321,38 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
         ast.declStmntRef = procDecls.front();
         auto procDecl = ast.declStmntRef;
 
+        /* Assign final arguments to parameters */
+        const auto& procSig = *procDecl->procSignature;
+        const auto numArgs = procSig.params.size();
+        ast.argExprs.resize(numArgs);
+
+        /* (1) Assign default arguments */
+        for (size_t i = 0; i < numArgs; ++i)
+        {
+            const auto& prm = procSig.params[i];
+            if (prm->defaultArgExpr)
+                ast.argExprs[i] = prm->defaultArgExpr.get();
+            else
+                ast.argExprs[i] = nullptr;
+        }
+        
+        /* (2) Assign explicit arguments */
+        for (size_t i = 0, n = ast.args.size(), paramIndex = 0; i < n; ++i)
+        {
+            /* Get parameter index */
+            const auto& arg = *ast.args[i];
+            if (!arg.paramIdent.empty())
+                paramIndex = procSig.FindParamIndex(arg.paramIdent);
+            else
+                paramIndex = i;
+
+            /* Assign argument to parameter */
+            if (paramIndex < ast.argExprs.size())
+                ast.argExprs[paramIndex] = arg.expr.get();
+            else
+                Error("named parameter \"" + arg.paramIdent + "\" index out of range", &ast);
+        }
+
         /* Check if procedure is deprecated */
         std::string hint;
         if (procDecl->HasAttribDeprecated(&hint))

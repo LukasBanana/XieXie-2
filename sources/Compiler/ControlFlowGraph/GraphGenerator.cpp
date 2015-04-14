@@ -154,14 +154,7 @@ DEF_VISIT_PROC(GraphGenerator, Param)
 
 DEF_VISIT_PROC(GraphGenerator, Arg)
 {
-    /* Build argument expression CFG */
-    Visit(ast->expr);
-    auto var = Var();
-
-    /* Make instruction */
-    auto inst = BB()->MakeInst<TACArgInst>(var);
-
-    PopVar();
+    // do nothing -> see "GenerateArgumentExpr"
 }
 
 DEF_VISIT_PROC(GraphGenerator, ProcSignature)
@@ -197,8 +190,8 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     auto procIdent = UniqueLabel(*ast->declStmntRef);
 
     /* Make instructions to push arguments */
-    for (auto it = ast->args.rbegin(); it != ast->args.rend(); ++it)
-        Visit(*it);
+    for (auto it = ast->argExprs.rbegin(); it != ast->argExprs.rend(); ++it)
+        GenerateArgumentExpr(**it);
 
     if (!procSig->isStatic)
     {
@@ -1336,6 +1329,18 @@ void GraphGenerator::GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, v
     }
     else
         ErrorIntern("missing iteration point for 'continue' statement", ast);
+}
+
+void GraphGenerator::GenerateArgumentExpr(Expr& ast)
+{
+    /* Build argument expression CFG */
+    Visit(&ast);
+    auto var = Var();
+
+    /* Make instruction */
+    auto inst = BB()->MakeInst<TACArgInst>(var);
+
+    PopVar();
 }
 
 #undef RETURN_BLOCK_REF

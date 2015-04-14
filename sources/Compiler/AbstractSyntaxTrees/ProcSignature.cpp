@@ -10,6 +10,7 @@
 #include "Param.h"
 
 #include <algorithm>
+#include <numeric>
 
 
 namespace AbstractSyntaxTrees
@@ -61,6 +62,16 @@ Param* ProcSignature::FindParam(const std::string& ident) const
         }
     );
     return it != params.end() ? it->get() : nullptr;
+}
+
+size_t ProcSignature::FindParamIndex(const std::string& ident) const
+{
+    for (size_t i = 0, n = params.size(); i < n; ++i)
+    {
+        if (params[i]->ident == ident)
+            return i;
+    }
+    return std::numeric_limits<size_t>::max();
 }
 
 bool ProcSignature::AreSimilar(const ProcSignature& lhs, const ProcSignature& rhs)
