@@ -267,6 +267,12 @@ int main(int argc, char* argv[])
     // Ignore program path argument, then parse all other arguments
     const char* app_path = argv[0];
     shell_parse_args(app_path, --argc, ++argv);
+
+    // Check for memory leaks
+    int ref_count = xvm_memory_ref_count();
+    if (ref_count != 0)
+        xvm_log_warning("%i memory leak(s) detected", ref_count);
+
     return 0;
 }
 

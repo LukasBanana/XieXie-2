@@ -91,6 +91,45 @@ INLINE static int _xvm_flt2int_signum(float val)
 }
 
 
+/* ----- Leak Detection ----- */
+
+#ifdef _ENABLE_LEAK_DETECTION_
+
+static long _mem_ref_count = 0;
+
+int xvm_memory_ref_count()
+{
+    return _mem_ref_count;
+}
+
+INLINE static void* _xvm_malloc(size_t size)
+{
+    ++_mem_ref_count;
+    return malloc(size);
+}
+
+INLINE static void _xvm_free(void* ptr)
+{
+    --_mem_ref_count;
+    free(ptr);
+}
+
+#define XVM_MALLOC  _xvm_malloc
+#define XVM_FREE    _xvm_free
+
+#else
+
+int xvm_memory_ref_count()
+{
+    return 0;
+}
+
+#define XVM_MALLOC  malloc
+#define XVM_FREE    free
+
+#endif
+
+
 /* ----- Registers ----- */
 
 const char* xvm_register_get_name(reg_t reg)
@@ -375,9 +414,28 @@ void xvm_log_println(const char* str)
     puts(str);
 }
 
-void xvm_log_error(const char* str)
+void xvm_log_error(const char* format, ...)
 {
-    printf("error: %s\n", str);
+    printf("error: ");
+
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+    
+    puts("");
+}
+
+void xvm_log_warning(const char* format, ...)
+{
+    printf("warning: ");
+
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+
+    puts("");
 }
 
 void xvm_log_readfile_error(const char* filename)
@@ -935,7 +993,7 @@ xvm_string xvm_string_create(size_t len)
 
     // Allocate memory for the string and store string length
     string.len = len;
-    string.str = (char*)malloc(sizeof(char)*(len + 1));
+    string.str = (char*)XVM_MALLOC(sizeof(char)*(len + 1));
 
     // Initialize last string entry with the null character
     string.str[len] = '\0';
@@ -975,7 +1033,7 @@ int xvm_string_append(xvm_string* string, const char* append_str)
 
         // Create new string
         size_t len = string->len + append_len;
-        char* str = (char*)malloc(sizeof(char)*(len + 1));
+        char* str = (char*)XVM_MALLOC(sizeof(char)*(len + 1));
         str[len] = '\0';
 
         // Copy data from original string
@@ -985,7 +1043,7 @@ int xvm_string_append(xvm_string* string, const char* append_str)
         memcpy(str + string->len, append_str, append_len);
 
         // Replace original string
-        free(string->str);
+        XVM_FREE(string->str);
         string->str = str;
         string->len = len;
 
@@ -999,7 +1057,7 @@ int xvm_string_free(xvm_string* string)
     if (string != NULL && string->str != NULL)
     {
         // Free memory and reset data
-        free(string->str);
+        XVM_FREE(string->str);
         string->len = 0;
         string->str = NULL;
         return 1;
@@ -1086,7 +1144,7 @@ int xvm_stack_create(xvm_stack* stack, size_t stack_size)
     if (stack != NULL && stack->storage == NULL && stack_size != 0)
     {
         stack->stack_size   = stack_size;
-        stack->storage      = (stack_word_t*)malloc(sizeof(stack_word_t)*stack_size);
+        stack->storage      = (stack_word_t*)XVM_MALLOC(sizeof(stack_word_t)*stack_size);
         return 1;
     }
     return 0;
@@ -1097,7 +1155,7 @@ int xvm_stack_free(xvm_stack* stack)
     if (stack != NULL)
     {
         if (stack->storage != NULL)
-            free(stack->storage);
+            XVM_FREE(stack->storage);
 
         // Reset stack data
         stack->stack_size   = 0;
@@ -1203,7 +1261,7 @@ int xvm_import_address_setup(xvm_import_address* import_address, unsigned int nu
     if (import_address != NULL)
     {
         import_address->num_indices = num_indices;
-        import_address->indices     = (unsigned int*)malloc(sizeof(unsigned int) * num_indices);
+        import_address->indices     = (unsigned int*)XVM_MALLOC(sizeof(unsigned int) * num_indices);
         import_address->label       = xvm_string_init();
         return 1;
     }
@@ -1216,7 +1274,7 @@ int xvm_import_address_free(xvm_import_address* import_address)
     {
         if (import_address->indices != NULL)
         {
-            free(import_address->indices);
+            XVM_FREE(import_address->indices);
             import_address->indices = NULL;
         }
         import_address->num_indices = 0;
@@ -1259,7 +1317,7 @@ int xvm_bytecode_create_instructions(xvm_bytecode* byte_code, unsigned int num_i
     if (byte_code != NULL && byte_code->instructions == NULL && num_instructions > 0)
     {
         byte_code->num_instructions = num_instructions;
-        byte_code->instructions     = (instr_t*)malloc(sizeof(instr_t)*num_instructions);
+        byte_code->instructions     = (instr_t*)XVM_MALLOC(sizeof(instr_t)*num_instructions);
         return 1;
     }
     return 0;
@@ -1270,7 +1328,7 @@ int xvm_bytecode_create_export_addresses(xvm_bytecode* byte_code, unsigned int n
     if (byte_code != NULL && byte_code->export_addresses == NULL && num_export_addresses > 0)
     {
         byte_code->num_export_addresses = num_export_addresses;
-        byte_code->export_addresses     = (xvm_export_address*)malloc(sizeof(xvm_export_address)*num_export_addresses);
+        byte_code->export_addresses     = (xvm_export_address*)XVM_MALLOC(sizeof(xvm_export_address)*num_export_addresses);
         return 1;
     }
     return 0;
@@ -1281,7 +1339,7 @@ int xvm_bytecode_create_import_addresses(xvm_bytecode* byte_code, unsigned int n
     if (byte_code != NULL && byte_code->import_addresses == NULL && num_import_addresses > 0)
     {
         byte_code->num_import_addresses = num_import_addresses;
-        byte_code->import_addresses     = (xvm_import_address*)malloc(sizeof(xvm_import_address)*num_import_addresses);
+        byte_code->import_addresses     = (xvm_import_address*)XVM_MALLOC(sizeof(xvm_import_address)*num_import_addresses);
         return 1;
     }
     return 0;
@@ -1329,10 +1387,10 @@ int xvm_bytecode_create_invocations(xvm_bytecode* byte_code, unsigned int num_in
     {
         // Create invocation identifiers
         byte_code->num_invoke_idents    = num_invoke_idents;
-        byte_code->invoke_idents        = (xvm_string*)malloc(sizeof(xvm_string)*num_invoke_idents);
+        byte_code->invoke_idents        = (xvm_string*)XVM_MALLOC(sizeof(xvm_string)*num_invoke_idents);
 
         // Create and initialize invocation bindings
-        byte_code->invoke_bindings      = (xvm_invocation_proc*)malloc(sizeof(xvm_invocation_proc)*num_invoke_idents);
+        byte_code->invoke_bindings      = (xvm_invocation_proc*)XVM_MALLOC(sizeof(xvm_invocation_proc)*num_invoke_idents);
         for (unsigned int i = 0; i < num_invoke_idents; ++i)
             byte_code->invoke_bindings[i] = _xvm_null_invocation;
         return 1;
@@ -1376,7 +1434,7 @@ int xvm_bytecode_create_module_names(xvm_bytecode* byte_code, unsigned int num_m
     {
         // Create module names
         byte_code->num_module_names = num_module_names;
-        byte_code->module_names     = (xvm_string*)malloc(sizeof(xvm_string)*num_module_names);
+        byte_code->module_names     = (xvm_string*)XVM_MALLOC(sizeof(xvm_string)*num_module_names);
         return 1;
     }
     return 0;
@@ -1389,7 +1447,7 @@ int xvm_bytecode_free(xvm_bytecode* byte_code)
         if (byte_code->instructions != NULL)
         {
             // Free instruction list
-            free(byte_code->instructions);
+            XVM_FREE(byte_code->instructions);
             byte_code->instructions     = NULL;
             byte_code->num_instructions = 0;
         }
@@ -1401,7 +1459,7 @@ int xvm_bytecode_free(xvm_bytecode* byte_code)
                 xvm_export_address_free(&(byte_code->export_addresses[i]));
 
             // Free export address list
-            free(byte_code->export_addresses);
+            XVM_FREE(byte_code->export_addresses);
             byte_code->export_addresses     = NULL;
             byte_code->num_export_addresses = 0;
         }
@@ -1413,7 +1471,7 @@ int xvm_bytecode_free(xvm_bytecode* byte_code)
                 xvm_import_address_free(&(byte_code->import_addresses[i]));
 
             // Free import address list
-            free(byte_code->import_addresses);
+            XVM_FREE(byte_code->import_addresses);
             byte_code->import_addresses     = NULL;
             byte_code->num_import_addresses = 0;
         }
@@ -1425,7 +1483,7 @@ int xvm_bytecode_free(xvm_bytecode* byte_code)
                 xvm_string_free(&(byte_code->invoke_idents[i]));
 
             // Free invocation identifier list
-            free(byte_code->invoke_idents);
+            XVM_FREE(byte_code->invoke_idents);
             byte_code->invoke_idents        = NULL;
             byte_code->num_invoke_idents    = 0;
         }
@@ -1433,14 +1491,18 @@ int xvm_bytecode_free(xvm_bytecode* byte_code)
         if (byte_code->invoke_bindings != NULL)
         {
             // Free invocation bindings vector
-            free(byte_code->invoke_bindings);
+            XVM_FREE(byte_code->invoke_bindings);
             byte_code->invoke_bindings = NULL;
         }
 
         if (byte_code->module_names != NULL)
         {
+            // Free each module name
+            for (unsigned int i = 0; i < byte_code->num_module_names; ++i)
+                xvm_string_free(&(byte_code->module_names[i]));
+
             // Free module names
-            free(byte_code->module_names);
+            XVM_FREE(byte_code->module_names);
             byte_code->module_names     = NULL;
             byte_code->num_module_names = 0;
         }
@@ -1926,7 +1988,7 @@ int xvm_module_container_add(xvm_module_container* container, xvm_module module)
         if (node == NULL)
         {
             // Create first node
-            container->first = (_xvm_module_container_node*)malloc(sizeof(_xvm_module_container_node));
+            container->first = (_xvm_module_container_node*)XVM_MALLOC(sizeof(_xvm_module_container_node));
             node = container->first;
         }
         else
@@ -1936,7 +1998,7 @@ int xvm_module_container_add(xvm_module_container* container, xvm_module module)
                 node = node->next;
 
             // Create next node
-            node->next = (_xvm_module_container_node*)malloc(sizeof(_xvm_module_container_node));
+            node->next = (_xvm_module_container_node*)XVM_MALLOC(sizeof(_xvm_module_container_node));
             node = node->next;
         }
 
@@ -1962,7 +2024,7 @@ static int _xvm_module_container_node_free(_xvm_module_container_node* node)
         {
             // Free next node
             result = _xvm_module_container_node_free(node->next);
-            free(node->next);
+            XVM_FREE(node->next);
         }
 
         return result;
@@ -1980,7 +2042,7 @@ int xvm_module_container_clear(xvm_module_container* container)
             int result = _xvm_module_container_node_free(container->first);
 
             // Free first node
-            free(container->first);
+            XVM_FREE(container->first);
             container->first = NULL;
 
             return result;
@@ -2026,7 +2088,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         case INSC_ALLOC_MEM:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
-            void* result = malloc((size_t)arg0);
+            void* result = XVM_MALLOC((size_t)arg0);
             *reg_ar = (regi_t)result;
         }
         break;
@@ -2036,7 +2098,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
             if (arg0 != 0)
-                free((void*)arg0);
+                XVM_FREE((void*)arg0);
         }
         break;
 

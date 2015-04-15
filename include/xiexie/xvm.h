@@ -20,6 +20,12 @@
 //! Shows the instruction indices as hex numbers.
 //#define _SHOW_RUNTIME_HEXLINES_
 
+/**
+Enables a simple mechanism to detect if the VM produced memory leaks.
+Only the number of memory leaks can be detected, after the program has finished.
+*/
+#define _ENABLE_LEAK_DETECTION_
+
 //! Enables opcode extraction optimization (safes one SLL instruction in x86 code)
 #define _OPTIMIZE_OPCODE_EXTRACTION_
 
@@ -195,7 +201,7 @@ typedef enum
 xvm_opcode;
 
 
-/* ----- Virtual machine exit codes ----- */
+/* ----- VM common functions ----- */
 
 typedef enum
 {
@@ -213,7 +219,18 @@ typedef enum
 }
 xvm_exit_codes;
 
+/**
+Returns the specified exit code as string.
+\see xvm_exit_codes
+*/
 const char* xvm_exitcode_to_string(const xvm_exit_codes exit_code);
+
+/**
+Returns the count of all memory references for this VM.
+\note If '_ENABLE_LEAK_DETECTION_' was not defined, the return value is always 0.
+\see _ENABLE_LEAK_DETECTION_
+*/
+int xvm_memory_ref_count();
 
 
 /* ----- Debug log ----- */
@@ -225,7 +242,10 @@ void xvm_log_print(const char* str);
 void xvm_log_println(const char* str);
 
 //! Prints the specified string as error message to the log output, e.g. "error: $s\\n".
-void xvm_log_error(const char* str);
+void xvm_log_error(const char* format, ...);
+
+//! Prints the specified string as warning message to the log output, e.g. "warning: $s\\n".
+void xvm_log_warning(const char* format, ...);
 
 //! Prints a 'read file error' for the specified filename to the log output.
 void xvm_log_readfile_error(const char* filename);
