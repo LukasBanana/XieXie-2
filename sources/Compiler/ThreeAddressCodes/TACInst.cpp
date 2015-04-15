@@ -132,9 +132,11 @@ std::string TACInst::OpCodeToString(const OpCodes opcode)
         case OpCodes::PARAM:
             return "Param";
 
-        /* Arg */
-        case OpCodes::ARG:
-            return "Arg";
+        /* Stack */
+        case OpCodes::PUSH:
+            return "Push";
+        case OpCodes::POP:
+            return "Pop";
     }
 
     return "";

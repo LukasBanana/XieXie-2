@@ -40,38 +40,36 @@ inc_ref:
 	.end:
 	ret 1
 
-; void dec_ref(Object obj)
+; void dec_ref(Object this)
 dec_ref:
 	; check for null pointer
-	ldw $r0, ($lb) -4		; load object reference 'obj'
-	mov $cf, $r0			; compare: obj = null
-	jne .end
+	mov $cf, $xr			; compare: this = null
+	je .end
 	
 	; check: ref-count = 1
-	ldw $r1, ($r0) 0		; load reference counter from object
-	sub $cf, $r1, 1			; check if reference is 1
+	ldw $r0, ($xr) 0		; load reference counter from object
+	sub $cf, $r0, 1			; check if reference is 1
 	je .rel					; release object
-		dec $r1				; decrement reference counter
-		stw $r1, ($r0) 0	; write reference counter back to object
-		ret 1
+		dec $r0				; decrement reference counter
+		stw $r0, ($xr) 0	; write reference counter back to object
+		ret
 	.rel:
 	
 	; load d'tor address
-	ldw $r1, ($r0) 8		; load vtable address
-	ldw $r1, ($r1) 0		; load release procedure address
+	ldw $r0, ($xr) 8		; load vtable address
+	ldw $r0, ($r0) 0		; load release procedure address
 	
 	; call d'tor
-	push $r0				; store $r0
-	push $r0				; push this pointer as argument onto stack
-	call $r1				; call d'tor 'release(this)'
-	;pop $r0				; restore $r0
+	push $xr				; store $xr
+	call $r0				; call d'tor 'release(this)'
+	;pop $xr				; restore $xr
 	
 	; free memory
-	;push $r0				; push this pointer again as argument onto stack
+	;push $xr				; push this pointer again as argument onto stack
 	insc FreeMem			; delete object 'FreeMem(this)'
 	
 	.end:
-	ret 1
+	ret
 
 ; Object dynamic_cast(Object obj, int baseTypeID, int castNumSubClasses)
 dynamic_cast:

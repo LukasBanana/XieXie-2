@@ -32,10 +32,11 @@ class TACVar
         enum class Types
         {
             Literal,    //!< Literal constant.
+            Temp,       //!< Compiler temporary variable.
             Global,     //!< Global variable.
             Local,      //!< Local variable.
-            Temp,       //!< Compiler temporary variable.
-            Return,     //!< Argument return for a procedure call.
+            Member,     //!< Member variable.
+            Result,     //!< Argument return for a procedure call.
             Instance,   //!< Instance (or 'this') pointer.
         };
 

@@ -23,6 +23,23 @@ class PointerTypeDenoter : public TypeDenoter
         
         AST_INTERFACE_EXT(PointerTypeDenoter, TypeDenoter);
 
+        bool IsPointer() const override
+        {
+            return true;
+        }
+        bool IsPointer(const std::string& ident) const override
+        {
+            return declIdent.empty() || declIdent == ident;
+        }
+        bool IsStrongRef() const override
+        {
+            return !isWeakRef;
+        }
+        bool IsWeakRef() const override
+        {
+            return isWeakRef;
+        }
+
         bool IsNull() const override
         {
             return declIdent.empty(); 
@@ -46,15 +63,6 @@ class PointerTypeDenoter : public TypeDenoter
             copy->isWeakRef = isWeakRef;
             copy->declRef   = declRef;
             return copy;
-        }
-
-        bool IsPointer() const override
-        {
-            return true;
-        }
-        bool IsPointer(const std::string& ident) const override
-        {
-            return declIdent.empty() || declIdent == ident;
         }
 
         std::string     declIdent;              // may be empty (for null pointer literal)

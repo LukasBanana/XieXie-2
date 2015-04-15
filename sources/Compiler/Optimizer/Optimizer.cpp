@@ -58,14 +58,11 @@ void Optimizer::TransformInst(TACInstPtr& inst)
         case TACInst::Types::Return:
             TransformReturnInst(inst);
             break;
-        case TACInst::Types::Result:
-            TransformResultInst(inst);
-            break;
         case TACInst::Types::Param:
             TransformParamInst(inst);
             break;
-        case TACInst::Types::Arg:
-            TransformArgInst(inst);
+        case TACInst::Types::Stack:
+            TransformStackInst(inst);
             break;
         case TACInst::Types::Switch:
             TransformSwitchInst(inst);
@@ -93,17 +90,12 @@ void Optimizer::TransformReturnInst(TACInstPtr& inst)
     // dummy
 }
 
-void Optimizer::TransformResultInst(TACInstPtr& inst)
-{
-    // dummy
-}
-
 void Optimizer::TransformParamInst(TACInstPtr& inst)
 {
     // dummy
 }
 
-void Optimizer::TransformArgInst(TACInstPtr& inst)
+void Optimizer::TransformStackInst(TACInstPtr& inst)
 {
     // dummy
 }

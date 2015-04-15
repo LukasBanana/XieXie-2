@@ -20,9 +20,8 @@
 #include "TACModifyInst.h"
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
-#include "TACResultInst.h"
 #include "TACDirectCallInst.h"
-#include "TACArgInst.h"
+#include "TACStackInst.h"
 #include "TACParamInst.h"
 
 #include <stack>
@@ -145,10 +144,9 @@ class XASMGenerator final : public AsmGenerator
         void GenerateModifyInst(const TACModifyInst& inst);
         void GenerateRelationInst(const TACRelationInst& inst);
         void GenerateReturnInst(const TACReturnInst& inst);
-        void GenerateResultInst(const TACResultInst& inst);
         void GenerateDirectCallInst(const TACDirectCallInst& inst);
         void GenerateParamInst(const TACParamInst& inst);
-        void GenerateArgInst(const TACArgInst& inst);
+        void GenerateStackInst(const TACStackInst& inst);
 
         void GenerateDirectJump(const BasicBlock& bb);
 

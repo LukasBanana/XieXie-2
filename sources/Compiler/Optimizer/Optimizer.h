@@ -40,9 +40,8 @@ class Optimizer
         virtual void TransformModifyInst(TACInstPtr& inst);
         virtual void TransformRelationInst(TACInstPtr& inst);
         virtual void TransformReturnInst(TACInstPtr& inst);
-        virtual void TransformResultInst(TACInstPtr& inst);
         virtual void TransformParamInst(TACInstPtr& inst);
-        virtual void TransformArgInst(TACInstPtr& inst);
+        virtual void TransformStackInst(TACInstPtr& inst);
         virtual void TransformSwitchInst(TACInstPtr& inst);
 
 };

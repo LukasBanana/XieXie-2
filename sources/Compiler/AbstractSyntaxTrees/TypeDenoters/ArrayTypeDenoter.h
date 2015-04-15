@@ -27,6 +27,10 @@ class ArrayTypeDenoter : public TypeDenoter
         {
             return true;
         }
+        bool IsStrongRef() const override
+        {
+            return true;
+        }
 
         std::string ToString() const override
         {

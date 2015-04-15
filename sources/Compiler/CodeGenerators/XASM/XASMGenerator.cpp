@@ -181,7 +181,7 @@ std::string XASMGenerator::Reg(const TACVar& var)
 
     switch (var.type)
     {
-        case TACVar::Types::Return:
+        case TACVar::Types::Result:
             return "$ar";
         case TACVar::Types::Instance:
             return "$xr";
@@ -278,12 +278,15 @@ void XASMGenerator::PopIndentBlock(const BasicBlock& bb)
 
 void XASMGenerator::GenerateModuleImports(const CFGProgram& program)
 {
-    CommentHeadline("MODULE IMPORTS");
+    if (!program.boundModuleNames.empty())
+    {
+        CommentHeadline("MODULE IMPORTS");
     
-    for (const auto& moduleName : program.boundModuleNames)
-        Line(".module \"" + moduleName + "\"");
+        for (const auto& moduleName : program.boundModuleNames)
+            Line(".module \"" + moduleName + "\"");
 
-    Blanks(2);
+        Blanks(2);
+    }
 }
 
 void XASMGenerator::GenerateStartUpCodeForRootClass(const CFGProgram& program)
@@ -404,17 +407,14 @@ void XASMGenerator::GenerateInst(const TACInst& inst)
         case TACInst::Types::Return:
             GenerateReturnInst(static_cast<const TACReturnInst&>(inst));
             break;
-        case TACInst::Types::Result:
-            GenerateResultInst(static_cast<const TACResultInst&>(inst));
-            break;
         case TACInst::Types::DirectCall:
             GenerateDirectCallInst(static_cast<const TACDirectCallInst&>(inst));
             break;
         case TACInst::Types::Param:
             GenerateParamInst(static_cast<const TACParamInst&>(inst));
             break;
-        case TACInst::Types::Arg:
-            GenerateArgInst(static_cast<const TACArgInst&>(inst));
+        case TACInst::Types::Stack:
+            GenerateStackInst(static_cast<const TACStackInst&>(inst));
             break;
     }
 }
@@ -633,11 +633,6 @@ void XASMGenerator::GenerateReturnInst(const TACReturnInst& inst)
     EndLn();
 }
 
-void XASMGenerator::GenerateResultInst(const TACResultInst& inst)
-{
-    Line("mov " + Reg(inst.dest) + ", $ar");
-}
-
 void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
 {
     if (inst.isInvocation)
@@ -651,9 +646,12 @@ void XASMGenerator::GenerateParamInst(const TACParamInst& inst)
     Line("ldw " + Reg(inst.dest) + ", ($lb) " + std::to_string(-4 * (inst.argIndex + 1)));
 }
 
-void XASMGenerator::GenerateArgInst(const TACArgInst& inst)
+void XASMGenerator::GenerateStackInst(const TACStackInst& inst)
 {
-    Line("push " + Reg(inst.src));
+    if (inst.opcode == TACInst::OpCodes::PUSH)
+        Line("push " + Reg(inst.var));
+    else if (inst.opcode == TACInst::OpCodes::POP)
+        Line("pop " + Reg(inst.var));
 }
 
 void XASMGenerator::GenerateDirectJump(const BasicBlock& bb)

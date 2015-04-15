@@ -77,6 +77,16 @@ class TypeDenoter : public AST
         {
             return false;
         }
+        //! Returns true if this is a strong reference.
+        virtual bool IsStrongRef() const
+        {
+            return false;
+        }
+        //! Returns true if this is a weak reference.
+        virtual bool IsWeakRef() const
+        {
+            return false;
+        }
 
         //! Returns true if this is an arithmetic type (integral or floating-point).
         bool IsArithmetic() const

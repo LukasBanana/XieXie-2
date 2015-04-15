@@ -14,11 +14,10 @@
 #include "TACCopyInst.h"
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
-#include "TACResultInst.h"
 #include "TACSwitchInst.h"
 #include "TACDirectCallInst.h"
 #include "TACParamInst.h"
-#include "TACArgInst.h"
+#include "TACStackInst.h"
 
 #include <algorithm>
 
@@ -100,11 +99,11 @@ DEF_VISIT_PROC(GraphGenerator, Program)
 
 DEF_VISIT_PROC(GraphGenerator, CodeBlock)
 {
+    PushRefScope();
+    
     auto block = VisitAndLink(ast->stmnts);
 
-    //block.out -> generate "dec_ref" instructions for all 'strong' pointers
-    //if (block.out) //TEST
-    //    block.out->MakeInst<TACDirectCallInst>("dec_ref");
+    PopRefScope(*block.out);
 
     RETURN_BLOCK_REF(block);
 }
@@ -123,7 +122,7 @@ DEF_VISIT_PROC(GraphGenerator, VarDecl)
         PushBB(bb);
         {
             Visit(ast->initExpr);
-            auto var = Var();
+            auto var = PopVar();
 
             /* Make instruction */
             auto inst = bb->MakeInst<TACCopyInst>();
@@ -131,7 +130,10 @@ DEF_VISIT_PROC(GraphGenerator, VarDecl)
             inst->src   = var;
             inst->dest  = LocalVar(ast);
 
-            PopVar();
+            /* Add strong reference to ref-scope (for local variables) */
+            auto varType = ast->GetTypeDenoter();
+            if (!refScopeStack_.Empty() && varType && varType->IsStrongRef())
+                TopRefScope() << inst->dest;
         }
         PopBB();
     }
@@ -922,13 +924,13 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
         auto literalIdent = AppendStringLiteral(ast->value);
         
         /* Make instruction */
-        BB()->MakeInst<TACArgInst>('@' + literalIdent);
+        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, '@' + literalIdent);
         BB()->MakeInst<TACDirectCallInst>("String.copy_literal");
-        auto inst = BB()->MakeInst<TACResultInst>();
 
-        inst->dest = TempVar();
+        auto var = TempVar();
+        BB()->MakeInst<TACCopyInst>(var, ResultVar());
 
-        PushVar(inst->dest);
+        PushVar(var);
     }
     else
     {
@@ -983,7 +985,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcCallExpr)
     Visit(ast->procCall);
 
     auto var = TempVar();
-    BB()->MakeInst<TACResultInst>(var);
+    BB()->MakeInst<TACCopyInst>(var, ResultVar());
 
     PushVar(var);
 }
@@ -1008,22 +1010,22 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
             ErrorIntern("missing reference to class declaration", ast);
 
         /* Generate allocation code */
-        BB()->MakeInst<TACArgInst>(TACVar("@" + VirtualTable(*classDecl)));
-        BB()->MakeInst<TACArgInst>(TACVar::Int(classDecl->GetTypeID()));
-        BB()->MakeInst<TACArgInst>(TACVar::Int(classDecl->GetInstanceSize()));
+        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar("@" + VirtualTable(*classDecl)));
+        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(classDecl->GetTypeID()));
+        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(classDecl->GetInstanceSize()));
         BB()->MakeInst<TACDirectCallInst>("new");
 
-        /* Generate initialization code */
-        //...
-
         /* Generate result code */
-        auto var = TempVar();
-        BB()->MakeInst<TACResultInst>(var);
+        auto var = ThisVar();
+        BB()->MakeInst<TACCopyInst>(var, ResultVar());
 
         PushVar(var);
     }
     else
         Error("can not generate dynamic allocation for built-in types", ast);
+
+    /* Call constructor */
+    Visit(&(ast->procCall));
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
@@ -1033,6 +1035,8 @@ DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
 
 DEF_VISIT_PROC(GraphGenerator, InitListExpr)
 {
+    //todo...
+    PushVar(TempVar());//!!!
 }
 
 /* --- Type denoters --- */
@@ -1335,12 +1339,7 @@ void GraphGenerator::GenerateArgumentExpr(Expr& ast)
 {
     /* Build argument expression CFG */
     Visit(&ast);
-    auto var = Var();
-
-    /* Make instruction */
-    auto inst = BB()->MakeInst<TACArgInst>(var);
-
-    PopVar();
+    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, PopVar());
 }
 
 #undef RETURN_BLOCK_REF
@@ -1478,6 +1477,52 @@ BasicBlock* GraphGenerator::IterBB() const
     return iterStackBB_.Empty() ? nullptr : iterStackBB_.Top();
 }
 
+void GraphGenerator::PushRefScope()
+{
+    refScopeStack_.Push({});
+}
+
+/*
+This function pops a reference scope, i.e. it decrements the ref-counters of all strong references in the current scope.
+To efficiently exploit the fact, that 'live variables' must be stored, the function generates the code as follows:
+- Push all references in reverse order onto stack.
+- For all references on the stack:
+  - Pop variable from stack into '$xr'.
+  - Call 'dec_ref'.
+*/
+void GraphGenerator::PopRefScope(BasicBlock& bb)
+{
+    auto& scope = TopRefScope();
+
+    const auto& refs = scope.strongRefs;
+    if (!refs.empty())
+    {
+        auto numRefs = refs.size();
+
+        /* Push references onto stack (expect the last one) */
+        for (size_t i = 0; i + 1 < numRefs; ++i)
+            bb.MakeInst<TACStackInst>(OpCodes::PUSH, refs[i]);
+
+        /* Decrement last ref directly */
+        bb.MakeInst<TACCopyInst>(ThisVar(), refs[numRefs - 1]);
+        bb.MakeInst<TACDirectCallInst>("dec_ref");
+
+        /* Decrement ref-counts of strong references in reverse order */
+        for (size_t i = 0; i + 1 < numRefs; ++i)
+        {
+            bb.MakeInst<TACStackInst>(OpCodes::POP, ThisVar());
+            bb.MakeInst<TACDirectCallInst>("dec_ref");
+        }
+    }
+
+    refScopeStack_.Pop();
+}
+
+GraphGenerator::RefScope& GraphGenerator::TopRefScope()
+{
+    return refScopeStack_.Top();
+}
+
 /* --- Variables --- */
 
 void GraphGenerator::PushVar(const TACVar& var)
@@ -1509,6 +1554,11 @@ TACVar GraphGenerator::TempVar()
 TACVar GraphGenerator::ThisVar()
 {
     return TACVar(1, TACVar::Types::Instance);
+}
+
+TACVar GraphGenerator::ResultVar()
+{
+    return TACVar(1, TACVar::Types::Result);
 }
 
 TACVar GraphGenerator::LocalVar(const AST* ast)
@@ -1549,6 +1599,28 @@ GraphGenerator::VisitIO::VisitIO(BasicBlock* in, BasicBlock* out, BasicBlock* ou
     outAlt  { outAlt }
 {
 }
+
+
+/*
+ * RefScope structure
+ */
+
+GraphGenerator::RefScope& GraphGenerator::RefScope::operator << (const TACVar& var)
+{
+    auto it = std::find(strongRefs.begin(), strongRefs.end(), var);
+    if (it == strongRefs.end())
+        strongRefs.push_back(var);
+    return *this;
+}
+
+GraphGenerator::RefScope& GraphGenerator::RefScope::operator >> (const TACVar& var)
+{
+    auto it = std::find(strongRefs.begin(), strongRefs.end(), var);
+    if (it != strongRefs.end())
+        strongRefs.erase(it);
+    return *this;
+}
+
 
 } // /namespace ControlFlowGraph
 

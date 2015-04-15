@@ -10,8 +10,7 @@
 
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
-#include "TACResultInst.h"
-#include "TACArgInst.h"
+#include "TACStackInst.h"
 #include "TACSwitchInst.h"
 
 
@@ -84,20 +83,15 @@ void ConstantPropagation::TransformReturnInst(TACInstPtr& inst)
         FetchConst(returnInst->src);
 }
 
-void ConstantPropagation::TransformResultInst(TACInstPtr& inst)
+void ConstantPropagation::TransformStackInst(TACInstPtr& inst)
 {
-    auto resultInst = static_cast<TACResultInst*>(inst.get());
-    
-    /* Procedure result is always mutable */
-    RemoveConst(resultInst->dest);
-}
-
-void ConstantPropagation::TransformArgInst(TACInstPtr& inst)
-{
-    auto argInst = static_cast<TACArgInst*>(inst.get());
+    auto stackInst = static_cast<TACStackInst*>(inst.get());
 
     /* Propagate constant */
-    FetchConst(argInst->src);
+    if (stackInst->opcode == TACInst::OpCodes::PUSH)
+        FetchConst(stackInst->var);
+    else if (stackInst->opcode == TACInst::OpCodes::POP)
+        RemoveConst(stackInst->var);
 }
 
 void ConstantPropagation::TransformSwitchInst(TACInstPtr& inst)

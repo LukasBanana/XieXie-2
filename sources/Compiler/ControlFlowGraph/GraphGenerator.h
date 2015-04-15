@@ -47,6 +47,7 @@ class GraphGenerator final : private Visitor
             };
         };*/
 
+        // AST visitor I/O structure.
         struct VisitIO
         {
             VisitIO() = default;
@@ -58,6 +59,16 @@ class GraphGenerator final : private Visitor
             BasicBlock* in      = nullptr;  // input block
             BasicBlock* out     = nullptr;  // default out/ true branch.
             BasicBlock* outAlt  = nullptr;  // alternative out/ false branch.
+        };
+
+        //! Reference counting scope structure.
+        struct RefScope
+        {
+            RefScope& operator << (const TACVar& var);
+            RefScope& operator >> (const TACVar& var);
+
+            //! TAC variables of strong references in this scope.
+            std::vector<TACVar> strongRefs;
         };
 
         /* === Functions === */
@@ -118,6 +129,10 @@ class GraphGenerator final : private Visitor
         //! Returns the current basic block for a loop iteration.
         BasicBlock* IterBB() const;
 
+        void PushRefScope();
+        void PopRefScope(BasicBlock& bb);
+        RefScope& TopRefScope();
+
         //! Returns the current class tree.
         inline ClassTree* CT() const
         {
@@ -133,6 +148,7 @@ class GraphGenerator final : private Visitor
 
         TACVar TempVar();
         TACVar ThisVar();
+        TACVar ResultVar();
         TACVar LocalVar(const AST* ast);
         TACVar LocalVar(const AST& ast);
         //! Generates a local TAC variable for the specifid variable name.
@@ -149,6 +165,8 @@ class GraphGenerator final : private Visitor
         SafeStack<BasicBlock*>      stackBB_;
         SafeStack<BasicBlock*>      breakStackBB_;
         SafeStack<BasicBlock*>      iterStackBB_;
+
+        SafeStack<RefScope>         refScopeStack_;
 
         TACVarManager               varMngr_;
 

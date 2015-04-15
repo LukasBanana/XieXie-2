@@ -11,9 +11,8 @@
 #include "TACCopyInst.h"
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
-#include "TACResultInst.h"
 #include "TACParamInst.h"
-#include "TACArgInst.h"
+#include "TACStackInst.h"
 #include "TACSwitchInst.h"
 
 #include <algorithm>
@@ -89,17 +88,6 @@ void VariableClean::TransformReturnInst(TACInstPtr& inst)
         ReadVar(returnInst->src);
 }
 
-void VariableClean::TransformResultInst(TACInstPtr& inst)
-{
-    auto resultInst = static_cast<TACResultInst*>(inst.get());
-
-    /* Propagate variabel usage */
-    if (IsDestVarRequired(resultInst->dest))
-        WriteVar(resultInst->dest);
-    else
-        inst = nullptr;
-}
-
 void VariableClean::TransformParamInst(TACInstPtr& inst)
 {
     auto paramInst = static_cast<TACParamInst*>(inst.get());
@@ -111,12 +99,15 @@ void VariableClean::TransformParamInst(TACInstPtr& inst)
         inst = nullptr;
 }
 
-void VariableClean::TransformArgInst(TACInstPtr& inst)
+void VariableClean::TransformStackInst(TACInstPtr& inst)
 {
-    auto argInst = static_cast<TACArgInst*>(inst.get());
+    auto stackInst = static_cast<TACStackInst*>(inst.get());
 
     /* Propagate variabel usage */
-    ReadVar(argInst->src);
+    if (stackInst->opcode == TACInst::OpCodes::PUSH)
+        ReadVar(stackInst->var);
+    else if (stackInst->opcode == TACInst::OpCodes::POP)
+        WriteVar(stackInst->var);
 }
 
 void VariableClean::TransformSwitchInst(TACInstPtr& inst)

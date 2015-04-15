@@ -1,0 +1,23 @@
+
+// Pointer Test 2
+// 15/04/2015
+
+class Widget {
+	int x
+}
+
+class Test {
+	
+	void main() {
+		
+		var a := new String()
+		var b := new Widget()
+		var c := { 1 }
+		var d := "Test"
+		
+		String@ a_w := a
+		
+	}
+	
+}
+

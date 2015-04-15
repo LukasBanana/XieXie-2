@@ -63,7 +63,12 @@ template <typename T> class SafeStack
         void AssertNotEmpty(const char* procName) const
         {
             if (container_.empty())
-                throw InternalError("invalid access to empty stack (" + ToStr(procName) + ")");
+            {
+                throw InternalError(
+                    SyntaxAnalyzer::SourceArea::ignore,
+                    "invalid access to empty stack (" + ToStr(procName) + ")"
+                );
+            }
         }
 
         std::stack<T> container_;
