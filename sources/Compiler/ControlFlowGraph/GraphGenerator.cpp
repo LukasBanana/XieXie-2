@@ -9,6 +9,7 @@
 #include "ASTImport.h"
 #include "CodeGenerators/NameMangling.h"
 #include "CompilerMessage.h"
+#include "BuiltinClasses.h"
 
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
@@ -1010,16 +1011,8 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
             ErrorIntern("missing reference to class declaration", ast);
 
         /* Generate allocation code */
-        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar("@" + VirtualTable(*classDecl)));
-        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(classDecl->GetTypeID()));
-        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(classDecl->GetInstanceSize()));
-        BB()->MakeInst<TACDirectCallInst>("new");
-
-        /* Generate result code */
-        auto var = ThisVar();
-        BB()->MakeInst<TACCopyInst>(var, ResultVar());
-
-        PushVar(var);
+        GenerateClassAlloc(*classDecl);
+        CopyAndPushResultVar(ThisVar());
     }
     else
         Error("can not generate dynamic allocation for built-in types", ast);
@@ -1035,8 +1028,20 @@ DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
 
 DEF_VISIT_PROC(GraphGenerator, InitListExpr)
 {
-    //todo...
-    PushVar(TempVar());//!!!
+    /* Get built-in class RTTI */
+    const BuiltinClasses::ClassRTTI* classRTTI = &(BuiltinClasses::Array);
+
+    //!TODO! -> if boolean array then -> classRTTI = ...
+
+    /* Append literal to program string literals */
+    GenerateClassAlloc(classRTTI->instanceSize, classRTTI->typeID, classRTTI->vtableAddr);
+
+    auto var = TempVar();
+    CopyAndPushResultVar(var);
+
+    //!TODO! -> initialize array
+
+    PushVar(var);
 }
 
 /* --- Type denoters --- */
@@ -1340,6 +1345,25 @@ void GraphGenerator::GenerateArgumentExpr(Expr& ast)
     /* Build argument expression CFG */
     Visit(&ast);
     BB()->MakeInst<TACStackInst>(OpCodes::PUSH, PopVar());
+}
+
+void GraphGenerator::GenerateClassAlloc(unsigned int instanceSize, unsigned int typeID, const std::string& vtableAddr)
+{
+    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar("@" + vtableAddr));
+    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(typeID));
+    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(instanceSize));
+    BB()->MakeInst<TACDirectCallInst>("new");
+}
+
+void GraphGenerator::GenerateClassAlloc(const ClassDeclStmnt& classDecl)
+{
+    GenerateClassAlloc(classDecl.GetInstanceSize(), classDecl.GetTypeID(), VirtualTable(classDecl));
+}
+
+void GraphGenerator::CopyAndPushResultVar(const TACVar& destVar)
+{
+    BB()->MakeInst<TACCopyInst>(destVar, ResultVar());
+    PushVar(destVar);
 }
 
 #undef RETURN_BLOCK_REF

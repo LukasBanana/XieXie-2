@@ -99,6 +99,11 @@ class GraphGenerator final : private Visitor
 
         void GenerateArgumentExpr(Expr& ast);
 
+        void GenerateClassAlloc(unsigned int instanceSize, unsigned int typeID, const std::string& vtableAddr);
+        void GenerateClassAlloc(const ClassDeclStmnt& classDecl);
+
+        void CopyAndPushResultVar(const TACVar& destVar);
+
         /* --- CFG Generation --- */
 
         template <typename T> VisitIO VisitAndLink(T ast);
