@@ -440,14 +440,14 @@ void xvm_log_warning(const char* format, ...)
 
 void xvm_log_readfile_error(const char* filename)
 {
-    printf("error: reading file \"%s\" failed\n", filename);
+    xvm_log_error("reading file \"%s\" failed\n", filename);
 }
 
 void xvm_log_exitcode_error(const xvm_exit_codes exit_code)
 {
     const char* err = xvm_exitcode_to_string(exit_code);
     if (err != NULL)
-        printf("error: program terminated with error: \"%s\"\n", err);
+        xvm_log_error("program terminated with error: \"%s\"\n", err);
 }
 
 
@@ -1832,7 +1832,7 @@ int xvm_module_load(xvm_module* module, const char* filename)
     module->handle = LoadLibraryA(filename);
     if (module->handle == 0)
     {
-        printf("error: loading module \"%s\" failed\n", filename);
+        xvm_log_error("loading module \"%s\" failed\n", filename);
         return 0;
     }
 
@@ -1847,7 +1847,7 @@ int xvm_module_load(xvm_module* module, const char* filename)
     module->handle = dlopen(filename, RTLD_LAZY);
     if (module->handle == NULL)
     {
-        printf("error: loading module \"%s\" failed\n", filename);
+        xvm_log_error("loading module \"%s\" failed\n", filename);
         return 0;
     }
 
@@ -1860,7 +1860,7 @@ int xvm_module_load(xvm_module* module, const char* filename)
 
     if (module->proc_count == NULL || module->fetch_proc == NULL || module->fetch_ident == NULL)
     {
-        printf("error: loading interface of module \"%s\" failed\n", filename);
+        xvm_log_error("loading interface of module \"%s\" failed\n", filename);
         return 0;
     }
 
@@ -1942,7 +1942,7 @@ static int _xvm_bytecode_bind_module_ext(xvm_bytecode* byte_code, const xvm_modu
     // Check for errors during binding/unbinding
     if (num_errors > 0)
     {
-        printf("error: %i invocation binding(s)/unbinding(s) from module to byte code failed\n", num_errors);
+        xvm_log_error("%i invocation binding(s)/unbinding(s) from module to byte code failed\n", num_errors);
         return 0;
     }
 
