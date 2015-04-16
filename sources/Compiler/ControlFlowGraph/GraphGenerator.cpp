@@ -1031,17 +1031,23 @@ DEF_VISIT_PROC(GraphGenerator, InitListExpr)
     /* Get built-in class RTTI */
     const BuiltinClasses::ClassRTTI* classRTTI = &(BuiltinClasses::Array);
 
-    //!TODO! -> if boolean array then -> classRTTI = ...
+    auto arrayType = ast->GetDeducedTypeDenoter();
+    if (arrayType)
+    {
+        if (arrayType->IsIntegral() || arrayType->IsFloat())
+            classRTTI = &(BuiltinClasses::PrimArray);
+        else if (arrayType->IsBoolean())
+            classRTTI = &(BuiltinClasses::BoolArray);
+    }
 
     /* Append literal to program string literals */
     GenerateClassAlloc(classRTTI->instanceSize, classRTTI->typeID, classRTTI->vtableAddr);
 
-    auto var = TempVar();
-    CopyAndPushResultVar(var);
+    CopyAndPushResultVar(TempVar());
 
     //!TODO! -> initialize array
 
-    PushVar(var);
+
 }
 
 /* --- Type denoters --- */

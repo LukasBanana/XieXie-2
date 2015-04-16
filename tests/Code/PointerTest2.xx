@@ -18,7 +18,7 @@ class Test {
 		
 		var a := new String()
 		var b := new Widget()
-		var c := { 1 }
+		var c := { 1, -5, 42, 3 }
 		var d := "Test"
 		
 		String@ a_w := a
