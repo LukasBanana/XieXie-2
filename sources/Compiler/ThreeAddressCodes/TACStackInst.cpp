@@ -12,10 +12,6 @@ namespace ThreeAddressCodes
 {
 
 
-TACStackInst::TACStackInst() :
-    TACInst{ OpCodes::PUSH }
-{
-}
 TACStackInst::TACStackInst(OpCodes opcode, const TACVar& var) :
     TACInst { opcode },
     var     { var    }

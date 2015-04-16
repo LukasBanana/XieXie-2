@@ -23,7 +23,7 @@ class TACStackInst : public TACInst
     
     public:
         
-        TACStackInst();
+        TACStackInst() = default;
         TACStackInst(OpCodes opcode, const TACVar& var);
 
         Types Type() const override;

@@ -137,6 +137,20 @@ std::string TACInst::OpCodeToString(const OpCodes opcode)
             return "Push";
         case OpCodes::POP:
             return "Pop";
+
+        /* Heap */
+        case OpCodes::LDB:
+            return "LdByte";
+        case OpCodes::STB:
+            return "StByte";
+        case OpCodes::LDH:
+            return "LdHalf";
+        case OpCodes::STH:
+            return "StHalf";
+        case OpCodes::LDW:
+            return "LdWord";
+        case OpCodes::STW:
+            return "StWord";
     }
 
     return "";

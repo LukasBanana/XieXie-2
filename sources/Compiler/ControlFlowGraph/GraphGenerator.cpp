@@ -200,7 +200,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     {
         /* Make instruction to set 'this' pointer */
         if (ast->procName->declRef && ast->procName->declRef->Type() == AST::Types::VarDecl)
-            BB()->MakeInst<TACCopyInst>(ThisVar(), LocalVar(ast->procName->declRef));
+            BB()->MakeInst<TACCopyInst>(ThisPtr(), LocalVar(ast->procName->declRef));
 
         /* Make indirect call instruction */
         BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);//!!!!
@@ -1012,7 +1012,7 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 
         /* Generate allocation code */
         GenerateClassAlloc(*classDecl);
-        CopyAndPushResultVar(ThisVar());
+        CopyAndPushResultVar(ThisPtr());
     }
     else
         Error("can not generate dynamic allocation for built-in types", ast);
@@ -1111,9 +1111,9 @@ GraphGenerator::VisitIO GraphGenerator::GenerateConditionalBinaryExpr(Expr& ast)
         /* Make instruction */
         auto inst = BB()->MakeInst<TACRelationInst>();
 
+        inst->opcode = OpCodes::CMPNE;
         inst->srcLhs = srcLhs;
         inst->srcRhs = TACVar("0");
-        inst->opcode = OpCodes::CMPNE;
 
         PopVar();
     }
@@ -1221,9 +1221,9 @@ void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
         auto isFloat = ast->lhsExpr->GetTypeDenoter()->IsFloat();
         auto inst = BB()->MakeInst<TACRelationInst>();
 
+        inst->opcode = OperatorToOpCode(ast->binaryOperator, isFloat);
         inst->srcLhs = srcLhs;
         inst->srcRhs = srcRhs;
-        inst->opcode = OperatorToOpCode(ast->binaryOperator, isFloat);
 
         PopVar(2);
     }
@@ -1244,10 +1244,10 @@ void GraphGenerator::GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args)
     auto isFloat = ast->GetTypeDenoter()->IsFloat();
     auto inst = BB()->MakeInst<TACModifyInst>();
     
+    inst->opcode    = OperatorToOpCode(ast->binaryOperator, isFloat);
     inst->dest      = TempVar();
     inst->srcLhs    = srcLhs;
     inst->srcRhs    = srcRhs;
-    inst->opcode    = OperatorToOpCode(ast->binaryOperator, isFloat);
 
     PopVar(2);
     PushVar(inst->dest);
@@ -1534,13 +1534,13 @@ void GraphGenerator::PopRefScope(BasicBlock& bb)
             bb.MakeInst<TACStackInst>(OpCodes::PUSH, refs[i]);
 
         /* Decrement last ref directly */
-        bb.MakeInst<TACCopyInst>(ThisVar(), refs[numRefs - 1]);
+        bb.MakeInst<TACCopyInst>(ThisPtr(), refs[numRefs - 1]);
         bb.MakeInst<TACDirectCallInst>("dec_ref");
 
         /* Decrement ref-counts of strong references in reverse order */
         for (size_t i = 0; i + 1 < numRefs; ++i)
         {
-            bb.MakeInst<TACStackInst>(OpCodes::POP, ThisVar());
+            bb.MakeInst<TACStackInst>(OpCodes::POP, ThisPtr());
             bb.MakeInst<TACDirectCallInst>("dec_ref");
         }
     }
@@ -1581,16 +1581,6 @@ TACVar GraphGenerator::TempVar()
     return varMngr_.TempVar();
 }
 
-TACVar GraphGenerator::ThisVar()
-{
-    return TACVar(1, TACVar::Types::Instance);
-}
-
-TACVar GraphGenerator::ResultVar()
-{
-    return TACVar(1, TACVar::Types::Result);
-}
-
 TACVar GraphGenerator::LocalVar(const AST* ast)
 {
     return ast != nullptr ? varMngr_.LocalVar(*ast) : TACVar();
@@ -1604,6 +1594,26 @@ TACVar GraphGenerator::LocalVar(const AST& ast)
 TACVar GraphGenerator::LocalVarFromVarName(const VarName& ast)
 {
     return LocalVar(ast.GetLast().declRef);
+}
+
+TACVar GraphGenerator::ResultVar()
+{
+    return TACVar(1, TACVar::Types::Result);
+}
+
+TACVar GraphGenerator::ThisPtr()
+{
+    return TACVar(1, TACVar::Types::ThisPtr);
+}
+
+TACVar GraphGenerator::StackPtr()
+{
+    return TACVar(1, TACVar::Types::StackPtr);
+}
+
+TACVar GraphGenerator::FramePtr()
+{
+    return TACVar(1, TACVar::Types::FramePtr);
 }
 
 

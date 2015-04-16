@@ -13,14 +13,10 @@ namespace ThreeAddressCodes
 {
 
 
-TACRelationInst::TACRelationInst() :
-    TACInst{ OpCodes::CMPE }
-{
-}
 TACRelationInst::TACRelationInst(const TACVar& lhs, const TACVar& rhs) :
-    TACInst { OpCodes::CMPE },
-    srcLhs  { lhs           },
-    srcRhs  { rhs           }
+    TACInst { OpCodes::NOP },
+    srcLhs  { lhs          },
+    srcRhs  { rhs          }
 {
 }
 

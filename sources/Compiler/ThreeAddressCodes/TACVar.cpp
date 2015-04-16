@@ -56,6 +56,7 @@ std::string TACVar::ToString() const
     {
         case Types::Literal:
             return value;
+
         case Types::Temp:
             return "t" + idStr;
         case Types::Global:
@@ -64,10 +65,15 @@ std::string TACVar::ToString() const
             return "l" + idStr;
         case Types::Member:
             return "m" + idStr;
+
         case Types::Result:
             return "out";
-        case Types::Instance:
-            return "this";
+        case Types::ThisPtr:
+            return "this*";
+        case Types::StackPtr:
+            return "stack*";
+        case Types::FramePtr:
+            return "frame*";
     }
 
     return idStr;

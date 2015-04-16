@@ -33,6 +33,7 @@ class TACVarManager
         
         using IDType = TACVar::IDType;
 
+        //! Restes all variables counters and references.
         void Reset();
 
         TACVar TempVar();

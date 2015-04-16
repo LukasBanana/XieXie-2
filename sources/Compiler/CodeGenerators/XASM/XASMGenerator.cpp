@@ -186,8 +186,12 @@ std::string XASMGenerator::Reg(const TACVar& var)
     {
         case TACVar::Types::Result:
             return "$ar";
-        case TACVar::Types::Instance:
+        case TACVar::Types::ThisPtr:
             return "$xr";
+        case TACVar::Types::StackPtr:
+            return "$sp";
+        case TACVar::Types::FramePtr:
+            return "$lb";
     }
 
     if (!var.IsValid())
@@ -711,10 +715,43 @@ void XASMGenerator::GenerateParamInst(const TACParamInst& inst)
 
 void XASMGenerator::GenerateStackInst(const TACStackInst& inst)
 {
-    if (inst.opcode == TACInst::OpCodes::PUSH)
+    if (inst.opcode == OpCodes::PUSH)
         Line("push " + Reg(inst.var));
-    else if (inst.opcode == TACInst::OpCodes::POP)
+    else if (inst.opcode == OpCodes::POP)
         Line("pop " + Reg(inst.var));
+}
+
+void XASMGenerator::GenerateHeapInst(const TACHeapInst& inst)
+{
+    StartLn();
+    {
+        switch (inst.opcode)
+        {
+            case OpCodes::LDB:
+                Ln("ldb");
+                break;
+            case OpCodes::STB:
+                Ln("stb");
+                break;
+
+            case OpCodes::LDH:
+                Ln("ldh");
+                break;
+            case OpCodes::STH:
+                Ln("sth");
+                break;
+
+            case OpCodes::LDW:
+                Ln("ldw");
+                break;
+            case OpCodes::STW:
+                Ln("stw");
+                break;
+        }
+
+        Ln(", (" + Reg(inst.baseVar) + ") " + std::to_string(inst.offset));
+    }
+    EndLn();
 }
 
 void XASMGenerator::GenerateDirectJump(const BasicBlock& bb)

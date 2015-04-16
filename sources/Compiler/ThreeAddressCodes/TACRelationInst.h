@@ -22,7 +22,7 @@ class TACRelationInst : public TACInst
     
     public:
         
-        TACRelationInst();
+        TACRelationInst() = default;
         TACRelationInst(const TACVar& lhs, const TACVar& rhs);
 
         Types Type() const override;
