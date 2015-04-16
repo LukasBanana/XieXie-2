@@ -6,6 +6,7 @@ class Widget {
 	int idx
 	bool property
 	float height
+	String[] personNames
 }
 
 class Test {

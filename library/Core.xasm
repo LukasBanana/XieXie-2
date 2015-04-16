@@ -25,20 +25,19 @@ new:
 	ldw $r1, ($lb) -12	; load argument 'vtableAddr' (address to vtable for the object)
 	stw $r1, ($ar) 8	; write vtable address to object
 	
-	ret 1				; return object reference (ar)
+	ret 3				; return object reference (ar)
 
-; void inc_ref(Object obj)
+; void inc_ref(Object this)
 inc_ref:
 	; check for null pointer
-	ldw $r0, ($lb) -4		; load object reference 'obj'
-	mov $cf, $r0			; compare: obj = null
+	mov $cf, $xr			; compare: this = null
 	je .end
 		; increment reference
-		ldw $r1, ($r0) 0	; load reference counter from object
-		inc $r1				; increment reference counter
-		stw $r1, ($r0) 0	; write reference counter back to object
+		ldw $r0, ($xr) 0	; load reference counter from object
+		inc $r0				; increment reference counter
+		stw $r0, ($xr) 0	; write reference counter back to object
 	.end:
-	ret 1
+	ret
 
 ; void dec_ref(Object this)
 dec_ref:
