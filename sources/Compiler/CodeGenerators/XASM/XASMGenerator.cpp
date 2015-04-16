@@ -14,6 +14,9 @@
 #include "StringModifier.h"
 #include "ProcDeclStmnt.h"
 #include "ProcSignature.h"
+#include "VarDecl.h"
+
+#include <algorithm>
 
 
 namespace CodeGenerator
@@ -313,6 +316,9 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
     auto classDecl = classTree.GetClassDeclAST();
     CommentHeadline("CLASS \"" + classDecl->ident + "\"");
 
+    /* Generate commentary docu for member variables */
+    GenerateClassStorageCommentary(*classDecl);
+
     /* Generate code for each procedure in the class tree */
     for (const auto& bb : classTree.GetRootBasicBlocks())
     {
@@ -322,6 +328,63 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
 
     /* Generate vtable */
     GenerateVtable(*classDecl);
+
+    Blank();
+}
+
+// Due to MSVC12 bug, the structure must be outside the function definition.
+struct FormattedStrings
+{
+    size_t                      maxLen = 0;
+    std::vector<std::string>    list;
+};
+
+void XASMGenerator::GenerateClassStorageCommentary(const ClassDeclStmnt& classDecl)
+{
+    const auto& memberVars = classDecl.GetMemberVars();
+    if (!config.comments || memberVars.empty())
+        return;
+
+    /* Setup and format information of member variables */
+    FormattedStrings typeNames, varNames, offsets;
+
+    auto AddString = [](FormattedStrings& formatted, const std::string& str)
+    {
+        auto len = str.size();
+        formatted.maxLen = std::max(formatted.maxLen, len);
+        formatted.list.push_back(str);
+    };
+
+    for (const auto& var : memberVars)
+    {
+        AddString(typeNames, var->GetTypeDenoter()->ToString());
+        AddString(varNames, var->ident);
+        AddString(offsets, std::to_string(var->memoryOffset));
+    }
+
+    /* Write class storage documentation */
+    Comment("Storage Layout:");
+
+    auto FitString = [](const FormattedStrings& formatted, size_t index, bool prefix) -> std::string
+    {
+        std::string result;
+        const auto& str = formatted.list[index];
+        if (!prefix)
+            result += str;
+        result += std::string(formatted.maxLen - str.size(), ' ');
+        if (prefix)
+            result += str;
+        return result;
+    };
+
+    for (size_t i = 0, n = memberVars.size(); i < n; ++i)
+    {
+        Comment(
+            "  " + FitString(typeNames, i, false) +
+            ' ' + FitString(varNames, i, false) +
+            " ( " + FitString(offsets, i, true) + " )"
+        );
+    }
 
     Blank();
 }

@@ -135,6 +135,16 @@ class ClassDeclStmnt : public ScopedStmnt
             return source_.get();
         }
 
+        /**
+        Returns the list with references to all member variables of this class (not its base classes!).
+        \remarks "GenerateRTTI" must be called first!
+        \see GenerateRTTI
+        */
+        const std::vector<VarDecl*>& GetMemberVars() const
+        {
+            return memberVars_;
+        }
+
         //! Returns true if this class has the "final" attribute.
         bool HasAttribFinal() const;
         //! Returns true if this class has the "deprecated" attribute.
@@ -192,10 +202,13 @@ class ClassDeclStmnt : public ScopedStmnt
 
         // dast
         PointerTypeDenoter                              thisTypeDenoter_;               // type denoter for this class declaration
+        
         ClassDeclStmnt*                                 baseClassRef_       = nullptr;  // reference to base class (or null if the base class is "Object").
         std::vector<ClassDeclStmnt*>                    subClassesRef_;                 // reference to all sub classes.
         Vtable                                          vtable_;                        // list of all class procedures (including the procedures from its base class).
+
         std::map<const ClassDeclStmnt*, Visibilities>   friendClassesRef_;              // reference to all friend classes.
+        std::vector<VarDecl*>                           memberVars_;                    // reference to all member variables.
 
         bool                                            isAbstract_         = false;    // is this an abstract class, i.e. has it abstract procedures?
 

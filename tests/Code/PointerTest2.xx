@@ -3,10 +3,15 @@
 // 15/04/2015
 
 class Widget {
-	int x
+	int idx
+	bool property
+	float height
 }
 
 class Test {
+	
+	int localA
+	float localB
 	
 	void main() {
 		

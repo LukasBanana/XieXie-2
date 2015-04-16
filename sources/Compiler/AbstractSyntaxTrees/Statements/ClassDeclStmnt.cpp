@@ -267,6 +267,8 @@ It also accumulates the instance size (see 'GetInstanceSize').
 */
 void ClassDeclStmnt::AssignAllMemberVariableLocations()
 {
+    memberVars_.clear();
+
     for (auto& stmnt : declStmnts)
     {
         if (stmnt->Type() == AST::Types::VarDeclStmnt)
@@ -285,6 +287,7 @@ void ClassDeclStmnt::AssignMemberVariableLocation(VarDecl& varDecl)
 {
     varDecl.memoryOffset = instanceSize_;
     instanceSize_ += varDecl.MemorySize();
+    memberVars_.push_back(&varDecl);
 }
 
 void ClassDeclStmnt::AssignAllStaticVariableLocations()

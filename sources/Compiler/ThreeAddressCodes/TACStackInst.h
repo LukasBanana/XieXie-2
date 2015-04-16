@@ -17,7 +17,7 @@ namespace ThreeAddressCodes
 {
 
 
-//! Stack operation TAC instruction.
+//! Stack operation (PUSH/POP) TAC instruction.
 class TACStackInst : public TACInst
 {
     

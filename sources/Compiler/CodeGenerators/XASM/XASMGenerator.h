@@ -136,6 +136,7 @@ class XASMGenerator final : public AsmGenerator
         void GenerateStartUpCodeForRootClass(const CFGProgram& program);
 
         void GenerateClassTree(const ClassTree& classTree);
+        void GenerateClassStorageCommentary(const ClassDeclStmnt& classDecl);
         void GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& procDecl);
         void GenerateBlock(const BasicBlock& bb);
 
