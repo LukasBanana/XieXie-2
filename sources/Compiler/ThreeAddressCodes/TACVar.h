@@ -73,9 +73,12 @@ class TACVar
         //! Replaces this variable by 'replacedVar' if this variable is equal to 'varToReplace'.
         bool Replace(const TACVar& varToReplace, const TACVar& replacedVar);
 
-        IDType      id      = TACVar::invalidID;
-        Types       type    = Types::Temp;
-        std::string value;
+        IDType          id      = TACVar::invalidID;
+        Types           type    = Types::Temp;
+        std::string     value;
+
+        unsigned int    offset  = 0;                    //!< Memory offset (in bytes) from the respective scope (global or class scope).
+        unsigned int    size    = 4;                    //!< Size (in bytes) of this variables). By default 4.
 
 };
 

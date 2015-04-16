@@ -50,7 +50,7 @@ TACVar TACVar::Float(float value)
 
 std::string TACVar::ToString() const
 {
-    std::string idStr = ToStr(id);
+    std::string idStr = std::to_string(id);
 
     switch (type)
     {

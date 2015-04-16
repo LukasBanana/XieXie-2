@@ -16,8 +16,9 @@ namespace ThreeAddressCodes
 
 void TACVarManager::Reset()
 {
-    varCounterLocal_    = 0;
-    varCounterGlobal_   = 0;
+    localVars_.Reset();
+    globalVars_.Reset();
+    memberVars_.Reset();
     tempVarIDs_.clear();
 }
 
@@ -28,16 +29,31 @@ TACVar TACVarManager::TempVar()
 
 TACVar TACVarManager::LocalVar(const AST& ast)
 {
-    auto it = localVarMap_.find(&ast);
-    
-    if (it == localVarMap_.end())
-    {
-        auto var = TACVar(++varCounterLocal_, TACVar::Types::Local);
-        localVarMap_[&ast] = var;
-        return var;
-    }
+    return localVars_.FetchVar(ast);
+}
 
-    return it->second;
+TACVar TACVarManager::GlobalVar(const VarDecl& ast)
+{
+    return globalVars_.FetchVar(
+        ast,
+        [&ast](TACVar& var)
+        {
+            var.offset  = ast.memoryOffset;
+            var.size    = ast.MemorySize();
+        }
+    );
+}
+
+TACVar TACVarManager::MemberVar(const VarDecl& ast)
+{
+    return memberVars_.FetchVar(
+        ast,
+        [&ast](TACVar& var)
+        {
+            var.offset  = ast.memoryOffset;
+            var.size    = ast.MemorySize();
+        }
+    );
 }
 
 void TACVarManager::PushVar(const TACVar& var)
@@ -90,6 +106,27 @@ void TACVarManager::RemoveTempVarID(IDType id)
     auto it = std::find(tempVarIDs_.begin(), tempVarIDs_.end(), id);
     if (it != tempVarIDs_.end())
         tempVarIDs_.erase(it);
+}
+
+
+/*
+ * VarMap structure
+ */
+
+template <typename T, TACVar::Types VarType>
+TACVar& TACVarManager::VarMap<T, VarType>::FetchVar(const T& ast, const std::function<void(TACVar& var)>& registerVarCallback)
+{
+    auto it = vars.find(&ast);
+
+    if (it == vars.end())
+    {
+        TACVar var{ ++varCounter, VarType };
+        if (registerVarCallback)
+            registerVarCallback(var);
+        it = vars.insert(std::pair<const T*, TACVar>(&ast, var)).first;
+    }
+
+    return it->second;
 }
 
 

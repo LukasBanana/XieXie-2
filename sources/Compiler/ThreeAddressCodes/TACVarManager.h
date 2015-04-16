@@ -12,8 +12,10 @@
 #include "TACVar.h"
 #include "SafeStack.h"
 #include "AST.h"
+#include "VarDecl.h"
 
 #include <map>
+#include <functional>
 
 
 namespace ThreeAddressCodes
@@ -25,6 +27,7 @@ class TACVarManager
 {
     
         using AST = AbstractSyntaxTrees::AST;
+        using VarDecl = AbstractSyntaxTrees::VarDecl;
 
     public:
         
@@ -34,6 +37,8 @@ class TACVarManager
 
         TACVar TempVar();
         TACVar LocalVar(const AST& ast);
+        TACVar GlobalVar(const VarDecl& ast);
+        TACVar MemberVar(const VarDecl& ast);
 
         void PushVar(const TACVar& var);
         TACVar PopVar();
@@ -43,6 +48,25 @@ class TACVarManager
 
     private:
         
+        /* === Structures === */
+
+        template <typename T, TACVar::Types VarType> struct VarMap
+        {
+            void Reset()
+            {
+                varCounter = 0;
+                vars.clear();
+            }
+
+            TACVar& FetchVar(
+                const T& ast,
+                const std::function<void(TACVar& var)>& registerVarCallback = nullptr
+            );
+
+            IDType                      varCounter = 0;
+            std::map<const T*, TACVar>  vars;
+        };
+
         /* === Functions === */
 
         IDType GenTempVarID();
@@ -50,13 +74,13 @@ class TACVarManager
 
         /* === Members === */
 
-        IDType                          varCounterLocal_    = 0;
-        IDType                          varCounterGlobal_   = 0;
+        SafeStack<TACVar>                       varStack_;
 
-        SafeStack<TACVar>               varStack_;
+        VarMap<AST, TACVar::Types::Local>       localVars_;
+        VarMap<VarDecl, TACVar::Types::Global>  globalVars_;
+        VarMap<VarDecl, TACVar::Types::Member>  memberVars_;
 
-        std::map<const AST*, TACVar>    localVarMap_;
-        std::vector<IDType>             tempVarIDs_;
+        std::vector<IDType>                     tempVarIDs_;
 
 };
 
