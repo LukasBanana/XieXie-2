@@ -477,11 +477,11 @@ void XASMGenerator::GenerateInst(const TACInst& inst)
         case TACInst::Types::DirectCall:
             GenerateDirectCallInst(static_cast<const TACDirectCallInst&>(inst));
             break;
-        case TACInst::Types::Param:
-            GenerateParamInst(static_cast<const TACParamInst&>(inst));
-            break;
         case TACInst::Types::Stack:
             GenerateStackInst(static_cast<const TACStackInst&>(inst));
+            break;
+        case TACInst::Types::Heap:
+            GenerateHeapInst(static_cast<const TACHeapInst&>(inst));
             break;
     }
 }
@@ -708,11 +708,6 @@ void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
         Line("call " + inst.procIdent);
 }
 
-void XASMGenerator::GenerateParamInst(const TACParamInst& inst)
-{
-    Line("ldw " + Reg(inst.dest) + ", ($lb) " + std::to_string(-4 * (inst.argIndex + 1)));
-}
-
 void XASMGenerator::GenerateStackInst(const TACStackInst& inst)
 {
     if (inst.opcode == OpCodes::PUSH)
@@ -725,6 +720,9 @@ void XASMGenerator::GenerateHeapInst(const TACHeapInst& inst)
 {
     StartLn();
     {
+        auto reg0 = Reg(inst.var);
+        auto reg1 = Reg(inst.baseVar);
+
         switch (inst.opcode)
         {
             case OpCodes::LDB:
@@ -749,7 +747,7 @@ void XASMGenerator::GenerateHeapInst(const TACHeapInst& inst)
                 break;
         }
 
-        Ln(", (" + Reg(inst.baseVar) + ") " + std::to_string(inst.offset));
+        Ln(' ' + reg0 + ", (" + reg1 + ") " + std::to_string(inst.offset));
     }
     EndLn();
 }

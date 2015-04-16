@@ -30,24 +30,34 @@ std::string TACStackInst::ToString() const
 
 bool TACStackInst::WritesVar(const TACVar& var) const
 {
-    return opcode == OpCodes::POP && this->var == var;
+    return IsLoadOp() && this->var == var;
 }
 
 bool TACStackInst::ReadsVar(const TACVar& var) const
 {
-    return opcode == OpCodes::PUSH && this->var == var;
+    return IsStoreOp() && this->var == var;
 }
 
 void TACStackInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
 {
     if (!flags(VarFlags::TempOnly) || var.IsTemp())
     {
-        if ( ( opcode == OpCodes::PUSH && flags(VarFlags::Source) ) ||
-             ( opcode == OpCodes::POP  && flags(VarFlags::Dest  ) ) )
+        if ( ( IsStoreOp() && flags(VarFlags::Source) ) ||
+             ( IsLoadOp() && flags(VarFlags::Dest) ) )
         {
             var.Replace(varToReplace, replacedVar);
         }
     }
+}
+
+bool TACStackInst::IsStoreOp() const
+{
+    return opcode == OpCodes::PUSH;
+}
+
+bool TACStackInst::IsLoadOp() const
+{
+    return opcode == OpCodes::POP;
 }
 
 

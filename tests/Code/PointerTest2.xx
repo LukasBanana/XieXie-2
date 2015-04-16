@@ -3,6 +3,8 @@
 // 15/04/2015
 
 class Widget {
+	static int count
+	static float size
 	int idx
 	bool property
 	float height
@@ -14,12 +16,13 @@ class Test {
 	int localA
 	float localB
 	
-	void main() {
+	void main(int x) {
 		
 		var a := new String()
 		var b := new Widget()
 		var c := { 1, -5, 42, 3 }
 		var d := "Test"
+		var e := x*2
 		
 		String@ a_w := a
 		

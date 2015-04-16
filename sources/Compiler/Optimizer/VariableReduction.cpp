@@ -11,9 +11,9 @@
 #include "TACCopyInst.h"
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
-#include "TACParamInst.h"
-#include "TACStackInst.h"
 #include "TACSwitchInst.h"
+#include "TACStackInst.h"
+#include "TACHeapInst.h"
 
 #include <algorithm>
 
@@ -75,12 +75,12 @@ void VariableReduction::TransformReturnInst(TACInstPtr& inst)
         ReadVar(returnInst->src, *inst);
 }
 
-void VariableReduction::TransformParamInst(TACInstPtr& inst)
+void VariableReduction::TransformSwitchInst(TACInstPtr& inst)
 {
-    auto paramInst = static_cast<TACParamInst*>(inst.get());
+    auto switchInst = static_cast<TACSwitchInst*>(inst.get());
 
     /* Propagate variabel usage */
-    WriteVar(paramInst->dest, *inst);
+    ReadVar(switchInst->src, *inst);
 }
 
 void VariableReduction::TransformStackInst(TACInstPtr& inst)
@@ -88,18 +88,21 @@ void VariableReduction::TransformStackInst(TACInstPtr& inst)
     auto stackInst = static_cast<TACStackInst*>(inst.get());
 
     /* Propagate variabel usage */
-    if (stackInst->opcode == TACInst::OpCodes::PUSH)
+    if (stackInst->IsStoreOp())
         ReadVar(stackInst->var, *inst);
-    else if (stackInst->opcode == TACInst::OpCodes::POP)
+    else
         WriteVar(stackInst->var, *inst);
 }
 
-void VariableReduction::TransformSwitchInst(TACInstPtr& inst)
+void VariableReduction::TransformHeapInst(TACInstPtr& inst)
 {
-    auto switchInst = static_cast<TACSwitchInst*>(inst.get());
+    auto heapInst = static_cast<TACHeapInst*>(inst.get());
 
     /* Propagate variabel usage */
-    ReadVar(switchInst->src, *inst);
+    if (heapInst->IsStoreOp())
+        ReadVar(heapInst->var, *inst);
+    else
+        WriteVar(heapInst->var, *inst);
 }
 
 void VariableReduction::ReadVar(const TACVar& var, TACInst& inst)

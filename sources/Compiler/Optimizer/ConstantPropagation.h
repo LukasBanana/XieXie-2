@@ -34,8 +34,9 @@ class ConstantPropagation : public Optimizer
         void TransformModifyInst(TACInstPtr& inst) override;
         void TransformRelationInst(TACInstPtr& inst) override;
         void TransformReturnInst(TACInstPtr& inst) override;
-        void TransformStackInst(TACInstPtr& inst) override;
         void TransformSwitchInst(TACInstPtr& inst) override;
+        void TransformStackInst(TACInstPtr& inst) override;
+        void TransformHeapInst(TACInstPtr& inst) override;
 
         std::unique_ptr<TACCopyInst> ConstantFolding(const TACModifyInst& inst);
 

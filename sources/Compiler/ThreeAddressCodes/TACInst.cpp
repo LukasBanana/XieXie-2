@@ -124,14 +124,6 @@ std::string TACInst::OpCodeToString(const OpCodes opcode)
         case OpCodes::INDCALL:
             return "IndCall";
 
-        /* Result */
-        case OpCodes::RESULT:
-            return "Result";
-
-        /* Param */
-        case OpCodes::PARAM:
-            return "Param";
-
         /* Stack */
         case OpCodes::PUSH:
             return "Push";

@@ -44,7 +44,6 @@ class TACInst
             DirectCall,     //!< Jump and link
             IndirectCall,   //!< Jump register and link
             Return,         //!< Procedure return
-            Param,          //!< Fetch parameter. // <-- !TODO! REPLACE BY "Heap" TAC instruction !!!!!!!!!!!!!
             Stack,          //!< Stack operation (Push or Pop).
             Heap,           //!< Heap operation (Load/Store Byte/Half/Word).
         };
@@ -106,12 +105,6 @@ class TACInst
 
             /* IndirectCall */
             INDCALL,
-
-            /* Result */
-            RESULT,
-
-            /* Param */
-            PARAM,
 
             /* Stack */
             PUSH,

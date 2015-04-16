@@ -10,8 +10,9 @@
 
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
-#include "TACStackInst.h"
 #include "TACSwitchInst.h"
+#include "TACStackInst.h"
+#include "TACHeapInst.h"
 
 
 namespace Optimization
@@ -83,23 +84,34 @@ void ConstantPropagation::TransformReturnInst(TACInstPtr& inst)
         FetchConst(returnInst->src);
 }
 
-void ConstantPropagation::TransformStackInst(TACInstPtr& inst)
-{
-    auto stackInst = static_cast<TACStackInst*>(inst.get());
-
-    /* Propagate constant */
-    if (stackInst->opcode == TACInst::OpCodes::PUSH)
-        FetchConst(stackInst->var);
-    else if (stackInst->opcode == TACInst::OpCodes::POP)
-        RemoveConst(stackInst->var);
-}
-
 void ConstantPropagation::TransformSwitchInst(TACInstPtr& inst)
 {
     auto switchInst = static_cast<TACSwitchInst*>(inst.get());
 
     /* Propagate constant */
     FetchConst(switchInst->src);
+}
+
+void ConstantPropagation::TransformStackInst(TACInstPtr& inst)
+{
+    auto stackInst = static_cast<TACStackInst*>(inst.get());
+
+    /* Propagate constant */
+    if (stackInst->IsStoreOp())
+        FetchConst(stackInst->var);
+    else
+        RemoveConst(stackInst->var);
+}
+
+void ConstantPropagation::TransformHeapInst(TACInstPtr& inst)
+{
+    auto heapInst = static_cast<TACHeapInst*>(inst.get());
+
+    /* Propagate constant */
+    if (heapInst->IsStoreOp())
+        FetchConst(heapInst->var);
+    else
+        RemoveConst(heapInst->var);
 }
 
 std::unique_ptr<TACCopyInst> ConstantPropagation::ConstantFolding(const TACModifyInst& inst)

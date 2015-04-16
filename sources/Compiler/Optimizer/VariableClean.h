@@ -31,9 +31,9 @@ class VariableClean : public Optimizer
         void TransformModifyInst(TACInstPtr& inst) override;
         void TransformRelationInst(TACInstPtr& inst) override;
         void TransformReturnInst(TACInstPtr& inst) override;
-        void TransformParamInst(TACInstPtr& inst) override;
-        void TransformStackInst(TACInstPtr& inst) override;
         void TransformSwitchInst(TACInstPtr& inst) override;
+        void TransformStackInst(TACInstPtr& inst) override;
+        void TransformHeapInst(TACInstPtr& inst) override;
 
         void ReadVar(const TACVar& var);
         void WriteVar(const TACVar& var);

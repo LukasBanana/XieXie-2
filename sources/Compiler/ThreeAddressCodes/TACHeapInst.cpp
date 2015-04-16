@@ -22,12 +22,20 @@ TACHeapInst::TACHeapInst(OpCodes opcode, const TACVar& var, const TACVar& baseVa
 
 TACInst::Types TACHeapInst::Type() const
 {
-    return Types::Stack;
+    return Types::Heap;
 }
 
 std::string TACHeapInst::ToString() const
 {
-    return OpCodePrefix() + " | " + var.ToString() + " (" + baseVar.ToString() + ")[" + std::to_string(offset) + "]";
+    auto inst = OpCodePrefix() + " | ";
+
+    auto ptr = "(" + baseVar.ToString() + ")[" + std::to_string(offset) + "]";
+    if (IsLoadOp())
+        inst += var.ToString() + " := " + ptr;
+    else
+        inst += ptr + " := " + var.ToString();
+
+    return inst;
 }
 
 bool TACHeapInst::WritesVar(const TACVar& var) const

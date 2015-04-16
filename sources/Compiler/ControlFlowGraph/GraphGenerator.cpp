@@ -17,8 +17,8 @@
 #include "TACReturnInst.h"
 #include "TACSwitchInst.h"
 #include "TACDirectCallInst.h"
-#include "TACParamInst.h"
 #include "TACStackInst.h"
+#include "TACHeapInst.h"
 
 #include <algorithm>
 
@@ -706,7 +706,11 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     /* Fetch parameters */
     size_t argIndex = 0;
     for (auto& param : procSig.params)
-        root->MakeInst<TACParamInst>(LocalVar(*param), argIndex++);
+    {
+        //root->MakeInst<TACParamInst>(LocalVar(*param), argIndex++);
+        ++argIndex;
+        root->MakeInst<TACHeapInst>(OpCodes::LDW, LocalVar(*param), FramePtr(), -4 * argIndex);
+    }
 
     /* Build sub-CFG for this procedure */
     auto graph = VisitAndLink(ast->codeBlock);
