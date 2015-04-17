@@ -19,10 +19,11 @@ static void shell_print_help()
     xvm_log_println("options:");
     xvm_log_println("  help ..................... prints the help information");
     xvm_log_println("  version .................. prints the version and license note");
-    xvm_log_println("  -v, --verbose ............ prints additional output before and after program execution");
-    xvm_log_println("  -s, --stack SIZE ......... sets the stack size (by default 256)");
-    xvm_log_println("  -m, --module FILE ........ loads the module, specified by FILE");
-    xvm_log_println("  -e, --entry LABEL ........ sets the main entry point, specified by LABEL");
+    xvm_log_println("  -D, --debug .............. enables the run-time debugger");
+    xvm_log_println("  -V, --verbose ............ prints additional output before and after program execution");
+    xvm_log_println("  -S, --stack SIZE ......... sets the stack size (by default 256)");
+    xvm_log_println("  -M, --module FILE ........ loads the module, specified by FILE");
+    xvm_log_println("  -E, --entry LABEL ........ sets the main entry point, specified by LABEL");
 }
 
 static void shell_print_version()
@@ -74,6 +75,10 @@ static int shell_parse_args(const char* app_path, int argc, char* argv[])
     const char* entry       = NULL;
     size_t      stack_size  = 256;
     xvm_string  module_path = extract_file_path(app_path);
+
+    // Initialize execution options
+    xvm_execution_options exec_options;
+    memset(&exec_options, 0, sizeof(exec_options));
     
     // Initialize module container
     xvm_module_container module_cont;
@@ -103,9 +108,17 @@ static int shell_parse_args(const char* app_path, int argc, char* argv[])
             shell_print_help();
         else if (strcmp(arg, "version") == 0)
             shell_print_version();
-        else if (strcmp(arg, "-v") == 0 || strcmp(arg, "--verbose") == 0)
-            verbose = 1;
-        else if (strcmp(arg, "-m") == 0 || strcmp(arg, "--module") == 0)
+        else if (strcmp(arg, "-V") == 0 || strcmp(arg, "--verbose") == 0)
+        {
+            #ifdef _ENABLE_RUNTIME_DEBUGGER_
+            exec_options.flags |= XVM_EXECUTION_FLAG_DEBUG;
+            #else
+            xvm_log_error("option '-D'/ '--debug' only available if XVM was compiled with run-time debugger enabled");
+            #endif
+        }
+        else if (strcmp(arg, "-D") == 0 || strcmp(arg, "--debug") == 0)
+            exec_options.flags |= XVM_EXECUTION_FLAG_DEBUG;
+        else if (strcmp(arg, "-M") == 0 || strcmp(arg, "--module") == 0)
         {
             if (argc > 0)
             {
@@ -125,11 +138,11 @@ static int shell_parse_args(const char* app_path, int argc, char* argv[])
             }
             else
             {
-                xvm_log_error("expected argument after \"-m\" and \"--module\" flag");
+                xvm_log_error("expected argument after \"-M\" and \"--module\" flag");
                 return 0;
             }
         }
-        else if (strcmp(arg, "-e") == 0 || strcmp(arg, "--entry") == 0)
+        else if (strcmp(arg, "-E") == 0 || strcmp(arg, "--entry") == 0)
         {
             if (argc > 0)
             {
@@ -142,11 +155,11 @@ static int shell_parse_args(const char* app_path, int argc, char* argv[])
             }
             else
             {
-                xvm_log_error("expected argument after \"-e\" and \"--entry\" flag");
+                xvm_log_error("expected argument after \"-E\" and \"--entry\" flag");
                 return 0;
             }
         }
-        else if (strcmp(arg, "-s") == 0 || strcmp(arg, "--stack") == 0)
+        else if (strcmp(arg, "-S") == 0 || strcmp(arg, "--stack") == 0)
         {
             if (argc > 0)
             {
@@ -168,7 +181,7 @@ static int shell_parse_args(const char* app_path, int argc, char* argv[])
             }
             else
             {
-                xvm_log_error("expected argument after \"-s\" and \"--stack\" flag");
+                xvm_log_error("expected argument after \"-S\" and \"--stack\" flag");
                 return 0;
             }
         }
@@ -240,9 +253,9 @@ static int shell_parse_args(const char* app_path, int argc, char* argv[])
         xvm_exit_codes exit_code = EXITCODE_SUCCESS;
         
         if (entry != NULL)
-            exit_code = xvm_execute_program_entry_point(&byte_code, &stack, entry);
+            exit_code = xvm_execute_program_entry_point(&byte_code, &stack, entry, &exec_options);
         else
-            exit_code = xvm_execute_program(&byte_code, &stack);
+            exit_code = xvm_execute_program(&byte_code, &stack, &exec_options);
 
         if (exit_code != EXITCODE_SUCCESS)
             xvm_log_exitcode_error(exit_code);

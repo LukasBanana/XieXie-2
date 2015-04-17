@@ -2309,7 +2309,8 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 xvm_exit_codes xvm_execute_program_ext(
     const xvm_bytecode* const byte_code,
     xvm_stack* const stack,
-    const xvm_export_address* entry_point)
+    const xvm_export_address* entry_point,
+    const xvm_execution_options* options)
 {
     #define JUMP_ADDRESS(r, a) (reg.i[r] + ((a) << 2))
 
@@ -2341,10 +2342,10 @@ xvm_exit_codes xvm_execute_program_ext(
     const byte_t* const program_start_ptr = (const byte_t*)(byte_code->instructions);
 
     // Invocation environment
-    _xvm_env_internal stack_env;
-    stack_env.reg_ref       = (int*)reg.i;
-    stack_env.stack_begin   = stack->storage;
-    stack_env.stack_end     = stack->storage + stack->stack_size;
+    _xvm_env_internal rt_env;
+    rt_env.reg_ref      = (int*)reg.i;
+    rt_env.stack_begin  = stack->storage;
+    rt_env.stack_end    = stack->storage + stack->stack_size;
 
     /* --- Temporary memory --- */
     instr_t         instr;          // Current instruction
@@ -2395,7 +2396,7 @@ xvm_exit_codes xvm_execute_program_ext(
     while (*reg_pc < instr_ptr_end)
     {
         #ifdef _ENABLE_RUNTIME_DEBUGGER_
-        if (instr != 0)
+        if (options != NULL && (options->flags & XVM_EXECUTION_FLAG_DEBUG) != 0 && instr != 0)
             _xvm_instr_print_debug_info(instr, prev_pc_index, reg.i);
         #endif
 
@@ -3024,7 +3025,7 @@ xvm_exit_codes xvm_execute_program_ext(
                 {
                     // Invoke bounded procedure
                     xvm_invocation_proc invokeProc = byte_code->invoke_bindings[unsgn_value];
-                    invokeProc((void*)&stack_env);
+                    invokeProc((void*)&rt_env);
                 }
                 else
                     return EXITCODE_INVOCATION_VIOLATION;
@@ -3059,9 +3060,10 @@ Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Vir
 */
 xvm_exit_codes xvm_execute_program(
     const xvm_bytecode* const byte_code,
-    xvm_stack* const stack)
+    xvm_stack* const stack,
+    const xvm_execution_options* options)
 {
-    return xvm_execute_program_ext(byte_code, stack, NULL);
+    return xvm_execute_program_ext(byte_code, stack, NULL, options);
 }
 
 /**
@@ -3072,7 +3074,8 @@ Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Vir
 xvm_exit_codes xvm_execute_program_entry_point(
     const xvm_bytecode* const byte_code,
     xvm_stack* const stack,
-    const char* entry_point)
+    const char* entry_point,
+    const xvm_execution_options* options)
 {
     const xvm_export_address* entry_point_addr = NULL;
     
@@ -3085,7 +3088,7 @@ xvm_exit_codes xvm_execute_program_entry_point(
         return EXITCODE_UNKNOWN_ENTRY_POINT;
 
     // Execute program from entry point
-    return xvm_execute_program_ext(byte_code, stack, entry_point_addr);
+    return xvm_execute_program_ext(byte_code, stack, entry_point_addr, options);
 }
 
 

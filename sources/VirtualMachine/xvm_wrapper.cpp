@@ -604,20 +604,29 @@ static ExitCodes MapExitCode(xvm_exit_codes code)
 
 ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack)
 {
+    xvm_execution_options options;
+    options.flags = 0;
+
     auto code = xvm_execute_program(
         &(byteCode.byteCode_),
-        &(stack.stack_)
+        &(stack.stack_),
+        &options
     );
     return MapExitCode(code);
 }
 
 ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const std::string& entryPoint)
 {
+    xvm_execution_options options;
+    options.flags = 0;
+
     auto code = xvm_execute_program_entry_point(
         &(byteCode.byteCode_),
         &(stack.stack_),
-        entryPoint.c_str()
+        entryPoint.c_str(),
+        &options
     );
+
     return MapExitCode(code);
 }
 
@@ -625,11 +634,16 @@ ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const ByteCode:
 {
     if (entryPoint.owner_ == (&byteCode))
     {
+        xvm_execution_options options;
+        options.flags = 0;
+
         auto code = xvm_execute_program_ext(
             &(byteCode.byteCode_),
             &(stack.stack_),
-            entryPoint.addr_
+            entryPoint.addr_,
+            &options
         );
+
         return MapExitCode(code);
     }
     return ExitCodes::InvalidByteCode;

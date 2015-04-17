@@ -19,7 +19,9 @@
 /* ----- Compilation configuration ----- */
 
 //! Enables runtimer debugger in virtual machine
-//#define _ENABLE_RUNTIME_DEBUGGER_
+#if defined(_DEBUG) && !defined(_ENABLE_RUNTIME_DEBUGGER_)
+#   define _ENABLE_RUNTIME_DEBUGGER_
+#endif
 
 //! Shows the instruction indices as hex numbers.
 //#define _SHOW_RUNTIME_HEXLINES_
@@ -768,11 +770,25 @@ xvm_module* xvm_module_iteration_next();
 /* ----- Virtual machine ----- */
 
 /**
+Program execution flag: enable run-time debugging.
+\note Only available if '_ENABLE_RUNTIME_DEBUGGER_' was defined.
+*/
+#define XVM_EXECUTION_FLAG_DEBUG (0x00000001)
+
+//! XVM program execution options structure.
+typedef struct
+{
+    int flags;
+}
+xvm_execution_options;
+
+/**
 Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Virtual Machine).
 \param[in] byte_code Pointer to the byte code to execute.
 \param[in] stack Pointer to the stack which is to be used during execution.
 \param[in] entry_point Optional pointer to the entry point address.
 This may also be NULL to start the program at the top.
+\param[in] options Optional pointer to execution options. This may also be NULL to use the default options.
 \remarks This is the main function for the entire virtual machine.
 All instructions are implemented inside this function and its large switch-case statement.
 \see xvm_bytecode_create_instructions
@@ -781,7 +797,8 @@ All instructions are implemented inside this function and its large switch-case 
 xvm_exit_codes xvm_execute_program_ext(
     const xvm_bytecode* const byte_code,
     xvm_stack* const stack,
-    const xvm_export_address* entry_point
+    const xvm_export_address* entry_point,
+    const xvm_execution_options* options
 );
 
 /**
@@ -790,7 +807,8 @@ Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Vir
 */
 xvm_exit_codes xvm_execute_program(
     const xvm_bytecode* const byte_code,
-    xvm_stack* const stack
+    xvm_stack* const stack,
+    const xvm_execution_options* options
 );
 
 /**
@@ -801,7 +819,8 @@ Executes the specified XBC (XieXie Byte Code) program within the XVM (XieXie Vir
 xvm_exit_codes xvm_execute_program_entry_point(
     const xvm_bytecode* const byte_code,
     xvm_stack* const stack,
-    const char* entry_point
+    const char* entry_point,
+    const xvm_execution_options* options
 );
 
 
