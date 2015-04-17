@@ -108,6 +108,8 @@ set(
 	${PROJECT_MODULES_DIR}/xvm_module.c
 )
 
+set(FilesCoreAsmGen ${PROJECT_SOURCE_DIR}/Tools/CoreAssemblyGenerator.cpp)
+
 
 # === Source group folders ===
 
@@ -136,6 +138,13 @@ source_group("Compiler\\ControlFlowGraph" FILES ${FilesCompilerCFG})
 
 source_group("Shell" FILES ${FilesShell})
 source_group("Shell\\Command" FILES ${FilesShellCommand})
+
+# --- Tools ---
+
+source_group(
+	"Tools" FILES
+	${FilesCoreAsmGen}
+)
 
 # --- Platform ---
 
@@ -200,6 +209,14 @@ SETUP_LIB_OUTPUT(xvmlib C)
 SETUP_LIB_OUTPUT(xvm C)
 SETUP_LIB_OUTPUT(xvm_wrapper CXX)
 SETUP_LIB_OUTPUT(xvm_module C)
+
+add_executable(CoreAssemblyGenerator ${FilesCoreAsmGen})
+
+set_target_properties(
+	CoreAssemblyGenerator PROPERTIES
+	LINKER_LANGUAGE CXX
+	DEBUG_POSTFIX "D"
+)
 
 target_link_libraries(xvm xvmlib)
 target_link_libraries(xvm_wrapper xvmlib)
