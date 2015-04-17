@@ -1,0 +1,52 @@
+/*
+ * MsgBox.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/**
+Message box module.
+@note Because the file is "msgbox" and not "MsgBox", this attribute is required!
+*/
+[[bind]]
+module MsgBox {
+	
+/*	static const OK						:= 0x00000000
+	static const OK_CANCEL				:= 0x00000001
+	static const ABORT_RETRY_IGNORE		:= 0x00000002
+	static const YES_NO_CANCEL			:= 0x00000003
+	static const YES_NO					:= 0x00000004
+	static const RETRY_CANCEL			:= 0x00000005
+	static const CANCEL_TRY_CONTINUE	:= 0x00000006
+	
+	static const ICON_ERROR				:= 0x00000010
+	static const ICON_QUESTION			:= 0x00000020
+	static const ICON_WARNING			:= 0x00000030
+	static const ICON_INFORMATION		:= 0x00000040
+	
+	static const DEFAULT_BUTTON1		:= 0x00000000
+	static const DEFAULT_BUTTON2		:= 0x00000100
+	static const DEFAULT_BUTTON3		:= 0x00000200
+	static const DEFAULT_BUTTON4		:= 0x00000300
+	
+	static const BUTTON_OK				:= 1
+	static const BUTTON_CANCEL			:= 2
+	static const BUTTON_ABORT			:= 3
+	static const BUTTON_RETRY			:= 4
+	static const BUTTON_IGNORE			:= 5
+	static const BUTTON_YES				:= 6
+	static const BUTTON_NO				:= 7
+	static const BUTTON_TRY				:= 10
+	static const BUTTON_CONTINUE		:= 11*/
+	
+	/**
+	Shows a simple message box.
+	@title Specifies the box title.
+	@text Specifies the message text.
+	@bitFlags Specifies the flags bitmask.
+	@return ID of the clicked button.
+	*/
+	static int messageBox(String title, String text, int bitFlags := 0)
+	
+}
