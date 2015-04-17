@@ -42,8 +42,10 @@ class Test {
 		*/
 		
 		//var i := Test.returnBoolean(true)
-		var j := Test.returnBoolean(a > b = false)
-		//Test.returnBoolean(a > b)
+		//var j := Test.returnBoolean(a > b = false)
+		while Test.returnBoolean(a > b and Test.getBoolean() or Test.returnBoolean(not Test.getBoolean())) {
+			a++
+		}
 		
 		//if Test.getBoolean() { a++ }
 		

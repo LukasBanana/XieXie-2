@@ -690,7 +690,11 @@ void XASMGenerator::GenerateRelationInst(const TACRelationInst& inst)
 
     if (inst.srcLhs.IsConst() && inst.srcRhs.IsConst())
     {
-        if (inst.IsFloatOp())
+        if (inst.IsAlwaysTrue())
+            GenerateDirectJump(Succ(0));
+        else if (inst.IsAlwaysFalse())
+            GenerateDirectJump(Succ(1));
+        else if (inst.IsFloatOp())
             Line("mov $cf, " + std::to_string(inst.srcLhs.Float() - inst.srcRhs.Float()));
         else
             Line("mov $cf, " + std::to_string(inst.srcLhs.Int() - inst.srcRhs.Int()));
