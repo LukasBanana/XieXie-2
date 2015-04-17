@@ -7,6 +7,7 @@
 
 #include "BasicBlock.h"
 #include "TACReturnInst.h"
+#include "TACRelationInst.h"
 
 #include <algorithm>
 
@@ -106,6 +107,9 @@ void BasicBlock::Clean()
         hasChanged = false;
 
         visitSet.clear();
+        KillBranches(visitSet, hasChanged);
+
+        visitSet.clear();
         Merge(visitSet, hasChanged);
 
         visitSet.clear();
@@ -141,6 +145,13 @@ bool BasicBlock::HasVisited(VisitSet& visitSet) const
     else
         visitSet.insert(this);
     return false;
+}
+
+// Kills all pointless branches
+void BasicBlock::KillBranches(VisitSet& visitSet, bool& hasChanged)
+{
+    
+
 }
 
 /*

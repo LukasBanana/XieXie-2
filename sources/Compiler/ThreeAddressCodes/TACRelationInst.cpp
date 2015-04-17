@@ -77,6 +77,35 @@ void TACRelationInst::ReplaceVar(const TACVar& varToReplace, const TACVar& repla
     }
 }
 
+bool TACRelationInst::IsAlwaysTrue() const
+{
+    if (srcLhs.IsConst() && srcRhs.IsConst())
+    {
+        /*switch ()
+        {
+            CMPE,
+            CMPNE,
+            CMPL,
+            CMPLE,
+            CMPG,
+            CMPGE,
+
+            FCMPE,
+            FCMPNE,
+            FCMPL,
+            FCMPLE,
+            FCMPG,
+            FCMPGE,
+        }*/
+    }
+    return false;
+}
+
+bool TACRelationInst::IsAlwaysFalse() const
+{
+    
+}
+
 
 } // /namespace ThreeAddressCodes
 

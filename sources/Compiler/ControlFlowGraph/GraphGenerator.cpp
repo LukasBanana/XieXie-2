@@ -118,20 +118,30 @@ DEF_VISIT_PROC(GraphGenerator, VarDecl)
     if (ast->initExpr)
     {
         /* Generate arithmetic expression */
-        auto exprCFG = GenerateArithmeticExpr(*ast->initExpr);
+        auto in = MakeBlock("VarDecl");
+        auto out = in;
 
-        /* Make instruction */
-        auto inst = exprCFG.out->MakeInst<TACCopyInst>();
+        PushBB(in);
+        {
+            GenerateArithmeticExpr(*ast->initExpr);
 
-        inst->src   = PopVar();
-        inst->dest  = LocalVar(ast);
+            /* Make instruction */
+            auto inst = BB()->MakeInst<TACCopyInst>();
 
-        /* Add strong reference to ref-scope (for local variables) */
-        auto varType = ast->GetTypeDenoter();
-        if (!refScopeStack_.Empty() && varType && varType->IsStrongRef())
-            TopRefScope() << inst->dest;
+            inst->src   = Var();
+            inst->dest  = LocalVar(ast);
+            PopVar();
 
-        RETURN_BLOCK_REF(exprCFG);
+            /* Add strong reference to ref-scope (for local variables) */
+            auto varType = ast->GetTypeDenoter();
+            if (!refScopeStack_.Empty() && varType && varType->IsStrongRef())
+                TopRefScope() << inst->dest;
+
+            out = BB();
+        }
+        PopBB();
+
+        RETURN_BLOCK_REF(VisitIO(in, out));
     }
     else
     {
@@ -984,7 +994,9 @@ DEF_VISIT_PROC(GraphGenerator, CastExpr)
 DEF_VISIT_PROC(GraphGenerator, ProcCallExpr)
 {
     Visit(ast->procCall);
-    PushVar(ResultVar());
+    auto var = TempVar();
+    BB()->MakeInst<TACCopyInst>(var, ResultVar());
+    PushVar(var);
 }
 
 DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)
@@ -1072,7 +1084,7 @@ GraphGenerator::VisitIO GraphGenerator::GenerateBooleanExpr(Expr& ast)
         if (exprType && exprType->IsBoolean())
         {
             /* Build condition 'var != false' */
-            return GenerateConditionalBinaryExpr(ast);
+            return GenerateBooleanExprCondition(ast);
         }
         else
             ErrorIntern("boolean type expected for variable access", &ast);
@@ -1086,7 +1098,7 @@ GraphGenerator::VisitIO GraphGenerator::GenerateBooleanExpr(Expr& ast)
         if (exprType && exprType->IsBoolean())
         {
             /* Build condition 'proc() != false' */
-            return GenerateConditionalBinaryExpr(ast);
+            return GenerateBooleanExprCondition(ast);
         }
         else
             ErrorIntern("boolean type expected for procedure call", &ast);
@@ -1113,7 +1125,7 @@ GraphGenerator::VisitIO GraphGenerator::GenerateBooleanExpr(Expr& ast)
     return VisitAndLink(&ast);
 }
 
-GraphGenerator::VisitIO GraphGenerator::GenerateConditionalBinaryExpr(Expr& ast)
+GraphGenerator::VisitIO GraphGenerator::GenerateBooleanExprCondition(Expr& ast)
 {
     auto in = MakeBlock();
     auto out = in;
@@ -1129,8 +1141,10 @@ GraphGenerator::VisitIO GraphGenerator::GenerateConditionalBinaryExpr(Expr& ast)
     auto inst = out->MakeInst<TACRelationInst>();
 
     inst->opcode = OpCodes::CMPNE;
-    inst->srcLhs = PopVar();
+    inst->srcLhs = Var();
     inst->srcRhs = TACVar("0");
+
+    PopVar();
 
     return VisitIO(in, out);
 }
@@ -1142,7 +1156,7 @@ true /  \ false
      \  /
    EndBoolean
 */
-GraphGenerator::VisitIO GraphGenerator::GenerateArithmeticExpr(Expr& ast)
+void GraphGenerator::GenerateArithmeticExpr(Expr& ast)
 {
     if (ast.GetTypeDenoter()->IsBoolean())
     {
@@ -1156,34 +1170,27 @@ GraphGenerator::VisitIO GraphGenerator::GenerateArithmeticExpr(Expr& ast)
         auto thenBranch = MakeBlock("Then");
         thenBranch->MakeInst<TACCopyInst>(var, TACVar("1"));
 
-        condCFG.out->AddSucc(*thenBranch, "true");
-        thenBranch->AddSucc(*out);
-
         /* Generate 'else' branches */
         auto elseBranch = MakeBlock("Else");
         elseBranch->MakeInst<TACCopyInst>(var, TACVar("0"));
 
+        /* Link CFG */
+        BB()->AddSucc(*condCFG.in);
+        condCFG.out->AddSucc(*thenBranch, "true");
         condCFG.outAlt->AddSucc(*elseBranch, "false");
+
+        thenBranch->AddSucc(*out);
         elseBranch->AddSucc(*out);
 
         /* Return final CFG for boolean expression */
         PushVar(var);
-        
-        return VisitIO(condCFG.in, out);
+
+        ReplaceBB(out);
     }
     else
     {
         /* Generate default arithmetic expression */
-        auto bb = MakeBlock();
-
-        PushBB(bb);
-        {
-            Visit(&ast);
-            bb = BB();
-        }
-        PopBB();
-
-        return bb;
+        Visit(&ast);
     }
 }
 
@@ -1273,15 +1280,18 @@ void GraphGenerator::GenerateLogicOrBinaryExpr(BinaryExpr* ast, void* args)
 
 void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
 {
-    auto bb = MakeBlock();
-    PushBB(bb);
+    auto in = MakeBlock();
+    auto out = in;
+
+    PushBB(in);
     {
-        Visit(ast->lhsExpr);
-        auto srcLhs = PopVar();
+        /* Generate sub expressions */
+        GenerateArithmeticExpr(*ast->lhsExpr);
+        auto srcLhs = Var();
 
-        Visit(ast->rhsExpr);
-        auto srcRhs = PopVar();
-
+        GenerateArithmeticExpr(*ast->rhsExpr);
+        auto srcRhs = Var();
+        
         /* Make instruction */
         auto isFloat = ast->lhsExpr->GetTypeDenoter()->IsFloat();
         auto inst = BB()->MakeInst<TACRelationInst>();
@@ -1289,10 +1299,14 @@ void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
         inst->opcode = OperatorToOpCode(ast->binaryOperator, isFloat);
         inst->srcLhs = srcLhs;
         inst->srcRhs = srcRhs;
+
+        PopVar(2);
+
+        out = BB();
     }
     PopBB();
 
-    RETURN_BLOCK_REF(bb);
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 void GraphGenerator::GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args)
@@ -1333,7 +1347,7 @@ static OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isFloat)
 
 void GraphGenerator::GenerateLogicNotUnaryExpr(UnaryExpr* ast, void* args)
 {
-    auto expr = GenerateConditionalBinaryExpr(*ast->expr);
+    auto expr = GenerateBooleanExpr(*ast->expr);
 
     auto trueBranch = MakeBlock();
     auto falseBranch = MakeBlock();
@@ -1411,17 +1425,8 @@ void GraphGenerator::GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, v
 
 void GraphGenerator::GenerateArgumentExpr(Expr& ast)
 {
-    auto exprCFG = GenerateArithmeticExpr(ast);
-
-    /* Check if current basic block must be replaced by new outgoing block */
-    if (exprCFG.in != BB())
-    {
-        BB()->AddSucc(*exprCFG.in);
-        ReplaceBB(exprCFG.out);
-    }
-
     /* Build argument expression CFG */
-    //Visit(&ast);
+    GenerateArithmeticExpr(ast);
     BB()->MakeInst<TACStackInst>(OpCodes::PUSH, PopVar());
 }
 

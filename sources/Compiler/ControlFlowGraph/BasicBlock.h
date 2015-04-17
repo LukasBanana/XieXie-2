@@ -143,6 +143,7 @@ class BasicBlock
         
         bool HasVisited(VisitSet& visitSet) const;
 
+        void KillBranches(VisitSet& visitSet, bool& hasChanged);
         void Merge(VisitSet& visitSet, bool& hasChanged);
         void Purge(VisitSet& visitSet, bool& hasChanged);
         void Unify(VisitSet& visitSet, bool& hasChanged);

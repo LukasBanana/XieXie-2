@@ -83,8 +83,8 @@ class GraphGenerator final : private Visitor
         /* --- Generation --- */
 
         VisitIO GenerateBooleanExpr(Expr& ast);
-        VisitIO GenerateConditionalBinaryExpr(Expr& ast);
-        VisitIO GenerateArithmeticExpr(Expr& ast);
+        VisitIO GenerateBooleanExprCondition(Expr& ast);
+        void GenerateArithmeticExpr(Expr& ast);
 
         void GenerateLogicAndBinaryExpr(BinaryExpr* ast, void* args);
         void GenerateLogicOrBinaryExpr(BinaryExpr* ast, void* args);

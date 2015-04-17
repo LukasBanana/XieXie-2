@@ -14,9 +14,9 @@ class Test {
 	
 	static int f(int x, bool b) {
 		if b {
-			return x*x
+			return x
 		} else {
-			return x+x
+			return -x
 		}
 	}
 	
@@ -31,16 +31,27 @@ class Test {
 		//bool d := true
 		
 		//int e := Test.f(a + b, a != b or not Test.getBoolean())
+		//Test.f(a + b, a != b or not Test.getBoolean())
 		
-		Test.g(1, 2)
+		/*
+		//if (Test.getBoolean() = Test.getBoolean() or not (a > b)) {
+		//if (Test.getBoolean() = not Test.getBoolean()) {
+		if (Test.getBoolean() = true) {
+			Test.g(1, 2)
+		}
+		*/
 		
-		//var e := Test.returnBoolean(true)
-		var e := Test.returnBoolean(a > b)
+		//var i := Test.returnBoolean(true)
+		var j := Test.returnBoolean(a > b = false)
 		//Test.returnBoolean(a > b)
 		
-		/*if Test.getBoolean() {
+		//if Test.getBoolean() { a++ }
+		
+		/*if Test.getBoolean() = (a > b) {
+		//if Test.getBoolean() = (Test.getBoolean() and Test.getBoolean()) {
 			a++
 		}*/
+		
 		
 	}
 	
