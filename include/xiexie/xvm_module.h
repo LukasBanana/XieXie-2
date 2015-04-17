@@ -45,12 +45,22 @@
 
 //! XVM environment state type.
 typedef void* XVM_Env;
+
+//! XVM boolean type.
+typedef char XVM_Boolean;
+
 //! XVM "Object" class type.
 typedef void* XVM_Object;
 //! XVM "String" class type.
 typedef void* XVM_String;
-//! XVM "Array" class type (array type is 'Object[]').
+//! XVM "Array" class type, e.g. 'Object[]'.
 typedef void* XVM_Array;
+//! XVM "PrimArray" class type, e.g. 'int[]'.
+typedef void* XVM_PrimArray;
+//! XVM "BoolArray" class type, e.g. 'bool[]'.
+typedef void* XVM_BoolArray;
+//! XVM "Buffer" class type, e.g. 'bool[]'.
+typedef void* XVM_Buffer;
 
 /**
 Invocation procedure signature. This is the signature for external procedure invocations in ANSI C.
@@ -68,31 +78,19 @@ typedef struct XVM_Invocation
 XVM_Invocation;
 
 
-/* ----- Common Interface ----- */
+/* ----- Error Handling ----- */
 
-//! Returns the argument as integer, specified by the parameter index (beginning with 1).
-int XVM_ParamInt(XVM_Env env, unsigned int paramIndex);
+/**
+Error procedure signature. Such a function is called, if an error during XVM functions calls occured.
+\param[in] err Specifies the error message.
+*/
+typedef void (*XVM_ERROR_PROC)(const char* err);
 
-//! Returns the argument as float, specified by the parameter index (beginning with 1).
-float XVM_ParamFloat(XVM_Env env, unsigned int paramIndex);
-
-//! Returns the argument as null-terminated C string, specified by the parameter index (beginning with 1).
-char* XVM_ParamString(XVM_Env env, unsigned int paramIndex);
-
-//! Returns the argument as raw pointer, specified by the parameter index (beginning with 1).
-void* XVM_ParamPointer(XVM_Env env, unsigned int paramIndex);
-
-//! Returns the argument as "Object" reference, specified by the parameter index (beginning with 1).
-XVM_Object XVM_ParamObject(XVM_Env env, unsigned int paramIndex);
-
-// Pop 'argSize' words from the stack.
-int XVM_ReturnVoid(XVM_Env env, unsigned int argSize);
-
-// Pop 'argSize' words from the stack and push 'value' onto the stack.
-int XVM_ReturnInt(XVM_Env env, unsigned int argSize, int value);
-
-// Pop 'argSize' words from the stack and push 'value' onto the stack.
-int XVM_ReturnFloat(XVM_Env env, unsigned int argSize, float value);
+/**
+Sets the error callback procedure.
+\see XVM_ERROR_PROC
+*/
+void XVM_SetErrorCallback(XVM_ERROR_PROC callback);
 
 
 /* ----- Object Class ----- */
@@ -100,22 +98,57 @@ int XVM_ReturnFloat(XVM_Env env, unsigned int argSize, float value);
 XVM_Object XVM_NewObject();
 
 int XVM_Object_refCount(XVM_Object obj);
-
 int XVM_Object_typeID(XVM_Object obj);
 
 
 /* ----- String Class ----- */
 
 XVM_String XVM_NewString(const char* str);
-
+int XVM_String_size(XVM_String obj);
+void XVM_String_resize(XVM_String obj, int size);
 char* XVM_String_pointer(XVM_String obj);
 
 
 /* ----- Array Class ----- */
 
 XVM_Array XVM_NewArray(size_t initSize);
-
 XVM_Object* XVM_Array_pointer(XVM_Object obj);
+
+
+/* ----- Parameter Fetch ----- */
+
+//! Returns the argument as boolean, specified by the parameter index (beginning with 1).
+XVM_Boolean XVM_ParamBool(XVM_Env env, unsigned int paramIndex);
+
+//! Returns the argument as integer, specified by the parameter index (beginning with 1).
+int XVM_ParamInt(XVM_Env env, unsigned int paramIndex);
+
+//! Returns the argument as float, specified by the parameter index (beginning with 1).
+float XVM_ParamFloat(XVM_Env env, unsigned int paramIndex);
+
+//! Returns the argument as raw pointer, specified by the parameter index (beginning with 1).
+void* XVM_ParamPointer(XVM_Env env, unsigned int paramIndex);
+
+//! Returns the argument as "Object" reference, specified by the parameter index (beginning with 1).
+XVM_Object XVM_ParamObject(XVM_Env env, unsigned int paramIndex);
+
+//! Returns the argument as "String" reference, specified by the parameter index (beginning with 1).
+XVM_String XVM_ParamString(XVM_Env env, unsigned int paramIndex);
+
+
+/* ----- Return Statements ----- */
+
+// Pop 'argSize' words from the stack.
+XVM_Boolean XVM_ReturnVoid(XVM_Env env, unsigned int argSize);
+
+// Pop 'argSize' words from the stack and return 'value'.
+XVM_Boolean XVM_ReturnBool(XVM_Env env, unsigned int argSize, XVM_Boolean value);
+
+// Pop 'argSize' words from the stack and return 'value'.
+XVM_Boolean XVM_ReturnInt(XVM_Env env, unsigned int argSize, int value);
+
+// Pop 'argSize' words from the stack and return 'value'.
+XVM_Boolean XVM_ReturnFloat(XVM_Env env, unsigned int argSize, float value);
 
 
 #endif

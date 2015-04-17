@@ -18,7 +18,11 @@
 // int messageBox(String title, String text, int bitFlags)
 void messageBox(XVM_Env env)
 {
-    int result = MessageBox(NULL, XVM_ParamString(env, 2), XVM_ParamString(env, 1), XVM_ParamInt(env, 3));
+    XVM_String title = XVM_ParamString(env, 1);
+    XVM_String text = XVM_ParamString(env, 2);
+
+    int result = MessageBox(NULL, XVM_String_pointer(text), XVM_String_pointer(title), XVM_ParamInt(env, 3));
+
     XVM_ReturnInt(env, 3, result);
 }
 

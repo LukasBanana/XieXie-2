@@ -8,7 +8,7 @@
 #include <xiexie/xvm_module.h>
 
 
-/* ----- Internal Enumerations ----- */
+/* ----- Internals ----- */
 
 // -> Copied from "xvm.h"
 typedef enum
@@ -53,12 +53,6 @@ typedef enum
 }
 register_id;
 
-
-/* ----- Common Interface ----- */
-
-#define FLOAT_TO_INT(val) *((int*)(&value))
-#define INT_TO_FLOAT(val) *((float*)(&value))
-
 //! XVM stack word type.
 typedef int XVM_Word;
 
@@ -70,63 +64,29 @@ typedef struct
 }
 _XVM_Env;
 
+#define FLOAT_TO_INT(val)   (*((int*)(&value)))
+#define INT_TO_FLOAT(val)   (*((float*)(&value)))
+
 #define ENV(env)            ((_XVM_Env*)env)
 #define ENV_REG(env, reg)   (ENV(env)->regRef[reg])
 #define ENV_STACK_PTR(env)  ((XVM_Word*)ENV_REG(env, REG_SP))
 
-int XVM_ParamInt(XVM_Env env, unsigned int paramIndex)
+
+/* ----- Error Handling ----- */
+
+static void _XVM_ErrorCallbackDummy(const char* err)
 {
-    return *(int*)(ENV_STACK_PTR(env) - paramIndex);
+    // dummy
 }
 
-float XVM_ParamFloat(XVM_Env env, unsigned int paramIndex)
+static XVM_ERROR_PROC _errorCallback = _XVM_ErrorCallbackDummy;
+
+void XVM_SetErrorCallback(XVM_ERROR_PROC callback)
 {
-    return *(float*)(ENV_STACK_PTR(env) - paramIndex);
-}
-
-char* XVM_ParamString(XVM_Env env, unsigned int paramIndex)
-{
-    return (char*)*(ENV_STACK_PTR(env) - paramIndex);
-}
-
-void* XVM_ParamPointer(XVM_Env env, unsigned int paramIndex)
-{
-    return (void*)*(ENV_STACK_PTR(env) - paramIndex);
-}
-
-XVM_Object XVM_ParamObject(XVM_Env env, unsigned int paramIndex)
-{
-    return (XVM_Object)XVM_ParamPointer(env, paramIndex);
-}
-
-int XVM_ReturnVoid(XVM_Env env, unsigned int argSize)
-{
-    // Pop arguments from stack
-    ENV_STACK_PTR(env) -= argSize;
-    if (ENV_STACK_PTR(env) < ENV(env)->stackBegin)
-        return XVM_False;
-
-    return XVM_True;
-}
-
-int XVM_ReturnInt(XVM_Env env, unsigned int argSize, int value)
-{
-    _XVM_Env* _env = (_XVM_Env*)env;
-
-    // Pop arguments from stack
-    ENV_STACK_PTR(env) -= argSize;
-    if (ENV_STACK_PTR(env) < ENV(env)->stackBegin)
-        return XVM_False;
-
-    // Set result into '$ar' register
-    ENV_REG(env, REG_AR) = value;
-
-    return XVM_True;
-}
-
-int XVM_ReturnFloat(XVM_Env env, unsigned int argSize, float value)
-{
-    return XVM_ReturnInt(env, argSize, FLOAT_TO_INT(value));
+    if (callback != NULL)
+        _errorCallback = callback;
+    else
+        _errorCallback = _XVM_ErrorCallbackDummy;
 }
 
 
@@ -178,16 +138,16 @@ typedef struct
 }
 _XVM_String;
 
+static const unsigned int String_typeID = 1;
+
 XVM_String XVM_NewString(const char* str)
 {
-    static const unsigned int typeIDString = 1;
-
-    _XVM_String* _obj = (_XVM_String*)_XVM_AllocObject(sizeof(_XVM_String), typeIDString, NULL);//!!!SET correct vtable address!!!
+    _XVM_String* _obj = (_XVM_String*)_XVM_AllocObject(sizeof(_XVM_String), String_typeID, NULL);//!!!SET correct vtable address!!!
     
     if (str != NULL)
     {
-        size_t len = strlen(str);
-    
+        unsigned len = (unsigned)strlen(str);
+
         _obj->size      = len;
         _obj->bufSize   = len;
         _obj->buffer    = (char*)malloc(sizeof(char) * (len + 1));
@@ -204,6 +164,45 @@ XVM_String XVM_NewString(const char* str)
     }
 
     return _obj;
+}
+
+int XVM_String_size(XVM_String obj)
+{
+    return ((_XVM_String*)obj)->size;
+}
+
+void XVM_String_resize(XVM_String obj, int size)
+{
+    _XVM_String* _obj = (_XVM_String*)obj;
+    unsigned _size = (unsigned)size;
+
+    if (_obj == NULL || _obj->buffer == NULL)
+    {
+        _errorCallback("invalid argument in 'String.resize'");
+        return;
+    }
+
+    // Allocate new buffer for string
+    char* buffer = (char*)malloc(sizeof(char)*(_size + 1));
+    buffer[_size] = '\0';
+
+    if (_size > _obj->size)
+    {
+        // Copy entire old string into new buffer and fill rest with zeros
+        memcpy(buffer, _obj->buffer, sizeof(char)*(_obj->size));
+        memset(&(buffer[_obj->size]), 0, sizeof(char)*(_size - _obj->size));
+    }
+    else
+    {
+        // Copy partial old string into new buffer
+        memcpy(buffer, _obj->buffer, sizeof(char)*_size);
+    }
+
+    // Replace string buffer
+    free(_obj->buffer);
+    _obj->buffer    = buffer;
+    _obj->size      = _size;
+    _obj->bufSize   = _size;
 }
 
 char* XVM_String_pointer(XVM_String obj)
@@ -223,11 +222,11 @@ typedef struct
 }
 _XVM_Array;
 
+static const unsigned int Array_typeID = 2;
+
 XVM_Array XVM_NewArray(size_t initSize)
 {
-    static const unsigned int typeIDArray = 2;
-
-    _XVM_Array* _obj = (_XVM_Array*)_XVM_AllocObject(sizeof(_XVM_Array), typeIDArray, NULL);//!!!SET correct vtable address!!!
+    _XVM_Array* _obj = (_XVM_Array*)_XVM_AllocObject(sizeof(_XVM_Array), Array_typeID, NULL);//!!!SET correct vtable address!!!
 
     if (initSize == 0)
         initSize = 1;
@@ -246,4 +245,76 @@ XVM_Object* XVM_Array_pointer(XVM_Object obj)
 {
     return ((_XVM_Array*)obj)->buffer;
 }
+
+
+/* ----- Parameter Fetch ----- */
+
+XVM_Boolean XVM_ParamBool(XVM_Env env, unsigned int paramIndex)
+{
+    return (XVM_Boolean)(*(int*)(ENV_STACK_PTR(env) - paramIndex));
+}
+
+int XVM_ParamInt(XVM_Env env, unsigned int paramIndex)
+{
+    return *(int*)(ENV_STACK_PTR(env) - paramIndex);
+}
+
+float XVM_ParamFloat(XVM_Env env, unsigned int paramIndex)
+{
+    return *(float*)(ENV_STACK_PTR(env) - paramIndex);
+}
+
+void* XVM_ParamPointer(XVM_Env env, unsigned int paramIndex)
+{
+    return (void*)*(ENV_STACK_PTR(env) - paramIndex);
+}
+
+XVM_Object XVM_ParamObject(XVM_Env env, unsigned int paramIndex)
+{
+    return (XVM_Object)XVM_ParamPointer(env, paramIndex);
+}
+
+XVM_String XVM_ParamString(XVM_Env env, unsigned int paramIndex)
+{
+    return (XVM_String)XVM_ParamPointer(env, paramIndex);
+}
+
+
+/* ----- Return Statements ----- */
+
+XVM_Boolean XVM_ReturnVoid(XVM_Env env, unsigned int argSize)
+{
+    // Pop arguments from stack
+    ENV_STACK_PTR(env) -= argSize;
+    if (ENV_STACK_PTR(env) < ENV(env)->stackBegin)
+        return XVM_False;
+
+    return XVM_True;
+}
+
+XVM_Boolean XVM_ReturnBool(XVM_Env env, unsigned int argSize, XVM_Boolean value)
+{
+    return XVM_ReturnInt(env, argSize, (int)value);
+}
+
+XVM_Boolean XVM_ReturnInt(XVM_Env env, unsigned int argSize, int value)
+{
+    _XVM_Env* _env = (_XVM_Env*)env;
+
+    // Pop arguments from stack
+    ENV_STACK_PTR(env) -= argSize;
+    if (ENV_STACK_PTR(env) < ENV(env)->stackBegin)
+        return XVM_False;
+
+    // Set result into '$ar' register
+    ENV_REG(env, REG_AR) = value;
+
+    return XVM_True;
+}
+
+XVM_Boolean XVM_ReturnFloat(XVM_Env env, unsigned int argSize, float value)
+{
+    return XVM_ReturnInt(env, argSize, FLOAT_TO_INT(value));
+}
+
 
