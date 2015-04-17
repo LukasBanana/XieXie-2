@@ -263,15 +263,17 @@ DEF_VISIT_PROC(GraphGenerator, CtrlTransferStmnt)
 DEF_VISIT_PROC(GraphGenerator, ExprStmnt)
 {
     /* Build CFG for expression statement */
-    auto bb = MakeBlock("ExprStmnt");
+    auto in = MakeBlock("ExprStmnt");
+    auto out = in;
     
-    PushBB(bb);
+    PushBB(in);
     {
         Visit(ast->expr);
+        out = BB();
     }
     PopBB();
 
-    RETURN_BLOCK_REF(bb);
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 /*
@@ -1113,24 +1115,24 @@ GraphGenerator::VisitIO GraphGenerator::GenerateBooleanExpr(Expr& ast)
 
 GraphGenerator::VisitIO GraphGenerator::GenerateConditionalBinaryExpr(Expr& ast)
 {
-    auto bb = MakeBlock();
-    PushBB(bb);
+    auto in = MakeBlock();
+    auto out = in;
+
+    PushBB(in);
     {
         Visit(&ast);
-        auto srcLhs = Var();
-
-        /* Make instruction */
-        auto inst = BB()->MakeInst<TACRelationInst>();
-
-        inst->opcode = OpCodes::CMPNE;
-        inst->srcLhs = srcLhs;
-        inst->srcRhs = TACVar("0");
-
-        PopVar();
+        out = BB();
     }
     PopBB();
 
-    return bb;
+    /* Make instruction */
+    auto inst = out->MakeInst<TACRelationInst>();
+
+    inst->opcode = OpCodes::CMPNE;
+    inst->srcLhs = PopVar();
+    inst->srcRhs = TACVar("0");
+
+    return VisitIO(in, out);
 }
 
 /*
@@ -1177,6 +1179,7 @@ GraphGenerator::VisitIO GraphGenerator::GenerateArithmeticExpr(Expr& ast)
         PushBB(bb);
         {
             Visit(&ast);
+            bb = BB();
         }
         PopBB();
 
@@ -1274,10 +1277,10 @@ void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
     PushBB(bb);
     {
         Visit(ast->lhsExpr);
-        auto srcLhs = Var();
+        auto srcLhs = PopVar();
 
         Visit(ast->rhsExpr);
-        auto srcRhs = Var();
+        auto srcRhs = PopVar();
 
         /* Make instruction */
         auto isFloat = ast->lhsExpr->GetTypeDenoter()->IsFloat();
@@ -1286,8 +1289,6 @@ void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
         inst->opcode = OperatorToOpCode(ast->binaryOperator, isFloat);
         inst->srcLhs = srcLhs;
         inst->srcRhs = srcRhs;
-
-        PopVar(2);
     }
     PopBB();
 
@@ -1410,12 +1411,17 @@ void GraphGenerator::GenerateContinueCtrlTransferStmnt(CtrlTransferStmnt* ast, v
 
 void GraphGenerator::GenerateArgumentExpr(Expr& ast)
 {
-    /*auto exprCFG = GenerateArithmeticExpr(ast);
+    auto exprCFG = GenerateArithmeticExpr(ast);
 
-    ReplaceBB(exprCFG.out);*/
+    /* Check if current basic block must be replaced by new outgoing block */
+    if (exprCFG.in != BB())
+    {
+        BB()->AddSucc(*exprCFG.in);
+        ReplaceBB(exprCFG.out);
+    }
 
     /* Build argument expression CFG */
-    Visit(&ast);
+    //Visit(&ast);
     BB()->MakeInst<TACStackInst>(OpCodes::PUSH, PopVar());
 }
 

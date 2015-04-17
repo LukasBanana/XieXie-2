@@ -32,6 +32,12 @@ BasicBlock::Edge::Edge(BasicBlock* succ, const std::string& label) :
  * BasicBlock class
  */
 
+void BasicBlock::AddStrictSucc(BasicBlock& block, const std::string& label)
+{
+    if (&block != this)
+        AddSucc(block, label);
+}
+
 void BasicBlock::AddSucc(BasicBlock& block, const std::string& label)
 {
     /* Check if block is already a successor of this block */

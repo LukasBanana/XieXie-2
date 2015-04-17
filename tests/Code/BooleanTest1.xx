@@ -20,6 +20,8 @@ class Test {
 		}
 	}
 	
+	static void g(int x, int y) {}
+	
 	static void main() {
 		
 		int a := 5
@@ -29,7 +31,12 @@ class Test {
 		//bool d := true
 		
 		//int e := Test.f(a + b, a != b or not Test.getBoolean())
-		var e := Test.returnBoolean(true)//a > b)
+		
+		Test.g(1, 2)
+		
+		//var e := Test.returnBoolean(true)
+		var e := Test.returnBoolean(a > b)
+		//Test.returnBoolean(a > b)
 		
 		/*if Test.getBoolean() {
 			a++

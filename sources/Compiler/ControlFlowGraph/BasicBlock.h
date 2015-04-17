@@ -88,7 +88,9 @@ class BasicBlock
             return instRef;
         }
 
-        //! Adds the specified successor to this basic block.
+        //! Adds the specified successor to this basic block. This can not be this basic block itself.
+        void AddStrictSucc(BasicBlock& block, const std::string& label = "");
+        //! Adds the specified successor to this basic block. This can also be this basic block itself.
         void AddSucc(BasicBlock& block, const std::string& label = "");
         //! Inserts the specified successor into this basic block.
         void InsertSucc(BasicBlock& block, BasicBlock& blockToReplace, const std::string& label = "");
