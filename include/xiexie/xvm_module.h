@@ -52,9 +52,6 @@ typedef void* XVM_String;
 //! XVM "Array" class type (array type is 'Object[]').
 typedef void* XVM_Array;
 
-//! XVM stack word type.
-typedef int XVM_StackWord;
-
 /**
 Invocation procedure signature. This is the signature for external procedure invocations in ANSI C.
 \param[in] env Environment handle to access the program state (e.g. the virtual stack).

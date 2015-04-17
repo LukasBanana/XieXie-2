@@ -1193,9 +1193,9 @@ INLINE static stack_word_t _xvm_stack_pop(xvm_stack* stack, regi_t* reg_sp)
 
 typedef struct
 {
-    stack_word_t**  ptr_ref;    // reference to stack pointer (register $sp)
-    stack_word_t*   begin;      // stack begin
-    stack_word_t*   end;        // stack end
+    int* reg_ref;       // reference to registers
+    int* stack_begin;   // stack begin
+    int* stack_end;     // stack end
 }
 _xvm_env_internal;
 
@@ -2342,9 +2342,9 @@ xvm_exit_codes xvm_execute_program_ext(
 
     // Invocation environment
     _xvm_env_internal stack_env;
-    stack_env.ptr_ref   = (stack_word_t**)reg_sp;
-    stack_env.begin     = stack->storage;
-    stack_env.end       = stack->storage + stack->stack_size;
+    stack_env.reg_ref       = (int*)reg.i;
+    stack_env.stack_begin   = stack->storage;
+    stack_env.stack_end     = stack->storage + stack->stack_size;
 
     /* --- Temporary memory --- */
     instr_t         instr;          // Current instruction
