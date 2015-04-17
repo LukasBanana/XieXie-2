@@ -133,6 +133,9 @@ class XASMGenerator final : public AsmGenerator
         /* --- Code Generation --- */
 
         void GenerateModuleImports(const CFGProgram& program);
+        void GenerateCoreAssembly();
+        void GenerateAdjustmentCode(const CFGProgram& program);
+        void GenerateStartUpCode(const ClassDeclStmnt& rootClass);
         void GenerateStartUpCodeForRootClass(const CFGProgram& program);
 
         void GenerateClassTree(const ClassTree& classTree);
@@ -155,10 +158,10 @@ class XASMGenerator final : public AsmGenerator
 
         void GenerateVtable(const ClassDeclStmnt& classDecl);
         void GenerateClassRTTI(const BuiltinClasses::ClassRTTI& typeInfo);
-        void GenerateStartUpCode(const ClassDeclStmnt& rootClass);
         void GenerateExportLabels();
 
         void GenerateStringLiteral(const CFGProgram::StringLiteral& constStr);
+        void GenerateStringLiteralAdjustment(const CFGProgram::StringLiteral& constStr);
         void GenerateBoolArrayLiteral(const CFGProgram::BoolArrayLiteral& constArray);
         void GenerateIntArrayLiteral(const CFGProgram::IntArrayLiteral& constArray);
         void GenerateFloatArrayLiteral(const CFGProgram::FloatArrayLiteral& constArray);

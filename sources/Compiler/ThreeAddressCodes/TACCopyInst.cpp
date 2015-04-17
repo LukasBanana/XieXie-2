@@ -23,6 +23,12 @@ TACCopyInst::TACCopyInst(const TACVar& dest, const TACVar& src) :
     src     { src          }
 {
 }
+TACCopyInst::TACCopyInst(OpCodes opcode, const TACVar& dest, const TACVar& src) :
+    TACInst { opcode },
+    dest    { dest   },
+    src     { src    }
+{
+}
 
 TACInst::Types TACCopyInst::Type() const
 {

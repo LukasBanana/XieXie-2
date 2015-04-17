@@ -55,10 +55,10 @@ bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorR
         /* Write commentary header */
         WriteHeader();
 
-        /* Generate module imports */
-        GenerateModuleImports(program);
-
         /* Generate start-up code */
+        GenerateModuleImports(program);
+        GenerateCoreAssembly();
+        GenerateAdjustmentCode(program);
         GenerateStartUpCodeForRootClass(program);
 
         /* Generate assembler code for each class tree */
@@ -296,6 +296,70 @@ void XASMGenerator::GenerateModuleImports(const CFGProgram& program)
     }
 }
 
+/*
+This function writes the entire 'Core' assembly into the final program.
+This code must be at the beginning, so the code is over-jumped with the label "__xx__entry"
+*/
+void XASMGenerator::GenerateCoreAssembly()
+{
+    CommentHeadline("CORE ASSEMBLY");
+    Line("jmp __xx__entry");
+
+    /*Ln(
+        #include ""
+    );*/
+
+    GlobalLabel("__xx__entry");
+    Blanks(2);
+}
+
+void XASMGenerator::GenerateAdjustmentCode(const CFGProgram& program)
+{
+    CommentHeadline("LITERAL ADJUSTMENTS");
+
+    /* Generate literal adjustments */
+    for (const auto& sl : program.stringLiterals)
+        GenerateStringLiteralAdjustment(sl);
+
+    Blanks(2);
+}
+
+void XASMGenerator::GenerateStartUpCode(const ClassDeclStmnt& rootClass)
+{
+    auto globalSize = rootClass.GetGlobalEndOffset();
+
+    CommentHeadline("PROGRAM START-UP");
+
+    if (globalSize > 0)
+    {
+        /* Allocate space for global variables */
+        Line("mov $gp, $sp");
+        Line("add $sp, $sp, " + std::to_string(globalSize));
+
+        /* Initialize global variables with zeros */
+        Line("push 0");
+        Line("push " + std::to_string(globalSize));
+        Line("push $gp");
+        Line("insc FillMem");
+    }
+    else
+        Line("mov $gp, 0");
+
+    /* Initialize global variables with specific values */
+    //...
+
+    /* Call main procedure */
+    Line("call " + mainProcIdent);
+
+    /* Call destructors of all global dynamic objects */
+    //...
+
+    /* Stop program */
+    Line("stop");
+
+    Blanks(2);
+}
+
 void XASMGenerator::GenerateStartUpCodeForRootClass(const CFGProgram& program)
 {
     bool hasRootClass = false;
@@ -516,6 +580,9 @@ void XASMGenerator::GenerateCopyInst(const TACCopyInst& inst)
                     break;
                 case OpCodes::ITF:
                     Ln("itf");
+                    break;
+                case OpCodes::LDADDR:
+                    Ln("lda");
                     break;
             }
 
@@ -781,42 +848,6 @@ void XASMGenerator::GenerateClassRTTI(const BuiltinClasses::ClassRTTI& typeInfo)
     WORDAddress(typeInfo.vtableAddr);   // vtableAddr
 }
 
-void XASMGenerator::GenerateStartUpCode(const ClassDeclStmnt& rootClass)
-{
-    auto globalSize = rootClass.GetGlobalEndOffset();
-
-    CommentHeadline("PROGRAM START-UP");
-
-    if (globalSize > 0)
-    {
-        /* Allocate space for global variables */
-        Line("mov $gp, $sp");
-        Line("add $sp, $sp, " + std::to_string(globalSize));
-
-        /* Initialize global variables with zeros */
-        Line("push 0");
-        Line("push " + std::to_string(globalSize));
-        Line("push $gp");
-        Line("insc FillMem");
-    }
-    else
-        Line("mov $gp, 0");
-
-    /* Initialize global variables with specific values */
-    //...
-
-    /* Call main procedure */
-    Line("call " + mainProcIdent);
-
-    /* Call destructors of all global dynamic objects */
-    //...
-
-    /* Stop program */
-    Line("stop");
-
-    Blanks(2);
-}
-
 void XASMGenerator::GenerateExportLabels()
 {
     if (!exportLabels_.empty())
@@ -842,13 +873,20 @@ void XASMGenerator::GenerateStringLiteral(const CFGProgram::StringLiteral& const
         GenerateClassRTTI(BuiltinClasses::String);
         WORDField(size);                                    // String.size
         WORDField(size);                                    // String.bufSize
-        WORDAddress(".buffer");                             // String.buffer
-        LocalLabel("buffer");
+        WORDField(0);                                       // String.buffer
         ASCIIField(ResolveStringLiteral(constStr.value));
     }
     DecIndent();
 
     Blank();
+}
+
+// Generates code to adjust the 'String.buffer' WORD field in a string literal.
+void XASMGenerator::GenerateStringLiteralAdjustment(const CFGProgram::StringLiteral& constStr)
+{
+    Line("lda $r0, @" + constStr.ident);
+    Line("add $r1, $r0, 24");
+    Line("stw $r1, ($r0) 20");
 }
 
 void XASMGenerator::GenerateBoolArrayLiteral(const CFGProgram::BoolArrayLiteral& constArray)

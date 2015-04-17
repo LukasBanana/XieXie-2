@@ -929,33 +929,30 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
         auto literalIdent = AppendStringLiteral(ast->value);
         
         /* Make instruction */
-        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, '@' + literalIdent);
+        auto var = TempVar();
+        BB()->MakeInst<TACCopyInst>(OpCodes::LDADDR, var, '@' + literalIdent);
+        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, var);
         BB()->MakeInst<TACDirectCallInst>("String.copy_literal");
 
-        auto var = TempVar();
-        BB()->MakeInst<TACCopyInst>(var, ResultVar());
-
-        PushVar(var);
+        PushVar(ResultVar());
     }
     else
     {
         /* Make instruction */
-        auto inst = BB()->MakeInst<TACCopyInst>();
-
-        inst->dest = TempVar();
+        TACVar var;
 
         switch (ast->GetType())
         {
             case LiteralExpr::Literals::Bool:
-                inst->src = (ast->value == "false" ? "0" : "1");
+                var = (ast->value == "false" ? "0" : "1");
                 break;
 
             default:
-                inst->src = ast->value;
+                var = ast->value;
                 break;
         }
 
-        PushVar(inst->dest);
+        PushVar(var);
     }
 }
 

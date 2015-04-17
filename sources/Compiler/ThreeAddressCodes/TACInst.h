@@ -59,6 +59,7 @@ class TACInst
             FTI,        // float-to-int static cast
             ITF,        // int-to-float static cast
             DYNCAST,    // dynamic (down) cast
+            LDADDR,     // load address from program
 
             /* Modify */
             AND,

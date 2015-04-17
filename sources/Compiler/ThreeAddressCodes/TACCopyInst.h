@@ -24,6 +24,7 @@ class TACCopyInst : public TACInst
         
         TACCopyInst();
         TACCopyInst(const TACVar& dest, const TACVar& src);
+        TACCopyInst(OpCodes opcode, const TACVar& dest, const TACVar& src);
 
         Types Type() const override;
         std::string ToString() const override;

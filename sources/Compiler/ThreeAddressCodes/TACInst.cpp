@@ -51,6 +51,8 @@ std::string TACInst::OpCodeToString(const OpCodes opcode)
             return "ITF";
         case OpCodes::DYNCAST:
             return "DynCast";
+        case OpCodes::LDADDR:
+            return "LdAddr";
 
         /* Modify */
         case OpCodes::AND:
