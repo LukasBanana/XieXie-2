@@ -1,67 +1,14 @@
 /*
- * XieXie 2.0 module main header
+ * xvm_module.c
  * 
- * Copyright (C) 2014 Lukas Hermanns
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms
- * of the BSD license.  See the LICENSE file for details.
+ * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_MODULE_H__
-#define __XX_MODULE_H__
+#include <xiexie/xvm_module.h>
 
 
-#include <stdlib.h>
-#include <string.h>
-
-
-//! XVM boolean 'true' literal.
-#define XVM_True    1
-//! XVM boolean 'false' literal.
-#define XVM_False   0
-
-#ifdef _WIN32
-#   define _XVM_EXPORT __declspec(dllexport)
-#else
-#   define _XVM_EXPORT
-#endif
-
-#define XVM_IMPLEMENT_MODULE_INTERFACE(procList)                                \
-    _XVM_EXPORT int xx_module_proc_count()                                      \
-    {                                                                           \
-        return (sizeof(procList)/sizeof(XVM_Invocation));                       \
-    }                                                                           \
-    _XVM_EXPORT XVM_INVOCATION_PROC xx_module_fetch_proc(int index)             \
-    {                                                                           \
-        return (index < xx_module_proc_count() ? procList[index].proc : NULL);  \
-    }                                                                           \
-    _XVM_EXPORT const char* xx_module_fetch_ident(int index)                    \
-    {                                                                           \
-        return (index < xx_module_proc_count() ? procList[index].ident : NULL); \
-    }
-
-#undef _XVM_EXPORT
-
-
-//! XVM environment state type.
-typedef void* XVM_Env;
-//! XVM "Object" class type.
-typedef void* XVM_Object;
-//! XVM "String" class type.
-typedef void* XVM_String;
-//! XVM "Array" class type (array type is 'Object[]').
-typedef void* XVM_Array;
-
-//! XVM stack word type.
-typedef int XVM_StackWord;
-
-/**
-Invocation procedure signature. This is the signature for external procedure invocations in ANSI C.
-\param[in] env Environment handle to access the program state (e.g. the virtual stack).
-*/
-typedef void (*XVM_INVOCATION_PROC)(XVM_Env env);
-
+/* ----- Common Interface ----- */
 
 typedef struct
 {
@@ -71,76 +18,35 @@ typedef struct
 }
 _XVM_Env;
 
-typedef struct
-{
-    unsigned    refCount;
-    unsigned    typeID;
-    void*       vtable;
-}
-_XVM_Object;
-
-typedef struct
-{
-    _XVM_Object super;
-    unsigned    size;
-    unsigned    bufSize;
-    char*       buffer;
-}
-_XVM_String;
-
-typedef struct
-{
-    _XVM_Object super;
-    unsigned    size;
-    unsigned    bufSize;
-    XVM_Object* buffer;
-}
-_XVM_Array;
-
-//! XVM invocation structure.
-typedef struct XVM_Invocation
-{
-    const char*         ident;
-    XVM_INVOCATION_PROC proc;
-}
-XVM_Invocation;
-
-
-//! Returns the argument as integer, specified by the parameter index (beginning with 1).
 int XVM_ParamInt(XVM_Env env, unsigned int paramIndex)
 {
     XVM_StackWord* ptr = *((_XVM_Env*)env)->regRefSP;
     return *(int*)(ptr - paramIndex);
 }
 
-//! Returns the argument as float, specified by the parameter index (beginning with 1).
 float XVM_ParamFloat(XVM_Env env, unsigned int paramIndex)
 {
     XVM_StackWord* ptr = *((_XVM_Env*)env)->regRefSP;
     return *(float*)(ptr - paramIndex);
 }
 
-//! Returns the argument as null-terminated C string, specified by the parameter index (beginning with 1).
 char* XVM_ParamString(XVM_Env env, unsigned int paramIndex)
 {
     XVM_StackWord* ptr = *((_XVM_Env*)env)->regRefSP;
     return (char*)*(ptr - paramIndex);
 }
 
-//! Returns the argument as raw pointer, specified by the parameter index (beginning with 1).
 void* XVM_ParamPointer(XVM_Env env, unsigned int paramIndex)
 {
     XVM_StackWord* ptr = *((_XVM_Env*)env)->regRefSP;
     return (void*)*(ptr - paramIndex);
 }
 
-//! Returns the argument as "Object" reference, specified by the parameter index (beginning with 1).
 XVM_Object XVM_ParamObject(XVM_Env env, unsigned int paramIndex)
 {
     return (XVM_Object)XVM_ParamPointer(env, paramIndex);
 }
 
-// Pop 'argSize' words from the stack.
 int XVM_ReturnVoid(XVM_Env env, unsigned int argSize)
 {
     _XVM_Env* _env = (_XVM_Env*)env;
@@ -148,12 +54,11 @@ int XVM_ReturnVoid(XVM_Env env, unsigned int argSize)
     // Pop arguments from stack
     *_env->regRefSP -= argSize;
     if (*_env->regRefSP < _env->begin)
-        return 0;
+        return XVM_False;
 
-    return 1;
+    return XVM_True;
 }
 
-// Pop 'argSize' words from the stack and push 'value' onto the stack.
 int XVM_ReturnInt(XVM_Env env, unsigned int argSize, int value)
 {
     _XVM_Env* _env = (_XVM_Env*)env;
@@ -161,23 +66,33 @@ int XVM_ReturnInt(XVM_Env env, unsigned int argSize, int value)
     // Pop arguments from stack
     *_env->regRefSP -= argSize;
     if (*_env->regRefSP < _env->begin)
-        return 0;
+        return XVM_False;
 
     // Push result onto stack
     **_env->regRefSP = value;
     ++*_env->regRefSP;
     if (*_env->regRefSP > _env->end)
-        return 0;
+        return XVM_False;
 
-    return 1;
+    return XVM_True;
 }
 
-// Pop 'argSize' words from the stack and push 'value' onto the stack.
 int XVM_ReturnFloat(XVM_Env env, unsigned int argSize, float value)
 {
     int valueInt = *((int*)(&value));
     return XVM_ReturnInt(env, argSize, valueInt);
 }
+
+
+/* ----- Object Class ----- */
+
+typedef struct
+{
+    unsigned    refCount;
+    unsigned    typeID;
+    void*       vtable;
+}
+_XVM_Object;
 
 static _XVM_Object* _XVM_AllocObject(size_t size, unsigned typeID, void* vtable)
 {
@@ -189,8 +104,6 @@ static _XVM_Object* _XVM_AllocObject(size_t size, unsigned typeID, void* vtable)
 
     return _obj;
 }
-
-/* --- Object Class --- */
 
 XVM_Object XVM_NewObject()
 {
@@ -207,7 +120,17 @@ int XVM_Object_typeID(XVM_Object obj)
     return ((_XVM_Object*)obj)->typeID;
 }
 
-/* --- String Class --- */
+
+/* ----- String Class ----- */
+
+typedef struct
+{
+    _XVM_Object super;
+    unsigned    size;
+    unsigned    bufSize;
+    char*       buffer;
+}
+_XVM_String;
 
 XVM_String XVM_NewString(const char* str)
 {
@@ -240,7 +163,17 @@ char* XVM_String_pointer(XVM_String obj)
     return ((_XVM_String*)obj)->buffer;
 }
 
-/* --- Array Class --- */
+
+/* ----- Array Class ----- */
+
+typedef struct
+{
+    _XVM_Object super;
+    unsigned    size;
+    unsigned    bufSize;
+    XVM_Object* buffer;
+}
+_XVM_Array;
 
 XVM_Array XVM_NewArray(size_t initSize)
 {
@@ -263,7 +196,4 @@ XVM_Object* XVM_Array_pointer(XVM_Object obj)
 {
     return ((_XVM_Array*)obj)->buffer;
 }
-
-
-#endif
 

@@ -5,6 +5,10 @@
  * See "LICENSE.txt" for license information.
  */
 
+#ifndef __XX_XVM_H__
+#define __XX_XVM_H__
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <setjmp.h>
@@ -804,4 +808,7 @@ xvm_exit_codes xvm_execute_program_entry_point(
 #ifdef __cplusplus
 }
 #endif
+
+
+#endif // /__XX_XVM_H__
 

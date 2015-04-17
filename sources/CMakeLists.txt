@@ -8,13 +8,41 @@ project(XieXie2)
 # === Build path ===
 
 set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build CACHE PATH "Build Directory")
+set(MODULES_OUTPUT_DIR "${PROJECT_SOURCE_DIR}/../modules")
 
 set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/../include")
+set(PROJECT_MODULES_DIR "${PROJECT_SOURCE_DIR}/Modules")
 
 
 # === Preprocessor definitions ===
 
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+macro(SETUP_LIB_OUTPUT LIB_NAME COMPILER_IDENT)
+	set_target_properties(
+		${LIB_NAME} PROPERTIES
+		LINKER_LANGUAGE ${COMPILER_IDENT}
+		DEBUG_POSTFIX "D"
+		ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+		ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+		LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+		LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+		RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
+		RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
+	)
+endmacro()
+
+macro(SETUP_STD_C_MODULE MODULE_NAME)
+	add_library("Module_${MODULE_NAME}" SHARED "${PROJECT_MODULES_DIR}/${MODULE_NAME}/${MODULE_NAME}.c")
+	set_target_properties(
+		"Module_${MODULE_NAME}" PROPERTIES
+		LINKER_LANGUAGE C
+		DEBUG_POSTFIX "D"
+		OUTPUT_NAME ${MODULE_NAME}
+		RUNTIME_OUTPUT_DIRECTORY_RELEASE "${MODULES_OUTPUT_DIR}/${MODULE_NAME}"
+	)
+	target_link_libraries("Module_${MODULE_NAME}" xvm_module)
+endmacro()
 
 
 # === Global files ===
@@ -76,6 +104,12 @@ set(
 	${PROJECT_SOURCE_DIR}/VirtualMachine/xvm_wrapper.cpp
 )
 
+set(
+	FilesXVMModule
+	${PROJECT_INCLUDE_DIR}/xiexie/xvm_module.h
+	${PROJECT_MODULES_DIR}/xvm_module.c
+)
+
 
 # === Source group folders ===
 
@@ -118,6 +152,16 @@ source_group(
 	${FilesXVMWrapper}
 )
 
+# --- Modules ---
+
+source_group(
+	"Modules" FILES
+	${FilesXVMModule}
+	${PROJECT_MODULES_DIR}/MsgBox/MsgBox.c
+	${PROJECT_MODULES_DIR}/Socket/Socket.c
+	${PROJECT_MODULES_DIR}/SysInfo/SysInfo.c
+)
+
 
 # === Include directories ===
 
@@ -140,70 +184,39 @@ include_directories("${PROJECT_SOURCE_DIR}/Platform")
 include_directories("${PROJECT_SOURCE_DIR}/Shell")
 include_directories("${PROJECT_SOURCE_DIR}/Shell/Command")
 
-# === Executable ===
+# === Binaries ===
 
 add_executable(xxc ${FilesAll})
 add_executable(xvm ${FilesXVMShell})
+
 add_library(xvmlib STATIC ${FilesXVM})
 add_library(xvm_wrapper STATIC ${FilesXVMWrapper})
+add_library(xvm_module STATIC ${FilesXVMModule})
 
-set_target_properties(
-	xxc PROPERTIES
-	LINKER_LANGUAGE CXX
-	DEBUG_POSTFIX "D"
-	ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-	LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-)
+SETUP_STD_C_MODULE(MsgBox)
+SETUP_STD_C_MODULE(Socket)
+SETUP_STD_C_MODULE(SysInfo)
 
-set_target_properties(
-	xvmlib PROPERTIES
-	LINKER_LANGUAGE C
-	DEBUG_POSTFIX "D"
-	ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-	LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-)
-
-set_target_properties(
-	xvm PROPERTIES
-	LINKER_LANGUAGE C
-	DEBUG_POSTFIX "D"
-	ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-	LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-)
-
-set_target_properties(
-	xvm_wrapper PROPERTIES
-	LINKER_LANGUAGE CXX
-	DEBUG_POSTFIX "D"
-	ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-	LIBRARY_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
-	RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
-)
+SETUP_LIB_OUTPUT(xxc CXX)
+SETUP_LIB_OUTPUT(xvmlib C)
+SETUP_LIB_OUTPUT(xvm C)
+SETUP_LIB_OUTPUT(xvm_wrapper CXX)
+SETUP_LIB_OUTPUT(xvm_module C)
 
 target_link_libraries(xvm xvmlib)
 target_link_libraries(xvm_wrapper xvmlib)
 target_link_libraries(xxc xvm_wrapper)
 
+if(WIN32)
+	target_link_libraries(Module_Socket wsock32 ws2_32)
+endif()
+
 if(UNIX)
-	target_link_libraries(xvm_wrapper dl m)
+	target_link_libraries(xxc dl m)
 	target_link_libraries(xvm dl m)
 	target_link_libraries(xvmlib dl m)
-	target_link_libraries(xxc dl m)
+	target_link_libraries(xvm_wrapper dl m)
+	target_link_libraries(xvm_module dl m)
 endif()
 
 

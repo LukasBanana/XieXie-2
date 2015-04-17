@@ -5,14 +5,14 @@
  * See "LICENSE.txt" for license information.
  */
 
+#include <xiexie/xvm_module.h>
+
 #if defined(_WIN32)
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
 #elif defined(__linux__)
 #   include <sys/socket.h>
 #endif
-
-#include "../xx_module.h"
 
 
 // INVOCATIONS

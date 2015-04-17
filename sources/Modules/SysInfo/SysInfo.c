@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "../xx_module.h"
+#include <xiexie/xvm_module.h>
 
 #if defined(_WIN32)
 
@@ -52,6 +52,7 @@ static void CopyInteger(int* dest, int value)
 static DWORD QueryProcessorSpeed()
 {
     // Open register key
+    DWORD speed, size;
     HKEY key;
     LONG error = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &key);
 
@@ -59,9 +60,9 @@ static DWORD QueryProcessorSpeed()
         return 0;
 
     // Query processor speed
-    DWORD speed = 0;
-    DWORD size  = sizeof(speed);
-    error       = RegQueryValueExA(key, "~MHz", 0, 0, (LPBYTE)(&speed), &size);
+    speed   = 0;
+    size    = sizeof(speed);
+    error   = RegQueryValueExA(key, "~MHz", 0, 0, (LPBYTE)(&speed), &size);
 
     // Close register key
     RegCloseKey(key);
@@ -121,10 +122,12 @@ static void SetupCPUType(char* dest)
 
 static void SetupCPUName(char* dest, LPFN_QUERYFULLPROCESSIMAGENAME_PROC queryFullProcessImageName)
 {
+    DWORD maxLen;
+
     if (!dest || !queryFullProcessImageName)
         return;
 
-    DWORD maxLen = maxStringLength;
+    maxLen = maxStringLength;
 
     // Query processor image name
     BOOL result = queryFullProcessImageName(

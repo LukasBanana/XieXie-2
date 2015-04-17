@@ -5,12 +5,12 @@
  * See "LICENSE.txt" for license information.
  */
 
-//#if defined(_WIN32)
+#include <xiexie/xvm_module.h>
+
+#if defined(_WIN32)
 
 
 #include <Windows.h>
-
-#include "../xx_module.h"
 
 
 // INVOCATIONS
@@ -33,5 +33,5 @@ static XVM_Invocation procList[] =
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);
 
 
-//#endif
+#endif
 
