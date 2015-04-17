@@ -97,6 +97,23 @@ void BasicBlock::RemoveSucc(BasicBlock& block)
         block.pred_.erase(itPred);
 }
 
+void BasicBlock::KillSucc(BasicBlock& block)
+{
+    /* Find block in the successor list of this block */
+    auto it = std::find(succ_.begin(), succ_.end(), &block);
+    if (it == succ_.end())
+        return;
+
+    /* Remove block from the list */
+    auto label = it->label;
+    succ_.erase(it);
+
+    /* Remove this block from the predecessor list of the specified block */
+    auto itPred = std::find(block.pred_.begin(), block.pred_.end(), this);
+    if (itPred != block.pred_.end())
+        block.pred_.erase(itPred);
+}
+
 void BasicBlock::Clean()
 {
     VisitSet visitSet;
@@ -150,8 +167,34 @@ bool BasicBlock::HasVisited(VisitSet& visitSet) const
 // Kills all pointless branches
 void BasicBlock::KillBranches(VisitSet& visitSet, bool& hasChanged)
 {
+    /* Check if this basic block has already been visited */
+    if (HasVisited(visitSet))
+        return;
     
+    /* Check if last instruction is a relation */
+    if (!insts.empty() && insts.back()->Type() == TACInst::Types::Relation && succ_.size() == 2)
+    {
+        /* Check if a branch can be killed */
+        const auto& relationInst = static_cast<const TACRelationInst&>(*insts.back());
+        if (relationInst.IsAlwaysTrue())
+        {
+            /* Kill 'false' branch */
+            KillSucc(*succ_.back());
+            insts.pop_back();
+            hasChanged = true;
+        }
+        else if (relationInst.IsAlwaysFalse())
+        {
+            /* Kill 'true' branch */
+            KillSucc(*succ_.front());
+            insts.pop_back();
+            hasChanged = true;
+        }
+    }
 
+    /* Visit successors */
+    for (auto bb : succ_)
+        bb->KillBranches(visitSet, hasChanged);
 }
 
 /*

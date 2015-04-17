@@ -94,8 +94,13 @@ class BasicBlock
         void AddSucc(BasicBlock& block, const std::string& label = "");
         //! Inserts the specified successor into this basic block.
         void InsertSucc(BasicBlock& block, BasicBlock& blockToReplace, const std::string& label = "");
-        //! Removes the specified successor from this basic block.
+        //! Removes the specified successor from this basic block and concatenates its successors to this block.
         void RemoveSucc(BasicBlock& block);
+        /**
+        Removes the specified successor from this basic block without concatenating to its successor.
+        \todo Incomplete!
+        */
+        void KillSucc(BasicBlock& block);
 
         //! Cleans the local CFG recursively.
         void Clean();
