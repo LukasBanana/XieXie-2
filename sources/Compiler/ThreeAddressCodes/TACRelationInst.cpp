@@ -80,30 +80,53 @@ void TACRelationInst::ReplaceVar(const TACVar& varToReplace, const TACVar& repla
 bool TACRelationInst::IsAlwaysTrue() const
 {
     if (srcLhs.IsConst() && srcRhs.IsConst())
-    {
-        /*switch ()
-        {
-            CMPE,
-            CMPNE,
-            CMPL,
-            CMPLE,
-            CMPG,
-            CMPGE,
-
-            FCMPE,
-            FCMPNE,
-            FCMPL,
-            FCMPLE,
-            FCMPG,
-            FCMPGE,
-        }*/
-    }
+        return IsConstRelationTrue();
     return false;
 }
 
 bool TACRelationInst::IsAlwaysFalse() const
 {
-    
+    if (srcLhs.IsConst() && srcRhs.IsConst())
+        return !IsConstRelationTrue();
+    return false;
+}
+
+
+/*
+ * ======= Private: ======
+ */
+
+bool TACRelationInst::IsConstRelationTrue() const
+{
+    switch (opcode)
+    {
+        case OpCodes::CMPE:
+            return srcLhs.Int() == srcRhs.Int();
+        case OpCodes::CMPNE:
+            return srcLhs.Int() != srcRhs.Int();
+        case OpCodes::CMPL:
+            return srcLhs.Int() < srcRhs.Int();
+        case OpCodes::CMPLE:
+            return srcLhs.Int() <= srcRhs.Int();
+        case OpCodes::CMPG:
+            return srcLhs.Int() > srcRhs.Int();
+        case OpCodes::CMPGE:
+            return srcLhs.Int() >= srcRhs.Int();
+
+        case OpCodes::FCMPE:
+            return srcLhs.Float() == srcRhs.Float();
+        case OpCodes::FCMPNE:
+            return srcLhs.Float() != srcRhs.Float();
+        case OpCodes::FCMPL:
+            return srcLhs.Float() < srcRhs.Float();
+        case OpCodes::FCMPLE:
+            return srcLhs.Float() <= srcRhs.Float();
+        case OpCodes::FCMPG:
+            return srcLhs.Float() > srcRhs.Float();
+        case OpCodes::FCMPGE:
+            return srcLhs.Float() >= srcRhs.Float();
+    }
+    return false;
 }
 
 

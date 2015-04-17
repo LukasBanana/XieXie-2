@@ -37,6 +37,10 @@ class TACRelationInst : public TACInst
 
         TACVar srcLhs, srcRhs;
 
+    private:
+        
+        bool IsConstRelationTrue() const;
+
 };
 
 
