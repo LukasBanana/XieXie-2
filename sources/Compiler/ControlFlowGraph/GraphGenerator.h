@@ -84,6 +84,7 @@ class GraphGenerator final : private Visitor
 
         VisitIO GenerateBooleanExpr(Expr& ast);
         VisitIO GenerateConditionalBinaryExpr(Expr& ast);
+        VisitIO GenerateArithmeticExpr(Expr& ast);
 
         void GenerateLogicAndBinaryExpr(BinaryExpr* ast, void* args);
         void GenerateLogicOrBinaryExpr(BinaryExpr* ast, void* args);
@@ -121,6 +122,7 @@ class GraphGenerator final : private Visitor
 
         void PushBB(BasicBlock* bb);
         void PopBB();
+        void ReplaceBB(BasicBlock* bb);
         //! Returns the current basic block.
         BasicBlock* BB() const;
 

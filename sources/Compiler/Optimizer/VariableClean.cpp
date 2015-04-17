@@ -148,9 +148,15 @@ bool VariableClean::VarNotWritten(const TACVar& var)
     return false;
 }
 
+/*
+Note:
+  Can not remove temporary variables, since "GraphGenerator::GenerateArithmeticExpr"
+  may generate them as single instruction for a basic block.
+*/
 bool VariableClean::IsDestVarRequired(const TACVar& var)
 {
-    return IsVarUsed(var) || ( !var.IsTemp() && VarNotWritten(var) ) ;
+    //return IsVarUsed(var) || ( !var.IsTemp() && VarNotWritten(var) );
+    return IsVarUsed(var) || VarNotWritten(var);
 }
 
 
