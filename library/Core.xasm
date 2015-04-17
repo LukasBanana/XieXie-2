@@ -6,7 +6,7 @@
 ;
 
 ; Export all global addresses
-.pragma("export all")
+;.pragma("export all")
 
 ; ------- Common -------
 

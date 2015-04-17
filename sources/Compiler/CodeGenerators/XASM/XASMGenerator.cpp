@@ -305,9 +305,9 @@ void XASMGenerator::GenerateCoreAssembly()
     CommentHeadline("CORE ASSEMBLY");
     Line("jmp __xx__entry");
 
-    /*Ln(
-        #include ""
-    );*/
+    Ln(
+        #include "Core.xasm.h"
+    );
 
     GlobalLabel("__xx__entry");
     Blanks(2);

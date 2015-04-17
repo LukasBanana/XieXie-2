@@ -44,13 +44,25 @@ static void TrimBlanksRight(std::string& s)
 
 static void TrimCommentRight(std::string& s)
 {
-    s.erase(
-        std::find_if(
-            s.rbegin(), s.rend(),
-            [](char c) { return c == ';'; }
-        ).base(),
-        s.end()
+    auto it = std::find_if(
+        s.rbegin(), s.rend(),
+        [](char c) { return c == ';'; }
     );
+    if (it != s.rend())
+    {
+        s.erase(it.base(), s.end());
+        s.pop_back();
+    }
+}
+
+static void ResolveString(std::string& s)
+{
+    for (auto i = s.size(); i > 0;)
+    {
+        --i;
+        if (s[i] == '\"')
+            s.replace(i, 1, "\\\"");
+    }
 }
 
 static void GenerateAssemblyIncludeFile(const std::string& assemblyInput, const std::string& assemblyOutput)
@@ -75,12 +87,13 @@ static void GenerateAssemblyIncludeFile(const std::string& assemblyInput, const 
         TrimBlanksLeft(line);
         TrimCommentRight(line);
         TrimBlanksRight(line);
+        ResolveString(line);
 
         if (line.empty())
             continue;
 
         /* Write line */
-        output << '\"' << line << "\"\\n" << std::endl;
+        output << '\"' << line << "\\n\"" << std::endl;
     }
 }
 
@@ -99,6 +112,7 @@ int main(int argc, char* argv[])
         try
         {
             GenerateAssemblyIncludeFile(assemblyInput, assemblyOutput);
+            std::cout << infoPrefix << "generation successful" << std::endl;
         }
         catch (const std::exception& err)
         {
