@@ -1,0 +1,42 @@
+
+// Boolean Test 1
+// 17/04/2015
+
+class Test {
+	
+	static bool getBoolean() {
+		return true
+	}
+	
+	static bool returnBoolean(bool b) {
+		return b
+	}
+	
+	static int f(int x, bool b) {
+		if b {
+			return x*x
+		} else {
+			return x+x
+		}
+	}
+	
+	static void main() {
+		
+		int a := 5
+		int b := -7
+		
+		//bool c := a > b and a != 7 or ( b = -2 and Test.getBoolean() )
+		//bool d := true
+		
+		//int e := Test.f(a + b, a != b or not Test.getBoolean())
+		var e := Test.returnBoolean(true)//a > b)
+		
+		/*if Test.getBoolean() {
+			a++
+		}*/
+		
+	}
+	
+}
+
+
