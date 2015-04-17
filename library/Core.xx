@@ -11,13 +11,13 @@ Root base object for all classes.
 */
 extern class Object {
 	
-	/// Returns the type ID of this object
-	[[final]]
-	int typeID()
-	
 	/// Returns the reference count of this object
 	[[final]]
 	int refCount()
+	
+	/// Returns the type ID of this object
+	[[final]]
+	int typeID()
 	
 	/// Returns true if this instance is equal to 'rhs' (right-hand-side).
 	bool equals(Object rhs)
@@ -46,7 +46,7 @@ extern class String {
 	
 	init()
 	init(int size)
-	init(String src)
+	init(String source)
 	
 	[[override]]
 	bool equals(Object rhs)

@@ -255,8 +255,8 @@ static std::unique_ptr<ClassDeclStmnt> GenClass(const std::string& ident)
 
 /*
 extern class Object {
-    int typeID()
     int refCount()
+    int typeID()
     bool equals(Object rhs)
     String toString()
     int pointer()
@@ -269,8 +269,8 @@ static std::unique_ptr<ClassDeclStmnt> GenObjectClass()
     GenReleaseProc(*ast);
     GenInitProc(*ast);
 
-    GenMemberProc(*ast, Int(), "typeID", ParamList(), AttrFinal());
     GenMemberProc(*ast, Int(), "refCount", ParamList(), AttrFinal());
+    GenMemberProc(*ast, Int(), "typeID", ParamList(), AttrFinal());
     GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"));
     GenMemberProc(*ast, String(), "toString");
     GenMemberProc(*ast, Int(), "pointer");
