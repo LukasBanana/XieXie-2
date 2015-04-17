@@ -31,8 +31,6 @@
 "ldw $r0, ($r0) 0\n"
 "push $xr\n"
 "call $r0\n"
-";pop $xr\n"
-";push $xr\n"
 "insc FreeMem\n"
 ".end:\n"
 "ret\n"

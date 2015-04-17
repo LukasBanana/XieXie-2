@@ -44,15 +44,13 @@ static void TrimBlanksRight(std::string& s)
 
 static void TrimCommentRight(std::string& s)
 {
-    auto it = std::find_if(
-        s.rbegin(), s.rend(),
-        [](char c) { return c == ';'; }
+    s.erase(
+        std::find_if(
+            s.begin(), s.end(),
+            [](char c) { return c == ';'; }
+        ),
+        s.end()
     );
-    if (it != s.rend())
-    {
-        s.erase(it.base(), s.end());
-        s.pop_back();
-    }
 }
 
 static void ResolveString(std::string& s)
@@ -84,13 +82,18 @@ static void GenerateAssemblyIncludeFile(const std::string& assemblyInput, const 
         std::getline(input, line);
 
         /* Parse line */
+        #ifndef _DEBUG
+
         TrimBlanksLeft(line);
         TrimCommentRight(line);
         TrimBlanksRight(line);
-        ResolveString(line);
 
         if (line.empty())
             continue;
+
+        #endif
+
+        ResolveString(line);
 
         /* Write line */
         output << '\"' << line << "\\n\"" << std::endl;

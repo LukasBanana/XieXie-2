@@ -985,11 +985,7 @@ DEF_VISIT_PROC(GraphGenerator, CastExpr)
 DEF_VISIT_PROC(GraphGenerator, ProcCallExpr)
 {
     Visit(ast->procCall);
-
-    auto var = TempVar();
-    BB()->MakeInst<TACCopyInst>(var, ResultVar());
-
-    PushVar(var);
+    PushVar(ResultVar());
 }
 
 DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)

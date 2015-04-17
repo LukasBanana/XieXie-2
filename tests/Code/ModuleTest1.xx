@@ -8,7 +8,17 @@ class Test {
 	
 	static void main() {
 		
-		MsgBox.messageBox("Info", "Hello, World!")
+		int answer := MsgBox.messageBox("Info", "Hello, World!", 0x6)
+		
+		if answer = 1 {
+			MsgBox.messageBox("Info", "Pressed OK")
+		} else if answer = 2 {
+			MsgBox.messageBox("Info", "Pressed CANCEL")
+		} else if answer = 10 {
+			MsgBox.messageBox("Info", "Pressed TRY")
+		} else if answer = 11 {
+			MsgBox.messageBox("Info", "Pressed CONTINUE")
+		}
 		
 	}
 	
