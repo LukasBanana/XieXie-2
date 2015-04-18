@@ -80,6 +80,15 @@ void CFGViewer::DefineBlock(const BasicBlock& block)
     auto blockID = GetBlockID(block);
     auto blockLabel = "<" + blockID + ">";
 
+    //if () //!!!!!
+    {
+        /* Append information about predecessors and successors */
+        blockLabel += (
+            " p(" + std::to_string(block.GetPred().size()) +
+            "), s(" + std::to_string(block.GetSucc().size()) + ")"
+        );
+    }
+
     if (!block.label.empty())
         blockLabel += "\\n'" + block.label + "'";
 
