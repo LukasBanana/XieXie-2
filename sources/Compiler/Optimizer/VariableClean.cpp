@@ -24,9 +24,12 @@ namespace Optimization
 
 bool VariableClean::Transform(BasicBlock& basicBlock)
 {
+    bbHasSucc_ = !basicBlock.GetSucc().empty();
+
     /* Transform instructions (bottom-up), then remove all null instructions */
     TransformInstsBottomUp(basicBlock);
     Clean(basicBlock);
+
     return false;//!!!
 }
 
@@ -149,8 +152,12 @@ Note:
 */
 bool VariableClean::IsDestVarRequired(const TACVar& var)
 {
-    //return IsVarUsed(var) || ( !var.IsTemp() && VarNotWritten(var) );
-    return IsVarUsed(var) || VarNotWritten(var);
+    /*
+    A destination variable is required iff:
+    - The variable is used in an instruction after the current instruction, or
+    - The variable was not yet written (this is because it may be required in a successor block, if there is any successor)
+    */
+    return IsVarUsed(var) || ( VarNotWritten(var) && bbHasSucc_ );
 }
 
 

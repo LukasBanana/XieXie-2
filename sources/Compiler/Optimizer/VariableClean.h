@@ -42,8 +42,10 @@ class VariableClean : public TACOptimizer
         bool VarNotWritten(const TACVar& var);
         bool IsDestVarRequired(const TACVar& var);
 
-        std::set<TACVar> vars_;             //!< Variables which are used for reading.
-        std::set<TACVar> varsLastWrite_;    //!< Variables which have already been written in the last stage.
+        std::set<TACVar>    vars_;              //!< Variables which are used for reading.
+        std::set<TACVar>    varsLastWrite_;     //!< Variables which have already been written in the last stage.
+
+        bool                bbHasSucc_ = false; //!< Does the current basic block has any successors?
 
 };
 
