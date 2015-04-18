@@ -37,11 +37,11 @@ class BasicBlock
             Edge() = default;
             Edge(BasicBlock* succ, const std::string& label = "");
 
-            bool operator == (BasicBlock* rhs) const
+            bool operator == (const BasicBlock* rhs) const
             {
                 return succ == rhs;
             }
-            bool operator != (BasicBlock* rhs) const
+            bool operator != (const BasicBlock* rhs) const
             {
                 return succ != rhs;
             }
@@ -90,24 +90,24 @@ class BasicBlock
         }
 
         //! Adds the specified successor to this basic block. This can not be this basic block itself.
-        void AddStrictSucc(BasicBlock& block, const std::string& label = "");
+        void AddStrictSucc(BasicBlock& bb, const std::string& label = "");
         //! Adds the specified successor to this basic block. This can also be this basic block itself.
-        void AddSucc(BasicBlock& block, const std::string& label = "");
+        void AddSucc(BasicBlock& bb, const std::string& label = "");
         //! Inserts the specified successor into this basic block.
-        void InsertSucc(BasicBlock& block, BasicBlock& blockToReplace, const std::string& label = "");
+        void InsertSucc(BasicBlock& bb, BasicBlock& blockToReplace, const std::string& label = "");
         //! Removes the specified successor from this basic block and concatenates its successors to this block.
-        void RemoveSucc(BasicBlock& block);
+        void RemoveSucc(BasicBlock& bb);
         //! Removes the specified successor from this basic block without concatenating to its successor.
-        void KillSucc(BasicBlock& block);
+        void KillSucc(BasicBlock& bb);
 
         //! Cleans this basic block, i.e. removes all multiple successor and predecessor connections.
         void Clean();
 
         /**
-        Returns true if all execution paths, beginning from this basic block,
-        end with a return statement, which has a variable.
+        Returns true if all execution paths, beginning from this basic block, end with a return statement.
+        \param[in] requiredVariable Specifies whether all return statements must have a variable.
         */
-        bool VerifyProcReturn() const;
+        bool VerifyProcReturn(bool requiredVariable = true) const;
 
         /**
         Returns true if 'succ' is a successor of this basic block.
@@ -116,6 +116,9 @@ class BasicBlock
         If the search algorithm finds any of the blocks in 'ignoreSet', the algorithm terminates and returns false.
         */
         bool IsSuccessor(const BasicBlock& succ, const VisitSet* ingoreSet = nullptr) const;
+
+        //! Returns true if the specified basic block is a direct successor of this basic block.
+        bool IsDirectSucc(const BasicBlock& bb) const;
 
         //! Returns the predecessor list.
         inline const BlockList& GetPred() const
@@ -146,12 +149,17 @@ class BasicBlock
         
         bool HasVisited(VisitSet& visitSet) const;
 
-        bool VerifyProcReturn(VisitSet& visitSet) const;
+        void RemovePred(const BasicBlock& bb);
+        void ReplacePred(const BasicBlock& bb, BasicBlock* bbToReplace);
 
+        BlockList::iterator FindPred(const BasicBlock& bb);
+        EdgeList::iterator FindSucc(const BasicBlock& bb);
+
+        bool VerifyProcReturn(VisitSet& visitSet, bool requiredVariable) const;
         bool IsSuccessor(const BasicBlock* succ, VisitSet& visitSet) const;
 
-        BlockList pred_;    //!< Predecessor reference list.
-        EdgeList succ_;     //!< Successor reference list.
+        BlockList   pred_; //!< Predecessor reference list.
+        EdgeList    succ_; //!< Successor reference list.
 
 };
 

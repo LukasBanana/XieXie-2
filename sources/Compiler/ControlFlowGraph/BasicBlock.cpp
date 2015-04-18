@@ -38,92 +38,88 @@ BasicBlock::Edge::Edge(BasicBlock* succ, const std::string& label) :
  * BasicBlock class
  */
 
-void BasicBlock::AddStrictSucc(BasicBlock& block, const std::string& label)
+void BasicBlock::AddStrictSucc(BasicBlock& bb, const std::string& label)
 {
-    if (&block != this)
-        AddSucc(block, label);
+    if (&bb != this)
+        AddSucc(bb, label);
 }
 
-void BasicBlock::AddSucc(BasicBlock& block, const std::string& label)
+void BasicBlock::AddSucc(BasicBlock& bb, const std::string& label)
 {
     /* Check if block is already a successor of this block */
-    if (std::find(succ_.begin(), succ_.end(), &block) != succ_.end())
+    if (IsDirectSucc(bb))
         return;
 
     /* Add block to the successor list */
-    succ_.push_back({ &block, label });
+    succ_.push_back({ &bb, label });
 
     /* Add this block to the predecessor list of the specified block */
-    block.pred_.push_back(this);
+    bb.pred_.push_back(this);
 }
 
-void BasicBlock::InsertSucc(BasicBlock& block, BasicBlock& blockToReplace, const std::string& label)
+void BasicBlock::InsertSucc(BasicBlock& bb, BasicBlock& blockToReplace, const std::string& label)
 {
     /* Check if block is already a successor of this block */
-    if (std::find(succ_.begin(), succ_.end(), &block) != succ_.end())
+    if (IsDirectSucc(bb))
         return;
 
     /* Find block-to-replace in the successor list of this block */
-    auto it = std::find(succ_.begin(), succ_.end(), &blockToReplace);
+    auto it = FindSucc(blockToReplace);
     if (it == succ_.end())
         return;
 
     /* Replace block-to-replace by block-to-insert */
-    *it = { &block, label };
+    *it = { &bb, label };
 
     /* Add this block to the predecessor list of the inserted block */
-    block.pred_.push_back(this);
-    block.succ_.push_back(&blockToReplace);
+    bb.pred_.push_back(this);
+    bb.succ_.push_back(&blockToReplace);
 
     /* Replace this block in the predecessor list of the block-to-replace by the new inserted block */
-    auto itPred = std::find(blockToReplace.pred_.begin(), blockToReplace.pred_.end(), this);
-    if (itPred != blockToReplace.pred_.end())
-        *itPred = &block;
+    blockToReplace.ReplacePred(*this, &bb);
 }
 
-void BasicBlock::RemoveSucc(BasicBlock& block)
+void BasicBlock::RemoveSucc(BasicBlock& bb)
 {
     /* Find block in the successor list of this block */
-    auto it = std::find(succ_.begin(), succ_.end(), &block);
+    auto it = FindSucc(bb);
     if (it == succ_.end())
         return;
 
     /* Remove block from the list */
     succ_.erase(it);
 
-    /* Add all successors of the input block to this block */
-    for (auto bb : block.GetSucc())
-        succ_.push_back(bb);
+    /* Add all successors of the input block to this block and replace its predecessor to this block */
+    for (const auto& next : bb.GetSucc())
+    {
+        next->ReplacePred(bb, this);
+        succ_.push_back(next);
+    }
 
     /* Remove this block from the predecessor list of the specified block */
-    auto itPred = std::find(block.pred_.begin(), block.pred_.end(), this);
-    if (itPred != block.pred_.end())
-        block.pred_.erase(itPred);
+    bb.RemovePred(*this);
 }
 
-void BasicBlock::KillSucc(BasicBlock& block)
+void BasicBlock::KillSucc(BasicBlock& bb)
 {
     /* Find block in the successor list of this block */
-    auto it = std::find(succ_.begin(), succ_.end(), &block);
+    auto it = FindSucc(bb);
     if (it == succ_.end())
         return;
 
     /* Remove block from the list */
-    auto label = it->label;
     succ_.erase(it);
 
     /* Remove this block from the predecessor list of the specified block */
-    auto itPred = std::find(block.pred_.begin(), block.pred_.end(), this);
-    if (itPred != block.pred_.end())
-        block.pred_.erase(itPred);
+    bb.RemovePred(*this);
 
     /* Check if block has no further predecessors */
-    if (block.pred_.empty())
+    if (bb.pred_.empty())
     {
         /* Now kill all further branches of the specified block */
-        auto nextSucc = block.succ_;
+        auto nextSucc = bb.succ_;
         for (auto& next : nextSucc)
-            block.KillSucc(*next);
+            bb.KillSucc(*next);
     }
 }
 
@@ -146,10 +142,10 @@ void BasicBlock::Clean()
     );
 }
 
-bool BasicBlock::VerifyProcReturn() const
+bool BasicBlock::VerifyProcReturn(bool requiredVariable) const
 {
     VisitSet visitSet;
-    return VerifyProcReturn(visitSet);
+    return VerifyProcReturn(visitSet, requiredVariable);
 }
 
 bool BasicBlock::IsSuccessor(const BasicBlock& succ, const VisitSet* ingoreSet) const
@@ -163,6 +159,11 @@ bool BasicBlock::IsSuccessor(const BasicBlock& succ, const VisitSet* ingoreSet) 
     }
 
     return IsSuccessor(&succ, visitSet);
+}
+
+bool BasicBlock::IsDirectSucc(const BasicBlock& bb) const
+{
+    return std::find(succ_.begin(), succ_.end(), &bb) != succ_.end();
 }
 
 
@@ -179,7 +180,33 @@ bool BasicBlock::HasVisited(VisitSet& visitSet) const
     return false;
 }
 
-bool BasicBlock::VerifyProcReturn(VisitSet& visitSet) const
+void BasicBlock::RemovePred(const BasicBlock& bb)
+{
+    /* Remove 'bb' from the predecessor list */
+    auto it = std::find(pred_.begin(), pred_.end(), &bb);
+    if (it != pred_.end())
+        pred_.erase(it);
+}
+
+void BasicBlock::ReplacePred(const BasicBlock& bb, BasicBlock* bbToReplace)
+{
+    /* Find predecessor 'bb' and replace it by 'bbToReplace' */
+    auto it = FindPred(bb);
+    if (it != pred_.end())
+        *it = bbToReplace;
+}
+
+BasicBlock::BlockList::iterator BasicBlock::FindPred(const BasicBlock& bb)
+{
+    return std::find(pred_.begin(), pred_.end(), &bb);
+}
+
+BasicBlock::EdgeList::iterator BasicBlock::FindSucc(const BasicBlock& bb)
+{
+    return std::find(succ_.begin(), succ_.end(), &bb);
+}
+
+bool BasicBlock::VerifyProcReturn(VisitSet& visitSet, bool requiredVariable) const
 {
     /* Check if this basic block has already been visited */
     if (HasVisited(visitSet))
@@ -189,18 +216,33 @@ bool BasicBlock::VerifyProcReturn(VisitSet& visitSet) const
     for (auto it = insts.rbegin(); it != insts.rend(); ++it)
     {
         if ((*it)->Type() == TACInst::Types::Return)
-            return static_cast<const TACReturnInst&>(**it).hasVar;
+        {
+            /* Return true if this 'return' statement has a variable */
+            return requiredVariable ? (static_cast<const TACReturnInst&>(**it).hasVar) : true;
+        }
     }
 
     /* Check if this is a leaf node */
     if (succ_.empty())
+    {
+        /*
+        No 'return' statement was found in the instruction list
+        -> Return with negative result
+        */
         return false;
+    }
 
     /* Visit successors */
     for (auto bb : succ_)
     {
-        if (!bb->VerifyProcReturn(visitSet))
+        if (!bb->VerifyProcReturn(visitSet, requiredVariable))
+        {
+            /*
+            There is an successor path with no return statement
+            -> Return with negative result
+            */
             return false;
+        }
     }
 
     return true;
@@ -212,12 +254,9 @@ bool BasicBlock::IsSuccessor(const BasicBlock* succ, VisitSet& visitSet) const
     if (HasVisited(visitSet))
         return false;
     
-    /* Check if 'succ' is a successor of this basic block */
-    for (const auto& edge : succ_)
-    {
-        if (edge.succ == succ)
-            return true;
-    }
+    /* Check if 'succ' is a direct successor of this basic block */
+    if (IsDirectSucc(*succ))
+        return true;
 
     /* Visit successors */
     for (auto bb : succ_)
