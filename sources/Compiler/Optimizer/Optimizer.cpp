@@ -21,21 +21,38 @@ namespace Optimization
 {
 
 
+template <typename T> void Opt(BasicBlock& bb, bool& hasChanged)
+{
+    if (T().Transform(bb))
+        hasChanged = true;
+}
+
 Optimizer::~Optimizer()
 {
 }
 
 void Optimizer::OptimizeProgram(CFGProgram& program)
 {
+    static const unsigned char maxNumPasses = 5;
+
     for (auto& ct : program.classTrees)
     {
         /* Instruction optimizations */
         for (auto& bb : ct->GetBasicBlocks())
         {
-            ConstantPropagation().Transform(*bb);
-            CopyPropagation().Transform(*bb);
-            VariableClean().Transform(*bb);
-            VariableReduction().Transform(*bb);
+            for (unsigned char i = 0; i < maxNumPasses; ++i)
+            {
+                bool hasChanged = false;
+
+                /* Perform local optimizations */
+                Opt<ConstantPropagation>(*bb, hasChanged);
+                Opt<CopyPropagation>(*bb, hasChanged);
+                Opt<VariableClean>(*bb, hasChanged);
+                Opt<VariableReduction>(*bb, hasChanged);
+
+                if (!hasChanged)
+                    break;
+            }
         }
 
         /* Additional graph optimizations */

@@ -22,17 +22,11 @@ namespace Optimization
 {
 
 
-bool CopyPropagation::Transform(BasicBlock& basicBlock)
+void CopyPropagation::TransformBlock(BasicBlock& basicBlock)
 {
     /* Transform instructions (top-down) */
     TransformInstsTopDown(basicBlock);
-    return false;//!!!
 }
-
-
-/*
- * ======= Private: =======
- */
 
 void CopyPropagation::TransformCopyInst(TACInstPtr& inst)
 {
@@ -101,20 +95,15 @@ void CopyPropagation::TransformHeapInst(TACInstPtr& inst)
         KillCopy(heapInst->var);
 }
 
-std::vector<CopyPropagation::Copy>::iterator CopyPropagation::FindCopy(const TACVar& copy)
-{
-    return std::find_if(
-        vars_.begin(), vars_.end(),
-        [&copy](const Copy& c) { return c.copy == copy; }
-    );
-}
-
 void CopyPropagation::ReadVar(TACVar& src)
 {
     /* Check if there is a copy which can be used instead of the specified source */
-    auto it = FindCopy(src);
-    if (it != vars_.end())
-        src = it->src;
+    auto it = vars_.find(src);
+    if (it != vars_.end() && src != it->second)
+    {
+        src = it->second;
+        Changed();
+    }
 }
 
 void CopyPropagation::WriteVar(const TACVar& dest, const TACVar& src)
@@ -123,11 +112,11 @@ void CopyPropagation::WriteVar(const TACVar& dest, const TACVar& src)
     KillCopy(dest);
 
     /* Check if there is a copy of the source */
-    auto it = FindCopy(src);
+    auto it = vars_.find(src);
     if (it != vars_.end())
-        vars_.push_back({ dest, it->src });
+        vars_[dest] = it->second;
     else
-        vars_.push_back({ dest, src });
+        vars_[dest] = src;
 }
 
 void CopyPropagation::KillCopy(const TACVar& dest)
@@ -135,7 +124,7 @@ void CopyPropagation::KillCopy(const TACVar& dest)
     /* Check if this kills a copy */
     for (auto it = vars_.begin(); it != vars_.end();)
     {
-        if (it->copy == dest || it->src == dest)
+        if (it->first == dest || it->second == dest)
             it = vars_.erase(it);
         else
             ++it;

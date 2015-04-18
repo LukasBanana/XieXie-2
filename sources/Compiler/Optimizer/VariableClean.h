@@ -21,12 +21,10 @@ namespace Optimization
 class VariableClean : public TACOptimizer
 {
     
-    public:
-        
-        bool Transform(BasicBlock& basicBlock) override;
-
     private:
         
+        void TransformBlock(BasicBlock& basicBlock) override;
+
         void TransformCopyInst(TACInstPtr& inst) override;
         void TransformModifyInst(TACInstPtr& inst) override;
         void TransformRelationInst(TACInstPtr& inst) override;
@@ -41,6 +39,7 @@ class VariableClean : public TACOptimizer
         bool IsVarUsed(const TACVar& var) const;
         bool VarNotWritten(const TACVar& var);
         bool IsDestVarRequired(const TACVar& var);
+        void KillInst(TACInstPtr& inst);
 
         std::set<TACVar>    vars_;              //!< Variables which are used for reading.
         std::set<TACVar>    varsLastWrite_;     //!< Variables which have already been written in the last stage.

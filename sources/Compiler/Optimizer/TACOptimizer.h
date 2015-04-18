@@ -21,8 +21,14 @@ namespace Optimization
 class TACOptimizer : public Optimizer
 {
     
+    public:
+        
+        bool Transform(BasicBlock& basicBlock) override final;
+
     protected:
         
+        virtual void TransformBlock(BasicBlock& basicBlock) = 0;
+
         //! Transforms the single specified instruction.
         void TransformInst(TACInstPtr& inst);
         //! Transforms all instructions of the specified basic block in top-down order.
@@ -39,6 +45,13 @@ class TACOptimizer : public Optimizer
         virtual void TransformSwitchInst(TACInstPtr& inst);
         virtual void TransformStackInst(TACInstPtr& inst);
         virtual void TransformHeapInst(TACInstPtr& inst);
+
+        //! Notifies the optimization pass, that something has changed.
+        void Changed();
+
+    private:
+        
+        bool hasChanged_ = false;
 
 };
 

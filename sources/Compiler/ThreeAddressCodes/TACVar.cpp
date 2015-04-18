@@ -135,9 +135,16 @@ bool TACVar::Replace(const TACVar& varToReplace, const TACVar& replacedVar)
 bool operator == (const TACVar& lhs, const TACVar& rhs)
 {
     return
-        lhs.id    == rhs.id   &&
-        lhs.type  == rhs.type &&
-        lhs.value == rhs.value;
+        lhs.id      == rhs.id     &&
+        lhs.type    == rhs.type   &&
+        lhs.value   == rhs.value  &&
+        lhs.offset  == rhs.offset &&
+        lhs.size    == rhs.size;
+}
+
+bool operator != (const TACVar& lhs, const TACVar& rhs)
+{
+    return !(lhs == rhs);
 }
 
 bool operator < (const TACVar& lhs, const TACVar& rhs)

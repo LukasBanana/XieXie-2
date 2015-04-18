@@ -24,12 +24,10 @@ namespace Optimization
 class ConstantPropagation : public TACOptimizer
 {
     
-    public:
-        
-        bool Transform(BasicBlock& basicBlock) override;
-
     private:
         
+        void TransformBlock(BasicBlock& basicBlock) override;
+
         void TransformCopyInst(TACInstPtr& inst) override;
         void TransformModifyInst(TACInstPtr& inst) override;
         void TransformRelationInst(TACInstPtr& inst) override;

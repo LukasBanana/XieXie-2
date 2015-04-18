@@ -92,6 +92,7 @@ class TACVar
 
 
 bool operator == (const TACVar& lhs, const TACVar& rhs);
+bool operator != (const TACVar& lhs, const TACVar& rhs);
 bool operator < (const TACVar& lhs, const TACVar& rhs);
 
 

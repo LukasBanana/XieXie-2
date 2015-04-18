@@ -22,21 +22,14 @@ namespace Optimization
 {
 
 
-bool VariableClean::Transform(BasicBlock& basicBlock)
+void VariableClean::TransformBlock(BasicBlock& basicBlock)
 {
     bbHasSucc_ = !basicBlock.GetSucc().empty();
 
     /* Transform instructions (bottom-up), then remove all null instructions */
     TransformInstsBottomUp(basicBlock);
     Clean(basicBlock);
-
-    return false;//!!!
 }
-
-
-/*
- * ======= Private: =======
- */
 
 void VariableClean::TransformCopyInst(TACInstPtr& inst)
 {
@@ -49,7 +42,7 @@ void VariableClean::TransformCopyInst(TACInstPtr& inst)
         ReadVar(copyInst->src);
     }
     else
-        inst = nullptr;
+        KillInst(inst);
 }
 
 void VariableClean::TransformModifyInst(TACInstPtr& inst)
@@ -64,7 +57,7 @@ void VariableClean::TransformModifyInst(TACInstPtr& inst)
         ReadVar(modifyInst->srcRhs);
     }
     else
-        inst = nullptr;
+        KillInst(inst);
 }
 
 void VariableClean::TransformRelationInst(TACInstPtr& inst)
@@ -114,7 +107,7 @@ void VariableClean::TransformHeapInst(TACInstPtr& inst)
         if (IsDestVarRequired(heapInst->var))
             WriteVar(heapInst->var);
         else
-            inst = nullptr;
+            KillInst(inst);
     }
     else
         ReadVar(heapInst->var);
@@ -158,6 +151,12 @@ bool VariableClean::IsDestVarRequired(const TACVar& var)
     - The variable was not yet written (this is because it may be required in a successor block, if there is any successor)
     */
     return IsVarUsed(var) || ( VarNotWritten(var) && bbHasSucc_ );
+}
+
+void VariableClean::KillInst(TACInstPtr& inst)
+{
+    inst = nullptr;
+    Changed();
 }
 
 

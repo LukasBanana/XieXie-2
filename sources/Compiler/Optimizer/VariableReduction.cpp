@@ -22,7 +22,7 @@ namespace Optimization
 {
 
 
-bool VariableReduction::Transform(BasicBlock& basicBlock)
+void VariableReduction::TransformBlock(BasicBlock& basicBlock)
 {
     /* Collect all temporary destination variables (top-down) */
     for (const auto& inst : basicBlock.insts)
@@ -30,14 +30,7 @@ bool VariableReduction::Transform(BasicBlock& basicBlock)
 
     /* Transform instructions (bottom-up) */
     TransformInstsBottomUp(basicBlock);
-
-    return false;//!!!
 }
-
-
-/*
- * ======= Private: =======
- */
 
 void VariableReduction::TransformCopyInst(TACInstPtr& inst)
 {
@@ -146,6 +139,8 @@ void VariableReduction::WriteVar(TACVar var, TACInst& inst)
                     break;
                 }
             }
+
+            Changed();
         }
         
         /* Remove variable from the 'used' list */

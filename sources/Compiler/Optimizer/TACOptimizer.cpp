@@ -14,6 +14,14 @@ namespace Optimization
 {
 
 
+bool TACOptimizer::Transform(BasicBlock& basicBlock)
+{
+    hasChanged_ = false;
+    TransformBlock(basicBlock);
+    return hasChanged_;
+}
+
+
 /*
  * ======= Protected: =======
  */
@@ -101,6 +109,11 @@ void TACOptimizer::TransformStackInst(TACInstPtr& inst)
 void TACOptimizer::TransformHeapInst(TACInstPtr& inst)
 {
     // dummy
+}
+
+void TACOptimizer::Changed()
+{
+    hasChanged_ = true;
 }
 
 

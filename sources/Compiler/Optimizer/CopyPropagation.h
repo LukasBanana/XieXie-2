@@ -11,7 +11,7 @@
 
 #include "TACOptimizer.h"
 
-#include <vector>
+#include <map>
 
 
 namespace Optimization
@@ -21,17 +21,9 @@ namespace Optimization
 class CopyPropagation : public TACOptimizer
 {
     
-    public:
-        
-        bool Transform(BasicBlock& basicBlock) override;
-
     private:
         
-        struct Copy
-        {
-            TACVar copy;
-            TACVar src;
-        };
+        void TransformBlock(BasicBlock& basicBlock) override;
 
         void TransformCopyInst(TACInstPtr& inst) override;
         void TransformModifyInst(TACInstPtr& inst) override;
@@ -41,13 +33,11 @@ class CopyPropagation : public TACOptimizer
         void TransformStackInst(TACInstPtr& inst) override;
         void TransformHeapInst(TACInstPtr& inst) override;
 
-        std::vector<Copy>::iterator FindCopy(const TACVar& copy);
-
         void ReadVar(TACVar& src);
         void WriteVar(const TACVar& dest, const TACVar& src);
         void KillCopy(const TACVar& dest);
 
-        std::vector<Copy> vars_;
+        std::map<TACVar, TACVar> vars_;
 
 };
 

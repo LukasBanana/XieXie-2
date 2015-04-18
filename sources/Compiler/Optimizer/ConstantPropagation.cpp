@@ -21,17 +21,11 @@ namespace Optimization
 
 using OpCodes = TACInst::OpCodes;
 
-bool ConstantPropagation::Transform(BasicBlock& basicBlock)
+void ConstantPropagation::TransformBlock(BasicBlock& basicBlock)
 {
     /* Transform instructions (top-down) */
     TransformInstsTopDown(basicBlock);
-    return false;//!!!
 }
-
-
-/*
- * ======= Private: =======
- */
 
 void ConstantPropagation::TransformCopyInst(TACInstPtr& inst)
 {
@@ -59,6 +53,7 @@ void ConstantPropagation::TransformModifyInst(TACInstPtr& inst)
             /* Propagate constant */
             PropagateConst(newInst->dest, newInst->src);
             inst = std::move(newInst);
+            Changed();
         }
     }
     else if (IsNOP(*modifyInst))
@@ -70,6 +65,7 @@ void ConstantPropagation::TransformModifyInst(TACInstPtr& inst)
         /* Propagate constant */
         PropagateConst(newInst->dest, newInst->src);
         inst = std::move(newInst);
+        Changed();
     }
     else
     {
@@ -262,7 +258,10 @@ void ConstantPropagation::FetchConst(TACVar& var)
     {
         auto it = vars_.find(var);
         if (it != vars_.end())
+        {
             var = it->second;
+            Changed();
+        }
     }
 }
 
