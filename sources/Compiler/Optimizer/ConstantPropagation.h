@@ -26,7 +26,7 @@ class ConstantPropagation : public TACOptimizer
     
     public:
         
-        void Transform(BasicBlock& basicBlock) override;
+        bool Transform(BasicBlock& basicBlock) override;
 
     private:
         

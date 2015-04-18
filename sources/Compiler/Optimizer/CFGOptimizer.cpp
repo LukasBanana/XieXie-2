@@ -12,6 +12,15 @@ namespace Optimization
 {
 
 
+bool CFGOptimizer::Transform(BasicBlock& basicBlock)
+{
+    BasicBlock::VisitSet visitSet;
+    bool hasChanged = false;
+    TransformHierarchy(basicBlock, visitSet, hasChanged);
+    return hasChanged;
+}
+
+
 /*
  * ======= Protected: =======
  */

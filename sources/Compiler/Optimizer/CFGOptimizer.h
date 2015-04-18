@@ -20,9 +20,15 @@ namespace Optimization
 class CFGOptimizer : public Optimizer
 {
     
+    public:
+        
+        bool Transform(BasicBlock& basicBlock) override final;
+
     protected:
         
         bool HasVisited(const BasicBlock& bb, BasicBlock::VisitSet& visitSet) const;
+
+        virtual void TransformHierarchy(BasicBlock& basicBlock, BasicBlock::VisitSet& visitSet, bool& hasChanged) = 0;
 
 };
 

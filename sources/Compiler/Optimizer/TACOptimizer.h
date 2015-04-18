@@ -17,8 +17,6 @@ namespace Optimization
 {
 
 
-using namespace ThreeAddressCodes;
-
 //! Base class for all TAC optimizer classes.
 class TACOptimizer : public Optimizer
 {

@@ -22,7 +22,7 @@ namespace Optimization
 {
 
 
-void VariableClean::Transform(BasicBlock& basicBlock)
+bool VariableClean::Transform(BasicBlock& basicBlock)
 {
     /* Transform instructions (bottom-up) */
     for (auto it = basicBlock.insts.rbegin(); it != basicBlock.insts.rend(); ++it)
@@ -34,6 +34,8 @@ void VariableClean::Transform(BasicBlock& basicBlock)
         [](TACInstPtr& inst) -> bool { return !inst; }
     );
     basicBlock.insts.erase(itEnd, basicBlock.insts.end());
+
+    return false;//!!!
 }
 
 

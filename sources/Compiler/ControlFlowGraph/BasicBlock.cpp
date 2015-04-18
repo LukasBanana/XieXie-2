@@ -11,6 +11,11 @@
 
 #include <algorithm>
 
+//!!!
+#include "BlockMerge.h"
+#include "BlockClean.h"
+#include "KillBranches.h"
+
 
 namespace ControlFlowGraph
 {
@@ -84,12 +89,11 @@ void BasicBlock::RemoveSucc(BasicBlock& block)
         return;
 
     /* Remove block from the list */
-    auto label = it->label;
     succ_.erase(it);
 
     /* Add all successors of the input block to this block */
     for (auto bb : block.GetSucc())
-        succ_.push_back({ bb.succ, label });
+        succ_.push_back(bb);
 
     /* Remove this block from the predecessor list of the specified block */
     auto itPred = std::find(block.pred_.begin(), block.pred_.end(), this);
@@ -123,28 +127,23 @@ void BasicBlock::KillSucc(BasicBlock& block)
     }
 }
 
+// Removes all multiple successor connections.
 void BasicBlock::Clean()
 {
-    VisitSet visitSet;
-    bool hasChanged = false;
+    /* Make successor list unique */
+    succ_.erase(
+        std::unique(
+            succ_.begin(), succ_.end(),
+            [](const Edge& lhs, const Edge& rhs) { return lhs.succ == rhs.succ; }
+        ),
+        succ_.end()
+    );
 
-    //do
-    {
-        hasChanged = false;
-
-        visitSet.clear();
-        KillBranches(visitSet, hasChanged);
-
-        visitSet.clear();
-        Merge(visitSet, hasChanged);
-
-        visitSet.clear();
-        Purge(visitSet, hasChanged);
-
-        visitSet.clear();
-        Unify(visitSet, hasChanged);
-    }
-    //while (hasChanged);
+    /* Make predecessor list unique */
+    pred_.erase(
+        std::unique(pred_.begin(), pred_.end()),
+        pred_.end()
+    );
 }
 
 bool BasicBlock::VerifyProcReturn() const
@@ -156,7 +155,14 @@ bool BasicBlock::VerifyProcReturn() const
 bool BasicBlock::IsSuccessor(const BasicBlock& succ, const VisitSet* ingoreSet) const
 {
     VisitSet visitSet;
-    return IsSuccessor(&succ, visitSet, ingoreSet);
+    
+    if (ingoreSet)
+    {
+        /* Initialize visit-set with set of blocks which shall be ignored */
+        visitSet = *ingoreSet;
+    }
+
+    return IsSuccessor(&succ, visitSet);
 }
 
 
@@ -171,142 +177,6 @@ bool BasicBlock::HasVisited(VisitSet& visitSet) const
     else
         visitSet.insert(this);
     return false;
-}
-
-// Kills all pointless branches
-void BasicBlock::KillBranches(VisitSet& visitSet, bool& hasChanged)
-{
-    /* Check if this basic block has already been visited */
-    if (HasVisited(visitSet))
-        return;
-    
-    /* Check if last instruction is a relation */
-    if (!insts.empty() && insts.back()->Type() == TACInst::Types::Relation && succ_.size() == 2)
-    {
-        /* Check if a branch can be killed */
-        const auto& relationInst = static_cast<const TACRelationInst&>(*insts.back());
-        if (relationInst.IsAlwaysTrue())
-        {
-            /* Kill 'false' branch */
-            KillSucc(*succ_.back());
-            insts.pop_back();
-            hasChanged = true;
-        }
-        else if (relationInst.IsAlwaysFalse())
-        {
-            /* Kill 'true' branch */
-            KillSucc(*succ_.front());
-            insts.pop_back();
-            hasChanged = true;
-        }
-    }
-
-    /* Visit successors */
-    for (auto bb : succ_)
-        bb->KillBranches(visitSet, hasChanged);
-}
-
-/*
-Cleans the entire basic block hierarchy for unecessary basic blocks.
-A successor is merged into its predecessor if they are the only links,
-i.e. when a basic block B has only a single successor, whose only predecessor is B.
-*/
-void BasicBlock::Merge(VisitSet& visitSet, bool& hasChanged)
-{
-    /* Check if this basic block has already been visited */
-    if (HasVisited(visitSet))
-        return;
-
-    /* Merge as much successors as possible */
-    while (succ_.size() == 1)
-    {
-        auto& next = succ_.front().succ;
-
-        if (next->pred_.size() == 1)
-        {
-            /* Add instructions from successor to this basic block */
-            for (auto& inst : next->insts)
-                insts.push_back(std::move(inst));
-            next->insts.clear();
-
-            /* Add flags from successor to this basic block */
-            flags << next->flags;
-
-            /* Move successor list */
-            succ_ = next->succ_;
-
-            for (auto& bb : succ_)
-            {
-                /* Set this block as predecessor to this successors */
-                auto it = std::find(bb->pred_.begin(), bb->pred_.end(), next);
-                if (it != bb->pred_.end())
-                    *it = this;
-            }
-
-            hasChanged = true;
-        }
-        else
-            break;
-    }
-
-    /* Visit successors */
-    for (auto bb : succ_)
-        bb->Merge(visitSet, hasChanged);
-}
-
-// Removes empty basic blocks.
-void BasicBlock::Purge(VisitSet& visitSet, bool& hasChanged)
-{
-    /* Check if this basic block has already been visited */
-    if (HasVisited(visitSet))
-        return;
-
-    /* Visit successors */
-    for (auto bb : succ_)
-        bb->Purge(visitSet, hasChanged);
-
-    /* Resolve empty basic blocks */
-    auto origSucc = succ_;
-    for (auto bb : origSucc)
-    {
-        /*
-        Instruction list must be empty,
-        successor list must have only a single element,
-        and this successor must not be the current basic block
-        */
-        if (bb->insts.empty() && bb->succ_.size() == 1 && bb->succ_.front() != bb.succ)
-        {
-            RemoveSucc(*bb);
-            hasChanged = true;
-        }
-    }
-}
-
-// Removes all multiple successor connections.
-void BasicBlock::Unify(VisitSet& visitSet, bool& hasChanged)
-{
-    /* Check if this basic block has already been visited */
-    if (HasVisited(visitSet))
-        return;
-    
-    /* Make successor list unique */
-    auto last = std::unique(
-        succ_.begin(), succ_.end(),
-        [](const Edge& lhs, const Edge& rhs) { return lhs.succ == rhs.succ; }
-    );
-
-    if (last != succ_.end())
-    {
-        succ_.erase(last, succ_.end());
-        hasChanged = true;
-    }
-
-    /* Make predecessor list unique */
-    pred_.erase(std::unique(pred_.begin(), pred_.end()), pred_.end());
-
-    /* Visit successors */
-    for (auto bb : succ_)
-        bb->Purge(visitSet, hasChanged);
 }
 
 bool BasicBlock::VerifyProcReturn(VisitSet& visitSet) const
@@ -336,14 +206,10 @@ bool BasicBlock::VerifyProcReturn(VisitSet& visitSet) const
     return true;
 }
 
-bool BasicBlock::IsSuccessor(const BasicBlock* succ, VisitSet& visitSet, const VisitSet* ingoreSet) const
+bool BasicBlock::IsSuccessor(const BasicBlock* succ, VisitSet& visitSet) const
 {
-    /* Check if this block is contained in the ignore set */
-    if (ingoreSet != nullptr && ingoreSet->find(this) != ingoreSet->end())
-        return false;
-
     /* Check if this basic block has already been visited */
-    if (/*this == succ || */HasVisited(visitSet))
+    if (HasVisited(visitSet))
         return false;
     
     /* Check if 'succ' is a successor of this basic block */
@@ -356,7 +222,7 @@ bool BasicBlock::IsSuccessor(const BasicBlock* succ, VisitSet& visitSet, const V
     /* Visit successors */
     for (auto bb : succ_)
     {
-        if (bb->IsSuccessor(succ, visitSet, ingoreSet))
+        if (bb->IsSuccessor(succ, visitSet))
             return true;
     }
 

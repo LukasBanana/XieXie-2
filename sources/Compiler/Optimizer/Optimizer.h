@@ -17,6 +17,7 @@ namespace Optimization
 
 
 using namespace ControlFlowGraph;
+using namespace ThreeAddressCodes;
 
 //! Interface for all code optimizer classes.
 class Optimizer
@@ -26,7 +27,11 @@ class Optimizer
         
         virtual ~Optimizer();
 
-        virtual void Transform(BasicBlock& basicBlock) = 0;
+        /**
+        Transforms the specified basic block for optimization purposes and
+        return true if any transformation has been performed.
+        */
+        virtual bool Transform(BasicBlock& basicBlock) = 0;
 
         static void OptimizeProgram(CFGProgram& program);
 

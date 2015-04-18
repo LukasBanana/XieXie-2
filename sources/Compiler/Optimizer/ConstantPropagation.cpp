@@ -19,11 +19,12 @@ namespace Optimization
 {
 
 
-void ConstantPropagation::Transform(BasicBlock& basicBlock)
+bool ConstantPropagation::Transform(BasicBlock& basicBlock)
 {
     /* Transform instructions (top-down) */
     for (auto& inst : basicBlock.insts)
         TransformInst(inst);
+    return false;//!!!
 }
 
 

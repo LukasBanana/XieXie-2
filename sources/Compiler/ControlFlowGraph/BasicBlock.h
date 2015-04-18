@@ -59,6 +59,7 @@ class BasicBlock
             std::string label;          //!< Edge label.
         };
 
+        //! Basic block flags enumeration.
         struct Flags
         {
             enum
@@ -99,7 +100,7 @@ class BasicBlock
         //! Removes the specified successor from this basic block without concatenating to its successor.
         void KillSucc(BasicBlock& block);
 
-        //! Cleans the local CFG recursively.
+        //! Cleans this basic block, i.e. removes all multiple successor and predecessor connections.
         void Clean();
 
         /**
@@ -145,14 +146,9 @@ class BasicBlock
         
         bool HasVisited(VisitSet& visitSet) const;
 
-        void KillBranches(VisitSet& visitSet, bool& hasChanged);
-        void Merge(VisitSet& visitSet, bool& hasChanged);
-        void Purge(VisitSet& visitSet, bool& hasChanged);
-        void Unify(VisitSet& visitSet, bool& hasChanged);
-
         bool VerifyProcReturn(VisitSet& visitSet) const;
 
-        bool IsSuccessor(const BasicBlock* succ, VisitSet& visitSet, const VisitSet* ingoreSet) const;
+        bool IsSuccessor(const BasicBlock* succ, VisitSet& visitSet) const;
 
         BlockList pred_;    //!< Predecessor reference list.
         EdgeList succ_;     //!< Successor reference list.

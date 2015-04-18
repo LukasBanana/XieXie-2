@@ -213,14 +213,6 @@ CFGProgramPtr CompileCommand::GenerateCFG(Program& program, Log& output)
 
         /* Optimize CFG */
         Optimization::Optimizer::OptimizeProgram(*cfgProgram);
-
-        #if 1//!!!TEMPORARY!!!
-        for (auto& ct : cfgProgram->classTrees)
-        {
-            for (auto bb : ct->GetRootBasicBlocks())
-                bb.second->Clean();
-        }
-        #endif
     }
 
     return cfgProgram;

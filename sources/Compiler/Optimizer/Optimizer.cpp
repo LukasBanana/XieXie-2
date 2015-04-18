@@ -7,6 +7,10 @@
 
 #include "Optimizer.h"
 
+#include "BlockMerge.h"
+#include "BlockClean.h"
+#include "KillBranches.h"
+
 #include "ConstantPropagation.h"
 #include "VariableClean.h"
 #include "VariableReduction.h"
@@ -24,16 +28,28 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
 {
     for (auto& ct : program.classTrees)
     {
+        /* Graph optimizations */
+        for (auto& bb : ct->GetRootBasicBlocks())
+        {
+            KillBranches().Transform(*bb.second);
+            BlockMerge().Transform(*bb.second);
+            BlockClean().Transform(*bb.second);
+        }
+
+        /* Instruction optimizations */
         for (auto& bb : ct->GetBasicBlocks())
         {
-            ConstantPropagation cp;
-            cp.Transform(*bb);
+            ConstantPropagation().Transform(*bb);
+            VariableClean().Transform(*bb);
+            VariableReduction().Transform(*bb);
+        }
 
-            VariableClean vc;
-            vc.Transform(*bb);
-
-            VariableReduction vr;
-            vr.Transform(*bb);
+        /* Graph optimizations */
+        for (auto& bb : ct->GetRootBasicBlocks())
+        {
+            KillBranches().Transform(*bb.second);
+            BlockMerge().Transform(*bb.second);
+            BlockClean().Transform(*bb.second);
         }
     }
 }

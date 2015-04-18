@@ -22,7 +22,7 @@ namespace Optimization
 {
 
 
-void VariableReduction::Transform(BasicBlock& basicBlock)
+bool VariableReduction::Transform(BasicBlock& basicBlock)
 {
     /* Collect all temporary destination variables (top-down) */
     for (const auto& inst : basicBlock.insts)
@@ -31,6 +31,8 @@ void VariableReduction::Transform(BasicBlock& basicBlock)
     /* Transform instructions (bottom-up) */
     for (auto it = basicBlock.insts.rbegin(); it != basicBlock.insts.rend(); ++it)
         TransformInst(*it);
+
+    return false;//!!!
 }
 
 
