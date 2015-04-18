@@ -510,8 +510,9 @@ void XASMGenerator::GenerateBlock(const BasicBlock& bb)
 {
     PopIndentBlock(bb);
 
-    /* Write local label for this block */
-    LocalLabel("bb" + std::to_string(bb.id));
+    /* Write local label for this block if it has any predecessors */
+    if (!bb.GetPred().empty())
+        LocalLabel("bb" + std::to_string(bb.id));
 
     /* Generate code for each instruction */
     for (const auto& inst : bb.insts)

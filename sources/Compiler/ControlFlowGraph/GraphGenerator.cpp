@@ -10,6 +10,7 @@
 #include "CodeGenerators/NameMangling.h"
 #include "CompilerMessage.h"
 #include "BuiltinClasses.h"
+#include "Optimizer.h"
 
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
@@ -708,6 +709,9 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 
     auto& procSig = *ast->procSignature;
 
+    /* Reset variable manager for this new procedure */
+    varMngr_.Reset();
+
     /* Store number of parameters in the current procedure declaration */
     numProcParams_ = static_cast<unsigned int>(procSig.params.size());
 
@@ -721,9 +725,10 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     size_t argIndex = 0;
     for (auto& param : procSig.params)
     {
-        //root->MakeInst<TACParamInst>(LocalVar(*param), argIndex++);
         ++argIndex;
-        root->MakeInst<TACHeapInst>(OpCodes::LDW, LocalVar(*param), FramePtr(), -4 * argIndex);
+        root->MakeInst<TACHeapInst>(
+            OpCodes::LDW, LocalVar(*param), FramePtr(), -4 * argIndex
+        );
     }
 
     /* Build sub-CFG for this procedure */
@@ -732,7 +737,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
         root->AddSucc(*graph.in);
     
     /* Clean local CFG of this procedure */
-    root->Clean();
+    Optimization::Optimizer::OptimizeGraph(*root);
 
     /* Verify procedure return statements */
     if (procSig.returnTypeDenoter->IsVoid())

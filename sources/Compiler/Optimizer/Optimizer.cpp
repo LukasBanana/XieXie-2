@@ -28,14 +28,6 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
 {
     for (auto& ct : program.classTrees)
     {
-        /* Graph optimizations */
-        for (auto& bb : ct->GetRootBasicBlocks())
-        {
-            KillBranches().Transform(*bb.second);
-            BlockMerge().Transform(*bb.second);
-            BlockClean().Transform(*bb.second);
-        }
-
         /* Instruction optimizations */
         for (auto& bb : ct->GetBasicBlocks())
         {
@@ -44,14 +36,17 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
             VariableReduction().Transform(*bb);
         }
 
-        /* Graph optimizations */
+        /* Additional graph optimizations */
         for (auto& bb : ct->GetRootBasicBlocks())
-        {
-            KillBranches().Transform(*bb.second);
-            BlockMerge().Transform(*bb.second);
-            BlockClean().Transform(*bb.second);
-        }
+            Optimizer::OptimizeGraph(*bb.second);
     }
+}
+
+void Optimizer::OptimizeGraph(BasicBlock& root)
+{
+    KillBranches().Transform(root);
+    BlockMerge().Transform(root);
+    BlockClean().Transform(root);
 }
 
 

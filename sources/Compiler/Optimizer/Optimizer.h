@@ -33,7 +33,16 @@ class Optimizer
         */
         virtual bool Transform(BasicBlock& basicBlock) = 0;
 
+        //! Optimizes the entire CFG program.
         static void OptimizeProgram(CFGProgram& program);
+
+        /**
+        Optimizes the CFG for the specified basic block root.
+        \remarks This only optimizes the graph, and does only little to no optimizations on the TAC instructions.
+        This is used internally by the CFG generator. For full optimization use "OptimizeProgram".
+        \see OptimizeProgram
+        */
+        static void OptimizeGraph(BasicBlock& root);
 
 };
 
