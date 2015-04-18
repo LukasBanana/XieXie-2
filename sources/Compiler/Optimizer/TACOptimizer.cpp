@@ -51,6 +51,9 @@ void TACOptimizer::TransformInst(TACInstPtr& inst)
         case TACInst::Types::Heap:
             TransformHeapInst(inst);
             break;
+        case TACInst::Types::DirectCall:
+            TransformDirectCallInst(inst);
+            break;
     }
 }
 
@@ -107,6 +110,11 @@ void TACOptimizer::TransformStackInst(TACInstPtr& inst)
 }
 
 void TACOptimizer::TransformHeapInst(TACInstPtr& inst)
+{
+    // dummy
+}
+
+void TACOptimizer::TransformDirectCallInst(TACInstPtr& inst)
 {
     // dummy
 }

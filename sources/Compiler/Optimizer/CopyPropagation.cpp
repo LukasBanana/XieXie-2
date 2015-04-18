@@ -32,9 +32,12 @@ void CopyPropagation::TransformCopyInst(TACInstPtr& inst)
 {
     auto copyInst = static_cast<TACCopyInst*>(inst.get());
 
-    /* Propagate copy */
-    ReadVar(copyInst->src);
-    WriteVar(copyInst->dest, copyInst->src);
+    if (!copyInst->src.IsLabel())
+    {
+        /* Propagate copy */
+        ReadVar(copyInst->src);
+        WriteVar(copyInst->dest, copyInst->src);
+    }
 }
 
 void CopyPropagation::TransformModifyInst(TACInstPtr& inst)
@@ -93,6 +96,12 @@ void CopyPropagation::TransformHeapInst(TACInstPtr& inst)
         ReadVar(heapInst->var);
     else
         KillCopy(heapInst->var);
+}
+
+void CopyPropagation::TransformDirectCallInst(TACInstPtr& inst)
+{
+    /* Call instruction kills all copies */
+    vars_.clear();
 }
 
 void CopyPropagation::ReadVar(TACVar& src)

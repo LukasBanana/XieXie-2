@@ -32,6 +32,7 @@ class CopyPropagation : public TACOptimizer
         void TransformSwitchInst(TACInstPtr& inst) override;
         void TransformStackInst(TACInstPtr& inst) override;
         void TransformHeapInst(TACInstPtr& inst) override;
+        void TransformDirectCallInst(TACInstPtr& inst) override;
 
         void ReadVar(TACVar& src);
         void WriteVar(const TACVar& dest, const TACVar& src);

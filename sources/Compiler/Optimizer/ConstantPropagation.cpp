@@ -122,6 +122,12 @@ void ConstantPropagation::TransformHeapInst(TACInstPtr& inst)
         RemoveConst(heapInst->var);
 }
 
+void ConstantPropagation::TransformDirectCallInst(TACInstPtr& inst)
+{
+    /* Call instruction kills all constants */
+    vars_.clear();
+}
+
 bool ConstantPropagation::IsNOP(const TACModifyInst& inst) const
 {
     /* Get single constant */

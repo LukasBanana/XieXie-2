@@ -1455,7 +1455,9 @@ void GraphGenerator::GenerateArgumentExpr(Expr& ast)
 
 void GraphGenerator::GenerateClassAlloc(unsigned int instanceSize, unsigned int typeID, const std::string& vtableAddr)
 {
-    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, LabelVar(vtableAddr));
+    auto addrVar = TempVar();
+    BB()->MakeInst<TACCopyInst>(OpCodes::LDADDR, addrVar, LabelVar(vtableAddr));
+    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, addrVar);
     BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(typeID));
     BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(instanceSize));
     BB()->MakeInst<TACDirectCallInst>("new");

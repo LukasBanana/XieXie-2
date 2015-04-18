@@ -35,6 +35,7 @@ class ConstantPropagation : public TACOptimizer
         void TransformSwitchInst(TACInstPtr& inst) override;
         void TransformStackInst(TACInstPtr& inst) override;
         void TransformHeapInst(TACInstPtr& inst) override;
+        void TransformDirectCallInst(TACInstPtr& inst) override;
 
         //! Returns true if this is equivalent to a no-operation instruction, e.g. "a + 0", or "a * 1".
         bool IsNOP(const TACModifyInst& inst) const;
