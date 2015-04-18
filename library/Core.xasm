@@ -219,15 +219,15 @@ CString.Pinit,R@String?source:
 	insc CopyMem
 	
 	; allocate buffer for new string
-	ldw $r2, ($r0) 12	; load 'String.size'
-	inc $r2				; increase size for null terminator
-	push $r2
+	ldw $r1, ($r0) 12	; load 'String.size'
+	inc $r1				; increase size for null terminator
+	push $r1
 	insc AllocMem		; allocate buffer
 	stw $ar, ($xr) 20	; write buffer address to new string object
 	
 	; copy string buffer from literal
 	ldw $r0, ($r0) 20	; load buffer address from literal
-	push $r2			; push buffer size
+	push $r1			; push buffer size
 	push $r0			; push buffer address of literal
 	push $ar			; push buffer address of new string
 	insc CopyMem
