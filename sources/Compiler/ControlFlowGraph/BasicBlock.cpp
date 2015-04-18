@@ -254,6 +254,7 @@ void BasicBlock::Merge(VisitSet& visitSet, bool& hasChanged)
         bb->Merge(visitSet, hasChanged);
 }
 
+// Removes empty basic blocks.
 void BasicBlock::Purge(VisitSet& visitSet, bool& hasChanged)
 {
     /* Check if this basic block has already been visited */
@@ -281,7 +282,7 @@ void BasicBlock::Purge(VisitSet& visitSet, bool& hasChanged)
     }
 }
 
-//!INCOMPLETE!
+// Removes all multiple successor connections.
 void BasicBlock::Unify(VisitSet& visitSet, bool& hasChanged)
 {
     /* Check if this basic block has already been visited */
@@ -291,7 +292,7 @@ void BasicBlock::Unify(VisitSet& visitSet, bool& hasChanged)
     /* Make successor list unique */
     auto last = std::unique(
         succ_.begin(), succ_.end(),
-        [](const Edge& lhs, const Edge& rhs){ return lhs.succ == rhs.succ; }
+        [](const Edge& lhs, const Edge& rhs) { return lhs.succ == rhs.succ; }
     );
 
     if (last != succ_.end())

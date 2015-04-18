@@ -9,7 +9,7 @@
 #define __XX_VARIABLE_REDUCTION_H__
 
 
-#include "Optimizer.h"
+#include "TACOptimizer.h"
 
 #include <map>
 #include <vector>
@@ -20,7 +20,7 @@ namespace Optimization
 
 
 //! Reduces the amount of temporary variables.
-class VariableReduction : public Optimizer
+class VariableReduction : public TACOptimizer
 {
     
     public:

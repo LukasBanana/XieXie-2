@@ -9,7 +9,7 @@
 #define __XX_VARIABLE_CLEAN_H__
 
 
-#include "Optimizer.h"
+#include "TACOptimizer.h"
 
 #include <set>
 
@@ -18,7 +18,7 @@ namespace Optimization
 {
 
 
-class VariableClean : public Optimizer
+class VariableClean : public TACOptimizer
 {
     
     public:

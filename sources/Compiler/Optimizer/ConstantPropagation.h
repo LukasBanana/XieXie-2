@@ -9,7 +9,7 @@
 #define __XX_CONSTANT_PROPAGATION_H__
 
 
-#include "Optimizer.h"
+#include "TACOptimizer.h"
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
 
@@ -21,7 +21,7 @@ namespace Optimization
 {
 
 
-class ConstantPropagation : public Optimizer
+class ConstantPropagation : public TACOptimizer
 {
     
     public:

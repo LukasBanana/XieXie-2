@@ -10,7 +10,6 @@
 
 
 #include "CFGProgram.h"
-#include "TACVar.h"
 
 
 namespace Optimization
@@ -18,9 +17,8 @@ namespace Optimization
 
 
 using namespace ControlFlowGraph;
-using namespace ThreeAddressCodes;
 
-//! Interface for all CFG optimizer classes.
+//! Interface for all code optimizer classes.
 class Optimizer
 {
     
@@ -31,18 +29,6 @@ class Optimizer
         virtual void Transform(BasicBlock& basicBlock) = 0;
 
         static void OptimizeProgram(CFGProgram& program);
-
-    protected:
-        
-        virtual void TransformInst(TACInstPtr& inst);
-
-        virtual void TransformCopyInst(TACInstPtr& inst);
-        virtual void TransformModifyInst(TACInstPtr& inst);
-        virtual void TransformRelationInst(TACInstPtr& inst);
-        virtual void TransformReturnInst(TACInstPtr& inst);
-        virtual void TransformSwitchInst(TACInstPtr& inst);
-        virtual void TransformStackInst(TACInstPtr& inst);
-        virtual void TransformHeapInst(TACInstPtr& inst);
 
 };
 
