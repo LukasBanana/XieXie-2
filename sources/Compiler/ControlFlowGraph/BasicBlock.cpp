@@ -112,6 +112,15 @@ void BasicBlock::KillSucc(BasicBlock& block)
     auto itPred = std::find(block.pred_.begin(), block.pred_.end(), this);
     if (itPred != block.pred_.end())
         block.pred_.erase(itPred);
+
+    /* Check if block has no further predecessors */
+    if (block.pred_.empty())
+    {
+        /* Now kill all further branches of the specified block */
+        auto nextSucc = block.succ_;
+        for (auto& next : nextSucc)
+            block.KillSucc(*next);
+    }
 }
 
 void BasicBlock::Clean()
