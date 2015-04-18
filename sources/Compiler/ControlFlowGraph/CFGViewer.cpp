@@ -17,14 +17,12 @@ namespace ControlFlowGraph
 {
 
 
-void CFGViewer::ViewGraph(
-    const BasicBlock& entryPoint, std::ostream& stream,
-    const std::string& fontName, const int fontSize)
+void CFGViewer::ViewGraph(const BasicBlock& entryPoint, std::ostream& stream, const OutputDesc& desc)
 {
     stream_ = &stream;
 
     WriteLine("digraph G {");
-    WriteLine("node [shape=\"box\", fontname=\"" + fontName + "\", fontsize=\"" + ToStr(fontSize) + "\"];");
+    WriteLine("node [shape=\"box\", fontname=\"" + desc.fontName + "\", fontsize=\"" + ToStr(desc.fontSize) + "\"];");
     WriteLine("edge [fontname=\"courier new bold\", fontsize=\"10\"];");
 
     DefineBlock(entryPoint);
@@ -35,20 +33,21 @@ void CFGViewer::ViewGraph(
     blockLinks_.clear();
 }
 
-void CFGViewer::ViewGraph(
-    const ClassTree& classTree, const std::string& path,
-    const std::string& fontName, const int fontSize)
+void CFGViewer::ViewGraph(const ClassTree& classTree, const std::string& path, const OutputDesc& desc)
 {
     for (const auto& block : classTree.GetRootBasicBlocks())
     {
+        /* Generate graph description files for the "dot" tool */
         auto filename = path + block.second->label + ".vg";
         std::ofstream file(filename);
-        ViewGraph(*block.second, file, fontName, fontSize);
+        ViewGraph(*block.second, file, desc);
 
-        #if 1//DEBUG!!!
-        auto cmd = "dot-png.bat \"" + filename + "\"";
-        system(cmd.c_str());
-        #endif
+        if (desc.genPNG)
+        {
+            /* Generate PNG file */
+            auto cmd = "dot -Tpng \"" + filename + "\" -o \"" + filename + ".png\"";
+            system(cmd.c_str());
+        }
     }
 }
 
@@ -80,7 +79,7 @@ void CFGViewer::DefineBlock(const BasicBlock& block)
     auto blockID = GetBlockID(block);
     auto blockLabel = "<" + blockID + ">";
 
-    //if () //!!!!!
+    #if 0//!!!DEBUG!!!
     {
         /* Append information about predecessors and successors */
         blockLabel += (
@@ -88,6 +87,7 @@ void CFGViewer::DefineBlock(const BasicBlock& block)
             "), s(" + std::to_string(block.GetSucc().size()) + ")"
         );
     }
+    #endif
 
     if (!block.label.empty())
         blockLabel += "\\n'" + block.label + "'";

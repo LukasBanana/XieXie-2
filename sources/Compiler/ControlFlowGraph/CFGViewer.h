@@ -31,14 +31,24 @@ class CFGViewer
     
     public:
         
-        void ViewGraph(
-            const BasicBlock& entryPoint, std::ostream& stream,
-            const std::string& fontName = "courier new", const int fontSize = 10
-        );
-        void ViewGraph(
-            const ClassTree& classTree, const std::string& path = "",
-            const std::string& fontName = "courier new", const int fontSize = 10
-        );
+        //! CFG viewer output description structure.
+        struct OutputDesc
+        {
+            //! Specifies the font name for the graph nodes. By default "courier new".
+            std::string fontName    = "courier new";
+            //! Specifies the font size for the graph nodes. By default 10.
+            int         fontSize    = 10;
+
+            /**
+            Specifies whether to generate a PNG file for each procedure CFG. By default true.
+            \remarks This requires that the "dot" tool is installed on your platform.
+            \see http://www.graphviz.org/
+            */
+            bool        genPNG      = true;
+        };
+
+        void ViewGraph(const BasicBlock& entryPoint, std::ostream& stream, const OutputDesc& desc = {});
+        void ViewGraph(const ClassTree& classTree, const std::string& path = "", const OutputDesc& desc = {});
 
     private:
         
