@@ -179,7 +179,7 @@ std::string XASMGenerator::ResolveStringLiteral(const std::string& str) const
 
 std::string XASMGenerator::Reg(const TACVar& var)
 {
-    if (var.IsConst())
+    if (var.IsConst() || var.IsLabel())
         return var.ToString();
 
     switch (var.type)
@@ -232,7 +232,7 @@ const BasicBlock& XASMGenerator::Pred(size_t index) const
 const BasicBlock& XASMGenerator::Succ(size_t index) const
 {
     if (index >= Succ().size())
-        ErrorIntern("predecessor index out of range");
+        ErrorIntern("succecessor index out of range");
     return *Succ()[index];
 }
 

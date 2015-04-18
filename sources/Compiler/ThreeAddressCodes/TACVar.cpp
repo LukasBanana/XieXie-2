@@ -8,6 +8,8 @@
 #include "TACVar.h"
 #include "StringModifier.h"
 
+#include <cctype>
+
 
 namespace ThreeAddressCodes
 {
@@ -26,10 +28,15 @@ TACVar::TACVar(const std::string& value) :
     type    { Types::Literal },
     value   { value          }
 {
+    if (!value.empty())
+    {
+        auto chr = static_cast<unsigned char>(value[0]);
+        if (std::isdigit(chr) == 0 && chr != '-')
+            type = Types::Label;
+    }
 }
 TACVar::TACVar(const char* value) :
-    type    { Types::Literal },
-    value   { value          }
+    TACVar{ std::string(value) }
 {
 }
 
@@ -55,6 +62,7 @@ std::string TACVar::ToString() const
     switch (type)
     {
         case Types::Literal:
+        case Types::Label:
             return value;
 
         case Types::Temp:
@@ -82,6 +90,11 @@ std::string TACVar::ToString() const
 bool TACVar::IsConst() const
 {
     return type == Types::Literal;
+}
+
+bool TACVar::IsLabel() const
+{
+    return type == Types::Label;
 }
 
 bool TACVar::IsTemp() const

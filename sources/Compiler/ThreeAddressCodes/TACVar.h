@@ -32,6 +32,7 @@ class TACVar
         enum class Types
         {
             Literal,    //!< Literal constant.
+            Label,      //!< Address label.
 
             Temp,       //!< Compiler temporary variable.
             Global,     //!< Global variable.
@@ -58,16 +59,19 @@ class TACVar
         //! Returns this variable as string representation (for debugging).
         std::string ToString() const;
 
-        //! Returns true if this variable is a constant literal.
-        bool IsConst() const;
-        //! Returns ture if this is a temporary variable.
-        bool IsTemp() const;
         /**
         Returns true if the ID of this variable is valid.
         \see id
         \see invalidID
         */
         bool IsValid() const;
+
+        //! Returns true if this variable is a constant literal.
+        bool IsConst() const;
+        //! Returns true if this variable is an address label.
+        bool IsLabel() const;
+        //! Returns ture if this is a temporary variable.
+        bool IsTemp() const;
 
         //! Returns the value as integer.
         int Int() const;
