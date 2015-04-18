@@ -11,11 +11,6 @@
 
 #include <algorithm>
 
-//!!!
-#include "BlockMerge.h"
-#include "BlockClean.h"
-#include "KillBranches.h"
-
 
 namespace ControlFlowGraph
 {

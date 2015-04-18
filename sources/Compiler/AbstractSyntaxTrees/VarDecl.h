@@ -35,6 +35,14 @@ class VarDecl : public Stmnt
         //! Returns the size (in bytes) of this variable. By default 1.
         unsigned int MemorySize() const;
 
+        //! Returns true if this is a static variable.
+        bool IsStatic() const;
+        /**
+        Returns true if this is a local variable.
+        \todo Not yet implemented!
+        */
+        bool IsLocal() const;
+
         /* === Members === */
 
         std::string     ident;

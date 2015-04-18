@@ -27,6 +27,28 @@ TACVar TACVarManager::TempVar()
     return TACVar(GenTempVarID());
 }
 
+TACVar TACVarManager::LValueVar(const AST& ast)
+{
+    auto varDecl = AST::Cast<VarDecl>(&ast);
+
+    if (varDecl)
+    {
+        if (varDecl->IsStatic())
+        {
+            /* Return global variable */
+            return GlobalVar(*varDecl);
+        }
+        if (!varDecl->IsLocal())
+        {
+            /* Return member variable */
+            return MemberVar(*varDecl);
+        }
+    }
+
+    /* Return local variable */
+    return LocalVar(ast);
+}
+
 TACVar TACVarManager::LocalVar(const AST& ast)
 {
     return localVars_.FetchVar(ast);

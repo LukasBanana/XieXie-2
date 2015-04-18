@@ -99,6 +99,16 @@ unsigned int VarDecl::MemorySize() const
     return varType != nullptr ? varType->MemorySize() : 1;
 }
 
+bool VarDecl::IsStatic() const
+{
+    return parentRef->isStatic;
+}
+
+bool VarDecl::IsLocal() const
+{
+    return false; //!TODO!
+}
+
 
 /* --- VarDeclStmnt --- */
 

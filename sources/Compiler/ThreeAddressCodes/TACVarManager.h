@@ -36,7 +36,16 @@ class TACVarManager
         //! Restes all variables counters and references.
         void Reset();
 
+        //! Generates new temporary variable.
         TACVar TempVar();
+        /**
+        Returns the 'locator-value' variable for the specified AST node.
+        \see LocalVar
+        \see GlobalVar
+        \see MemberVar
+        */
+        TACVar LValueVar(const AST& ast);
+
         TACVar LocalVar(const AST& ast);
         TACVar GlobalVar(const VarDecl& ast);
         TACVar MemberVar(const VarDecl& ast);

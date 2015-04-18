@@ -4,6 +4,8 @@
 
 class Test {
 	
+	static int g_a := 10
+	
 	static bool getBoolean() {
 		return true
 	}
@@ -24,7 +26,7 @@ class Test {
 	
 	static void main() {
 		
-		int a := 5
+		int a := Test.g_a
 		int b := -7
 		
 		//bool c := a > b and a != 7 or ( b = -2 and Test.getBoolean() )

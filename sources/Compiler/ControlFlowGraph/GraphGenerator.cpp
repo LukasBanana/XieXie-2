@@ -135,7 +135,7 @@ DEF_VISIT_PROC(GraphGenerator, VarDecl)
             auto inst = BB()->MakeInst<TACCopyInst>();
 
             inst->src   = Var();
-            inst->dest  = LocalVar(ast);
+            inst->dest  = LValueVar(ast);
             PopVar();
 
             /* Add strong reference to ref-scope (for local variables) */
@@ -157,7 +157,7 @@ DEF_VISIT_PROC(GraphGenerator, VarDecl)
         auto inst = bb->MakeInst<TACCopyInst>();
 
         inst->src   = TACVar("0");
-        inst->dest  = LocalVar(ast);
+        inst->dest  = LValueVar(ast);
 
         RETURN_BLOCK_REF(bb);
     }
@@ -213,7 +213,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     {
         /* Make instruction to set 'this' pointer */
         if (ast->procName->declRef && ast->procName->declRef->Type() == AST::Types::VarDecl)
-            BB()->MakeInst<TACCopyInst>(ThisPtr(), LocalVar(ast->procName->declRef));
+            BB()->MakeInst<TACCopyInst>(ThisPtr(), LValueVar(ast->procName->declRef));
 
         /* Make indirect call instruction */
         BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);//!!!!
@@ -605,7 +605,7 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
     in->AddSucc(*cond);
 
     /* Loop initialization */
-    auto idxVar = LocalVar(ast);
+    auto idxVar = LValueVar(ast);
     in->MakeInst<TACCopyInst>(idxVar, ToStr(ast->rangeStart));
 
     /* Loop condition */
@@ -727,7 +727,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     {
         ++argIndex;
         root->MakeInst<TACHeapInst>(
-            OpCodes::LDW, LocalVar(*param), FramePtr(), -4 * argIndex
+            OpCodes::LDW, LValueVar(*param), FramePtr(), -4 * argIndex
         );
     }
 
@@ -781,7 +781,7 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
         {
             /* Get variable identifier */
             auto& lastName = varName->GetLast();
-            auto var = LocalVarFromVarName(lastName);
+            auto var = LValueVarFromVarName(lastName);
             auto isFloat = IsASTFloat(lastName);
 
             /* Make basic block and instruction */
@@ -843,7 +843,7 @@ DEF_VISIT_PROC(GraphGenerator, ModifyAssignStmnt)
 
         /* Get variable identifier */
         auto& varName = ast->varName->GetLast();
-        auto var = LocalVarFromVarName(varName);
+        auto var = LValueVarFromVarName(varName);
         auto isFloat = IsASTFloat(varName);
 
         /* Make instruction */
@@ -863,7 +863,7 @@ DEF_VISIT_PROC(GraphGenerator, PostOperatorStmnt)
 {
     /* Get variable identifier */
     auto& varName = ast->varName->GetLast();
-    auto var = LocalVarFromVarName(varName);
+    auto var = LValueVarFromVarName(varName);
     auto isFloat = IsASTFloat(varName);
 
     /* Make basic block and instruction */
@@ -1041,7 +1041,7 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 
 DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
 {
-    PushVar(LocalVarFromVarName(*ast->varName));
+    PushVar(LValueVarFromVarName(*ast->varName));
 }
 
 DEF_VISIT_PROC(GraphGenerator, InitListExpr)
@@ -1686,19 +1686,19 @@ TACVar GraphGenerator::TempVar()
     return varMngr_.TempVar();
 }
 
-TACVar GraphGenerator::LocalVar(const AST* ast)
+TACVar GraphGenerator::LValueVar(const AST* ast)
 {
-    return ast != nullptr ? varMngr_.LocalVar(*ast) : TACVar();
+    return ast != nullptr ? varMngr_.LValueVar(*ast) : TACVar();
 }
 
-TACVar GraphGenerator::LocalVar(const AST& ast)
+TACVar GraphGenerator::LValueVar(const AST& ast)
 {
-    return LocalVar(&ast);
+    return LValueVar(&ast);
 }
 
-TACVar GraphGenerator::LocalVarFromVarName(const VarName& ast)
+TACVar GraphGenerator::LValueVarFromVarName(const VarName& ast)
 {
-    return LocalVar(ast.GetLast().declRef);
+    return LValueVar(ast.GetLast().declRef);
 }
 
 TACVar GraphGenerator::ResultVar()
