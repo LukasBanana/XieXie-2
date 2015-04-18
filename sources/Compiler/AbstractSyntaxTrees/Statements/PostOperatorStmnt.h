@@ -21,6 +21,7 @@ class PostOperatorStmnt : public Stmnt
     
     public:
         
+        //! Post operators.
         enum class Operators
         {
             Inc,

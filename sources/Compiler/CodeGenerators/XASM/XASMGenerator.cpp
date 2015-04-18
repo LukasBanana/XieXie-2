@@ -848,9 +848,9 @@ void XASMGenerator::GenerateVtable(const ClassDeclStmnt& classDecl)
 
 void XASMGenerator::GenerateClassRTTI(const BuiltinClasses::ClassRTTI& typeInfo)
 {
-    WORDField(1);                       // refCount
-    WORDField(typeInfo.typeID);         // typeID
-    WORDAddress(typeInfo.vtableAddr);   // vtableAddr
+    WORDField(1);                           // refCount
+    WORDField(typeInfo.typeID);             // typeID
+    WORDAddress(typeInfo.GetVtableAddr());  // vtableAddr
 }
 
 void XASMGenerator::GenerateExportLabels()

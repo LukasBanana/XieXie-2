@@ -21,6 +21,7 @@ class BinaryExpr : public Expr
     
     public:
         
+        //! Binary expression operators.
         enum class Operators
         {
             LogicOr,

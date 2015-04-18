@@ -1059,7 +1059,7 @@ DEF_VISIT_PROC(GraphGenerator, InitListExpr)
     }
 
     /* Append literal to program string literals */
-    GenerateClassAlloc(classRTTI->instanceSize, classRTTI->typeID, classRTTI->vtableAddr);
+    GenerateClassAlloc(classRTTI->instanceSize, classRTTI->typeID, classRTTI->GetVtableAddr());
 
     CopyAndPushResultVar(TempVar());
 

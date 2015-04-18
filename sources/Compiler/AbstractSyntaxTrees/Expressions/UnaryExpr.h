@@ -21,6 +21,7 @@ class UnaryExpr : public Expr
     
     public:
         
+        //! Unary expression operators.
         enum class Operators
         {
             LogicNot,

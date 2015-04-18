@@ -21,6 +21,7 @@ class ModifyAssignStmnt : public Stmnt
     
     public:
         
+        //! Modify assignment operators.
         enum class Operators
         {
             Add,
