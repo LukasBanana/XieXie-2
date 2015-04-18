@@ -190,6 +190,7 @@ void CompileCommand::DecorateProgram(AbstractSyntaxTrees::Program& program, Log&
     if (output.verbose)
         output.Message("context analysis ...");
 
+    /* Decoreate AST */
     ContextAnalyzer::Decorator decorator;
     if (!decorator.DecorateProgram(program, errorReporter_))
         hasError_ = true;
@@ -207,10 +208,19 @@ CFGProgramPtr CompileCommand::GenerateCFG(Program& program, Log& output)
         hasError_ = true;
     else if (options_.optimize)
     {
-        /* Optimize CFG */
         if (output.verbose)
             output.Message("optimization ...");
+
+        /* Optimize CFG */
         Optimization::Optimizer::OptimizeProgram(*cfgProgram);
+
+        #if 1//!!!TEMPORARY!!!
+        for (auto& ct : cfgProgram->classTrees)
+        {
+            for (auto bb : ct->GetRootBasicBlocks())
+                bb.second->Clean();
+        }
+        #endif
     }
 
     return cfgProgram;

@@ -35,10 +35,15 @@ using OpCodes = TACInst::OpCodes;
  * Internal functions
  */
 
-static bool IsVarFloat(const VarName& ast)
+static bool IsASTFloat(const AST& ast)
 {
-    auto varType = ast.GetTypeDenoter();
-    return (varType != nullptr ? varType->IsFloat() : false);
+    auto astType = ast.GetTypeDenoter();
+    return (astType != nullptr ? astType->IsFloat() : false);
+}
+
+static TACVar LabelVar(const std::string& label)
+{
+    return TACVar('@' + label);
 }
 
 
@@ -772,7 +777,7 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
             /* Get variable identifier */
             auto& lastName = varName->GetLast();
             auto var = LocalVarFromVarName(lastName);
-            auto isFloat = IsVarFloat(lastName);
+            auto isFloat = IsASTFloat(lastName);
 
             /* Make basic block and instruction */
             auto inst = bb->MakeInst<TACCopyInst>();
@@ -834,7 +839,7 @@ DEF_VISIT_PROC(GraphGenerator, ModifyAssignStmnt)
         /* Get variable identifier */
         auto& varName = ast->varName->GetLast();
         auto var = LocalVarFromVarName(varName);
-        auto isFloat = IsVarFloat(varName);
+        auto isFloat = IsASTFloat(varName);
 
         /* Make instruction */
         auto inst = bb->MakeInst<TACModifyInst>();
@@ -854,7 +859,7 @@ DEF_VISIT_PROC(GraphGenerator, PostOperatorStmnt)
     /* Get variable identifier */
     auto& varName = ast->varName->GetLast();
     auto var = LocalVarFromVarName(varName);
-    auto isFloat = IsVarFloat(varName);
+    auto isFloat = IsASTFloat(varName);
 
     /* Make basic block and instruction */
     auto bb = MakeBlock();
@@ -939,7 +944,7 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
         
         /* Make instruction */
         auto var = TempVar();
-        BB()->MakeInst<TACCopyInst>(OpCodes::LDADDR, var, '@' + literalIdent);
+        BB()->MakeInst<TACCopyInst>(OpCodes::LDADDR, var, LabelVar(literalIdent));
         BB()->MakeInst<TACStackInst>(OpCodes::PUSH, var);
         BB()->MakeInst<TACDirectCallInst>("String.copy_literal");
 
@@ -1381,16 +1386,29 @@ void GraphGenerator::GenerateNegateUnaryExpr(UnaryExpr* ast, void* args)
     auto src = Var();
 
     /* Make instruction */
-    auto isFloat = ast->GetTypeDenoter()->IsFloat();
-    auto inst = BB()->MakeInst<TACModifyInst>();
-    
-    inst->opcode    = OperatorToOpCode(ast->unaryOperator, isFloat);
-    inst->dest      = TempVar();
-    inst->srcLhs    = TACVar("0");
-    inst->srcRhs    = src;
+    if (src.IsConst())
+    {
+        auto inst = BB()->MakeInst<TACCopyInst>();
 
-    PopVar();
-    PushVar(inst->dest);
+        inst->dest  = TempVar();
+        inst->src   = '-' + src.value;
+
+        PopVar();
+        PushVar(inst->dest);
+    }
+    else
+    {
+        auto isFloat = ast->GetTypeDenoter()->IsFloat();
+        auto inst = BB()->MakeInst<TACModifyInst>();
+    
+        inst->opcode    = OperatorToOpCode(ast->unaryOperator, isFloat);
+        inst->dest      = TempVar();
+        inst->srcLhs    = TACVar("0");
+        inst->srcRhs    = src;
+
+        PopVar();
+        PushVar(inst->dest);
+    }
 }
 
 void GraphGenerator::GenerateBreakCtrlTransferStmnt(CtrlTransferStmnt* ast, void* args)
@@ -1432,7 +1450,7 @@ void GraphGenerator::GenerateArgumentExpr(Expr& ast)
 
 void GraphGenerator::GenerateClassAlloc(unsigned int instanceSize, unsigned int typeID, const std::string& vtableAddr)
 {
-    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar("@" + vtableAddr));
+    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, LabelVar(vtableAddr));
     BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(typeID));
     BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(instanceSize));
     BB()->MakeInst<TACDirectCallInst>("new");
