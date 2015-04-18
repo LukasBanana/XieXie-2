@@ -24,17 +24,9 @@ namespace Optimization
 
 bool VariableClean::Transform(BasicBlock& basicBlock)
 {
-    /* Transform instructions (bottom-up) */
-    for (auto it = basicBlock.insts.rbegin(); it != basicBlock.insts.rend(); ++it)
-        TransformInst(*it);
-
-    /* Remove all empty instructions */
-    auto itEnd = std::remove_if(
-        basicBlock.insts.begin(), basicBlock.insts.end(),
-        [](TACInstPtr& inst) -> bool { return !inst; }
-    );
-    basicBlock.insts.erase(itEnd, basicBlock.insts.end());
-
+    /* Transform instructions (bottom-up), then remove all null instructions */
+    TransformInstsBottomUp(basicBlock);
+    Clean(basicBlock);
     return false;//!!!
 }
 

@@ -22,8 +22,7 @@ namespace Optimization
 bool ConstantPropagation::Transform(BasicBlock& basicBlock)
 {
     /* Transform instructions (top-down) */
-    for (auto& inst : basicBlock.insts)
-        TransformInst(inst);
+    TransformInstsTopDown(basicBlock);
     return false;//!!!
 }
 

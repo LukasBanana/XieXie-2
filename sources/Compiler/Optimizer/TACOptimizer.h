@@ -23,7 +23,14 @@ class TACOptimizer : public Optimizer
     
     protected:
         
+        //! Transforms the single specified instruction.
         void TransformInst(TACInstPtr& inst);
+        //! Transforms all instructions of the specified basic block in top-down order.
+        void TransformInstsTopDown(BasicBlock& basicBlock);
+        //! Transforms all instructions of the specified basic block in bottom-up order.
+        void TransformInstsBottomUp(BasicBlock& basicBlock);
+        //! Removes all null instructions.
+        void Clean(BasicBlock& basicBlock);
 
         virtual void TransformCopyInst(TACInstPtr& inst);
         virtual void TransformModifyInst(TACInstPtr& inst);

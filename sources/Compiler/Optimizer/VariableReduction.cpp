@@ -29,8 +29,7 @@ bool VariableReduction::Transform(BasicBlock& basicBlock)
         inst->InsertDestVar(availVars_, TACInst::VarFlags::TempOnly);
 
     /* Transform instructions (bottom-up) */
-    for (auto it = basicBlock.insts.rbegin(); it != basicBlock.insts.rend(); ++it)
-        TransformInst(*it);
+    TransformInstsBottomUp(basicBlock);
 
     return false;//!!!
 }

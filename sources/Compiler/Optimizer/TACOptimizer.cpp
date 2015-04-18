@@ -7,6 +7,8 @@
 
 #include "TACOptimizer.h"
 
+#include <algorithm>
+
 
 namespace Optimization
 {
@@ -42,6 +44,28 @@ void TACOptimizer::TransformInst(TACInstPtr& inst)
             TransformHeapInst(inst);
             break;
     }
+}
+
+void TACOptimizer::TransformInstsTopDown(BasicBlock& basicBlock)
+{
+    for (auto& inst : basicBlock.insts)
+        TransformInst(inst);
+}
+
+void TACOptimizer::TransformInstsBottomUp(BasicBlock& basicBlock)
+{
+    for (auto it = basicBlock.insts.rbegin(); it != basicBlock.insts.rend(); ++it)
+        TransformInst(*it);
+}
+
+void TACOptimizer::Clean(BasicBlock& basicBlock)
+{
+    /* Remove all instructions that are null */
+    auto itEnd = std::remove_if(
+        basicBlock.insts.begin(), basicBlock.insts.end(),
+        [](TACInstPtr& inst) -> bool { return !inst; }
+    );
+    basicBlock.insts.erase(itEnd, basicBlock.insts.end());
 }
 
 void TACOptimizer::TransformCopyInst(TACInstPtr& inst)
