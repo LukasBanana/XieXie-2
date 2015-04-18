@@ -1,27 +1,24 @@
 /*
- * ConstantPropagation.h
+ * CopyPropagation.h
  * 
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_CONSTANT_PROPAGATION_H__
-#define __XX_CONSTANT_PROPAGATION_H__
+#ifndef __XX_COPY_PROPAGATION_H__
+#define __XX_COPY_PROPAGATION_H__
 
 
 #include "TACOptimizer.h"
-#include "TACModifyInst.h"
-#include "TACCopyInst.h"
 
-#include <map>
-#include <string>
+#include <vector>
 
 
 namespace Optimization
 {
 
 
-class ConstantPropagation : public TACOptimizer
+class CopyPropagation : public TACOptimizer
 {
     
     public:
@@ -30,6 +27,12 @@ class ConstantPropagation : public TACOptimizer
 
     private:
         
+        struct Copy
+        {
+            TACVar copy;
+            TACVar src;
+        };
+
         void TransformCopyInst(TACInstPtr& inst) override;
         void TransformModifyInst(TACInstPtr& inst) override;
         void TransformRelationInst(TACInstPtr& inst) override;
@@ -38,15 +41,13 @@ class ConstantPropagation : public TACOptimizer
         void TransformStackInst(TACInstPtr& inst) override;
         void TransformHeapInst(TACInstPtr& inst) override;
 
-        //! Returns true if this is equivalent to a no-operation instruction, e.g. "a + 0", or "a * 1".
-        bool IsNOP(const TACModifyInst& inst) const;
-        std::unique_ptr<TACCopyInst> ConstantFolding(const TACModifyInst& inst);
+        std::vector<Copy>::iterator FindCopy(const TACVar& copy);
 
-        void FetchConst(TACVar& var);
-        void PropagateConst(const TACVar& dest, const TACVar& src);
-        void RemoveConst(const TACVar& dest);
+        void ReadVar(TACVar& src);
+        void WriteVar(const TACVar& dest, const TACVar& src);
+        void KillCopy(const TACVar& dest);
 
-        std::map<TACVar, std::string> vars_;
+        std::vector<Copy> vars_;
 
 };
 

@@ -19,6 +19,8 @@ namespace Optimization
 {
 
 
+using OpCodes = TACInst::OpCodes;
+
 bool ConstantPropagation::Transform(BasicBlock& basicBlock)
 {
     /* Transform instructions (top-down) */
@@ -58,6 +60,16 @@ void ConstantPropagation::TransformModifyInst(TACInstPtr& inst)
             PropagateConst(newInst->dest, newInst->src);
             inst = std::move(newInst);
         }
+    }
+    else if (IsNOP(*modifyInst))
+    {
+        /* Constant folding */
+        auto constVar = (modifyInst->srcLhs.IsConst() ? modifyInst->srcRhs : modifyInst->srcLhs);
+        auto newInst = MakeUnique<TACCopyInst>(modifyInst->dest, constVar);
+
+        /* Propagate constant */
+        PropagateConst(newInst->dest, newInst->src);
+        inst = std::move(newInst);
     }
     else
     {
@@ -114,10 +126,54 @@ void ConstantPropagation::TransformHeapInst(TACInstPtr& inst)
         RemoveConst(heapInst->var);
 }
 
+bool ConstantPropagation::IsNOP(const TACModifyInst& inst) const
+{
+    /* Get single constant */
+    const auto& lhs = inst.srcLhs;
+    const auto& rhs = inst.srcRhs;
+
+    TACVar constVar;
+    if (lhs.IsConst())
+        constVar = lhs;
+    else if (rhs.IsConst())
+        constVar = rhs;
+    else
+        return false;
+
+    /* Check if this is a no-operation instruction */
+    switch (inst.opcode)
+    {
+        case OpCodes::AND:
+            return constVar.Int() == ~0;
+
+        case OpCodes::OR:
+        case OpCodes::ADD:
+        case OpCodes::SUB:
+            return constVar.Int() == 0;
+
+        case OpCodes::MUL:
+        case OpCodes::DIV:
+        case OpCodes::MOD:
+            return constVar.Int() == 1;
+
+        case OpCodes::FADD:
+        case OpCodes::FSUB:
+            return constVar.Float() == 0.0f;
+
+        case OpCodes::FMUL:
+        case OpCodes::FDIV:
+        case OpCodes::FMOD:
+            return constVar.Float() == 1.0f;
+
+        default:
+            break;
+    }
+
+    return false;
+}
+
 std::unique_ptr<TACCopyInst> ConstantPropagation::ConstantFolding(const TACModifyInst& inst)
 {
-    using OpCodes = TACInst::OpCodes;
-
     auto MakeInt = [&inst](int value)
     {
         return MakeUnique<TACCopyInst>(inst.dest, TACVar(ToStr(value)));

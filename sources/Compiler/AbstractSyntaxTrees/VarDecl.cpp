@@ -31,7 +31,7 @@ bool VarDecl::IsStatic() const
 
 bool VarDecl::IsLocal() const
 {
-    return false; //!TODO!
+    return true; //!TODO!
 }
 
 

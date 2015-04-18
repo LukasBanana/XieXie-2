@@ -12,6 +12,7 @@
 #include "KillBranches.h"
 
 #include "ConstantPropagation.h"
+#include "CopyPropagation.h"
 #include "VariableClean.h"
 #include "VariableReduction.h"
 
@@ -32,6 +33,7 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
         for (auto& bb : ct->GetBasicBlocks())
         {
             ConstantPropagation().Transform(*bb);
+            CopyPropagation().Transform(*bb);
             VariableClean().Transform(*bb);
             VariableReduction().Transform(*bb);
         }

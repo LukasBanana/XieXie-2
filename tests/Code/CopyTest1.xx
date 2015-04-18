@@ -1,0 +1,20 @@
+
+// Copy Test 1
+// 18/04/2015
+
+/// Test for the "Copy Propagation" optimization pass
+class Test {
+	
+	int test1(int x) {
+		
+		int a := x
+		int b := a
+		x := 0
+		int c := b
+		
+		return c + x
+		
+	}
+	
+}
+
