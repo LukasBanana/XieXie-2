@@ -45,10 +45,10 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
                 bool hasChanged = false;
 
                 /* Perform local optimizations */
-                Opt<ConstantPropagation>(*bb, hasChanged);
-                Opt<CopyPropagation>(*bb, hasChanged);
-                Opt<VariableClean>(*bb, hasChanged);
-                Opt<VariableReduction>(*bb, hasChanged);
+                Opt< ConstantPropagation >(*bb, hasChanged);
+                Opt< CopyPropagation     >(*bb, hasChanged);
+                Opt< VariableClean       >(*bb, hasChanged);
+                Opt< VariableReduction   >(*bb, hasChanged);
 
                 if (!hasChanged)
                     break;
@@ -64,8 +64,8 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
 void Optimizer::OptimizeGraph(BasicBlock& root)
 {
     KillBranches().Transform(root);
-    BlockMerge().Transform(root);
-    BlockClean().Transform(root);
+    BlockMerge  ().Transform(root);
+    BlockClean  ().Transform(root);
 }
 
 
