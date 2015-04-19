@@ -7,6 +7,7 @@
 
 #include "TACModifyInst.h"
 #include "StringModifier.h"
+#include "MakeUnique.h"
 
 
 namespace ThreeAddressCodes
@@ -74,6 +75,11 @@ std::string TACModifyInst::ToString() const
 
     /* Return final instruction debug string */
     return OpCodePrefix() + " | " + dest.ToString() + " := " + srcLhs.ToString() + " " + op + " " + srcRhs.ToString();
+}
+
+TACInstPtr TACModifyInst::Copy() const
+{
+    return MakeUnique<TACModifyInst>(*this);
 }
 
 bool TACModifyInst::WritesVar(const TACVar& var) const

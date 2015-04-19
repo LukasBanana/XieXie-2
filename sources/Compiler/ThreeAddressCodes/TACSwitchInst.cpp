@@ -7,6 +7,7 @@
 
 #include "TACSwitchInst.h"
 #include "StringModifier.h"
+#include "MakeUnique.h"
 
 
 namespace ThreeAddressCodes
@@ -27,6 +28,11 @@ TACInst::Types TACSwitchInst::Type() const
 std::string TACSwitchInst::ToString() const
 {
     return OpCodePrefix() + " | " + src.ToString();
+}
+
+TACInstPtr TACSwitchInst::Copy() const
+{
+    return MakeUnique<TACSwitchInst>(*this);
 }
 
 void TACSwitchInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)

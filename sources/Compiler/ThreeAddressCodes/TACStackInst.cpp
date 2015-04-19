@@ -6,6 +6,7 @@
  */
 
 #include "TACStackInst.h"
+#include "MakeUnique.h"
 
 
 namespace ThreeAddressCodes
@@ -26,6 +27,11 @@ TACInst::Types TACStackInst::Type() const
 std::string TACStackInst::ToString() const
 {
     return OpCodePrefix() + " | " + var.ToString();
+}
+
+TACInstPtr TACStackInst::Copy() const
+{
+    return MakeUnique<TACStackInst>(*this);
 }
 
 bool TACStackInst::WritesVar(const TACVar& var) const

@@ -6,6 +6,7 @@
  */
 
 #include "TACHeapInst.h"
+#include "MakeUnique.h"
 
 
 namespace ThreeAddressCodes
@@ -36,6 +37,11 @@ std::string TACHeapInst::ToString() const
         inst += ptr + " := " + var.ToString();
 
     return inst;
+}
+
+TACInstPtr TACHeapInst::Copy() const
+{
+    return MakeUnique<TACHeapInst>(*this);
 }
 
 bool TACHeapInst::WritesVar(const TACVar& var) const

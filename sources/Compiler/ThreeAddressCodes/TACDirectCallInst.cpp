@@ -8,6 +8,7 @@
 #include "TACDirectCallInst.h"
 #include "StringModifier.h"
 #include "CodeGenerators/NameMangling.h"
+#include "MakeUnique.h"
 
 
 namespace ThreeAddressCodes
@@ -33,6 +34,11 @@ TACInst::Types TACDirectCallInst::Type() const
 std::string TACDirectCallInst::ToString() const
 {
     return OpCodePrefix() + " | " + (isInvocation ? procIdent : CodeGenerator::NameMangling::DisplayLabel(procIdent));
+}
+
+TACInstPtr TACDirectCallInst::Copy() const
+{
+    return MakeUnique<TACDirectCallInst>(*this);
 }
 
 

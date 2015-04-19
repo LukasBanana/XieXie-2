@@ -27,6 +27,7 @@ class TACDirectCallInst : public TACInst
 
         Types Type() const override;
         std::string ToString() const override;
+        TACInstPtr Copy() const override;
 
         std::string procIdent;
         bool        isInvocation = false;

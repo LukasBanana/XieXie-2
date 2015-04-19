@@ -7,6 +7,7 @@
 
 #include "TACReturnInst.h"
 #include "StringModifier.h"
+#include "MakeUnique.h"
 
 
 namespace ThreeAddressCodes
@@ -41,6 +42,11 @@ std::string TACReturnInst::ToString() const
         str += "<none>";
 
     return str;
+}
+
+TACInstPtr TACReturnInst::Copy() const
+{
+    return MakeUnique<TACReturnInst>(*this);
 }
 
 void TACReturnInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)

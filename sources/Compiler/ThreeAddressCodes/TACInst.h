@@ -22,6 +22,10 @@ namespace ThreeAddressCodes
 
 
 class TACVar;
+class TACInst;
+
+//! Unique pointer to TACInst.
+using TACInstPtr = std::unique_ptr<TACInst>;
 
 /**
 TAC (Three Address Code) instruction base class.
@@ -140,9 +144,10 @@ class TACInst
 
         //! Returns the TAC instruction type.
         virtual Types Type() const = 0;
-
         //! Returns this TAC instruction as string representation (for debugging).
         virtual std::string ToString() const = 0;
+        //! Returns a copy of this instruction.
+        virtual TACInstPtr Copy() const = 0; 
 
         //! Returns true if this instruction writes the specified variable.
         virtual bool WritesVar(const TACVar& var) const;
@@ -180,9 +185,6 @@ class TACInst
         }
 
 };
-
-//! Unique pointer to TACInst.
-using TACInstPtr = std::unique_ptr<TACInst>;
 
 
 } // /namespace ThreeAddressCodes

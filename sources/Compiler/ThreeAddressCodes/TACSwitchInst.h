@@ -26,6 +26,7 @@ class TACSwitchInst : public TACInst
 
         Types Type() const override;
         std::string ToString() const override;
+        TACInstPtr Copy() const override;
 
         void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
 
