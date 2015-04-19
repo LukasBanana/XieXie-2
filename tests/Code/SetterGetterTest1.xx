@@ -19,7 +19,8 @@ class Test {
 	
 	static void main() {
 		var w := new Widget("Test")
-		//var name := w.getName()
+		var name := w.getName()
+		w.setName(name: name)
 	}
 	
 }

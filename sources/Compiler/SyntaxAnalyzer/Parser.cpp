@@ -14,6 +14,7 @@
 #include "Version.h"
 #include "LibPaths.h"
 #include "FileHelper.h"
+#include "StdCodeFactory.h"
 
 #include <algorithm>
 
@@ -1202,6 +1203,21 @@ ClassDeclStmntPtr Parser::ParseAnonymousClass(const std::string& baseClassIdent)
     return ast;
 }
 
+// Evaluates the attributes for the variable declaration
+static void EvaluateVarDeclAttribs(const VarDecl& varDecl)
+{
+    /* Get reference to attribute prefix */
+    auto attribPrefix = varDecl.parentRef->attribPrefix.get();
+    if (attribPrefix)
+    {
+        /* Check if setter/getter procedures must be generated */
+        if (attribPrefix->HasAttrib("set"))
+            ContextAnalyzer::StdCodeFactory::GenerateSetter(varDecl);
+        if (attribPrefix->HasAttrib("get"))
+            ContextAnalyzer::StdCodeFactory::GenerateGetter(varDecl);
+    }
+}
+
 // var_decl_stmnt: attrib_prefix? (type_denoter | auto_type_denoter) var_decl_list;
 VarDeclStmntPtr Parser::ParseVarDeclStmnt(
     const TokenPtr& identTkn, bool hasArrayType, bool isStatic, const AttribPrefixPtr& attribPrefix)
@@ -1234,6 +1250,7 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(
     {
         decl->parentRef     = ast.get();
         decl->visibility    = state_.classVis;
+        EvaluateVarDeclAttribs(*decl);
     }
 
     return ast;
@@ -1261,7 +1278,10 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(
 
     /* Forward decoration */
     for (auto& decl : ast->varDecls)
+    {
         decl->parentRef = ast.get();
+        EvaluateVarDeclAttribs(*decl);
+    }
 
     return ast;
 }

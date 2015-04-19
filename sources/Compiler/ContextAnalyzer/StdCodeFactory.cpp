@@ -477,6 +477,16 @@ static void VerifyVarDecl(const VarDecl& varDecl)
         throw std::invalid_argument("member variable has empty identifier");
 }
 
+static void GenSingleStmntAndAppendToClass(ClassDeclStmnt& classDecl, const ProcDeclStmntPtr& procDecl, const StmntPtr& stmnt)
+{
+    /* Generate code block */
+    procDecl->codeBlock = std::make_shared<CodeBlock>();
+    procDecl->codeBlock->stmnts.push_back(stmnt);
+
+    /* Append to class declaration */
+    classDecl.declStmnts.push_back(procDecl);
+}
+
 
 /*
  * Global Functions
@@ -529,9 +539,8 @@ void GenerateSetter(const VarDecl& memberVar, const VarDecl::Vis visibility)
     assignStmnt->varNames.push_back(destVarName);
     assignStmnt->expr = GenVarAccessExpr(GenVarName(varIdent));
 
-    /* Generate code block */
-    procDecl->codeBlock = std::make_shared<CodeBlock>();
-    procDecl->codeBlock->stmnts.push_back(assignStmnt);
+    /* Generate single statement and append to class declaration */
+    GenSingleStmntAndAppendToClass(classDecl, procDecl, assignStmnt);
 }
 
 void GenerateGetter(const VarDecl& memberVar, const VarDecl::Vis visibility)
@@ -558,9 +567,8 @@ void GenerateGetter(const VarDecl& memberVar, const VarDecl::Vis visibility)
     auto sourceVarName = (memberVar.IsStatic() ? GenVarNameList({ classDecl.ident, varIdent }) : GenVarName(varIdent));
     returnStmnt->expr = GenVarAccessExpr(sourceVarName);
 
-    /* Generate code block */
-    procDecl->codeBlock = std::make_shared<CodeBlock>();
-    procDecl->codeBlock->stmnts.push_back(returnStmnt);
+    /* Generate single statement and append to class declaration */
+    GenSingleStmntAndAppendToClass(classDecl, procDecl, returnStmnt);
 }
 
 
