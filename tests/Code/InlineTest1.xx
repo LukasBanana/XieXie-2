@@ -1,0 +1,19 @@
+
+// Inline Test 1
+// 19/04/2015
+
+/// Test for the "Inlining" optimization pass
+class Test {
+	
+	static int f(int x) {
+		return x*x
+	}
+	
+	static int main() {
+		
+		return Test.f(1) + Test.f(2)
+		
+	}
+	
+}
+

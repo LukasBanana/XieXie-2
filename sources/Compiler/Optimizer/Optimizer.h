@@ -44,6 +44,18 @@ class Optimizer
         */
         static void OptimizeGraph(BasicBlock& root);
 
+    protected:
+
+        //! Returns the procedure dictionary of the CFG program, which is currently being optimized.
+        static CFGProgram::ProcDictionary const * GetProcDict()
+        {
+            return procDict_;
+        }
+
+    private:
+
+        static CFGProgram::ProcDictionary const * procDict_;
+
 };
 
 

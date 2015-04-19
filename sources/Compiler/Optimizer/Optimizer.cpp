@@ -11,6 +11,7 @@
 #include "BlockClean.h"
 #include "KillBranches.h"
 
+#include "ProcedureInlining.h"
 #include "ConstantPropagation.h"
 #include "CopyPropagation.h"
 #include "VariableClean.h"
@@ -27,6 +28,8 @@ template <typename T> void Opt(BasicBlock& bb, bool& hasChanged)
         hasChanged = true;
 }
 
+CFGProgram::ProcDictionary const * Optimizer::procDict_ = nullptr;
+
 Optimizer::~Optimizer()
 {
 }
@@ -34,6 +37,8 @@ Optimizer::~Optimizer()
 void Optimizer::OptimizeProgram(CFGProgram& program)
 {
     static const unsigned char maxNumPasses = 5;
+
+    procDict_ = &(program.procedures);
 
     for (auto& ct : program.classTrees)
     {
@@ -45,10 +50,11 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
                 bool hasChanged = false;
 
                 /* Perform local optimizations */
-                Opt< ConstantPropagation >(*bb, hasChanged);
+                Opt< ProcedureInlining   >(*bb, hasChanged);
+                /*Opt< ConstantPropagation >(*bb, hasChanged);
                 Opt< CopyPropagation     >(*bb, hasChanged);
                 Opt< VariableClean       >(*bb, hasChanged);
-                Opt< VariableReduction   >(*bb, hasChanged);
+                Opt< VariableReduction   >(*bb, hasChanged);*/
 
                 if (!hasChanged)
                     break;
@@ -59,6 +65,8 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
         for (auto& bb : ct->GetRootBasicBlocks())
             Optimizer::OptimizeGraph(*bb.second);
     }
+
+    procDict_ = nullptr;
 }
 
 void Optimizer::OptimizeGraph(BasicBlock& root)
