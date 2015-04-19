@@ -108,8 +108,8 @@ class Parser
         StmntPtr                ParseDeclStmnt();
         StmntPtr                ParseExternDeclStmnt();
         StmntPtr                ParseVarNameStmnt(TokenPtr identTkn = nullptr);
-        StmntPtr                ParseVarDeclOrProcDeclStmnt();
-        StmntPtr                ParseClassDeclOrProcDeclStmnt();
+        StmntPtr                ParseVarDeclOrProcDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
+        StmntPtr                ParseClassDeclOrProcDeclOrVarDeclStmnt();
         StmntPtr                ParseClassDeclOrModuleDeclStmnt();
 
         StmntPtr                ParseCtrlTransferStmnt();
@@ -135,12 +135,21 @@ class Parser
         ClassDeclStmntPtr       ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
         ClassDeclStmntPtr       ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
         ClassDeclStmntPtr       ParseAnonymousClass(const std::string& baseClassIdent);
-        VarDeclStmntPtr         ParseVarDeclStmnt(const TokenPtr& identTkn = nullptr, bool hasArrayType = false, bool isStatic = false);
-        VarDeclStmntPtr         ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
+        VarDeclStmntPtr         ParseVarDeclStmnt(
+            const TokenPtr& identTkn = nullptr, bool hasArrayType = false,
+            bool isStatic = false, const AttribPrefixPtr& attribPrefix = nullptr
+        );
+        VarDeclStmntPtr         ParseVarDeclStmnt(
+            const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn,
+            bool isStatic = false, const AttribPrefixPtr& attribPrefix = nullptr
+        );
         //EnumDeclStmntPtr        ParseEnumDeclStmnt();
         //FlagsDeclStmntPtr       ParseFlagsDeclStmnt();
         ProcDeclStmntPtr        ParseProcDeclStmntPrimary(bool isExtern = false, AttribPrefixPtr attribPrefix = nullptr);
-        ProcDeclStmntPtr        ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic = false);
+        ProcDeclStmntPtr        ParseProcDeclStmnt(
+            const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn,
+            bool isStatic = false, const AttribPrefixPtr& attribPrefix = nullptr
+        );
         ProcDeclStmntPtr        ParseInitDeclStmnt(bool isExtern = false);
         ProcDeclStmntPtr        ParseReleaseDeclStmnt();
         FriendDeclStmntPtr      ParseFriendDeclStmnt();

@@ -25,12 +25,13 @@ class VarDeclStmnt : public Stmnt
 
         const TypeDenoter* GetTypeDenoter() const override;
 
-        bool                    isStatic    = false;
+        AttribPrefixPtr         attribPrefix;               // may be null
+        bool                    isStatic        = false;
         TypeDenoterPtr          typeDenoter;
         std::vector<VarDeclPtr> varDecls;
 
         // dast
-        ClassDeclStmnt*         parentRef   = nullptr;  // reference to the parent class (this is already decorated inside the parser).
+        ClassDeclStmnt*         parentRef       = nullptr;  // reference to the parent class (this is already decorated inside the parser).
 
 };
 

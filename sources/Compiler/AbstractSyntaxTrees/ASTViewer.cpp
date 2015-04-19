@@ -231,6 +231,7 @@ DEF_VISIT_PROC(ASTViewer, ClassDeclStmnt)
 DEF_VISIT_PROC(ASTViewer, VarDeclStmnt)
 {
     AST_INFO_COLOR("VarDeclStmnt", colorStmnt);
+    Visit(ast->attribPrefix);
     Visit(ast->typeDenoter);
     Visit(ast->varDecls);
 }

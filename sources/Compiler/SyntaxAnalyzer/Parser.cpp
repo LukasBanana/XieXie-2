@@ -669,7 +669,7 @@ StmntPtr Parser::ParseDeclStmnt()
         case Tokens::Release:
             return ParseReleaseDeclStmnt();
         case Tokens::LDParen:
-            return ParseClassDeclOrProcDeclStmnt();
+            return ParseClassDeclOrProcDeclOrVarDeclStmnt();
         case Tokens::Var:
         case Tokens::Const:
             return ParseVarDeclStmnt();
@@ -727,11 +727,11 @@ StmntPtr Parser::ParseVarNameStmnt(TokenPtr identTkn)
 }
 
 // (var_decl_stmnt | proc_decl_stmnt)
-StmntPtr Parser::ParseVarDeclOrProcDeclStmnt()
+StmntPtr Parser::ParseVarDeclOrProcDeclStmnt(const AttribPrefixPtr& attribPrefix)
 {
     /* Check for procedure modifier or return type denoter 'void' */
     if (Is(Tokens::Void))
-        return ParseProcDeclStmntPrimary();
+        return ParseProcDeclStmntPrimary(false, attribPrefix);
 
     /* Parse optional storage modifier */
     bool isStatic = false;
@@ -745,7 +745,7 @@ StmntPtr Parser::ParseVarDeclOrProcDeclStmnt()
     if (Is(Tokens::Var) || Is(Tokens::Const))
     {
         /* Parse variable declaration */
-        return ParseVarDeclStmnt(nullptr, false, isStatic);
+        return ParseVarDeclStmnt(nullptr, false, isStatic, attribPrefix);
     }
 
     /* Check for procedure declaration */
@@ -754,7 +754,7 @@ StmntPtr Parser::ParseVarDeclOrProcDeclStmnt()
         /* Parse type denoter and identifier */
         auto typeDenoter = ParseReturnTypeDenoter();
         auto identTkn = Accept(Tokens::Ident);
-        return ParseProcDeclStmnt(typeDenoter, identTkn, isStatic);
+        return ParseProcDeclStmnt(typeDenoter, identTkn, isStatic, attribPrefix);
     }
 
     /* Parse type denoter and identifier */
@@ -763,14 +763,14 @@ StmntPtr Parser::ParseVarDeclOrProcDeclStmnt()
 
     /* Check for procedure declaration */
     if (Is(Tokens::LBracket))
-        return ParseProcDeclStmnt(typeDenoter, identTkn, isStatic);
+        return ParseProcDeclStmnt(typeDenoter, identTkn, isStatic, attribPrefix);
 
     /* Parse variable declaration */
-    return ParseVarDeclStmnt(typeDenoter, identTkn, isStatic);
+    return ParseVarDeclStmnt(typeDenoter, identTkn, isStatic, attribPrefix);
 }
 
-// (proc_decl_stmnt | class_decl_stmnt)
-StmntPtr Parser::ParseClassDeclOrProcDeclStmnt()
+// (proc_decl_stmnt | class_decl_stmnt | var_decl_stmnt)
+StmntPtr Parser::ParseClassDeclOrProcDeclOrVarDeclStmnt()
 {
     auto attribPrefix = ParseAttribPrefix();
 
@@ -783,7 +783,7 @@ StmntPtr Parser::ParseClassDeclOrProcDeclStmnt()
         #endif
     }
 
-    return ParseProcDeclStmntPrimary(false, attribPrefix);
+    return ParseVarDeclOrProcDeclStmnt(attribPrefix);
 }
 
 // (class_decl_stmnt | module_decl_stmnt)
@@ -1202,13 +1202,15 @@ ClassDeclStmntPtr Parser::ParseAnonymousClass(const std::string& baseClassIdent)
     return ast;
 }
 
-// var_decl_stmnt: (type_denoter | auto_type_denoter) var_decl_list;
-VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TokenPtr& identTkn, bool hasArrayType, bool isStatic)
+// var_decl_stmnt: attrib_prefix? (type_denoter | auto_type_denoter) var_decl_list;
+VarDeclStmntPtr Parser::ParseVarDeclStmnt(
+    const TokenPtr& identTkn, bool hasArrayType, bool isStatic, const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<VarDeclStmnt>();
 
-    ast->isStatic   = isStatic;
-    ast->parentRef  = state_.classDecl;
+    ast->attribPrefix   = attribPrefix;
+    ast->isStatic       = isStatic;
+    ast->parentRef      = state_.classDecl;
 
     if (Is(Tokens::Var))
     {
@@ -1239,10 +1241,12 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TokenPtr& identTkn, bool hasArra
 
 // var_decl_stmnt: type_denoter var_decl_list;
 // --> alternative for abstract parsing
-VarDeclStmntPtr Parser::ParseVarDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic)
+VarDeclStmntPtr Parser::ParseVarDeclStmnt(
+    const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic, const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<VarDeclStmnt>();
 
+    ast->attribPrefix   = attribPrefix;
     ast->isStatic       = isStatic;
     ast->typeDenoter    = typeDenoter;
     ast->parentRef      = state_.classDecl;
@@ -1342,12 +1346,14 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPt
 
 // proc_decl_stmnt: attrib_prefix? proc_signature code_block;
 // --> alternative for abstract parsing
-ProcDeclStmntPtr Parser::ParseProcDeclStmnt(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic)
+ProcDeclStmntPtr Parser::ParseProcDeclStmnt(
+    const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic, const AttribPrefixPtr& attribPrefix)
 {
     auto ast = Make<ProcDeclStmnt>();
 
-    ast->parentRef  = state_.classDecl;
-    ast->visibility = state_.classVis;
+    ast->attribPrefix   = attribPrefix;
+    ast->parentRef      = state_.classDecl;
+    ast->visibility     = state_.classVis;
 
     ast->procSignature = ParseProcSignature(typeDenoter, identTkn, isStatic);
     state_.procIdent = ast->procSignature->ident;
