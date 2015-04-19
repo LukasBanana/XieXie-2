@@ -721,6 +721,9 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     
     auto root = CT()->CreateRootBasicBlock(*ast, procDisplay);
 
+    /* Register CFG root in procedure reference map */
+    program_->procedures.Register(procSig.label, root);
+
     /* Fetch parameters */
     size_t argIndex = 0;
     for (auto& param : procSig.params)

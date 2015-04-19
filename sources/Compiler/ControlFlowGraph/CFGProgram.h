@@ -10,9 +10,11 @@
 
 
 #include "ClassTree.h"
+#include "Dictionary.h"
 
 #include <vector>
 #include <string>
+#include <map>
 
 
 namespace ControlFlowGraph
@@ -37,13 +39,17 @@ class CFGProgram
         using BoolArrayLiteral  = Literal<std::vector<bool>>;
         using IntArrayLiteral   = Literal<std::vector<int>>;
         using FloatArrayLiteral = Literal<std::vector<float>>;
+        using ProcDictionary    = Dictionary<BasicBlock>;
 
         std::vector<ClassTreePtr>       classTrees;
+
         std::vector<std::string>        boundModuleNames;
         std::vector<StringLiteral>      stringLiterals;
         std::vector<BoolArrayLiteral>   boolArrayLiterals;
         std::vector<IntArrayLiteral>    intArrayLiterals;
         std::vector<FloatArrayLiteral>  floatArrayLiterals;
+
+        ProcDictionary                  procedures;
 
 };
 
