@@ -150,6 +150,9 @@ class BasicBlock
         //! Bit mask of the basic block flags.
         BitMask         flags;
 
+        //! Number of parameters (only used if this is a root basic block for a procedure).
+        unsigned int    numParams = 0;
+
     private:
         
         bool HasVisited(VisitSet& visitSet) const;

@@ -9,6 +9,7 @@
 
 #include "TACCopyInst.h"
 #include "TACStackInst.h"
+#include "TACHeapInst.h"
 #include "TACReturnInst.h"
 
 #include <algorithm>
@@ -94,13 +95,35 @@ bool ProcedureInlining::CanInlineProcedure(const BasicBlock& inlineBlock) const
 
 void ProcedureInlining::InlineProcedure(BasicBlock& basicBlock, const BasicBlock& inlineBlock, InstList::difference_type& instrIdx) const
 {
-    //!TODO! -> remove "PUSH" instructions
+    /* Remove 'push' instructions which were used as procedure arguments */
+    std::vector<TACVar> argVars;
+
+    for (auto i = inlineBlock.numParams; i > 0; --i)
+    {
+        /* Get next upper 'push' instruction */
+        --instrIdx;
+        auto it = basicBlock.insts.begin() + instrIdx;
+        auto& inst = **it;
+
+        if (inst.Type() == TACInst::Types::Stack && inst.opcode == TACInst::OpCodes::PUSH)
+        {
+            auto& stackInst = static_cast<TACStackInst&>(inst);
+            argVars.push_back(stackInst.var);
+            basicBlock.insts.erase(it);
+        }
+        else
+            throw std::runtime_error("'push' instruction expected in 'procedure inline' optimization pass");
+    }
 
     if (!inlineBlock.insts.empty())
     {
         /* Insert all instructions from the inline block */
         for (const auto& inst : inlineBlock.insts)
+        {
             basicBlock.InsertInstCopy(*inst, instrIdx++);
+
+            //!TODO! -> replace "LdWord ... (frame*) ..." by argument variable !!!
+        }
 
         /* Replace 'return' instruction with 'mov' instruction */
         auto& lastInlineInst = basicBlock.insts[instrIdx - 1];
