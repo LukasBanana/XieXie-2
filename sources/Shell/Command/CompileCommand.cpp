@@ -12,7 +12,7 @@
 #include "Parser.h"
 #include "Decorator.h"
 #include "GraphGenerator.h"
-#include "StdClassGenerator.h"
+#include "StdCodeFactory.h"
 #include "CodeGenerators/XASM/XASMGenerator.h"
 
 #include "ASTViewer.h"
@@ -150,7 +150,7 @@ void CompileCommand::ParseProgram(AbstractSyntaxTrees::Program& program, Log& ou
     Parser parser;
 
     /* Generate built-in class declarations */
-    ContextAnalyzer::StdClassGenerator::GenerateBuiltinClasses(program);
+    ContextAnalyzer::StdCodeFactory::GenerateBuiltinClasses(program);
     
     /* Parse input filenames */
     std::vector<std::string> nextSources;

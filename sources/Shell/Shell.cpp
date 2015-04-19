@@ -17,7 +17,7 @@
 #include "Decorator.h"
 #include "GraphGenerator.h"
 #include "Program.h"
-#include "StdClassGenerator.h"
+#include "StdCodeFactory.h"
 
 #include <sstream>
 
@@ -115,7 +115,7 @@ void Shell::Script(std::istream& stream, bool appendDefaultScript)
     AbstractSyntaxTrees::Program program;
     SyntaxAnalyzer::Parser parser;
 
-    ContextAnalyzer::StdClassGenerator::GenerateBuiltinClasses(program);
+    ContextAnalyzer::StdCodeFactory::GenerateBuiltinClasses(program);
 
     /* Parse program */
     if (!parser.ParseSource(program, std::make_shared<SyntaxAnalyzer::SourceStream>(std::move(source)), errorReporter))
