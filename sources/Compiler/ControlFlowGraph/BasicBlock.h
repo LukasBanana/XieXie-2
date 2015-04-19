@@ -75,12 +75,14 @@ class BasicBlock
 
         /* === Types === */
 
-        using BlockList = std::vector<BasicBlock*>;
-        using EdgeList  = std::vector<Edge>;
-        using VisitSet  = std::set<const BasicBlock*>;
+        using BlockList         = std::vector<BasicBlock*>;
+        using EdgeList          = std::vector<Edge>;
+        using VisitSet          = std::set<const BasicBlock*>;
+        using InstructionList   = std::vector<ThreeAddressCodes::TACInstPtr>;
 
         /* === Functions === */
 
+        //! Makes a new instruction and appends it at end of the instruction list of this basic block.
         template <typename T, typename... Args> T* MakeInst(Args&&... args)
         {
             auto inst = MakeUnique<T>(std::forward<Args>(args)...);
@@ -88,6 +90,9 @@ class BasicBlock
             insts.emplace_back(std::move(inst));
             return instRef;
         }
+
+        //! Makes a copy of 'inst' and inserts it at the specified position in this basic block.
+        ThreeAddressCodes::TACInst* InsertInstCopy(const ThreeAddressCodes::TACInst& inst, size_t position);
 
         //! Adds the specified successor to this basic block. This can not be this basic block itself.
         void AddStrictSucc(BasicBlock& bb, const std::string& label = "");
@@ -134,16 +139,16 @@ class BasicBlock
         /* === Members === */
 
         //! Basic block ID number. Valid IDs begin with 1.
-        size_t                                      id = 0;
+        size_t          id = 0;
 
         //! Basic block label.
-        std::string                                 label;
+        std::string     label;
 
         //! TAC instructions.
-        std::vector<ThreeAddressCodes::TACInstPtr>  insts;
+        InstructionList insts;
 
         //! Bit mask of the basic block flags.
-        BitMask                                     flags;
+        BitMask         flags;
 
     private:
         

@@ -33,6 +33,17 @@ BasicBlock::Edge::Edge(BasicBlock* succ, const std::string& label) :
  * BasicBlock class
  */
 
+TACInst* BasicBlock::InsertInstCopy(const TACInst& inst, size_t position)
+{
+    auto newInst = inst.Copy();
+    auto instRef = newInst.get();
+    if (position + 1 < insts.size())
+        insts.insert(insts.begin() + position, std::move(newInst));
+    else
+        insts.emplace_back(std::move(newInst));
+    return instRef;
+}
+
 void BasicBlock::AddStrictSucc(BasicBlock& bb, const std::string& label)
 {
     if (&bb != this)
