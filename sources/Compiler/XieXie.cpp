@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "LibPaths.h"
+#include "SearchPaths.h"
 
 #include <xiexie/xiexie.h>
 #include <sstream>
@@ -22,8 +22,8 @@ using namespace VirtualMachine;
 
 void SetupPaths(const std::string& libraryPath, const std::string& modulesPath)
 {
-    LibPaths::LibraryPath() = libraryPath;
-    LibPaths::ModulesPath() = modulesPath;
+    SearchPaths::LibraryPath() = libraryPath;
+    SearchPaths::ModulesPath() = modulesPath;
 }
 
 

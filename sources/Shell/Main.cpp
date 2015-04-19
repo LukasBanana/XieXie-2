@@ -6,7 +6,7 @@
  */
 
 #include "Shell.h"
-#include "LibPaths.h"
+#include "SearchPaths.h"
 
 #include <sstream>
 #include <iostream>
@@ -15,7 +15,7 @@
 int main(int argc, char* argv[])
 {
     /* Initialize application path */
-    LibPaths::Setup(argv[0]);
+    SearchPaths::Setup(argv[0]);
 
     /* Execute all program arguments as shell commands */
     Shell shell;

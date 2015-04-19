@@ -1,15 +1,15 @@
 /*
- * LibPaths.cpp
+ * SearchPaths.cpp
  * 
  * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "LibPaths.h"
+#include "SearchPaths.h"
 #include "StringModifier.h"
 
 
-namespace LibPaths
+namespace SearchPaths
 {
 
 
@@ -40,7 +40,7 @@ std::string& ModulesPath()
 }
 
 
-} // /namespace LibPaths
+} // /namespace SearchPaths
 
 
 

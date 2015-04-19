@@ -12,7 +12,7 @@
 #include "BuiltinTypeDenoter.h"
 #include "Timer.h"
 #include "Version.h"
-#include "LibPaths.h"
+#include "SearchPaths.h"
 #include "FileHelper.h"
 #include "StdCodeFactory.h"
 
@@ -2243,7 +2243,7 @@ bool Parser::FindImport(std::string& filename) const
         return true;
 
     /* (2) Search file is "library/" directory */
-    auto libraryFile = LibPaths::LibraryPath() + filename;
+    auto libraryFile = SearchPaths::LibraryPath() + filename;
     if (FileHelper::DoesFileExist(libraryFile))
     {
         filename = std::move(libraryFile);
@@ -2251,7 +2251,7 @@ bool Parser::FindImport(std::string& filename) const
     }
 
     /* (3) Search file is "modules/<FILE>/" directory */
-    auto moduleFile = LibPaths::ModulesPath() + ExtractFileIdent(filename) + "/" + filename;
+    auto moduleFile = SearchPaths::ModulesPath() + ExtractFileIdent(filename) + "/" + filename;
     if (FileHelper::DoesFileExist(moduleFile))
     {
         filename = std::move(moduleFile);

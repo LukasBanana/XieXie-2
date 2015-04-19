@@ -1,18 +1,18 @@
 /*
- * LibPaths.h
+ * SearchPaths.h
  * 
  * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __XX_LIB_PATHS_H__
-#define __XX_LIB_PATHS_H__
+#ifndef __XX_SEARCH_PATHS_H__
+#define __XX_SEARCH_PATHS_H__
 
 
 #include <string>
 
 
-namespace LibPaths
+namespace SearchPaths
 {
 
 
@@ -34,7 +34,7 @@ std::string& LibraryPath();
 std::string& ModulesPath();
 
 
-} // /namespace LibPaths
+} // /namespace SearchPaths
 
 
 #endif
