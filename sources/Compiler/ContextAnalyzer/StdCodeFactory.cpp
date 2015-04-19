@@ -15,6 +15,12 @@
 #include "PointerTypeDenoter.h"
 #include "Attrib.h"
 #include "AttribPrefix.h"
+#include "VarDeclStmnt.h"
+#include "StringModifier.h"
+#include "CodeBlock.h"
+#include "ReturnStmnt.h"
+#include "VarAccessExpr.h"
+#include "CopyAssignStmnt.h"
 
 
 namespace ContextAnalyzer
@@ -23,8 +29,6 @@ namespace ContextAnalyzer
 namespace StdCodeFactory
 {
 
-
-using namespace AbstractSyntaxTrees;
 
 /*
  * Type denoter generation functions
@@ -148,6 +152,32 @@ struct ParamList
     std::vector<ParamPtr> list;
 };
 
+// Generate variable name AST
+static VarNamePtr GenVarName(const std::string& ident)
+{
+    auto ast = std::make_shared<VarName>();
+    {
+        ast->ident = ident;
+    }
+    return ast;
+}
+
+// Generate variable name AST linked list
+static VarNamePtr GenVarNameList(const std::vector<std::string>& idents)
+{
+    VarNamePtr first, prev;
+    for (const auto& ident : idents)
+    {
+        auto ast = GenVarName(ident);
+        if (!first)
+            first = ast;
+        if (prev)
+            prev->next = ast;
+        prev = ast;
+    }
+    return first;
+}
+
 // Generate literal expression AST
 static ExprPtr GenExpr(int value)
 {
@@ -155,6 +185,16 @@ static ExprPtr GenExpr(int value)
     {
         ast->typeDenoter    = Int();
         ast->value          = std::to_string(value);
+    }
+    return ast;
+}
+
+// Generate variable access expression AST
+static ExprPtr GenVarAccessExpr(const VarNamePtr& varName)
+{
+    auto ast = std::make_shared<VarAccessExpr>();
+    {
+        ast->varName = varName;
     }
     return ast;
 }
@@ -183,8 +223,8 @@ static ProcSignaturePtr GenProcSignature(const TypeDenoterPtr& returnType, const
     return ast;
 }
 
-// Generate member procedure AST
-static void GenMemberProc(
+//! Generate procedure AST
+static ProcDeclStmntPtr GenProcDecl(
     ClassDeclStmnt& classDecl, const TypeDenoterPtr& returnType, const std::string& ident,
     const ParamList& params = ParamList(), const AttribPrefixPtr& attribPrefix = nullptr)
 {
@@ -194,6 +234,15 @@ static void GenMemberProc(
         ast->attribPrefix   = attribPrefix;
         ast->parentRef      = &classDecl;
     }
+    return ast;
+}
+
+// Generate member procedure AST
+static void GenMemberProc(
+    ClassDeclStmnt& classDecl, const TypeDenoterPtr& returnType, const std::string& ident,
+    const ParamList& params = ParamList(), const AttribPrefixPtr& attribPrefix = nullptr)
+{
+    auto ast = GenProcDecl(classDecl, returnType, ident, params, attribPrefix);
     classDecl.declStmnts.push_back(ast);
 }
 
@@ -202,13 +251,8 @@ static void GenStaticProc(
     ClassDeclStmnt& classDecl, const TypeDenoterPtr& returnType, const std::string& ident,
     const ParamList& params = ParamList(), const AttribPrefixPtr& attribPrefix = nullptr)
 {
-    auto ast = std::make_shared<ProcDeclStmnt>();
-    {
-        ast->procSignature              = GenProcSignature(returnType, ident, params);
-        ast->procSignature->isStatic    = true;
-        ast->attribPrefix               = attribPrefix;
-        ast->parentRef                  = &classDecl;
-    }
+    auto ast = GenProcDecl(classDecl, returnType, ident, params, attribPrefix);
+    ast->procSignature->isStatic = true;
     classDecl.declStmnts.push_back(ast);
 }
 
@@ -422,6 +466,17 @@ static std::unique_ptr<ClassDeclStmnt> GenIntrinsicsClass()
     return ast;
 }
 
+// Verifies that the variable declaration is complete
+static void VerifyVarDecl(const VarDecl& varDecl)
+{
+    if (!varDecl.parentRef)
+        throw std::invalid_argument("parent of member variable not set");
+    if (!varDecl.parentRef->parentRef)
+        throw std::invalid_argument("parent's class of member variable not set");
+    if (varDecl.ident.empty())
+        throw std::invalid_argument("member variable has empty identifier");
+}
+
 
 /*
  * Global Functions
@@ -445,6 +500,67 @@ void GenerateBuiltinClasses(AbstractSyntaxTrees::Program& program)
 
     for (auto& classDecl : classDeclList)
         program.classDeclStmnts.push_back(std::move(classDecl));
+}
+
+void GenerateSetter(const VarDecl& memberVar, const VarDecl::Vis visibility)
+{
+    VerifyVarDecl(memberVar);
+
+    /* Get references */
+    const auto& varIdent = memberVar.ident;
+    auto& classDecl = *memberVar.parentRef->parentRef;
+
+    /* Generate procedure identifier */
+    std::string procIdent = "set" + varIdent;
+    ToUpper(procIdent[3]);
+
+    /* Generate procedure signature */
+    auto param = GenParam(memberVar.GetTypeDenoter()->CopyRef(), varIdent);
+    auto procDecl = GenProcDecl(classDecl, Void(), procIdent, param, AttrFinal());
+
+    procDecl->procSignature->isStatic = memberVar.IsStatic();
+
+    /* Generate copy assign statmenet */
+    auto assignStmnt = std::make_shared<CopyAssignStmnt>();
+
+    auto destVarBase = (memberVar.IsStatic() ? classDecl.ident : "this");
+    auto destVarName = GenVarNameList({ destVarBase, varIdent });
+
+    assignStmnt->varNames.push_back(destVarName);
+    assignStmnt->expr = GenVarAccessExpr(GenVarName(varIdent));
+
+    /* Generate code block */
+    procDecl->codeBlock = std::make_shared<CodeBlock>();
+    procDecl->codeBlock->stmnts.push_back(assignStmnt);
+}
+
+void GenerateGetter(const VarDecl& memberVar, const VarDecl::Vis visibility)
+{
+    VerifyVarDecl(memberVar);
+
+    /* Get references */
+    const auto& varIdent = memberVar.ident;
+    auto& classDecl = *memberVar.parentRef->parentRef;
+
+    /* Generate procedure identifier */
+    std::string procIdent = "get" + varIdent;
+    ToUpper(procIdent[3]);
+
+    /* Generate procedure signature */
+    auto returnType = memberVar.GetTypeDenoter()->CopyRef();
+    auto procDecl = GenProcDecl(classDecl, returnType, procIdent, ParamList(), AttrFinal());
+
+    procDecl->procSignature->isStatic = memberVar.IsStatic();
+    
+    /* Generate return statement */
+    auto returnStmnt = std::make_shared<ReturnStmnt>();
+
+    auto sourceVarName = (memberVar.IsStatic() ? GenVarNameList({ classDecl.ident, varIdent }) : GenVarName(varIdent));
+    returnStmnt->expr = GenVarAccessExpr(sourceVarName);
+
+    /* Generate code block */
+    procDecl->codeBlock = std::make_shared<CodeBlock>();
+    procDecl->codeBlock->stmnts.push_back(returnStmnt);
 }
 
 
