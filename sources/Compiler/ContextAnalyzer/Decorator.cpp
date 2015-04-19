@@ -201,6 +201,11 @@ DEF_VISIT_PROC(Decorator, AttribPrefix)
     Visit(ast->attribs);
 }
 
+static bool IsElementOf(const std::string& element, const std::set<std::string>& elementSet)
+{
+    return elementSet.find(element) != elementSet.end();
+}
+
 DEF_VISIT_PROC(Decorator, Attrib)
 {
     Visit(ast->arg);
@@ -210,12 +215,12 @@ DEF_VISIT_PROC(Decorator, Attrib)
     /* Verify attribute argument */
     try
     {
-        if (ast->ident == "deprecated" || ast->ident == "export" || ast->ident == "bind")
+        if (IsElementOf(ast->ident, { "deprecated", "export", "bind" }))
         {
             if (ast->arg && ast->arg->GetType() != Arg::String)
                 throw std::string("attribute '" + ast->ident + "' can only have a string as argument");
         }
-        else if (ast->ident == "final" || ast->ident == "override")
+        else if (IsElementOf(ast->ident, { "final", "override", "get", "set" }))
         {
             if (ast->arg)
                 throw std::string("attribute '" + ast->ident + "' can not have any arguments");
@@ -413,6 +418,7 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
 
             case AST::Types::ClassDeclStmnt:
                 /* Declaration statement for member variables */
+                Visit(ast->attribPrefix);
                 for (auto& varDecl : ast->varDecls)
                 {
                     DecorateVarDeclMember(*varDecl);
