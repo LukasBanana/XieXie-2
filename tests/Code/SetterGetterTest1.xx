@@ -1,0 +1,27 @@
+
+// Setter/Getter Test 1
+// 19/04/2015
+
+class Widget {
+public:
+	init(String name) {
+		this.name := name
+	}
+private:
+	[[get]]
+	int x, y
+	
+	[[get, set]]
+	String name
+}
+
+class Test {
+	
+	static void main() {
+		var w := new Widget("Test")
+		//var name := w.getName()
+	}
+	
+}
+
+
