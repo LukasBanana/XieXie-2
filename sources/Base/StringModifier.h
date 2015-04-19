@@ -57,6 +57,9 @@ std::string NumberOffset(
     size_t num, size_t maxNum, const char fillChar = ' ', const size_t base = 10
 );
 
+void ToLower(char& chr);
+void ToUpper(char& chr);
+
 std::string ToLower(std::string str);
 std::string ToUpper(std::string str);
 

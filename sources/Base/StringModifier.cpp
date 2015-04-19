@@ -202,23 +202,29 @@ std::string NumberOffset(
         (base > 10 ? NumToHex(numOrig, false) : ToStr(numOrig));
 }
 
+void ToLower(char& chr)
+{
+    if (chr >= 'A' && chr <= 'Z')
+        chr += ('a' - 'A');
+}
+
+void ToUpper(char& chr)
+{
+    if (chr >= 'a' && chr <= 'z')
+        chr -= ('a' - 'A');
+}
+
 std::string ToLower(std::string str)
 {
     for (char& chr : str)
-    {
-        if (chr >= 'A' && chr <= 'Z')
-            chr += ('a' - 'A');
-    }
+        ToLower(chr);
     return str;
 }
 
 std::string ToUpper(std::string str)
 {
     for (char& chr : str)
-    {
-        if (chr >= 'a' && chr <= 'z')
-            chr -= ('a' - 'A');
-    }
+        ToUpper(chr);
     return str;
 }
 
