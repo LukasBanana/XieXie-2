@@ -9,9 +9,10 @@ class Test {
 		return x*x
 	}
 	
-	static int main() {
+	static int test1(int x) {
 		
-		return Test.f(1) + Test.f(2)
+		//return Test.f(x) + Test.f(x+2)
+		return Test.f(3) + Test.f(-5)
 		
 	}
 	
