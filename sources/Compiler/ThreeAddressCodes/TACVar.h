@@ -25,6 +25,8 @@ class TACVar
     
     public:
         
+        /* === Types and Enumerations === */
+
         using IDType = unsigned int;
         static const IDType invalidID = 0;
 
@@ -44,6 +46,8 @@ class TACVar
             StackPtr,   //!< Stack pointer '$sp'.
             FramePtr,   //!< Frame pointer '$lb'.
         };
+
+        /* === Functions === */
 
         TACVar() = default;
         TACVar(IDType id, const Types type = Types::Temp);
@@ -73,6 +77,13 @@ class TACVar
         //! Returns ture if this is a temporary variable.
         bool IsTemp() const;
 
+        //! Returns true if this is a frame pointer variable.
+        bool IsThisPtr() const;
+        //! Returns true if this is a frame pointer variable.
+        bool IsStackPtr() const;
+        //! Returns true if this is a frame pointer variable.
+        bool IsFramePtr() const;
+
         //! Returns the value as integer.
         int Int() const;
         //! Returns the value as floating-point.
@@ -80,6 +91,11 @@ class TACVar
 
         //! Replaces this variable by 'replacedVar' if this variable is equal to 'varToReplace'.
         bool Replace(const TACVar& varToReplace, const TACVar& replacedVar);
+
+        //! Appends the specified offset to the ID number, if this is a temporary or local variable.
+        void IDOffset(const IDType offset);
+
+        /* === Members === */
 
         IDType          id      = TACVar::invalidID;
         Types           type    = Types::Temp;

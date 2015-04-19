@@ -62,9 +62,14 @@ std::string TACRelationInst::ToString() const
     return OpCodePrefix() + " | " + srcLhs.ToString() + " " + op + " " + srcRhs.ToString();
 }
 
-TACInstPtr TACRelationInst::Copy() const
+TACInstPtr TACRelationInst::Copy(const TACVar::IDType varIDOffset) const
 {
-    return MakeUnique<TACRelationInst>(*this);
+    auto inst = MakeUnique<TACRelationInst>(*this);
+    {
+        inst->srcLhs.IDOffset(varIDOffset);
+        inst->srcRhs.IDOffset(varIDOffset);
+    }
+    return std::move(inst);
 }
 
 bool TACRelationInst::ReadsVar(const TACVar& var) const

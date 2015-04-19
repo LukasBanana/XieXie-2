@@ -44,9 +44,13 @@ std::string TACReturnInst::ToString() const
     return str;
 }
 
-TACInstPtr TACReturnInst::Copy() const
+TACInstPtr TACReturnInst::Copy(const TACVar::IDType varIDOffset) const
 {
-    return MakeUnique<TACReturnInst>(*this);
+    auto inst = MakeUnique<TACReturnInst>(*this);
+    {
+        inst->src.IDOffset(varIDOffset);
+    }
+    return std::move(inst);
 }
 
 void TACReturnInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)

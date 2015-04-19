@@ -32,7 +32,13 @@ class ProcedureInlining : public TACOptimizer
 
         BasicBlock* FindProcedureCFG(const TACDirectCallInst& inst) const;
         bool CanInlineProcedure(const BasicBlock& inlineBlock) const;
-        void InlineProcedure(BasicBlock& basicBlock, const BasicBlock& inlineBlock, InstList::difference_type& instrIdx) const;
+        void InlineProcedure(BasicBlock& basicBlock, const BasicBlock& inlineBlock, InstList::difference_type& instrIdx);
+
+        std::vector<TACVar> PopArgumentStack(BasicBlock& basicBlock, const BasicBlock& inlineBlock, InstList::difference_type& instrIdx);
+        void ReplaceLoadWordInst(BasicBlock& basicBlock, InstList::difference_type& instrIdx, const std::vector<TACVar>& argVars);
+        void ReplaceReturnInst(TACInstPtr& inst);
+
+        TACVar::IDType idOffset_ = 0;
 
 };
 

@@ -10,6 +10,7 @@
 
 
 #include "TACInst.h"
+#include "TACVar.h"
 #include "MakeUnique.h"
 #include "BitMask.h"
 
@@ -22,6 +23,8 @@
 namespace ControlFlowGraph
 {
 
+
+using namespace ThreeAddressCodes;
 
 //! Basic block of the control flow graph (CFG).
 class BasicBlock
@@ -78,7 +81,7 @@ class BasicBlock
         using BlockList         = std::vector<BasicBlock*>;
         using EdgeList          = std::vector<Edge>;
         using VisitSet          = std::set<const BasicBlock*>;
-        using InstructionList   = std::vector<ThreeAddressCodes::TACInstPtr>;
+        using InstructionList   = std::vector<TACInstPtr>;
 
         /* === Functions === */
 
@@ -92,7 +95,7 @@ class BasicBlock
         }
 
         //! Makes a copy of 'inst' and inserts it at the specified position in this basic block.
-        ThreeAddressCodes::TACInst* InsertInstCopy(const ThreeAddressCodes::TACInst& inst, size_t position);
+        TACInst* InsertInstCopy(const TACInst& inst, size_t position, const TACVar::IDType varIDOffset = 0);
 
         //! Adds the specified successor to this basic block. This can not be this basic block itself.
         void AddStrictSucc(BasicBlock& bb, const std::string& label = "");
@@ -152,6 +155,9 @@ class BasicBlock
 
         //! Number of parameters (only used if this is a root basic block for a procedure).
         unsigned int    numParams = 0;
+
+        //! Highest ID number of all temporary and local variables in this basic block.
+        TACVar::IDType  maxVarID = 0;
 
     private:
         

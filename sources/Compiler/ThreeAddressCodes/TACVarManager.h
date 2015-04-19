@@ -56,6 +56,9 @@ class TACVarManager
         //! Returns the current TAC variable at the top of the stack.
         TACVar Var();
 
+        //! Returns the highest ID number of all current temporary and local variables.
+        IDType HighestVarID() const;
+
     private:
         
         /* === Structures === */

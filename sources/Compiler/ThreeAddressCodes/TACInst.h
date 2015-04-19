@@ -147,7 +147,7 @@ class TACInst
         //! Returns this TAC instruction as string representation (for debugging).
         virtual std::string ToString() const = 0;
         //! Returns a copy of this instruction.
-        virtual TACInstPtr Copy() const = 0; 
+        virtual TACInstPtr Copy(const TACVar::IDType varIDOffset = 0) const = 0; 
 
         //! Returns true if this instruction writes the specified variable.
         virtual bool WritesVar(const TACVar& var) const;

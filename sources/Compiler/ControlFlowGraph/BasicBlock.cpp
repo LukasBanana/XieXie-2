@@ -16,8 +16,6 @@ namespace ControlFlowGraph
 {
 
 
-using namespace ThreeAddressCodes;
-
 /*
  * Edge structure
  */
@@ -33,9 +31,9 @@ BasicBlock::Edge::Edge(BasicBlock* succ, const std::string& label) :
  * BasicBlock class
  */
 
-TACInst* BasicBlock::InsertInstCopy(const TACInst& inst, size_t position)
+TACInst* BasicBlock::InsertInstCopy(const TACInst& inst, size_t position, const TACVar::IDType varIDOffset)
 {
-    auto newInst = inst.Copy();
+    auto newInst = inst.Copy(varIDOffset);
     auto instRef = newInst.get();
     if (position + 1 < insts.size())
         insts.insert(insts.begin() + position, std::move(newInst));

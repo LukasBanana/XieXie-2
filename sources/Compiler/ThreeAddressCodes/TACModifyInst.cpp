@@ -77,9 +77,15 @@ std::string TACModifyInst::ToString() const
     return OpCodePrefix() + " | " + dest.ToString() + " := " + srcLhs.ToString() + " " + op + " " + srcRhs.ToString();
 }
 
-TACInstPtr TACModifyInst::Copy() const
+TACInstPtr TACModifyInst::Copy(const TACVar::IDType varIDOffset) const
 {
-    return MakeUnique<TACModifyInst>(*this);
+    auto inst = MakeUnique<TACModifyInst>(*this);
+    {
+        inst->dest.IDOffset(varIDOffset);
+        inst->srcLhs.IDOffset(varIDOffset);
+        inst->srcRhs.IDOffset(varIDOffset);
+    }
+    return std::move(inst);
 }
 
 bool TACModifyInst::WritesVar(const TACVar& var) const

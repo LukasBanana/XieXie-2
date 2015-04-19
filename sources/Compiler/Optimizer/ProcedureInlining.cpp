@@ -21,6 +21,9 @@ namespace Optimization
 
 void ProcedureInlining::TransformBlock(BasicBlock& basicBlock)
 {
+    /* Reset state */
+    idOffset_ = basicBlock.maxVarID;
+
     /* Transform instructions (top-down) */
     for (auto it = basicBlock.insts.begin(); it != basicBlock.insts.end();)
     {
@@ -93,9 +96,37 @@ bool ProcedureInlining::CanInlineProcedure(const BasicBlock& inlineBlock) const
     return true;
 }
 
-void ProcedureInlining::InlineProcedure(BasicBlock& basicBlock, const BasicBlock& inlineBlock, InstList::difference_type& instrIdx) const
+void ProcedureInlining::InlineProcedure(
+    BasicBlock& basicBlock, const BasicBlock& inlineBlock, InstList::difference_type& instrIdx)
 {
     /* Remove 'push' instructions which were used as procedure arguments */
+    auto argVars = PopArgumentStack(basicBlock, inlineBlock, instrIdx);
+
+    if (!inlineBlock.insts.empty())
+    {
+        for (const auto& inst : inlineBlock.insts)
+        {
+            /* Insert instruction from the inline block */
+            basicBlock.InsertInstCopy(*inst, instrIdx, idOffset_);
+
+            /* Replace heap instruction of type 'LdWord ... (frame*) ...' */
+            ReplaceLoadWordInst(basicBlock, instrIdx, argVars);
+
+            ++instrIdx;
+        }
+
+        /* Replace 'return' instruction with 'mov' instruction */
+        ReplaceReturnInst(basicBlock.insts[instrIdx - 1]);
+
+        /* Increase ID offset for the next inlining */
+        idOffset_ += inlineBlock.maxVarID;
+    }
+}
+
+// Removes all relevant 'push' instructions, which were used as procedure arguments.
+std::vector<TACVar> ProcedureInlining::PopArgumentStack(
+    BasicBlock& basicBlock, const BasicBlock& inlineBlock, InstList::difference_type& instrIdx)
+{
     std::vector<TACVar> argVars;
 
     for (auto i = inlineBlock.numParams; i > 0; --i)
@@ -115,26 +146,38 @@ void ProcedureInlining::InlineProcedure(BasicBlock& basicBlock, const BasicBlock
             throw std::runtime_error("'push' instruction expected in 'procedure inline' optimization pass");
     }
 
-    if (!inlineBlock.insts.empty())
+    return argVars;
+}
+
+void ProcedureInlining::ReplaceLoadWordInst(
+    BasicBlock& basicBlock, InstList::difference_type& instrIdx, const std::vector<TACVar>& argVars)
+{
+    /* Replace heap instruction of type 'LdWord ... (frame*) ...' */
+    auto& inst = basicBlock.insts[instrIdx];
+    if (inst->Type() == TACInst::Types::Heap && inst->opcode == TACInst::OpCodes::LDW)
     {
-        /* Insert all instructions from the inline block */
-        for (const auto& inst : inlineBlock.insts)
+        const auto& heapInst = static_cast<const TACHeapInst&>(*inst);
+        if (heapInst.baseVar.IsFramePtr() && (heapInst.offset % 4 == 0))
         {
-            basicBlock.InsertInstCopy(*inst, instrIdx++);
+            auto argIdx = static_cast<size_t>(-heapInst.offset / 4) - 1u;
 
-            //!TODO! -> replace "LdWord ... (frame*) ..." by argument variable !!!
+            if (argIdx < argVars.size())
+            {
+                /* Replace 'LdWord' instruction by 'Mov' instruction */
+                inst = MakeUnique<TACCopyInst>(heapInst.var, argVars[argIdx]);
+            }
         }
+    }
+}
 
-        /* Replace 'return' instruction with 'mov' instruction */
-        auto& lastInlineInst = basicBlock.insts[instrIdx - 1];
-        if (lastInlineInst->Type() == TACInst::Types::Return)
-        {
-            auto& returnInst = static_cast<const TACReturnInst&>(*lastInlineInst);
-            auto srcVar = returnInst.src;
-            lastInlineInst = MakeUnique<TACCopyInst>(
-                TACVar(1, TACVar::Types::Result), srcVar
-            );
-        }
+// Replaces the 'Return' instruction by a 'Mov' instruction.
+void ProcedureInlining::ReplaceReturnInst(TACInstPtr& inst)
+{
+    if (inst->Type() == TACInst::Types::Return)
+    {
+        auto& returnInst = static_cast<const TACReturnInst&>(*inst);
+        auto srcVar = returnInst.src;
+        inst = MakeUnique<TACCopyInst>(TACVar(1, TACVar::Types::Result), srcVar);
     }
 }
 

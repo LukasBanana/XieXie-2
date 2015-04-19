@@ -102,6 +102,21 @@ bool TACVar::IsTemp() const
     return type == Types::Temp;
 }
 
+bool TACVar::IsThisPtr() const
+{
+    return type == Types::ThisPtr;
+}
+
+bool TACVar::IsStackPtr() const
+{
+    return type == Types::StackPtr;
+}
+
+bool TACVar::IsFramePtr() const
+{
+    return type == Types::FramePtr;
+}
+
 bool TACVar::IsValid() const
 {
     return id != TACVar::invalidID;
@@ -125,6 +140,12 @@ bool TACVar::Replace(const TACVar& varToReplace, const TACVar& replacedVar)
         return true;
     }
     return false;
+}
+
+void TACVar::IDOffset(const IDType offset)
+{
+    if (type == Types::Temp || type == Types::Local)
+        id += offset;
 }
 
 

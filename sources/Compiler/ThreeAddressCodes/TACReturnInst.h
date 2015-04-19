@@ -27,7 +27,7 @@ class TACReturnInst : public TACInst
 
         Types Type() const override;
         std::string ToString() const override;
-        TACInstPtr Copy() const override;
+        TACInstPtr Copy(const TACVar::IDType varIDOffset = 0) const override;
 
         void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
 

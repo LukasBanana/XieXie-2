@@ -30,9 +30,13 @@ std::string TACSwitchInst::ToString() const
     return OpCodePrefix() + " | " + src.ToString();
 }
 
-TACInstPtr TACSwitchInst::Copy() const
+TACInstPtr TACSwitchInst::Copy(const TACVar::IDType varIDOffset) const
 {
-    return MakeUnique<TACSwitchInst>(*this);
+    auto inst = MakeUnique<TACSwitchInst>(*this);
+    {
+        inst->src.IDOffset(varIDOffset);
+    }
+    return std::move(inst);
 }
 
 void TACSwitchInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)

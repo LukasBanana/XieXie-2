@@ -39,9 +39,14 @@ std::string TACHeapInst::ToString() const
     return inst;
 }
 
-TACInstPtr TACHeapInst::Copy() const
+TACInstPtr TACHeapInst::Copy(const TACVar::IDType varIDOffset) const
 {
-    return MakeUnique<TACHeapInst>(*this);
+    auto inst = MakeUnique<TACHeapInst>(*this);
+    {
+        inst->baseVar.IDOffset(varIDOffset);
+        inst->var.IDOffset(varIDOffset);
+    }
+    return std::move(inst);
 }
 
 bool TACHeapInst::WritesVar(const TACVar& var) const

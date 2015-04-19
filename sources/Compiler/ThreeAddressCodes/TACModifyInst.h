@@ -27,7 +27,7 @@ class TACModifyInst : public TACInst
 
         Types Type() const override;
         std::string ToString() const override;
-        TACInstPtr Copy() const override;
+        TACInstPtr Copy(const TACVar::IDType varIDOffset = 0) const override;
 
         bool WritesVar(const TACVar& var) const override;
         bool ReadsVar(const TACVar& var) const override;

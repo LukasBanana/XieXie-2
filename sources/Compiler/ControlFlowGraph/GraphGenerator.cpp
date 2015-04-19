@@ -719,8 +719,8 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     procSig.label = UniqueLabel(*ast);
     auto procDisplay = DisplayLabel(procSig.label);
     
+    /* Create procedure CFG */
     auto root = CT()->CreateRootBasicBlock(*ast, procDisplay);
-    root->numParams = numProcParams_;
 
     /* Register CFG root in procedure reference map */
     program_->procedures.Register(procSig.label, root);
@@ -759,6 +759,10 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
         if (!root->VerifyProcReturn())
             Error("not all execution paths in \"" + procSig.ident + "\" end with a valid procedure return", ast);
     }
+
+    /* Store final procedure information inside the CFG root */
+    root->numParams = numProcParams_;
+    root->maxVarID  = varMngr_.HighestVarID();
 
     RETURN_BLOCK_REF(VisitIO(root, graph.out));
 }

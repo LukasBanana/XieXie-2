@@ -51,10 +51,10 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
 
                 /* Perform local optimizations */
                 Opt< ProcedureInlining   >(*bb, hasChanged);
-                /*Opt< ConstantPropagation >(*bb, hasChanged);
+                Opt< ConstantPropagation >(*bb, hasChanged);
                 Opt< CopyPropagation     >(*bb, hasChanged);
                 Opt< VariableClean       >(*bb, hasChanged);
-                Opt< VariableReduction   >(*bb, hasChanged);*/
+                Opt< VariableReduction   >(*bb, hasChanged);
 
                 if (!hasChanged)
                     break;

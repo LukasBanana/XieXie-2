@@ -36,7 +36,7 @@ std::string TACDirectCallInst::ToString() const
     return OpCodePrefix() + " | " + (isInvocation ? procIdent : CodeGenerator::NameMangling::DisplayLabel(procIdent));
 }
 
-TACInstPtr TACDirectCallInst::Copy() const
+TACInstPtr TACDirectCallInst::Copy(const TACVar::IDType varIDOffset) const
 {
     return MakeUnique<TACDirectCallInst>(*this);
 }

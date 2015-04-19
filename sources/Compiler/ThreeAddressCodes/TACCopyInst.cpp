@@ -41,9 +41,14 @@ std::string TACCopyInst::ToString() const
     return OpCodePrefix() + " | " + dest.ToString() + " := " + src.ToString();
 }
 
-TACInstPtr TACCopyInst::Copy() const
+TACInstPtr TACCopyInst::Copy(const TACVar::IDType varIDOffset) const
 {
-    return MakeUnique<TACCopyInst>(*this);
+    auto inst = MakeUnique<TACCopyInst>(*this);
+    {
+        inst->dest.IDOffset(varIDOffset);
+        inst->src.IDOffset(varIDOffset);
+    }
+    return std::move(inst);
 }
 
 bool TACCopyInst::WritesVar(const TACVar& var) const
