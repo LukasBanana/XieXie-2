@@ -38,6 +38,9 @@ bool ProcedureInlining::OptimizeDirectCallInst(BasicBlock& basicBlock, InstList:
     auto callInst = static_cast<TACDirectCallInst*>(it->get());
 
     /* Inline procedure call, if possible */
+    if (callInst->isInvocation)
+        return false;
+
     auto procCFG = FindProcedureCFG(*callInst);
     if (procCFG && CanInlineProcedure(basicBlock, *procCFG))
     {

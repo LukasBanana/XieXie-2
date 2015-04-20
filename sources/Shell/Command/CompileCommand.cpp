@@ -269,15 +269,19 @@ void CompileCommand::ShowCFG(const CFGProgram& cfgProgram, Log& output)
     CFGViewer viewer;
 
     size_t i = 0;
-    for (const auto& tree : cfgProgram.classTrees)
+    for (const auto& ct : cfgProgram.classTrees)
     {
-        if (output.verbose)
-            output.Message("dump CFG class tree \"" + tree->GetClassDeclAST()->ident + "\"");
-        #ifdef _DEBUG
-        viewer.ViewGraph(*tree, "cfg-dump/");
-        #else
-        viewer.ViewGraph(*tree);
-        #endif
+        const auto classDecl = ct->GetClassDeclAST();
+        if (!classDecl->isBuiltin && !classDecl->isExtern && !classDecl->isModule)
+        {
+            if (output.verbose)
+                output.Message("dump CFG class tree \"" + classDecl->ident + "\"");
+            #ifdef _DEBUG
+            viewer.ViewGraph(*ct, "cfg-dump/");
+            #else
+            viewer.ViewGraph(*ct);
+            #endif
+        }
     }
 }
 
