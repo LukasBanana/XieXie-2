@@ -150,7 +150,7 @@ void querySystemInfo(
     int cpuNameStringPtr, int cpuCountIntegerPtr, int cpuSpeedIntegerPtr
 )
 */
-void querySystemInfo(XVM_Env env)
+void SysInfo_querySystemInfo(XVM_Env env)
 {
     // Get in/out string parameters
     char* platform  = XVM_ParamString(env, 1);
@@ -205,7 +205,7 @@ void querySystemInfo(XVM_Env env)
 
 static XVM_Invocation procList[] =
 {
-    { "SysInfo.querySystemInfo", querySystemInfo },
+    { "SysInfo.querySystemInfo", SysInfo_querySystemInfo },
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);

@@ -18,14 +18,14 @@
 // INVOCATIONS
 
 // int openSocket(int family, int type, int protocol)
-void openSocket(XVM_Env env)
+void Socket_open(XVM_Env env)
 {
     SOCKET sock = socket(XVM_ParamInt(env, 1), XVM_ParamInt(env, 2), XVM_ParamInt(env, 3));
     XVM_ReturnInt(env, 3, (int)sock);
 }
 
 // int closeSocket(int sock)
-void closeSocket(XVM_Env env)
+void Socket_close(XVM_Env env)
 {
     int result = closesocket((SOCKET)XVM_ParamInt(env, 1));
     XVM_ReturnInt(env, 1, result);
@@ -36,8 +36,8 @@ void closeSocket(XVM_Env env)
 
 static XVM_Invocation procList[] =
 {
-    { "Socket.open", openSocket },
-    { "Socket.close", closeSocket },
+    { "Socket.open", Socket_open },
+    { "Socket.close", Socket_close },
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);

@@ -5,10 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-/**
-Message box module.
-@note Because the file is "msgbox" and not "MsgBox", this attribute is required!
-*/
+/// Message box module.
 [[bind]]
 module MsgBox {
 	
@@ -30,15 +27,15 @@ module MsgBox {
 	static const DEFAULT_BUTTON3		:= 0x00000200
 	static const DEFAULT_BUTTON4		:= 0x00000300
 	
-	static const BUTTON_OK				:= 1
-	static const BUTTON_CANCEL			:= 2
-	static const BUTTON_ABORT			:= 3
-	static const BUTTON_RETRY			:= 4
-	static const BUTTON_IGNORE			:= 5
-	static const BUTTON_YES				:= 6
-	static const BUTTON_NO				:= 7
-	static const BUTTON_TRY				:= 10
-	static const BUTTON_CONTINUE		:= 11*/
+	static const ID_OK					:= 1
+	static const ID_CANCEL				:= 2
+	static const ID_ABORT				:= 3
+	static const ID_RETRY				:= 4
+	static const ID_IGNORE				:= 5
+	static const ID_YES					:= 6
+	static const ID_NO					:= 7
+	static const ID_TRY					:= 10
+	static const ID_CONTINUE			:= 11*/
 	
 	/**
 	Shows a simple message box.
@@ -47,6 +44,6 @@ module MsgBox {
 	@bitFlags Specifies the flags bitmask.
 	@return ID of the clicked button.
 	*/
-	static int messageBox(String title, String text, int bitFlags := 0)
+	static int show(String title, String text, int bitFlags := 0)
 	
 }

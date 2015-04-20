@@ -16,7 +16,7 @@
 // INVOCATIONS
 
 // int messageBox(String title, String text, int bitFlags)
-void messageBox(XVM_Env env)
+void MsgBox_show(XVM_Env env)
 {
     XVM_String title = XVM_ParamString(env, 1);
     XVM_String text = XVM_ParamString(env, 2);
@@ -31,7 +31,7 @@ void messageBox(XVM_Env env)
 
 static XVM_Invocation procList[] =
 {
-    { "MsgBox.messageBox", messageBox },
+    { "MsgBox.show", MsgBox_show },
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);
