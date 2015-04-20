@@ -19,6 +19,11 @@ namespace ThreeAddressCodes
  * TACVar class
  */
 
+const TACVar TACVar::varResult   { 1, Types::Result   };
+const TACVar TACVar::varThisPtr  { 1, Types::ThisPtr  };
+const TACVar TACVar::varStackPtr { 1, Types::StackPtr };
+const TACVar TACVar::varFramePtr { 1, Types::FramePtr };
+
 TACVar::TACVar(IDType id, const Types type) :
     id  { id   },
     type{ type }

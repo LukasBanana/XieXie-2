@@ -39,7 +39,7 @@ bool ProcedureInlining::OptimizeDirectCallInst(BasicBlock& basicBlock, InstList:
 
     /* Inline procedure call, if possible */
     auto procCFG = FindProcedureCFG(*callInst);
-    if (CanInlineProcedure(*procCFG))
+    if (procCFG && CanInlineProcedure(basicBlock, *procCFG))
     {
         it = basicBlock.insts.erase(it);
         
@@ -63,14 +63,19 @@ BasicBlock* ProcedureInlining::FindProcedureCFG(const TACDirectCallInst& inst) c
 
 /*
 A procedure can be inlined iff:
+- The procedure does not call itself recursively.
 - The number of instruction does not exceed a fixed limit,
 - The procedure CFG does only consist of a single basic block, i.e. there is now flow control (currently too hard to implement),
 - The last instruction must be a 'return' instruction,
 - Only the last instruction can be a 'return' instruction.
 */
-bool ProcedureInlining::CanInlineProcedure(const BasicBlock& inlineBlock) const
+bool ProcedureInlining::CanInlineProcedure(const BasicBlock& basicBlock, const BasicBlock& inlineBlock) const
 {
     const auto& insts = inlineBlock.insts;
+
+    /* Check if procedure does not call itself recursively */
+    if (&basicBlock == &inlineBlock)
+        return false;
 
     /* Check if instruction count does not exceed the limit */
     static const size_t maxInstsToInline = 10;
@@ -81,16 +86,16 @@ bool ProcedureInlining::CanInlineProcedure(const BasicBlock& inlineBlock) const
     if (!inlineBlock.GetSucc().empty())
         return false;
 
+    /* Check if last instruction is a return statement */
+    if (!insts.empty() && insts.back()->Type() != TACInst::Types::Return)
+        return false;
+
     /* Check if only the last instruction is a 'return' instruction */
     for (size_t i = 0, n = inlineBlock.insts.size(); i + 1 < n; ++i)
     {
         if (insts[i]->Type() == TACInst::Types::Return)
             return false;
     }
-
-    /* Check if last instruction is a return statement */
-    if (!insts.empty() && insts.back()->Type() != TACInst::Types::Return)
-        return false;
 
     /* Procedure satisfies all conditions to be inlinded */
     return true;
@@ -177,7 +182,7 @@ void ProcedureInlining::ReplaceReturnInst(TACInstPtr& inst)
     {
         auto& returnInst = static_cast<const TACReturnInst&>(*inst);
         auto srcVar = returnInst.src;
-        inst = MakeUnique<TACCopyInst>(TACVar(1, TACVar::Types::Result), srcVar);
+        inst = MakeUnique<TACCopyInst>(TACVar::varResult, srcVar);
     }
 }
 

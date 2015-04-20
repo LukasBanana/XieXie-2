@@ -104,6 +104,11 @@ class TACVar
         unsigned int    offset  = 0;                    //!< Memory offset (in bytes) from the respective scope (global or class scope).
         unsigned int    size    = 4;                    //!< Size (in bytes) of this variables). By default 4.
 
+        static const TACVar varResult;
+        static const TACVar varThisPtr;
+        static const TACVar varStackPtr;
+        static const TACVar varFramePtr;
+
 };
 
 

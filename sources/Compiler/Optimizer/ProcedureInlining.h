@@ -31,7 +31,7 @@ class ProcedureInlining : public TACOptimizer
         bool OptimizeDirectCallInst(BasicBlock& basicBlock, InstList::iterator& it);
 
         BasicBlock* FindProcedureCFG(const TACDirectCallInst& inst) const;
-        bool CanInlineProcedure(const BasicBlock& inlineBlock) const;
+        bool CanInlineProcedure(const BasicBlock& basicBlock, const BasicBlock& inlineBlock) const;
         void InlineProcedure(BasicBlock& basicBlock, const BasicBlock& inlineBlock, InstList::difference_type& instrIdx);
 
         std::vector<TACVar> PopArgumentStack(BasicBlock& basicBlock, const BasicBlock& inlineBlock, InstList::difference_type& instrIdx);

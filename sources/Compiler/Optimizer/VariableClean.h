@@ -10,6 +10,7 @@
 
 
 #include "TACOptimizer.h"
+#include "TACCopyInst.h"
 
 #include <set>
 
@@ -32,6 +33,8 @@ class VariableClean : public TACOptimizer
         void TransformSwitchInst(TACInstPtr& inst) override;
         void TransformStackInst(TACInstPtr& inst) override;
         void TransformHeapInst(TACInstPtr& inst) override;
+
+        bool IsInstUnnecessary(const TACCopyInst& inst) const;
 
         void ReadVar(const TACVar& var);
         void WriteVar(const TACVar& var);

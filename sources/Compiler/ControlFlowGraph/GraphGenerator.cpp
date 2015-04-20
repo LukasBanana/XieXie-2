@@ -1711,24 +1711,24 @@ TACVar GraphGenerator::LValueVarFromVarName(const VarName& ast)
     return LValueVar(ast.GetLast().declRef);
 }
 
-TACVar GraphGenerator::ResultVar()
+const TACVar& GraphGenerator::ResultVar()
 {
-    return TACVar(1, TACVar::Types::Result);
+    return TACVar::varResult;
 }
 
-TACVar GraphGenerator::ThisPtr()
+const TACVar& GraphGenerator::ThisPtr()
 {
-    return TACVar(1, TACVar::Types::ThisPtr);
+    return TACVar::varThisPtr;
 }
 
-TACVar GraphGenerator::StackPtr()
+const TACVar& GraphGenerator::StackPtr()
 {
-    return TACVar(1, TACVar::Types::StackPtr);
+    return TACVar::varStackPtr;
 }
 
-TACVar GraphGenerator::FramePtr()
+const TACVar& GraphGenerator::FramePtr()
 {
-    return TACVar(1, TACVar::Types::FramePtr);
+    return TACVar::varFramePtr;
 }
 
 

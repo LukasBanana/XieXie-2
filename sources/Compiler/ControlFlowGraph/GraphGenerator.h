@@ -159,10 +159,10 @@ class GraphGenerator final : private Visitor
         //! Generates a local TAC variable for the specifid variable name.
         TACVar LValueVarFromVarName(const VarName& ast);
 
-        TACVar ResultVar();
-        TACVar ThisPtr();
-        TACVar StackPtr();
-        TACVar FramePtr();
+        const TACVar& ResultVar();
+        const TACVar& ThisPtr();
+        const TACVar& StackPtr();
+        const TACVar& FramePtr();
 
         /* === Members === */
 

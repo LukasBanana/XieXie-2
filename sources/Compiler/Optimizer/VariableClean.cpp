@@ -8,7 +8,6 @@
 #include "VariableClean.h"
 
 #include "TACModifyInst.h"
-#include "TACCopyInst.h"
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
 #include "TACSwitchInst.h"
@@ -36,7 +35,7 @@ void VariableClean::TransformCopyInst(TACInstPtr& inst)
     auto copyInst = static_cast<TACCopyInst*>(inst.get());
 
     /* Propagate variable usage */
-    if (IsDestVarRequired(copyInst->dest))
+    if (!IsInstUnnecessary(*copyInst) && IsDestVarRequired(copyInst->dest))
     {
         WriteVar(copyInst->dest);
         ReadVar(copyInst->src);
@@ -111,6 +110,11 @@ void VariableClean::TransformHeapInst(TACInstPtr& inst)
     }
     else
         ReadVar(heapInst->var);
+}
+
+bool VariableClean::IsInstUnnecessary(const TACCopyInst& inst) const
+{
+    return inst.opcode == TACInst::OpCodes::MOV && inst.dest == inst.src;
 }
 
 void VariableClean::ReadVar(const TACVar& var)

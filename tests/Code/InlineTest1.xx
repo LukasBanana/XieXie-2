@@ -9,10 +9,15 @@ class Test {
 		return x*x
 	}
 	
+	static int recursive(int n) {
+		return Test.recursive(n + 1)
+	}
+	
 	static int test1(int x) {
 		
 		//return Test.f(x) + Test.f(x+2)
-		return Test.f(3) + Test.f(-5)
+		//return Test.f(3) + Test.f(-5)
+		return Test.recursive(5) // !INCOMPLETE!
 		
 	}
 	
