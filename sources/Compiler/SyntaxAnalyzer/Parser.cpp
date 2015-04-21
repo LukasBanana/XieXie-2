@@ -197,7 +197,7 @@ TokenPtr Parser::InlineMacro(const Token& macro)
     else if (spell == "__CLASS__")
         return MakeString(state_.classDecl != nullptr ? state_.classDecl->ident : "");
     else if (spell == "__PROC__")
-        return MakeString(state_.procIdent);
+        return MakeString(state_.procDecl != nullptr ? state_.procDecl->procSignature->ident : "");
     else if (spell == "__LINE__")
         return MakeInt(macro.PosStart().Row());
     else if (spell == "__DATE__")
@@ -1186,6 +1186,7 @@ ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix)
 ClassDeclStmntPtr Parser::ParseAnonymousClass(const std::string& baseClassIdent)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
+
     state_.classDecl = ast.get();
 
     ast->isAnonymous    = true;
@@ -1227,6 +1228,7 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(
     ast->attribPrefix   = attribPrefix;
     ast->isStatic       = isStatic;
     ast->parentRef      = state_.classDecl;
+    ast->scopeRef       = state_.procDecl;
 
     if (Is(Tokens::Var))
     {
@@ -1267,6 +1269,7 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(
     ast->isStatic       = isStatic;
     ast->typeDenoter    = typeDenoter;
     ast->parentRef      = state_.classDecl;
+    ast->scopeRef       = state_.procDecl;
 
     auto varDecl = ParseVarDecl(identTkn);
     if (Is(Tokens::Comma))
@@ -1338,6 +1341,8 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPt
 {
     auto ast = Make<ProcDeclStmnt>();
 
+    state_.procDecl = ast.get();
+
     ast->parentRef  = state_.classDecl;
     ast->visibility = state_.classVis;
 
@@ -1347,7 +1352,6 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPt
         ast->attribPrefix = ParseAttribPrefix();
 
     ast->procSignature = ParseProcSignature();
-    state_.procIdent = ast->procSignature->ident;
 
     if (!isExtern)
     {
@@ -1361,6 +1365,8 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPt
         }
     }
     
+    state_.procDecl = nullptr;
+
     return ast;
 }
 
@@ -1371,12 +1377,13 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(
 {
     auto ast = Make<ProcDeclStmnt>();
 
+    state_.procDecl = ast.get();
+
     ast->attribPrefix   = attribPrefix;
     ast->parentRef      = state_.classDecl;
     ast->visibility     = state_.classVis;
 
     ast->procSignature = ParseProcSignature(typeDenoter, identTkn, isStatic);
-    state_.procIdent = ast->procSignature->ident;
 
     if (Is(Tokens::LCurly))
     {
@@ -1386,6 +1393,8 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(
         }
         PopProcHasReturnType();
     }
+
+    state_.procDecl = nullptr;
 
     return ast;
 }
@@ -1398,6 +1407,8 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 {
     auto ast = Make<ProcDeclStmnt>();
 
+    state_.procDecl = ast.get();
+
     ast->parentRef  = state_.classDecl;
     ast->visibility = state_.classVis;
 
@@ -1407,8 +1418,6 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
     ast->procSignature->ident               = "init";
     ast->procSignature->isCtor              = true;
     ast->procSignature->returnTypeDenoter   = Make<BuiltinTypeDenoter>(BuiltinTypeDenoter::TypeNames::Void);
-
-    state_.procIdent = "init";
 
     /* Parse optional attributes */
     if (Is(Tokens::LDParen))
@@ -1448,6 +1457,8 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
             ast->codeBlock->stmnts.insert(ast->codeBlock->stmnts.begin(), callStmnt);
     }
 
+    state_.procDecl = nullptr;
+
     return ast;
 }
 
@@ -1455,6 +1466,8 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 ProcDeclStmntPtr Parser::ParseReleaseDeclStmnt()
 {
     auto ast = Make<ProcDeclStmnt>();
+
+    state_.procDecl = ast.get();
 
     ast->parentRef  = state_.classDecl;
     ast->visibility = state_.classVis;
@@ -1465,10 +1478,10 @@ ProcDeclStmntPtr Parser::ParseReleaseDeclStmnt()
     ast->procSignature->isDtor              = true;
     ast->procSignature->returnTypeDenoter   = Make<BuiltinTypeDenoter>(BuiltinTypeDenoter::TypeNames::Void);
 
-    state_.procIdent = "release";
-
     Accept(Tokens::Release);
     ast->codeBlock = ParseCodeBlock();
+
+    state_.procDecl = nullptr;
 
     return ast;
 }

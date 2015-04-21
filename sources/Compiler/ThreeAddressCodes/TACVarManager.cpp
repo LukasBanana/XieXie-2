@@ -135,14 +135,14 @@ void TACVarManager::RemoveTempVarID(IDType id)
  * VarMap structure
  */
 
-template <typename T, TACVar::Types VarType>
-TACVar& TACVarManager::VarMap<T, VarType>::FetchVar(const T& ast, const std::function<void(TACVar& var)>& registerVarCallback)
+template <typename T, TACVar::Types varType, bool useCounter>
+TACVar& TACVarManager::VarMap<T, varType, useCounter>::FetchVar(const T& ast, const std::function<void(TACVar& var)>& registerVarCallback)
 {
     auto it = vars.find(&ast);
 
     if (it == vars.end())
     {
-        TACVar var{ ++varCounter, VarType };
+        TACVar var{ (useCounter ? ++varCounter : 1), varType };
         if (registerVarCallback)
             registerVarCallback(var);
         it = vars.insert(std::pair<const T*, TACVar>(&ast, var)).first;

@@ -37,8 +37,8 @@ class TACVar
             Label,      //!< Address label.
 
             Temp,       //!< Compiler temporary variable.
-            Global,     //!< Global variable.
             Local,      //!< Local variable.
+            Global,     //!< Global variable.
             Member,     //!< Member variable.
 
             Result,     //!< Argument return '$ar'.
@@ -74,8 +74,15 @@ class TACVar
         bool IsConst() const;
         //! Returns true if this variable is an address label.
         bool IsLabel() const;
+
         //! Returns ture if this is a temporary variable.
         bool IsTemp() const;
+        //! Returns ture if this is a local variable.
+        bool IsLocal() const;
+        //! Returns ture if this is a global variable.
+        bool IsGlobal() const;
+        //! Returns ture if this is a member variable.
+        bool IsMember() const;
 
         //! Returns true if this is a frame pointer variable.
         bool IsThisPtr() const;

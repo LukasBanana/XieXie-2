@@ -72,12 +72,12 @@ std::string TACVar::ToString() const
 
         case Types::Temp:
             return "t" + idStr;
-        case Types::Global:
-            return "g" + idStr;
         case Types::Local:
             return "l" + idStr;
+        case Types::Global:
+            return "g[" + std::to_string(offset) + "]";
         case Types::Member:
-            return "m" + idStr;
+            return "m[" + std::to_string(offset) + "]";
 
         case Types::Result:
             return "out";
@@ -105,6 +105,21 @@ bool TACVar::IsLabel() const
 bool TACVar::IsTemp() const
 {
     return type == Types::Temp;
+}
+
+bool TACVar::IsLocal() const
+{
+    return type == Types::Local;
+}
+
+bool TACVar::IsGlobal() const
+{
+    return type == Types::Global;
+}
+
+bool TACVar::IsMember() const
+{
+    return type == Types::Member;
 }
 
 bool TACVar::IsThisPtr() const
@@ -180,6 +195,12 @@ bool operator < (const TACVar& lhs, const TACVar& rhs)
 
     if (lhs.type < rhs.type) return true;
     if (lhs.type > rhs.type) return false;
+
+    if (lhs.offset < rhs.offset) return true;
+    if (lhs.offset > rhs.offset) return false;
+
+    if (lhs.size < rhs.size) return true;
+    if (lhs.size > rhs.size) return false;
 
     return lhs.value < rhs.value;
 }

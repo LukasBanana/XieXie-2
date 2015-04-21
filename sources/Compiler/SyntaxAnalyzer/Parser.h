@@ -45,10 +45,10 @@ class Parser
 
         struct StateContainer
         {
-            std::string                     filename;                               //!< Current filename.
-            ClassDeclStmnt*                 classDecl   = nullptr;                  //!< Reference to the current class declaration.
-            ClassDeclStmnt::Visibilities    classVis = ProcDeclStmnt::Vis::Public;  //!< Current visibility within a class declaration.
-            std::string                     procIdent;                              //!< Identifier of the current procedure declaration.
+            std::string                     filename;                                   //!< Current filename.
+            ClassDeclStmnt*                 classDecl   = nullptr;                      //!< Reference to the current class declaration.
+            ClassDeclStmnt::Visibilities    classVis    = ProcDeclStmnt::Vis::Public;   //!< Current visibility within a class declaration.
+            ProcDeclStmnt*                  procDecl    = nullptr;                      //!< Reference to the current procedure declaration.
         };
 
         /* === Functions === */

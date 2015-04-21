@@ -16,8 +16,13 @@ class Test {
 	static int test1(int x) {
 		
 		//return Test.f(x) + Test.f(x+2)
+		//return Test.f(3) + Test.f(x+2)
+		
+		//return Test.f(3) + Test.f(x)
+		return Test.f(x) + Test.f(3)
+		
 		//return Test.f(3) + Test.f(-5)
-		return Test.recursive(5) // !INCOMPLETE!
+		//return Test.recursive(5)
 		
 	}
 	

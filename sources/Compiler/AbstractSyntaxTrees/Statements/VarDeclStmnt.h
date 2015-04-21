@@ -32,6 +32,7 @@ class VarDeclStmnt : public Stmnt
 
         // dast
         ClassDeclStmnt*         parentRef       = nullptr;  // reference to the parent class (this is already decorated inside the parser).
+        ProcDeclStmnt*          scopeRef        = nullptr;  // reference to the local scope of the procedure (only set for local variables).
 
 };
 

@@ -31,7 +31,7 @@ bool VarDecl::IsStatic() const
 
 bool VarDecl::IsLocal() const
 {
-    return true; //!TODO!
+    return parentRef->scopeRef != nullptr;
 }
 
 

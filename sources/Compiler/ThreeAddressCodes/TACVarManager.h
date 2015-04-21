@@ -60,7 +60,7 @@ class TACVarManager
         
         /* === Structures === */
 
-        template <typename T, TACVar::Types VarType> struct VarMap
+        template <typename T, TACVar::Types varType, bool useCounter> struct VarMap
         {
             void Reset()
             {
@@ -84,13 +84,13 @@ class TACVarManager
 
         /* === Members === */
 
-        SafeStack<TACVar>                       varStack_;
+        SafeStack<TACVar>                               varStack_;
 
-        VarMap<AST, TACVar::Types::Local>       localVars_;
-        VarMap<VarDecl, TACVar::Types::Global>  globalVars_;
-        VarMap<VarDecl, TACVar::Types::Member>  memberVars_;
+        VarMap< AST,     TACVar::Types::Local,  true  > localVars_;
+        VarMap< VarDecl, TACVar::Types::Global, false > globalVars_;
+        VarMap< VarDecl, TACVar::Types::Member, false > memberVars_;
 
-        std::vector<IDType>                     tempVarIDs_;
+        std::vector<IDType>                             tempVarIDs_;
 
 };
 
