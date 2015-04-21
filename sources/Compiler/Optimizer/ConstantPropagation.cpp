@@ -153,27 +153,27 @@ bool ConstantPropagation::IsNOP(const TACModifyInst& inst) const
             return constVar.Int() == 0;
 
         case OpCodes::SUB:
-            return rhs.Int() == 0;
+            return rhs.IsConst() && rhs.Int() == 0;
 
         case OpCodes::MUL:
             return constVar.Int() == 1;
 
         case OpCodes::DIV:
         case OpCodes::MOD:
-            return rhs.Int() == 1;
+            return rhs.IsConst() && rhs.Int() == 1;
 
         case OpCodes::FADD:
             return constVar.Float() == 0.0f;
 
         case OpCodes::FSUB:
-            return rhs.Float() == 0.0f;
+            return rhs.IsConst() && rhs.Float() == 0.0f;
 
         case OpCodes::FMUL:
             return constVar.Float() == 1.0f;
 
         case OpCodes::FDIV:
         case OpCodes::FMOD:
-            return rhs.Float() == 1.0f;
+            return rhs.IsConst() && rhs.Float() == 1.0f;
 
         default:
             break;
