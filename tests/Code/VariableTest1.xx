@@ -12,12 +12,12 @@ class Test {
 	
 	int test1(int x) {
 		
-		var a := Test.g_a
+		var a := Test.g_a + Test.g_c
 		a += m_a
 		a += x
 		
-		
 		return a
+		
 	}
 	
 }

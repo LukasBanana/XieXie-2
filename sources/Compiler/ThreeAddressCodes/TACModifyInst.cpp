@@ -23,6 +23,13 @@ TACModifyInst::TACModifyInst(const TACVar& dest, const TACVar& srcLhs, const TAC
     srcRhs  { srcRhs       }
 {
 }
+TACModifyInst::TACModifyInst(OpCodes opcode, const TACVar& dest, const TACVar& srcLhs, const TACVar& srcRhs) :
+    TACInst { opcode },
+    dest    { dest   },
+    srcLhs  { srcLhs },
+    srcRhs  { srcRhs }
+{
+}
 
 TACInst::Types TACModifyInst::Type() const
 {

@@ -117,6 +117,37 @@ DEF_VISIT_PROC(GraphGenerator, CodeBlock)
 
 DEF_VISIT_PROC(GraphGenerator, VarName)
 {
+    /* Get variable for current identifier */
+    auto var = LValueVar(ast->declRef);
+
+    auto arrayAccess = ast->arrayAccess.get();
+    while (arrayAccess)
+    {
+        /* Generate code for array access */
+        Visit(arrayAccess);
+        auto indexVar = PopVar();
+
+        /* Generate code to access array pointer */
+        auto baseVar = TempVar();
+        auto offsetVar = TempVar();
+
+        BB()->MakeInst<TACHeapInst>(OpCodes::LDW, baseVar, var, BuiltinClasses::Array_Offset_buffer);
+        BB()->MakeInst<TACModifyInst>(OpCodes::SLL, offsetVar, indexVar, TACVar("2"));
+        BB()->MakeInst<TACModifyInst>(OpCodes::ADD, baseVar, baseVar, offsetVar);
+
+        var = baseVar;
+
+        /* Get next array access */
+        arrayAccess = arrayAccess->next.get();
+    }
+
+    /* Push current variable */
+    PushVar(var);
+
+    if (ast->next)
+    {
+        //todo...
+    }
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarDecl)
@@ -190,6 +221,9 @@ DEF_VISIT_PROC(GraphGenerator, Attrib)
 
 DEF_VISIT_PROC(GraphGenerator, ArrayAccess)
 {
+    /* Generate code for index expression */
+    Visit(ast->indexExpr);
+    //auto offsetVar = PopVar();
     //todo...
 }
 
@@ -1024,7 +1058,10 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 {
     if (ast->typeDenoter->IsArray())
     {
-        //todo...
+        /* Generate allocation code */
+        const auto& classArray = BuiltinClasses::Array;
+        GenerateClassAlloc(classArray.instanceSize, classArray.typeID, classArray.GetVtableAddr());
+        CopyAndPushResultVar(ThisPtr());
     }
     else if (ast->typeDenoter->IsPointer())
     {
@@ -1048,7 +1085,7 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 
 DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
 {
-    PushVar(LValueVarFromVarName(*ast->varName));
+    Visit(ast->varName);
 }
 
 DEF_VISIT_PROC(GraphGenerator, InitListExpr)

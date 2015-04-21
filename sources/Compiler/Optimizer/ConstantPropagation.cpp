@@ -59,8 +59,8 @@ void ConstantPropagation::TransformModifyInst(TACInstPtr& inst)
     else if (IsNOP(*modifyInst))
     {
         /* Constant folding */
-        auto constVar = (modifyInst->srcLhs.IsConst() ? modifyInst->srcRhs : modifyInst->srcLhs);
-        auto newInst = MakeUnique<TACCopyInst>(modifyInst->dest, constVar);
+        auto var = (modifyInst->srcLhs.IsConst() ? modifyInst->srcRhs : modifyInst->srcLhs);
+        auto newInst = MakeUnique<TACCopyInst>(modifyInst->dest, var);
 
         /* Propagate constant */
         PropagateConst(newInst->dest, newInst->src);
