@@ -283,6 +283,8 @@ void ConstantPropagation::PropagateConst(const TACVar& dest, const TACVar& src)
 {
     if (src.IsConst())
         vars_[dest] = src.value;
+    else
+        RemoveConst(dest);
 }
 
 void ConstantPropagation::RemoveConst(const TACVar& dest)
