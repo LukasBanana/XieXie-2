@@ -35,6 +35,8 @@ class TACStackInst : public TACInst
 
         void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
 
+        TACVar::IDType MaxVarID() const override;
+
         //! Returns true if this instruction stores a value to the stack.
         bool IsStoreOp() const;
         //! Returns true if this instruction loads a value from the stack.

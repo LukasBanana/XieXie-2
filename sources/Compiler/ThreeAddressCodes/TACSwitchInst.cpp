@@ -45,6 +45,11 @@ void TACSwitchInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replace
         src.Replace(varToReplace, replacedVar);
 }
 
+TACVar::IDType TACSwitchInst::MaxVarID() const
+{
+    return src.id;
+}
+
 
 } // /namespace ThreeAddressCodes
 

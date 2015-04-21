@@ -37,7 +37,7 @@ Optimizer::~Optimizer()
 void Optimizer::OptimizeProgram(CFGProgram& program)
 {
     static const unsigned char maxNumPasses = 2;//5;
-
+    
     procDict_ = &(program.procedures);
 
     for (auto& ct : program.classTrees)
@@ -53,7 +53,7 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
                 Opt< ProcedureInlining   >(*bb, hasChanged);
                 Opt< ConstantPropagation >(*bb, hasChanged);
                 Opt< CopyPropagation     >(*bb, hasChanged);
-                //Opt< VariableClean       >(*bb, hasChanged);
+                Opt< VariableClean       >(*bb, hasChanged);
                 //Opt< VariableReduction   >(*bb, hasChanged);
 
                 if (!hasChanged)

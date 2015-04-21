@@ -762,7 +762,6 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 
     /* Store final procedure information inside the CFG root */
     root->numParams = numProcParams_;
-    root->maxVarID  = varMngr_.HighestVarID();
 
     RETURN_BLOCK_REF(VisitIO(root, graph.out));
 }

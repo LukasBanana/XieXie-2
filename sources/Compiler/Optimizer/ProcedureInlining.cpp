@@ -22,7 +22,7 @@ namespace Optimization
 void ProcedureInlining::TransformBlock(BasicBlock& basicBlock)
 {
     /* Reset state */
-    idOffset_ = basicBlock.maxVarID;
+    idOffset_ = basicBlock.MaxVarID();
 
     /* Transform instructions (top-down) */
     for (auto it = basicBlock.insts.begin(); it != basicBlock.insts.end();)
@@ -74,14 +74,14 @@ A procedure can be inlined iff:
 */
 bool ProcedureInlining::CanInlineProcedure(const BasicBlock& basicBlock, const BasicBlock& inlineBlock) const
 {
-    const auto& insts = inlineBlock.insts;
-
-    /* Check if procedure does not call itself recursively */
+    /* Check if procedure calls itself recursively */
     if (&basicBlock == &inlineBlock)
         return false;
 
     /* Check if instruction count does not exceed the limit */
     static const size_t maxInstsToInline = 10;
+    const auto& insts = inlineBlock.insts;
+
     if (insts.size() > maxInstsToInline)
         return false;
 
@@ -94,7 +94,7 @@ bool ProcedureInlining::CanInlineProcedure(const BasicBlock& basicBlock, const B
         return false;
 
     /* Check if only the last instruction is a 'return' instruction */
-    for (size_t i = 0, n = inlineBlock.insts.size(); i + 1 < n; ++i)
+    for (size_t i = 0, n = insts.size(); i + 1 < n; ++i)
     {
         if (insts[i]->Type() == TACInst::Types::Return)
             return false;
@@ -127,7 +127,7 @@ void ProcedureInlining::InlineProcedure(
         ReplaceReturnInst(basicBlock.insts[instrIdx - 1]);
 
         /* Increase ID offset for the next inlining */
-        idOffset_ += inlineBlock.maxVarID;
+        idOffset_ += inlineBlock.MaxVarID();
     }
 }
 

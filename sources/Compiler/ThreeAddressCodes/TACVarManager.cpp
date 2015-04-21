@@ -97,19 +97,6 @@ TACVar TACVarManager::Var()
     return varStack_.Top();
 }
 
-TACVarManager::IDType TACVarManager::HighestVarID() const
-{
-    /* Find highest ID number */
-    IDType highestID = 0;
-
-    for (auto id : tempVarIDs_)
-        highestID = std::max(highestID, id);
-
-    highestID = std::max(highestID, localVars_.varCounter);
-
-    return highestID;
-}
-
 
 /*
  * ======= Private: =======

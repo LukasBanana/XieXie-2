@@ -60,6 +60,11 @@ void TACStackInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replaced
     }
 }
 
+TACVar::IDType TACStackInst::MaxVarID() const
+{
+    return var.id;
+}
+
 bool TACStackInst::IsStoreOp() const
 {
     return opcode == OpCodes::PUSH;

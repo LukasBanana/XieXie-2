@@ -128,6 +128,9 @@ class BasicBlock
         //! Returns true if the specified basic block is a direct successor of this basic block.
         bool IsDirectSucc(const BasicBlock& bb) const;
 
+        //! Returns the maximal ID number of all variables in this basic block.
+        TACVar::IDType MaxVarID() const;
+
         //! Returns the predecessor list.
         inline const BlockList& GetPred() const
         {
@@ -155,9 +158,6 @@ class BasicBlock
 
         //! Number of parameters (only used if this is a root basic block for a procedure).
         unsigned int    numParams = 0;
-
-        //! Highest ID number of all temporary and local variables in this basic block.
-        TACVar::IDType  maxVarID = 0;
 
     private:
         

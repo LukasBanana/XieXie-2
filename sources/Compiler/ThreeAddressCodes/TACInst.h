@@ -159,6 +159,9 @@ class TACInst
         //! Replaces the variable 'varToReplace' by 'replacedVar'.
         virtual void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source));
 
+        //! Returns the maximal ID number of all variables in this instruction.
+        virtual TACVar::IDType MaxVarID() const;
+
         //! Returns a string for the specified op-code.
         static std::string OpCodeToString(const OpCodes opcode);
         /**

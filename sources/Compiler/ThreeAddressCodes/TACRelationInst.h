@@ -33,6 +33,8 @@ class TACRelationInst : public TACInst
 
         void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
 
+        TACVar::IDType MaxVarID() const override;
+
         bool IsAlwaysTrue() const;
         bool IsAlwaysFalse() const;
 

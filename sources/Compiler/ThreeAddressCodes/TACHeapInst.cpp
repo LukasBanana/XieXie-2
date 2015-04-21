@@ -81,6 +81,11 @@ void TACHeapInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedV
     }
 }
 
+TACVar::IDType TACHeapInst::MaxVarID() const
+{
+    return var.id;
+}
+
 bool TACHeapInst::IsStoreOp() const
 {
     return (opcode == OpCodes::STB || opcode == OpCodes::STH || opcode == OpCodes::STW);

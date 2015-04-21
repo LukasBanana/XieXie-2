@@ -35,6 +35,8 @@ class TACModifyInst : public TACInst
         void InsertDestVar(std::set<TACVar>& vars, const BitMask& flags = 0) const override;
         void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
 
+        TACVar::IDType MaxVarID() const override;
+
         TACVar dest, srcLhs, srcRhs;
 
 };

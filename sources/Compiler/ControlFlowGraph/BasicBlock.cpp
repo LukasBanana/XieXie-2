@@ -35,7 +35,7 @@ TACInst* BasicBlock::InsertInstCopy(const TACInst& inst, size_t position, const 
 {
     auto newInst = inst.Copy(varIDOffset);
     auto instRef = newInst.get();
-    if (position + 1 < insts.size())
+    if (position < insts.size())
         insts.insert(insts.begin() + position, std::move(newInst));
     else
         insts.emplace_back(std::move(newInst));
@@ -168,6 +168,16 @@ bool BasicBlock::IsSuccessor(const BasicBlock& succ, const VisitSet* ingoreSet) 
 bool BasicBlock::IsDirectSucc(const BasicBlock& bb) const
 {
     return std::find(succ_.begin(), succ_.end(), &bb) != succ_.end();
+}
+
+TACVar::IDType BasicBlock::MaxVarID() const
+{
+    TACVar::IDType maxID = 0;
+
+    for (const auto& inst : insts)
+        maxID = std::max(maxID, inst->MaxVarID());
+
+    return maxID;
 }
 
 

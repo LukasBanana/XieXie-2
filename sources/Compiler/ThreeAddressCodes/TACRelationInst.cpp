@@ -9,6 +9,8 @@
 #include "StringModifier.h"
 #include "MakeUnique.h"
 
+#include <algorithm>
+
 
 namespace ThreeAddressCodes
 {
@@ -86,6 +88,11 @@ void TACRelationInst::ReplaceVar(const TACVar& varToReplace, const TACVar& repla
         if (!flags(VarFlags::TempOnly) || srcRhs.IsTemp())
             srcRhs.Replace(varToReplace, replacedVar);
     }
+}
+
+TACVar::IDType TACRelationInst::MaxVarID() const
+{
+    return std::max(srcLhs.id, srcRhs.id);
 }
 
 bool TACRelationInst::IsAlwaysTrue() const

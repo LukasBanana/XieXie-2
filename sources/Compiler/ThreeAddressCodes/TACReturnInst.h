@@ -31,6 +31,8 @@ class TACReturnInst : public TACInst
 
         void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
 
+        TACVar::IDType MaxVarID() const override;
+
         TACVar          src;
         bool            hasVar          = false;
         unsigned int    numProcParams   = 0;

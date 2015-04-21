@@ -33,6 +33,11 @@ void TACInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, 
     // dummy
 }
 
+TACVar::IDType TACInst::MaxVarID() const
+{
+    return TACVar::invalidID; // dummy
+}
+
 std::string TACInst::OpCodeToString(const OpCodes opcode)
 {
     switch (opcode)

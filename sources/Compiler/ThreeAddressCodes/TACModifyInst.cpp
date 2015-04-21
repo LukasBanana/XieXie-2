@@ -9,6 +9,8 @@
 #include "StringModifier.h"
 #include "MakeUnique.h"
 
+#include <algorithm>
+
 
 namespace ThreeAddressCodes
 {
@@ -115,6 +117,11 @@ void TACModifyInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replace
         if (!flags(VarFlags::TempOnly) || srcRhs.IsTemp())
             srcRhs.Replace(varToReplace, replacedVar);
     }
+}
+
+TACVar::IDType TACModifyInst::MaxVarID() const
+{
+    return std::max({ dest.id, srcLhs.id, srcRhs.id });
 }
 
 
