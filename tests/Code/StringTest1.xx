@@ -15,7 +15,7 @@ class Test {
 		int x := 5
 		//var s2 := "x = \(x)"
 		
-		Test.f("")
+		Test.f(s: null)
 		
 	}
 	

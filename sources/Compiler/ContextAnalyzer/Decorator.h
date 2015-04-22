@@ -108,8 +108,12 @@ class Decorator final : private Visitor
 
         void RegisterProcSymbol(ProcDeclStmnt& ast);
         void DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch);
-        void DeduceProcedureByArgs(std::vector<ProcDeclStmnt*>& procDecls, const std::vector<ArgPtr>& args);
-        void DeduceProcedureByNamedParamArgs(std::vector<ProcDeclStmnt*>& procDecls, const std::vector<ArgPtr>& args, size_t argIndex);
+        void DeduceProcedureByArgs(
+            std::vector<ProcDeclStmnt*>& procDecls, const std::vector<ArgPtr>& args, bool explicitTypeMatch
+        );
+        void DeduceProcedureByNamedParamArgs(
+            std::vector<ProcDeclStmnt*>& procDecls, const std::vector<ArgPtr>& args, size_t argIndex, bool explicitTypeMatch
+        );
         void DecorateMainProc(ProcSignature& ast);
 
         /* --- Symbol table --- */

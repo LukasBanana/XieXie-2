@@ -1291,11 +1291,24 @@ Otherwise the procedure of the base class can only identified with 'super.' insi
 */
 void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch)
 {
-    const auto& procDeclRefs = overloadSwitch.procDeclRefs;
-
     /* Find suitable procedure declaration */
+    const auto& procDeclRefs = overloadSwitch.procDeclRefs;
     auto procDecls = procDeclRefs;
-    DeduceProcedureByArgs(procDecls, ast.args);
+
+    /*
+    First, try to find suitable procedure with implicit type match
+    ==> e.g. allow conversion: String -> Object
+    */
+    DeduceProcedureByArgs(procDecls, ast.args, false);
+
+    if (procDecls.size() > 1)
+    {
+        /*
+        Second, try to find suitable procedure with explicit type match
+        ==> e.g. don't allow conversion String -> Object
+        */
+        DeduceProcedureByArgs(procDecls, ast.args, true);
+    }
 
     /* Check if unique procedure call has found */
     if (procDecls.empty())
@@ -1379,7 +1392,8 @@ This functions tries to deduces which overloaded procedure is to be used.
 It also check if the argument types fit to the parameters types.
 Named parameters will be arranged into the correct order.
 */
-void Decorator::DeduceProcedureByArgs(std::vector<ProcDeclStmnt*>& procDecls, const std::vector<ArgPtr>& args)
+void Decorator::DeduceProcedureByArgs(
+    std::vector<ProcDeclStmnt*>& procDecls, const std::vector<ArgPtr>& args, bool explicitTypeMatch)
 {
     size_t argIndex = 0;
 
@@ -1395,7 +1409,7 @@ void Decorator::DeduceProcedureByArgs(std::vector<ProcDeclStmnt*>& procDecls, co
         /* Check if arguments continue to use named parameters */
         if (!arg->paramIdent.empty())
         {
-            DeduceProcedureByNamedParamArgs(procDecls, args, argIndex);
+            DeduceProcedureByNamedParamArgs(procDecls, args, argIndex, explicitTypeMatch);
             return;
         }
         else
@@ -1407,7 +1421,11 @@ void Decorator::DeduceProcedureByArgs(std::vector<ProcDeclStmnt*>& procDecls, co
 
                 if (argIndex < params.size())
                 {
-                    if (!TypeChecker::VerifyTypeCompatibility(*params[argIndex]->typeDenoter, *argType))
+                    /* Check type compatibility */
+                    auto areTypesCompatible = TypeChecker::VerifyTypeCompatibility(
+                        *params[argIndex]->typeDenoter, *argType, nullptr, explicitTypeMatch
+                    );
+                    if (!areTypesCompatible)
                         it = procDecls.erase(it);
                     else
                         ++it;
@@ -1433,7 +1451,8 @@ void Decorator::DeduceProcedureByArgs(std::vector<ProcDeclStmnt*>& procDecls, co
     }
 }
 
-void Decorator::DeduceProcedureByNamedParamArgs(std::vector<ProcDeclStmnt*>& procDecls, const std::vector<ArgPtr>& args, size_t argIndex)
+void Decorator::DeduceProcedureByNamedParamArgs(
+    std::vector<ProcDeclStmnt*>& procDecls, const std::vector<ArgPtr>& args, size_t argIndex, bool explicitTypeMatch)
 {
     for (auto n = args.size(); argIndex < n; ++argIndex)
     {
@@ -1461,7 +1480,11 @@ void Decorator::DeduceProcedureByNamedParamArgs(std::vector<ProcDeclStmnt*>& pro
 
             if (prm)
             {
-                if (!TypeChecker::VerifyTypeCompatibility(*prm->typeDenoter, *argType))
+                /* Check type compatibility */
+                auto areTypesCompatible = TypeChecker::VerifyTypeCompatibility(
+                    *prm->typeDenoter, *argType, nullptr, explicitTypeMatch
+                );
+                if (!areTypesCompatible)
                     it = procDecls.erase(it);
                 else
                     ++it;
