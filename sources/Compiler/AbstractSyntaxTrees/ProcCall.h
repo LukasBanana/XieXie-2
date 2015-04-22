@@ -25,6 +25,11 @@ class ProcCall : public AST
 
         const TypeDenoter* GetTypeDenoter() const override;
 
+        //! Returns a string representation of this procedure call.
+        std::string ToString() const;
+
+        /* === Members === */
+
         VarNamePtr          procName;
         std::vector<ArgPtr> args;
 

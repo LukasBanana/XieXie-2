@@ -25,6 +25,8 @@ class Arg : public AST
 
         const TypeDenoter* GetTypeDenoter() const override;
 
+        std::string ToString() const;
+
         std::string paramIdent; // may be empty (used for named parameters)
         ExprPtr     expr;
 

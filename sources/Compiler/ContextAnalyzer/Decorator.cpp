@@ -82,6 +82,11 @@ void Decorator::Warning(const std::string& msg, const AST* ast)
     errorReporter_->Add<CompilerWarning>(msg, ast);
 }
 
+void Decorator::Message(const std::string& msg)
+{
+    errorReporter_->Add(CompilerMessage(SourceArea::ignore, msg));
+}
+
 const SyntaxAnalyzer::SourceCode* Decorator::GetCurrentSource() const
 {
     return class_ != nullptr ? class_->GetSource() : nullptr;
@@ -613,16 +618,12 @@ DEF_VISIT_PROC(Decorator, AllocExpr)
                 Error("can not instantiate abstract class \"" + classDecl->ident + "\"", ast);
 
                 /* List all abstract procedures */
-                errorReporter_->Add(CompilerMessage(SourceArea::ignore, ">> abstract procedures are: "));
+                Message(">> abstract procedures are: ");
 
                 for (const auto procDecl : classDecl->GetVtable().procs)
                 {
                     if (procDecl->IsAbstract())
-                    {
-                        errorReporter_->Add(CompilerMessage(
-                            SourceArea::ignore, ">>   " + procDecl->procSignature->ToString()
-                        ));
-                    }
+                        Message(">>   " + procDecl->procSignature->ToString());
                 }
             }
             /* Check if class is marked as deprecated */
@@ -1300,26 +1301,24 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
     if (procDecls.empty())
     {
         Error("no suitable signature found for procedure call", &ast);
-        errorReporter_->Add(CompilerMessage(SourceArea::ignore, ">> candidates are: "));
+
+        Message(">> specified is: ");
+        Message(">>   " + ast.ToString());
+        Message(">> but candidates are: ");
 
         for (const auto procDecl : procDeclRefs)
-        {
-            errorReporter_->Add(CompilerMessage(
-                SourceArea::ignore, ">>   " + procDecl->procSignature->ToString()
-            ));
-        }
+            Message(">>   " + procDecl->procSignature->ToString());
     }
     else if (procDecls.size() > 1)
     {
         Error("procedure call is ambiguous", &ast);
-        errorReporter_->Add(CompilerMessage(SourceArea::ignore, ">> deduced procedures are: "));
+
+        Message(">> specified is: ");
+        Message(">>   " + ast.ToString());
+        Message(">> but deduced procedures are: ");
 
         for (const auto procDecl : procDecls)
-        {
-            errorReporter_->Add(CompilerMessage(
-                SourceArea::ignore, ">>   " + procDecl->procSignature->ToString()
-            ));
-        }
+            Message(">>   " + procDecl->procSignature->ToString());
     }
     else
     {

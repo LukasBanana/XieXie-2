@@ -20,14 +20,6 @@ const TypeDenoter* VarDeclStmnt::GetTypeDenoter() const
 }
 
 
-/* --- ProcCall --- */
-
-const TypeDenoter* ProcCall::GetTypeDenoter() const
-{
-    return declStmntRef != nullptr ? declStmntRef->GetTypeDenoter() : nullptr;
-}
-
-
 /* --- ForRangeStmnt --- */
 
 const TypeDenoter* ForRangeStmnt::GetTypeDenoter() const
@@ -84,14 +76,6 @@ const TypeDenoter* CastExpr::GetTypeDenoter() const
 const TypeDenoter* AllocExpr::GetTypeDenoter() const
 {
     return typeDenoter.get();
-}
-
-
-/* --- Arg --- */
-
-const TypeDenoter* Arg::GetTypeDenoter() const
-{
-    return expr->GetTypeDenoter();
 }
 
 

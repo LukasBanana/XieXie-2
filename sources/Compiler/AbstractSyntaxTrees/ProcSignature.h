@@ -42,6 +42,8 @@ class ProcSignature : public AST
         */
         static bool AreSimilar(const ProcSignature& lhs, const ProcSignature& rhs);
 
+        /* === Members === */
+
         bool                    isStatic        = false;    // is this procedure static?
         bool                    isEntryPoint    = false;    // is this procedure a main entry point?
         bool                    isCtor          = false;    // is this a constructor?
