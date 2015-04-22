@@ -1,0 +1,23 @@
+
+// String Test 1
+// 22/04/2015
+
+/// Test for string literals
+class Test {
+	
+	static void f(Object o) {}
+	static void f(String s) {}
+	
+	static void main() {
+		
+		var s1 := "Hello, World!"
+		
+		int x := 5
+		//var s2 := "x = \(x)"
+		
+		Test.f("")
+		
+	}
+	
+}
+
