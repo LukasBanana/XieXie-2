@@ -207,7 +207,7 @@ CString.Pinit:
 	
 	; initialize string buffer with null terminator
 	stw $r0, ($ar) 0	; this.pointer[0] := 0
-	ret 1
+	ret
 
 ; void String.init(String this, String source)
 CString.Pinit,R@String?source:
@@ -330,7 +330,7 @@ String.vtable:
 CArray.Prelease:
 	; load object members
 	ldw $r0, ($xr) 12	; load this.size
-	ldw $r1, ($xr) 20	; load pointer to string buffer
+	ldw $r1, ($xr) 20	; load pointer to array buffer
 	
 	; de-reference all objects in array
 	mov $xr, $r1		; set iterator to pointer: it := this.buffer
@@ -357,12 +357,25 @@ CArray.Prelease:
 	
 	; free array buffer
 	push $r1
-	insc FreeMem		; delete string buffer
+	insc FreeMem		; delete array buffer
 	ret
 
 ; void Array.init(Object this)
 CArray.Pinit:
-	; ...
+; void PrimArray.init(Object this)
+CPrimArray.Pinit:
+	; this.size := 0
+	mov $r0, 0
+	stw $r0, ($xr) 12
+	
+	; initialize array buffer with 16 elements
+	mov $r1, 16
+	stw $r1, ($xr) 16
+	
+	; allocate array buffer
+	push 64
+	insc AllocMem		; allocate 16*4 bytes
+	stw $ar, ($xr) 20	; store pointer to buffer in array instance
 	ret
 
 ; void Array.init(Array this, int size)
@@ -373,8 +386,18 @@ CArray.Pinit,I?size:
 Array.vtable:
 	.word @CArray.Prelease
 	.word @CArray.Pinit
-	.word @CObject.PtoString
+	.word @CObject.PtypeID
+	.word @CObject.PrefCount
+	.word @CArray.Pequals,R@Object?rhs
+	.word @CArray.PtoString
+	.word @CArray.Ppointer
 	.word @CArray.Pinit,I?size
+	.word @CArray.Pcopy
+	.word @CArray.Psize
+	.word @CArray.Presize,I?size
+	.word @CArray.Pempty
+	.word @CArray.Padd,R@Object?entry
+	.word @CArray.Premove,I?pos
 
 
 ; ------- PrimArray Class -------
@@ -385,6 +408,24 @@ Array.vtable:
 ;	int		size	(12) <- number of entries
 ;	int		bufSize	(16) <- actual number of entries
 ;	int		buffer	(20)
+
+; todo...
+
+PrimArray.vtable:
+	.word @PrimArray.Prelease
+	.word @PrimArray.Pinit
+	.word @CObject.PtypeID
+	.word @CObject.PrefCount
+	.word @PrimArray.Pequals,R@Object?rhs
+	.word @PrimArray.PtoString
+	.word @PrimArray.Ppointer
+	.word @PrimArray.Pinit,I?size
+	.word @PrimArray.Pcopy
+	.word @PrimArray.Psize
+	.word @PrimArray.Presize,I?size
+	.word @PrimArray.Pempty
+	.word @PrimArray.Padd,R@Object?entry
+	.word @PrimArray.Premove,I?pos
 
 
 ; ------- BoolArray Class -------
