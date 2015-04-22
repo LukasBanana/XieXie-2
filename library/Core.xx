@@ -65,11 +65,12 @@ extern class String {
 	
 	bool empty()
 	
-	String add(String rhs)
+	String append(String rhs)
+	String append(Object rhs)
 	
-	String add(bool rhs)
-	String add(int rhs)
-	String add(float rhs)
+	String append(bool rhs)
+	String append(int rhs)
+	String append(float rhs)
 	
 	String subString(int pos, int len := -1)
 	

@@ -332,7 +332,11 @@ extern class String {
     int size()
     void resize(int size)
     bool empty()
-    String add(String rhs)
+    String append(String rhs)
+    String append(Object rhs)
+    String append(bool rhs)
+    String append(int rhs)
+    String append(float rhs)
     String subString(int pos, int len := -1)
     void setChar(int pos, int char)
     int getChar(int pos)
@@ -355,10 +359,11 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     GenMemberProc(*ast, Void(), "resize", GenParam(Int(), "size"));
     GenMemberProc(*ast, Void(), "adjust");
     GenMemberProc(*ast, Bool(), "empty");
-    GenMemberProc(*ast, String(), "add", GenParam(String(), "rhs"));
-    GenMemberProc(*ast, String(), "add", GenParam(Bool(), "rhs"));
-    GenMemberProc(*ast, String(), "add", GenParam(Int(), "rhs"));
-    GenMemberProc(*ast, String(), "add", GenParam(Float(), "rhs"));
+    GenMemberProc(*ast, String(), "append", GenParam(String(), "rhs"));
+    GenMemberProc(*ast, String(), "append", GenParam(Object(), "rhs"));
+    GenMemberProc(*ast, String(), "append", GenParam(Bool(), "rhs"));
+    GenMemberProc(*ast, String(), "append", GenParam(Int(), "rhs"));
+    GenMemberProc(*ast, String(), "append", GenParam(Float(), "rhs"));
     GenMemberProc(*ast, String(), "subString", ( GenParam(Int(), "pos"), GenParam(Int(), "len", GenExpr(-1)) ));
     GenMemberProc(*ast, Void(), "setChar", ( GenParam(Int(), "pos"), GenParam(Int(), "char") ));
     GenMemberProc(*ast, Int(), "getChar", GenParam(Int(), "pos"));

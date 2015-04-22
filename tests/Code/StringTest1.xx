@@ -2,11 +2,14 @@
 // String Test 1
 // 22/04/2015
 
+class WString : String {}
+
 /// Test for string literals
 class Test {
 	
 	static void f(Object o) {}
 	static void f(String s) {}
+	static void f(int x) {}
 	
 	static void main() {
 		
@@ -15,7 +18,11 @@ class Test {
 		int x := 5
 		//var s2 := "x = \(x)"
 		
-		Test.f(s: null)
+		//var s := new WString()
+		//Test.f(s)
+		
+		Test.f(s: "x = \(x)")
+		//Test.f(s: "x = ".append(x).append("\n"))
 		
 	}
 	

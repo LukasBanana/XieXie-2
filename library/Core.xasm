@@ -278,8 +278,13 @@ CString.Pempty:
 	mov $ar, 1			; return true
 	ret
 
-; String String.add(String this, String rhs)
-CString.Padd,R@String?rhs:
+; String String.append(String this, String rhs)
+CString.Pappend,R@String?rhs:
+	; ...
+	ret 1
+
+; String String.append(String this, Object rhs)
+CString.Pappend,R@Object?rhs:
 	; ...
 	ret 1
 
@@ -312,7 +317,8 @@ String.vtable:
 	.word @CString.Psize
 	.word @CString.Presize,I?size
 	.word @CString.Pempty
-	.word @CString.Padd,R@String?rhs
+	.word @CString.Pappend,R@String?rhs
+	.word @CString.Pappend,R@Object?rhs
 	.word @CString.PsetChar,I?pos,I?char
 	.word @CString.PgetChar,I?pos
 
