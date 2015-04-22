@@ -36,6 +36,7 @@ class CompileCommand : public Command
         {
             bool hasError       = false;
             bool showAST        = false;
+            bool showTokens     = false;
             bool showCFG        = false;
             bool optimize       = false;
             bool warnings       = false;

@@ -7,6 +7,8 @@
 
 #include "StreamParser.h"
 
+#include <algorithm>
+
 
 StreamParser::StreamParser(std::istream& stream) :
     // bracket initializer required for GCC (due to bug 56032)
@@ -21,6 +23,31 @@ std::string StreamParser::Accept()
     auto prev = tkn_;
     stream_ >> tkn_;
     return prev;
+}
+
+bool StreamParser::AcceptOption(bool& option, const std::string& flag)
+{
+    if (!option && Get() == flag)
+    {
+        Accept();
+        option = true;
+        return true;
+    }
+    return false;
+}
+
+bool StreamParser::AcceptOption(bool& option, const std::initializer_list<const char*>& flags)
+{
+    if (!option)
+    {
+        if (std::find(flags.begin(), flags.end(), std::string(Get())) != flags.end())
+        {
+            Accept();
+            option = true;
+            return true;
+        }
+    }
+    return false;
 }
 
 StreamParser::operator bool () const

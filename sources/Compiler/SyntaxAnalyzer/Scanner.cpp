@@ -33,6 +33,14 @@ bool Scanner::ScanSource(const SourceCodePtr& source, ErrorReporter& errorReport
 
 TokenPtr Scanner::Next()
 {
+    /* First deflate the inserted token queue */
+    if (!insertedTokens_.empty())
+    {
+        auto tkn = insertedTokens_.front();
+        insertedTokens_.pop();
+        return tkn;
+    }
+
     /*
     Scan until a valid token has been found
     (infinite loop to catch exception, but continue scanning)
@@ -50,6 +58,8 @@ TokenPtr Scanner::Next()
             errorReporter_->Add(err);
         }
     }
+
+    /* End of token stream */
     return nullptr;
 }
 
@@ -185,6 +195,16 @@ TokenPtr Scanner::Make(const Tokens& type, std::string& spell, const SourceArea&
     if (takeChr)
         spell += TakeIt();
     return std::make_shared<Token>(area, type, std::move(spell));
+}
+
+TokenPtr Scanner::Make(const Tokens& type, const char* spell, bool takeChr)
+{
+    return Make(type, std::string(spell), takeChr);
+}
+
+TokenPtr Scanner::Make(const Tokens& type, const char* spell, const SourceArea& area, bool takeChr)
+{
+    return Make(type, std::string(spell), area, takeChr);
 }
 
 TokenPtr Scanner::Scan()
@@ -406,6 +426,19 @@ TokenPtr Scanner::ScanToken()
         return Make(Tokens::RParen, spell);
     }
 
+    if (Is('('))
+    {
+        PushStringBracket();
+        return Make(Tokens::LBracket, true);
+    }
+
+    if (Is(')'))
+    {
+        auto tkn = Make(Tokens::RBracket, true);
+        PopStringBracket();
+        return tkn;
+    }
+
     /* Scan punctuation, special characters and brackets */
     if (Is('.'))
     {
@@ -419,8 +452,6 @@ TokenPtr Scanner::ScanToken()
     {
         case ';': return Make(Tokens::Semicolon, true); break;
         case ',': return Make(Tokens::Comma,     true); break;
-        case '(': return Make(Tokens::LBracket,  true); break;
-        case ')': return Make(Tokens::RBracket,  true); break;
         case '{': return Make(Tokens::LCurly,    true); break;
         case '}': return Make(Tokens::RCurly,    true); break;
     }
@@ -430,15 +461,18 @@ TokenPtr Scanner::ScanToken()
     return nullptr;
 }
 
-TokenPtr Scanner::ScanStringLiteral()
+TokenPtr Scanner::ScanStringLiteral(bool continueScan)
 {
     std::string spell;
     SourceArea area { Pos() };
 
     while (true)
     {
-        /* Take opening '\"' character */
-        Take('\"');
+        if (!continueScan)
+        {
+            /* Take opening '\"' character */
+            Take('\"');
+        }
 
         while (true)
         {
@@ -448,7 +482,20 @@ TokenPtr Scanner::ScanStringLiteral()
                 TakeIt();
 
                 if (IsEscapeChar())
+                {
+                    /* Append escape character */
                     spell += chr_;
+                }
+                else if (Is('('))
+                {
+                    /* Open escape string and return current string */
+                    TakeIt();
+                    OpenStringESCBracket();
+
+                    /* Return current string part */
+                    area.end = Pos();
+                    return Make(Tokens::StringLiteral, spell, area);
+                }
                 else
                 {
                     auto chr = TakeIt();
@@ -860,6 +907,8 @@ void Scanner::ScanNonDecimalLiteral(std::string& spell, const std::function<bool
     }
 }
 
+/* --- States --- */
+
 bool Scanner::IsEscapeChar() const
 {
     return
@@ -869,6 +918,70 @@ bool Scanner::IsEscapeChar() const
         Is( 'b') || Is( 'f') || Is( 'n') ||
         Is( 'r') || Is( 't') || Is( 'v') ||
         Is( 'x') || Is( 'u') || Is( 'U');
+}
+
+void Scanner::OpenStringESCBracket()
+{
+    /* Push new string bracket counter onto stack */
+    stringBracketStack_.Push(0);
+
+    /* Insert tokens for the automatic code: ".append(" */
+    InsertToken(Make(Tokens::Dot, "."));
+    InsertToken(Make(Tokens::Ident, "append"));
+    InsertToken(Make(Tokens::LBracket, "("));
+}
+
+void Scanner::CloseStringESCBracket()
+{
+    /* Pop previous string bracket counter from stack */
+    stringBracketStack_.Pop();
+
+    /* Try to continue the string literal */
+    auto strLiteral = ScanStringLiteral(true);
+    if (!strLiteral->Spell().empty())
+    {
+        /* Store tokens, which were possible inserted from "ScanStringLiteral" */
+        auto prevInsertedTokens = insertedTokens_;
+
+        /* 'std::queue' has not "clear" function, so swap it with empty queue */
+        std::queue<TokenPtr>().swap(insertedTokens_);
+
+        /* Insert tokens for the automatic code: ".append(" */
+        InsertToken(Make(Tokens::Dot, "."));
+        InsertToken(Make(Tokens::Ident, "append"));
+        InsertToken(Make(Tokens::LBracket, "("));
+        InsertToken(strLiteral);
+        InsertToken(Make(Tokens::RBracket, ")"));
+
+        /* Push previous tokens back into queue */
+        while (!prevInsertedTokens.empty())
+        {
+            InsertToken(prevInsertedTokens.front());
+            prevInsertedTokens.pop();
+        }
+    }
+}
+
+void Scanner::PushStringBracket()
+{
+    if (!stringBracketStack_.Empty())
+        ++stringBracketStack_.Top();
+}
+
+void Scanner::PopStringBracket()
+{
+    if (!stringBracketStack_.Empty())
+    {
+        if (stringBracketStack_.Top() > 0)
+            --stringBracketStack_.Top();
+        else
+            CloseStringESCBracket();
+    }
+}
+
+void Scanner::InsertToken(const TokenPtr& tkn)
+{
+    insertedTokens_.push(tkn);
 }
 
 

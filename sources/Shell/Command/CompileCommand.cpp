@@ -8,6 +8,7 @@
 #include "CompileCommand.h"
 #include "SourceStream.h"
 #include "FileHelper.h"
+#include "Platform/ConsoleManip.h"
 
 #include "Parser.h"
 #include "Decorator.h"
@@ -25,6 +26,7 @@
 using namespace AbstractSyntaxTrees;
 using namespace SyntaxAnalyzer;
 using namespace ControlFlowGraph;
+using namespace Platform::ConsoleManip;
 
 void CompileCommand::Execute(StreamParser& input, Log& output)
 {
@@ -110,44 +112,31 @@ void CompileCommand::ReadOptions(StreamParser& input)
     /* Parse options */
     while (true)
     {
-        if (input.Get() == "--show-ast" && !options_.showAST)
-        {
-            input.Accept();
-            options_.showAST = true;
-        }
-        else if (input.Get() == "--show-cfg" && !options_.showCFG)
-        {
-            input.Accept();
-            options_.showCFG = true;
-        }
-        else if ( ( input.Get() == "-O" || input.Get() == "--optimize" ) && !options_.optimize)
-        {
-            input.Accept();
-            options_.optimize = true;
-        }
-        else if ( ( input.Get() == "-W" || input.Get() == "--warn" ) && !options_.warnings)
-        {
-            input.Accept();
-            options_.warnings = true;
-        }
-        else if ( ( input.Get() == "-fo" || input.Get() == "--force-override" ) && !options_.forceOverride)
-        {
-            input.Accept();
-            options_.forceOverride = true;
-        }
-        else if (input.Get() == "-out" || input.Get() == "--output")
+        if (input.Get() == "-out" || input.Get() == "--output")
         {
             input.Accept();
             outputFilename_ = input.Accept();
         }
-        else
+        else if ( !( input.AcceptOption(options_.showAST, "--show-ast") ||
+                     input.AcceptOption(options_.showTokens, "--show-tokens") ||
+                     input.AcceptOption(options_.showCFG, "--show-cfg") ||
+                     input.AcceptOption(options_.optimize, { "-O", "--optimize" }) ||
+                     input.AcceptOption(options_.warnings, { "-W", "--warn" }) ||
+                     input.AcceptOption(options_.forceOverride, { "-fo", "--force-override" }) ) )
+        {
             break;
+        }
     }
 }
 
 void CompileCommand::ParseProgram(AbstractSyntaxTrees::Program& program, Log& output)
 {
+    /* Initialize parser */
     Parser parser;
+
+    std::stringstream tokenStream;
+    if (options_.showTokens)
+        parser.tokenStream = &tokenStream;
 
     /* Generate built-in class declarations */
     ContextAnalyzer::StdCodeFactory::GenerateBuiltinClasses(program);
@@ -182,6 +171,14 @@ void CompileCommand::ParseProgram(AbstractSyntaxTrees::Program& program, Log& ou
 
         /* Process next sources */
         sources_ = std::move(nextSources);
+    }
+
+    /* Show debug output */
+    if (options_.showTokens)
+    {
+        output.Message("token stream dump:");
+        ScopedColor scopedColor(output.stream, Color::Cyan);
+        output.Message(tokenStream.str());
     }
 }
 

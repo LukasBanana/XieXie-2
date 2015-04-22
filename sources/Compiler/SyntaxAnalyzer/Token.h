@@ -34,7 +34,7 @@ class Token
             __Unknown__,
 
             // Identifiers
-            Ident = 0,      //!< (letter | '_') (letter | '_' | digit)*
+            Ident,          //!< (letter | '_') (letter | '_' | digit)*
             ObjectIdent,    //!< this | super
 
             // Literals,

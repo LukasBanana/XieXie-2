@@ -18,6 +18,7 @@
 #include <string>
 #include <functional>
 #include <stack>
+#include <queue>
 
 
 namespace SyntaxAnalyzer
@@ -83,11 +84,13 @@ class Scanner
         TokenPtr Make(const Tokens& type, bool takeChr = false);
         TokenPtr Make(const Tokens& type, std::string& spell, bool takeChr = false);
         TokenPtr Make(const Tokens& type, std::string& spell, const SourceArea& area, bool takeChr = false);
+        TokenPtr Make(const Tokens& type, const char* spell, bool takeChr = false);
+        TokenPtr Make(const Tokens& type, const char* spell, const SourceArea& area, bool takeChr = false);
 
         TokenPtr Scan();
         TokenPtr ScanToken();
 
-        TokenPtr ScanStringLiteral();
+        TokenPtr ScanStringLiteral(bool continueScan = false);
         TokenPtr ScanVerbatimStringLiteral();
         TokenPtr ScanIdentifier();
         TokenPtr ScanAssignShiftRelationOp(const char Chr);
@@ -101,6 +104,8 @@ class Scanner
         void ScanDecimalLiteral(std::string& spell, bool& hasDigitSep, bool& isDigitSepAllowed, bool isBeforeComma);
         void ScanNonDecimalLiteral(std::string& spell, const std::function<bool()>& pred);
 
+        /* --- States --- */
+
         bool IsEscapeChar() const;
 
         inline bool Is(char chr) const
@@ -113,13 +118,25 @@ class Scanner
             return static_cast<unsigned char>(chr_);
         }
 
+        void OpenStringESCBracket();
+        void CloseStringESCBracket();
+
+        void PushStringBracket();
+        void PopStringBracket();
+
+        void InsertToken(const TokenPtr& tkn);
+
         /* === Members === */
 
-        SourceCodePtr       source_;
-        char                chr_            = 0;
-        ErrorReporter*      errorReporter_  = nullptr;
+        SourceCodePtr           source_;
+        char                    chr_            = 0;
+        ErrorReporter*          errorReporter_  = nullptr;
 
-        SafeStack<bool>     allowRDParenStack_;
+        SafeStack<bool>         allowRDParenStack_;
+        SafeStack<size_t>       stringBracketStack_;
+
+        //! Queue for tokens, inserted by the scanner, before actual text scanning continues.
+        std::queue<TokenPtr>    insertedTokens_;
 
 };
 

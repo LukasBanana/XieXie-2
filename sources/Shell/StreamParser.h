@@ -11,6 +11,7 @@
 
 #include <string>
 #include <istream>
+#include <initializer_list>
 
 
 class StreamParser
@@ -21,6 +22,9 @@ class StreamParser
         StreamParser(std::istream& stream);
 
         std::string Accept();
+
+        bool AcceptOption(bool& option, const std::string& flag);
+        bool AcceptOption(bool& option, const std::initializer_list<const char*>& flags);
 
         operator bool () const;
 

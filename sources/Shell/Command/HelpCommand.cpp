@@ -27,6 +27,7 @@ void HelpCommand::Execute(StreamParser& input, Log& output)
             "    -fo, --force-override  forces the compiler to override existing filed during code generation",
             "    -out, --output FILE    specifies the output filename for the executable",
             "    --show-ast             prints the abstract syntax tree (AST)",
+            "    --show-tokens          prints the token stream",
             "    --show-cfg             writes the control flow graph (CFG) to a *.vg (DOT) file",
             "",
             "  reply FILE [OPT]         shows information from the specified byte code file (*.xbc)",

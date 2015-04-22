@@ -19,6 +19,7 @@
 #include <stack>
 #include <functional>
 #include <initializer_list>
+#include <sstream>
 #include <fstream>
 
 
@@ -38,6 +39,9 @@ class Parser
 
         bool ParseSource(Program& program, const SourceCodePtr& source, ErrorReporter& errorReporter);
         ProgramPtr ParseSource(const std::string& filename, ErrorReporter& errorReporter);
+
+        //! Optional token string stream for debug output.
+        std::stringstream* tokenStream = nullptr;
 
     private:
         

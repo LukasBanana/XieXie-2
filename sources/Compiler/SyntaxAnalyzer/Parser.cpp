@@ -161,10 +161,27 @@ TokenPtr Parser::AcceptIt()
     /* Parse next token and return previous token */
     auto prevToken = tkn_;
     tkn_ = scanner_.Next();
+    
+    /* Check for end of token stream */
     if (!tkn_)
         Error("unexpected end of file");
+
+    /* Check if token must be replaced by a macro */
     if (tkn_->Type() == Tokens::Macro)
         tkn_ = InlineMacro(*tkn_);
+
+    /* Check if tokens must be printed out for debugging */
+    if (tokenStream)
+    {
+        if (tkn_->Type() == Tokens::StringLiteral)
+            *tokenStream << '\"';
+        *tokenStream << tkn_->Spell();
+        if (tkn_->Type() == Tokens::StringLiteral)
+            *tokenStream << '\"';
+        *tokenStream << ' ';
+    }
+
+    /* Return scanned token */
     return prevToken;
 }
 
