@@ -1304,10 +1304,22 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
     if (procDecls.size() > 1)
     {
         /*
+        If the procedure call remains ambiguous, 'procDecls' will be empty, because of explicit type matching.
+        So store a backup and restore is after the second deduction pass, to enhance the compiler error outputs!
+        */
+        auto prevProcDecls = procDecls;
+
+        /*
         Second, try to find suitable procedure with explicit type match
         ==> e.g. don't allow conversion String -> Object
         */
         DeduceProcedureByArgs(procDecls, ast.args, true);
+
+        if (procDecls.empty())
+        {
+            /* Second deduction pass failed -> now restore previous 'procDecls' list */
+            procDecls = prevProcDecls;
+        }
     }
 
     /* Check if unique procedure call has found */
