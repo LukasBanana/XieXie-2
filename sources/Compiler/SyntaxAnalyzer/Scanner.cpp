@@ -946,7 +946,7 @@ void Scanner::CloseStringESCBracket()
         /* 'std::queue' has not "clear" function, so swap it with empty queue */
         std::queue<TokenPtr>().swap(insertedTokens_);
 
-        /* Insert tokens for the automatic code: ".append(" */
+        /* Insert tokens for the automatic code: ".append(<literal>)" */
         InsertToken(Make(Tokens::Dot, "."));
         InsertToken(Make(Tokens::Ident, "append"));
         InsertToken(Make(Tokens::LBracket, "("));

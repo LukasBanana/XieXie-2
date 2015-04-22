@@ -21,7 +21,8 @@ class Test {
 		//var s := new WString()
 		//Test.f(s)
 		
-		Test.f(s: "x = \(x) \("y = \(y*2)") ")
+		//Test.f(s: "x = \(x) \("y = \(y*2)") ")
+		Test.f(s: "x = \(x), y = \(y)")
 		//Test.f(s: "x = ".append(x).append("\n"))
 		
 	}
