@@ -50,6 +50,7 @@
 \def\cpp{\textsc{C++}\xspace}
 \def\cppx{\textsc{C++11}\xspace}
 \def\java{\textsc{Java}\xspace}
+\def\swift{\textsc{Swift}\xspace}
 \def\csharp{\textsc{C\#}\xspace}
 \def\python{\textsc{Python}\xspace}
 \def\xxc{\texttt{xxc}\xspace}
@@ -82,6 +83,7 @@
 		keywordstyle = \bfseries\color{darkBlueColor},
 		stringstyle = \color{red},
 		frame = single,
+		showstringspaces = false,
 		tabsize = 4,
 		numbers=none
 	}
@@ -243,7 +245,7 @@ may change over time. Here is a rough ToDo-list:
 	\hline
 	Local Constant Propagation & \almdone \\
 	\hline
-	Local Copy Propagation & \notimpl \\
+	Local Copy Propagation & \almdone \\
 	\hline
 	Local Variable Clean & \almdone \\
 	\hline
@@ -282,7 +284,7 @@ First of all, ``xi\`exie'' is the chinese word for ``thanks'' or ``thank you''
 (see \href{http://dictionary.hantrainerpro.com/chinese-english/translation-xiexie_thankyou.htm}{hantrainerpro.com})
 and is roughly pronounced ``Sh-eh sh-eh''.
 
-The design of the \xxlang is overall influenced by \java, \cpp, and \python.
+The design of the \xxlang is overall influenced by \java, \cpp, \swift, and \python.
 
 
 %----------------------------------------------------------------------------------------
@@ -420,6 +422,24 @@ If it's used, all separators must satisfy the following rules:
 	\item No valid separator must be omitted. \\
 		Counterexample: \texttt{1234'567'890}.
 \end{enumerate}
+
+\subsection{String Interpolation}
+
+The syntax for \textit{string interpolation} is equal to that in \swift and allows you to easily concatenate
+strings with other objects or primitive elements, such as integers or floating-point values. If you want to concatenate
+strings for yourself, it may look like this:
+\begin{lstlisting}
+var x := 5, y := -3
+var s1 := "x = ".append(x).append(", y = ").append(y)
+\end{lstlisting}
+This will write "\texttt{x = 5, y = -3}" into \texttt{s1}. The same result can be achieved with the following
+string interpolation:
+\begin{lstlisting}
+var s2 := "x = \(x), y = \(y)"
+\end{lstlisting}
+With the escape character '\texttt{\textbackslash}', everthing in the parenthesis will be read an arbitrary expression,
+which is appended (or concatenated) to the string on its left.
+Thus, the string literal \texttt{s2} is equivalent to \texttt{s1}.
 
 
 %----------------------------------------------------------------------------------------
