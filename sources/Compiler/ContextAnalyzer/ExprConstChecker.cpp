@@ -26,7 +26,7 @@ bool ExprConstChecker::Verify(const Expr& expr, ErrorReporter* errorReporter)
     catch (const AST* ast)
     {
         if (errorReporter)
-            errorReporter->Add(ContextError(ast->sourceArea, "expression must be constant"));
+            errorReporter->Add<ContextError>("expression must be constant", ast);
     }
     return false;
 }

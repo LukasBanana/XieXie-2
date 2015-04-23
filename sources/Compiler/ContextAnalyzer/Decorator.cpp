@@ -877,6 +877,11 @@ bool Decorator::VerifyExprType(const Expr& expr)
     return exprTypeChecker_.Verify(expr, errorReporter_);
 }
 
+bool Decorator::EvaluateConstIntExpr(const Expr& expr, int& result)
+{
+    return exprIntEvaluator_.Evaluate(expr, result, errorReporter_);
+}
+
 bool Decorator::VerifyExprIsFromType(
     const Expr& expr, const std::string& typeDesc, const std::string& usageDesc,
     const std::function<bool(const TypeDenoter& typeDenoter)>& verifier)
@@ -1649,7 +1654,26 @@ void Decorator::DecorateSwitchStmnt(SwitchStmnt& ast)
 
 void Decorator::DecorateSwitchCaseItem(SwitchStmnt& ast, Expr& item)
 {
-    //!TODO! -> statically evaluate integral expressions !!!
+    if (item.Type() == AST::Types::RangeExpr)
+    {
+        auto& rangeExpr = static_cast<RangeExpr&>(item);
+
+        /* Evaluate range expressions */
+        int rangeStart = 0, rangeEnd = 0;
+        if (EvaluateConstIntExpr(*rangeExpr.lhsExpr, rangeStart), EvaluateConstIntExpr(*rangeExpr.rhsExpr, rangeEnd))
+        {
+            
+        }
+    }
+    else
+    {
+        /* Evaluate index expression */
+        int index = 0;
+        if (EvaluateConstIntExpr(item, index))
+        {
+            
+        }
+    }
 }
 
 /* --- Symbol table --- */

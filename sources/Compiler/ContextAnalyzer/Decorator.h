@@ -15,13 +15,15 @@
 #include "CompilerMessage.h"
 #include "ScopedStmnt.h"
 #include "AttribPrefix.h"
-#include "ExprConstChecker.h"
-#include "ExprTypeChecker.h"
-#include "ExprNamespaceFinder.h"
 #include "ProcOverloadSwitch.h"
 #include "ClassDeclStmnt.h"
 #include "SourceCode.h"
 #include "SwitchCase.h"
+
+#include "ExprConstChecker.h"
+#include "ExprTypeChecker.h"
+#include "ExprNamespaceFinder.h"
+#include "ExprIntEvaluator.h"
 
 #include <functional>
 
@@ -82,6 +84,7 @@ class Decorator final : private Visitor
         void DecorateExpr(Expr& ast);
         bool VerifyExprConst(const Expr& expr);
         bool VerifyExprType(const Expr& expr);
+        bool EvaluateConstIntExpr(const Expr& expr, int& result);
         bool VerifyExprIsFromType(
             const Expr& expr, const std::string& typeDesc, const std::string& usageDesc,
             const std::function<bool(const TypeDenoter& typeDenoter)>& verifier
@@ -160,6 +163,7 @@ class Decorator final : private Visitor
         ExprConstChecker                exprConstChecker_;
         ExprTypeChecker                 exprTypeChecker_;
         ExprNamespaceFinder             exprNamespaceFinder_;
+        ExprIntEvaluator                exprIntEvaluator_;
 
         States                          state_          = States::RegisterClassSymbols;
 

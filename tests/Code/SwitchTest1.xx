@@ -5,6 +5,9 @@
 /// Test for CFG generation of switch statements
 class Test {
 	
+	static const g_a := 32
+	static const g_b := Test.g_a*2
+	
 	int test1(int x) {
 		
 		const start := 2
@@ -23,6 +26,8 @@ class Test {
 				a := 7
 			case -8 .. -3:
 				a := -1
+			case Test.g_b:
+				a := Test.g_a
 		}
 		
 		return a
