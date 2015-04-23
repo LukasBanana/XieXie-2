@@ -199,10 +199,11 @@ DEF_VISIT_PROC(ASTViewer, ForRangeStmnt)
 {
     AST_INFO_COLOR("ForRangeStmnt", colorStmnt);
     AST_STRING(varIdent);
+    Visit(ast->rangeExpr);
+    Visit(ast->codeBlock);
     AST_VALUE(rangeStart);
     AST_VALUE(rangeEnd);
     AST_VALUE(rangeStep);
-    Visit(ast->codeBlock);
 }
 
 DEF_VISIT_PROC(ASTViewer, ForEachStmnt)

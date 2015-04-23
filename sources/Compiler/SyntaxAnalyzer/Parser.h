@@ -107,7 +107,6 @@ class Parser
 
         int                     ParseSignedIntLiteral();
         unsigned int            ParseUnsignedIntLiteral();
-        std::pair<int, int>     ParseIntegralRange();
 
         /* --- Statements --- */
 

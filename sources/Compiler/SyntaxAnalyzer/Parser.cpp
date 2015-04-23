@@ -626,17 +626,6 @@ unsigned int Parser::ParseUnsignedIntLiteral()
     return StrToNum<unsigned int>(Accept(Tokens::IntLiteral)->Spell());
 }
 
-std::pair<int, int> Parser::ParseIntegralRange()
-{
-    std::pair<int, int> range;
-
-    range.first = ParseSignedIntLiteral();
-    Accept(Tokens::RangeSep);
-    range.second = ParseSignedIntLiteral();
-
-    return range;
-}
-
 /* --- Statements --- */
 
 // stmnt: var_name_stmnt | branch_stmnt | loop_stmnt | ctrl_transfer_stmnt;
@@ -1018,7 +1007,7 @@ ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& 
         {
             /* Single integer literal (this is for the 'repeat' statements) */
             ast->rangeStart = 0;
-            ast->rangeEnd = ParseUnsignedIntLiteral();
+            ast->rangeEnd = static_cast<int>(ParseUnsignedIntLiteral());
 
             if (ast->rangeEnd == 0)
                 ++ast->rangeStart;
@@ -1040,10 +1029,7 @@ ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& 
     if (!hasInvisibleIndex)
     {
         /* Parse integral range (this is for the actual 'for-range' statement) */
-        auto range = ParseIntegralRange();
-
-        ast->rangeStart = range.first;
-        ast->rangeEnd = range.second;
+        ast->rangeExpr = ParseRangeExpr();
 
         if (Is(Tokens::Arrow))
         {
@@ -2009,6 +1995,7 @@ VarAccessExprPtr Parser::ParseVarAccessExpr(const VarNamePtr& varName)
     auto ast = Make<VarAccessExpr>();
 
     ast->varName = (varName != nullptr ? varName : ParseVarName());
+    ast->sourceArea = ast->varName->sourceArea;
 
     return ast;
 }

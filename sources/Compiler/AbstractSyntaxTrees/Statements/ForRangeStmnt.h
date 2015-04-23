@@ -26,10 +26,13 @@ class ForRangeStmnt : public Stmnt
         const TypeDenoter* GetTypeDenoter() const override;
 
         std::string     varIdent;
+        RangeExprPtr    rangeExpr;
+        CodeBlockPtr    codeBlock;
+
+        // dast
         int             rangeStart  = 0;
         int             rangeEnd    = 0;
         unsigned int    rangeStep   = 1;
-        CodeBlockPtr    codeBlock;
 
 };
 

@@ -360,6 +360,15 @@ DEF_VISIT_PROC(Decorator, ForRangeStmnt)
     OpenScope();
     {
         RegisterSymbol(ast->varIdent, ast);
+        
+        if (ast->rangeExpr)
+        {
+            DecorateExpr(*ast->rangeExpr);
+
+            EvaluateConstIntExpr(*ast->rangeExpr->lhsExpr, ast->rangeStart);
+            EvaluateConstIntExpr(*ast->rangeExpr->rhsExpr, ast->rangeEnd);
+        }
+
         Visit(ast->codeBlock);
     }
     CloseScope();
