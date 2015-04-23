@@ -1660,7 +1660,7 @@ void Decorator::DecorateSwitchCaseItem(SwitchStmnt& ast, Expr& item)
 
         /* Evaluate range expressions */
         int rangeStart = 0, rangeEnd = 0;
-        if (EvaluateConstIntExpr(*rangeExpr.lhsExpr, rangeStart), EvaluateConstIntExpr(*rangeExpr.rhsExpr, rangeEnd))
+        if (EvaluateConstIntExpr(*rangeExpr.lhsExpr, rangeStart) && EvaluateConstIntExpr(*rangeExpr.rhsExpr, rangeEnd))
         {
             
         }
