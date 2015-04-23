@@ -265,6 +265,7 @@ DEF_VISIT_PROC(Decorator, ProcCall)
 DEF_VISIT_PROC(Decorator, SwitchCase)
 {
     Visit(ast->items);
+
     OpenScope();
     {
         Visit(ast->stmnts);
@@ -308,6 +309,13 @@ DEF_VISIT_PROC(Decorator, SwitchStmnt)
 {
     Visit(ast->expr);
     Visit(ast->cases);
+
+    /* Verify switch expression type */
+    auto exprType = ast->expr->GetTypeDenoter();
+    if (!exprType || !exprType->IsArithmetic())
+        Error("currently only arithmetic expressions are allowed for switch-statements", ast);
+
+    DecorateSwitchStmnt(*ast);
 }
 
 DEF_VISIT_PROC(Decorator, DoWhileStmnt)
@@ -1605,6 +1613,20 @@ void Decorator::DecorateMainProc(ProcSignature& ast)
     }
 
     ast.isEntryPoint = true;
+}
+
+void Decorator::DecorateSwitchStmnt(SwitchStmnt& ast)
+{
+    /* Collect all ranges and decorate them with the respective switch-case reference */
+    for (const auto& caseRef : ast.cases)
+    {
+        
+
+    }
+
+
+    //...
+
 }
 
 /* --- Symbol table --- */

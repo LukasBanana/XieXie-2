@@ -84,9 +84,6 @@ class Parser
         std::string AcceptImport();
         std::string ParseImport();
 
-        int AcceptSignedIntLiteral();
-        unsigned int AcceptUnsignedIntLiteral();
-
         /* --- Common AST nodes --- */
 
         void                    ParseProgram(Program& ast);
@@ -105,6 +102,12 @@ class Parser
         ArrayAccessPtr          ParseArrayAccess(bool hasArrayAccess = false);
         ProcCallPtr             ParseProcCall(const VarNamePtr& varName = nullptr);
         SwitchCasePtr           ParseSwitchCase();
+
+        /* --- Simple AST nodes --- */
+
+        int                     ParseSignedIntLiteral();
+        unsigned int            ParseUnsignedIntLiteral();
+        std::pair<int, int>     ParseIntegralRange();
 
         /* --- Statements --- */
 
@@ -257,6 +260,9 @@ class Parser
 
         //! Returns this the import filename with possible path augmentation.
         bool FindImport(std::string& filename) const;
+
+        //! Converts the specified expression AST node to a signed integer literal. If this is not possible, the return value is false.
+        bool ConvertExprToSignedIntLiteral(const Expr& ast, int& value) const;
 
         inline Tokens TknType() const
         {

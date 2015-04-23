@@ -23,8 +23,12 @@ class SwitchCase : public AST
         
         AST_INTERFACE(SwitchCase);
 
-        std::vector<ExprPtr>    items; // if empty -> default case
-        std::vector<StmntPtr>   stmnts;
+        //! Returns true if this is a default case.
+        bool IsDefaultCase() const;
+
+        std::vector<ExprPtr>                items;  // if 'items' and 'ranges' are empty -> default case
+        std::vector<std::pair<int, int>>    ranges; // if 'items' and 'ranges' are empty -> default case
+        std::vector<StmntPtr>               stmnts;
 
 };
 

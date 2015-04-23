@@ -268,29 +268,6 @@ std::string Parser::ParseImport()
     return import;
 }
 
-int Parser::AcceptSignedIntLiteral()
-{
-    /* Parse optional negative number */
-    bool isNegative = false;
-
-    if (Is(Tokens::SubOp))
-    {
-        AcceptIt();
-        isNegative = true;
-    }
-
-    /* Parse integer literal */
-    auto spell = Accept(Tokens::IntLiteral)->Spell();
-    auto value = StrToNum<int>(spell);
-
-    return isNegative ? -value : value;
-}
-
-unsigned int Parser::AcceptUnsignedIntLiteral()
-{
-    return StrToNum<unsigned int>(Accept(Tokens::IntLiteral)->Spell());
-}
-
 /* --- Common AST nodes --- */
 
 void Parser::ParseProgram(Program& ast)
@@ -598,27 +575,106 @@ ProcCallPtr Parser::ParseProcCall(const VarNamePtr& varName)
 // switch_case:     (case_label | default_label) stmnt_list;
 // case_label:      'case' case_item_list ':';
 // default_label:   'default' ':';
+// case_item_list:  case_item (',' case_item)*;
+// case_item:       expr | integral_range;
 SwitchCasePtr Parser::ParseSwitchCase()
 {
     auto ast = Make<SwitchCase>();
 
     if (Is(Tokens::Default))
     {
+        /* Parse default case header */
         AcceptIt();
         Accept(Tokens::Colon);
     }
     else if (Is(Tokens::Case))
     {
         Accept(Tokens::Case);
-        ast->items = ParseExprList();
+        
+        /*
+        Parse the items and ranges with this special loop instead of "ParseExprList" etc.
+        This is because the ranges must be handled in a particular manner.
+        */
+        while (true)
+        {
+            /* Parse an expression first */
+            auto expr = ParseExpr();
+
+            /* Check if this is intended to be an integral range */
+            if (Is(Tokens::RangeSep))
+            {
+                /* Check if expression is only a signed integer literal */
+                int rangeStart = 0;
+                if (ConvertExprToSignedIntLiteral(*expr, rangeStart))
+                {
+                    /* Parse integral range */
+                    AcceptIt();
+                    auto rangeEnd = ParseSignedIntLiteral();
+
+                    /* Append values to ranges */
+                    ast->ranges.push_back({ rangeStart, rangeEnd });
+                }
+                else
+                    Error("range separator '..' is only allowed between two signed integer literals");
+            }
+            else
+            {
+                /* Append expression to items */
+                ast->items.push_back(expr);
+            }
+
+            /* Check for further items */
+            if (Is(Tokens::Comma))
+                AcceptIt();
+            else
+                break;
+        }
+
         Accept(Tokens::Colon);
     }
     else
         ErrorUnexpected("expected switch case block: 'case' or 'default'");
 
+    /* Parse the statement list for this switch-case */
     ast->stmnts = ParseSwitchCaseStmntList();
 
     return ast;
+}
+
+/* --- Simple AST nodes --- */
+
+int Parser::ParseSignedIntLiteral()
+{
+    /* Parse optional negative number */
+    bool isNegative = false;
+
+    if (Is(Tokens::SubOp))
+    {
+        AcceptIt();
+        isNegative = true;
+    }
+
+    /* Parse integer literal */
+    auto spell = Accept(Tokens::IntLiteral)->Spell();
+    auto value = StrToNum<int>(spell);
+
+    return isNegative ? -value : value;
+}
+
+unsigned int Parser::ParseUnsignedIntLiteral()
+{
+    return StrToNum<unsigned int>(Accept(Tokens::IntLiteral)->Spell());
+}
+
+std::pair<int, int> Parser::ParseIntegralRange()
+{
+    std::pair<int, int> range;
+
+    range.first = ParseSignedIntLiteral();
+    Accept(Tokens::RangeSep);
+    range.second = ParseSignedIntLiteral();
+
+    return range;
 }
 
 /* --- Statements --- */
@@ -978,7 +1034,9 @@ ForStmntPtr Parser::ParseForStmnt(bool parseComplete, const TokenPtr& identTkn)
     return ast;
 }
 
-// for_range_stmnt: 'for' (INT_LITERAL | IDENT ':' for_range '..' for_range ('->' INT_LITERAL)?) code_block;
+// for_range_stmnt:     'for' IDENT ':' integral_range ('->' INT_LITERAL)? code_block;
+// integral_range:      signed_int_literal '..' signed_int_literal;
+// signed_int_literal:  NEGATION? INT_LITERAL;
 ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& identTkn)
 {
     auto ast = Make<ForRangeStmnt>();
@@ -1000,7 +1058,7 @@ ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& 
         {
             /* Single integer literal */
             ast->rangeStart = 0;
-            ast->rangeEnd = AcceptUnsignedIntLiteral();
+            ast->rangeEnd = ParseUnsignedIntLiteral();
 
             if (ast->rangeEnd == 0)
                 ++ast->rangeStart;
@@ -1021,15 +1079,16 @@ ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& 
 
     if (!hasInvisibleIndex)
     {
-        /* Parse range literals */
-        ast->rangeStart = AcceptSignedIntLiteral();
-        Accept(Tokens::RangeSep);
-        ast->rangeEnd = AcceptSignedIntLiteral();
+        /* Parse integral range */
+        auto range = ParseIntegralRange();
+
+        ast->rangeStart = range.first;
+        ast->rangeEnd = range.second;
 
         if (Is(Tokens::Arrow))
         {
             AcceptIt();
-            ast->rangeStep = AcceptUnsignedIntLiteral();
+            ast->rangeStep = ParseUnsignedIntLiteral();
         }
     }
 
@@ -2288,6 +2347,34 @@ bool Parser::FindImport(std::string& filename) const
         return true;
     }
 
+    return false;
+}
+
+bool Parser::ConvertExprToSignedIntLiteral(const Expr& ast, int& value) const
+{
+    if (ast.Type() == AST::Types::UnaryExpr)
+    {
+        const auto& unaryExpr = static_cast<const UnaryExpr&>(ast);
+        if (unaryExpr.unaryOperator == UnaryExpr::Operators::Negate && unaryExpr.expr->Type() == AST::Types::LiteralExpr)
+        {
+            if (ConvertExprToSignedIntLiteral(*unaryExpr.expr, value))
+            {
+                /* Negate integer value */
+                value = -value;
+                return true;
+            }
+        }
+    }
+    else if (ast.Type() == AST::Types::LiteralExpr)
+    {
+        const auto& literalExpr = static_cast<const LiteralExpr&>(ast);
+        if (literalExpr.GetType() == LiteralExpr::Literals::Int)
+        {
+            /* Get integer value */
+            value = StrToNum<int>(literalExpr.value);
+            return true;
+        }
+    }
     return false;
 }
 

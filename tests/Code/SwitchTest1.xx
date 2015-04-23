@@ -1,0 +1,31 @@
+
+// Switch Test 1
+// 23/04/2015
+
+/// Test for CFG generation of switch statements
+class Test {
+	
+	int test1(int x) {
+		
+		int a
+		
+		switch x {
+			case 1:
+				a := 1
+			case 5 .. 10, 20:
+				if x = 6 {
+					break
+				}
+				a := 2
+			case 7: // error, already used
+				a := 7
+			case -8 .. -3:
+				a := -1
+		}
+		
+		return a
+		
+	}
+	
+}
+

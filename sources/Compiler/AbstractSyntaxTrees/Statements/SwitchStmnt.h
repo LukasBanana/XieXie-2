@@ -11,6 +11,8 @@
 
 #include "Stmnt.h"
 
+#include <vector>
+
 
 namespace AbstractSyntaxTrees
 {
@@ -21,10 +23,36 @@ class SwitchStmnt : public Stmnt
     
     public:
         
+        struct IndexedCases
+        {
+            int                         rangeStart  = 0;
+            int                         rangeEnd    = 0;
+            std::vector<SwitchCase*>    casesRef;
+        };
+
+        struct CaseIntRange
+        {
+            int         rangeStart  = 0;
+            int         rangeEnd    = 0;
+            SwitchCase* caseRef     = nullptr;
+        };
+
+        struct CaseFloatRange
+        {
+            float       rangeStart  = 0.0f;
+            float       rangeEnd    = 0.0f;
+            SwitchCase* caseRef     = nullptr;
+        };
+
         AST_INTERFACE_EXT(SwitchStmnt, Stmnt);
 
         ExprPtr                     expr;
         std::vector<SwitchCasePtr>  cases;
+
+        // dast
+        std::vector<IndexedCases>   indexedCases;
+        std::vector<CaseIntRange>   intRanges;
+        std::vector<CaseFloatRange> floatRanges;
 
 };
 

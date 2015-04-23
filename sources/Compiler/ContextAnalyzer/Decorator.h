@@ -116,6 +116,8 @@ class Decorator final : private Visitor
         );
         void DecorateMainProc(ProcSignature& ast);
 
+        void DecorateSwitchStmnt(SwitchStmnt& ast);
+
         /* --- Symbol table --- */
 
         void PushSymTab(StmntSymbolTable& symTab, bool outsideClass = false);

@@ -110,6 +110,14 @@ std::string CtrlTransferStmnt::GetTransferSpell(const Transfers transfer)
 }
 
 
+/* --- SwitchCase --- */
+
+bool SwitchCase::IsDefaultCase() const
+{
+    return items.empty() && ranges.empty();
+}
+
+
 } // /namespace AbstractSyntaxTrees
 
 
