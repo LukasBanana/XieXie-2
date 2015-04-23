@@ -22,8 +22,8 @@ class Test {
 					break
 				}
 				a := 2
-			case 7: // error, already used
-				a := 7
+			//case 7: // error, already used
+			//	a := 7
 			case -8 .. -3:
 				a := -1
 			case Test.g_b:

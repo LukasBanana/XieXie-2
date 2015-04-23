@@ -121,7 +121,7 @@ class Decorator final : private Visitor
         void DecorateMainProc(ProcSignature& ast);
 
         void DecorateSwitchStmnt(SwitchStmnt& ast);
-        void DecorateSwitchCaseItem(SwitchStmnt& ast, Expr& item);
+        void DecorateSwitchCaseItem(SwitchStmnt& ast, SwitchCase& caseRef, Expr& item);
 
         /* --- Symbol table --- */
 

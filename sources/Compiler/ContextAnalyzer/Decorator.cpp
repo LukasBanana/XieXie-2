@@ -1646,13 +1646,11 @@ void Decorator::DecorateSwitchStmnt(SwitchStmnt& ast)
     for (auto& caseRef : ast.cases)
     {
         for (auto& item : caseRef->items)
-            DecorateSwitchCaseItem(ast, *item);
+            DecorateSwitchCaseItem(ast, *caseRef, *item);
     }
-
-    //todo...
 }
 
-void Decorator::DecorateSwitchCaseItem(SwitchStmnt& ast, Expr& item)
+void Decorator::DecorateSwitchCaseItem(SwitchStmnt& ast, SwitchCase& caseRef, Expr& item)
 {
     if (item.Type() == AST::Types::RangeExpr)
     {
@@ -1662,7 +1660,8 @@ void Decorator::DecorateSwitchCaseItem(SwitchStmnt& ast, Expr& item)
         int rangeStart = 0, rangeEnd = 0;
         if (EvaluateConstIntExpr(*rangeExpr.lhsExpr, rangeStart) && EvaluateConstIntExpr(*rangeExpr.rhsExpr, rangeEnd))
         {
-            
+            if (!ast.InsertCaseRange(caseRef, rangeStart, rangeEnd))
+                Error("switch-case range [" + std::to_string(rangeStart) + " .. " + std::to_string(rangeEnd) + "] is already reserved", &item);
         }
     }
     else
@@ -1671,7 +1670,8 @@ void Decorator::DecorateSwitchCaseItem(SwitchStmnt& ast, Expr& item)
         int index = 0;
         if (EvaluateConstIntExpr(item, index))
         {
-            
+            if (!ast.InsertCaseIndex(caseRef, index))
+                Error("switch-case index [" + std::to_string(index) + "] is already reserved", &item);
         }
     }
 }
