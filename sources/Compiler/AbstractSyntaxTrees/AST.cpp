@@ -95,6 +95,14 @@ const TypeDenoter* VarAccessExpr::GetTypeDenoter() const
 }
 
 
+/* --- RangeExpr --- */
+
+const TypeDenoter* RangeExpr::GetTypeDenoter() const
+{
+    return lhsExpr->GetTypeDenoter();
+}
+
+
 /* --- CtrlTransferStmnt --- */
 
 std::string CtrlTransferStmnt::GetTransferSpell(const Transfers transfer)
@@ -114,7 +122,7 @@ std::string CtrlTransferStmnt::GetTransferSpell(const Transfers transfer)
 
 bool SwitchCase::IsDefaultCase() const
 {
-    return items.empty() && ranges.empty();
+    return items.empty();
 }
 
 

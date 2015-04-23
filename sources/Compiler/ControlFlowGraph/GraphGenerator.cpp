@@ -1107,23 +1107,30 @@ DEF_VISIT_PROC(GraphGenerator, InitListExpr)
 
     CopyAndPushResultVar(TempVar());
 
-    //!TODO! -> initialize array
+    //!TODO! -> initialize array !!!
 
+}
 
+DEF_VISIT_PROC(GraphGenerator, RangeExpr)
+{
+    // do nothing
 }
 
 /* --- Type denoters --- */
 
 DEF_VISIT_PROC(GraphGenerator, BuiltinTypeDenoter)
 {
+    // do nothing
 }
 
 DEF_VISIT_PROC(GraphGenerator, ArrayTypeDenoter)
 {
+    // do nothing
 }
 
 DEF_VISIT_PROC(GraphGenerator, PointerTypeDenoter)
 {
+    // do nothing
 }
 
 /* --- Generation --- */

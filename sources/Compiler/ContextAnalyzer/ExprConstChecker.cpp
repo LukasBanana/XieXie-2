@@ -84,6 +84,12 @@ DEF_VISIT_PROC(ExprConstChecker, InitListExpr)
     Visit(ast->exprs);
 }
 
+DEF_VISIT_PROC(ExprConstChecker, RangeExpr)
+{
+    Visit(ast->lhsExpr);
+    Visit(ast->rhsExpr);
+}
+
 
 } // /namespace ContextAnalyzer
 

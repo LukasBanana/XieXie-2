@@ -81,7 +81,7 @@ switch_case:		(case_label | default_label) stmnt_list;
 case_label:			'case' case_item_list ':';
 default_label:		'default' ':';
 case_item_list:		case_item (',' case_item)*;
-case_item:			expr | integral_range;
+case_item:			expr | range_expr;
 
 // CTRL TRANSFER STATEMENTS
 break_stmnt:	'break';
@@ -90,14 +90,11 @@ return_stmnt:	'return' expr?;
 
 // LOOP STATEMENTS
 for_stmnt:			'for' var_name_stmnt? ';' expr? ';' assign_stmnt? code_block;
-for_range_stmnt:	'for' IDENT ':' integral_range ('->' INT_LITERAL)? code_block;
+for_range_stmnt:	'for' IDENT ':' range_expr ('->' INT_LITERAL)? code_block;
 for_each_stmnt:		'foreach' IDENT ':' expr code_block;
 repeat_stmnt:		'repeat' INT_LITERAL? code_block;
 while_stmnt:		'while' expr code_block;
 do_while_stmnt:		'do' code_block 'while' expr;
-
-integral_range:		signed_int_literal '..' signed_int_literal;
-signed_int_literal:	NEGATION? INT_LITERAL;
 
 // ATTRIBUTES
 attrib_prefix:		'[[' attrib_list ']]';
@@ -225,6 +222,8 @@ bracket_expr:		'(' expr ')';
 cast_expr: 			'(' type_denoter ')' value_expr;
 call_expr:			proc_call;
 unary_expr:			('~' | '-' | 'not') value_expr;
+
+range_expr:			expr '..' expr;
 
 proc_call:			var_name '(' arg_list? ')';
 

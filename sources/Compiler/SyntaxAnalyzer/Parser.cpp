@@ -575,8 +575,6 @@ ProcCallPtr Parser::ParseProcCall(const VarNamePtr& varName)
 // switch_case:     (case_label | default_label) stmnt_list;
 // case_label:      'case' case_item_list ':';
 // default_label:   'default' ':';
-// case_item_list:  case_item (',' case_item)*;
-// case_item:       expr | integral_range;
 SwitchCasePtr Parser::ParseSwitchCase()
 {
     auto ast = Make<SwitchCase>();
@@ -589,47 +587,9 @@ SwitchCasePtr Parser::ParseSwitchCase()
     }
     else if (Is(Tokens::Case))
     {
+        /* Parse switch-case item expressions */
         Accept(Tokens::Case);
-        
-        /*
-        Parse the items and ranges with this special loop instead of "ParseExprList" etc.
-        This is because the ranges must be handled in a particular manner.
-        */
-        while (true)
-        {
-            /* Parse an expression first */
-            auto expr = ParseExpr();
-
-            /* Check if this is intended to be an integral range */
-            if (Is(Tokens::RangeSep))
-            {
-                /* Check if expression is only a signed integer literal */
-                int rangeStart = 0;
-                if (ConvertExprToSignedIntLiteral(*expr, rangeStart))
-                {
-                    /* Parse integral range */
-                    AcceptIt();
-                    auto rangeEnd = ParseSignedIntLiteral();
-
-                    /* Append values to ranges */
-                    ast->ranges.push_back({ rangeStart, rangeEnd });
-                }
-                else
-                    Error("range separator '..' is only allowed between two signed integer literals");
-            }
-            else
-            {
-                /* Append expression to items */
-                ast->items.push_back(expr);
-            }
-
-            /* Check for further items */
-            if (Is(Tokens::Comma))
-                AcceptIt();
-            else
-                break;
-        }
-
+        ast->items = ParseSwitchCaseItemExprList();
         Accept(Tokens::Colon);
     }
     else
@@ -1056,7 +1016,7 @@ ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& 
     {
         if (Is(Tokens::IntLiteral))
         {
-            /* Single integer literal */
+            /* Single integer literal (this is for the 'repeat' statements) */
             ast->rangeStart = 0;
             ast->rangeEnd = ParseUnsignedIntLiteral();
 
@@ -1079,7 +1039,7 @@ ForRangeStmntPtr Parser::ParseForRangeStmnt(bool parseComplete, const TokenPtr& 
 
     if (!hasInvisibleIndex)
     {
-        /* Parse integral range */
+        /* Parse integral range (this is for the actual 'for-range' statement) */
         auto range = ParseIntegralRange();
 
         ast->rangeStart = range.first;
@@ -2053,6 +2013,39 @@ VarAccessExprPtr Parser::ParseVarAccessExpr(const VarNamePtr& varName)
     return ast;
 }
 
+// range_expr: expr '..' expr;
+RangeExprPtr Parser::ParseRangeExpr(const ExprPtr& lhsExpr)
+{
+    auto ast = Make<RangeExpr>();
+
+    /* Parse range expression */
+    if (lhsExpr)
+        ast->lhsExpr = lhsExpr;
+    else
+        ast->lhsExpr = ParseExpr();
+
+    Accept(Tokens::RangeSep);
+
+    ast->rhsExpr = ParseExpr();
+
+    /* Setup source area */
+    ast->sourceArea.start   = ast->lhsExpr->sourceArea.start;
+    ast->sourceArea.end     = ast->rhsExpr->sourceArea.end;
+
+    return ast;
+}
+
+//! case_item: expr | range_expr;
+ExprPtr Parser::ParseSwitchCaseItemExpr()
+{
+    auto ast = ParseExpr();
+
+    if (Is(Tokens::RangeSep))
+        ast = ParseRangeExpr(ast);
+
+    return ast;
+}
+
 /* --- Type denoters --- */
 
 // type_denoter : builtin_type_denoter | array_type_denoter | pointer_type_denoter;
@@ -2209,6 +2202,11 @@ std::vector<StmntPtr> Parser::ParseSwitchCaseStmntList()
         std::bind(&Parser::ParseStmnt, this),
         { Tokens::RCurly, Tokens::Case, Tokens::Default }
     );
+}
+
+std::vector<ExprPtr> Parser::ParseSwitchCaseItemExprList(const Tokens separatorToken)
+{
+    return ParseSeparatedList<ExprPtr>(std::bind(&Parser::ParseSwitchCaseItemExpr, this), separatorToken);
 }
 
 std::vector<VarNamePtr> Parser::ParseVarNameList(const Tokens separatorToken)

@@ -62,6 +62,7 @@
 #include "AllocExpr.h"
 #include "VarAccessExpr.h"
 #include "InitListExpr.h"
+#include "RangeExpr.h"
 
 
 /* --- Type denoters --- */

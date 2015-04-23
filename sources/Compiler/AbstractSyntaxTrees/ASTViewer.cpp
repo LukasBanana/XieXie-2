@@ -338,6 +338,13 @@ DEF_VISIT_PROC(ASTViewer, InitListExpr)
     Visit(ast->exprs);
 }
 
+DEF_VISIT_PROC(ASTViewer, RangeExpr)
+{
+    AST_INFO_COLOR("RangeExpr", colorExpr);
+    Visit(ast->lhsExpr);
+    Visit(ast->rhsExpr);
+}
+
 /* --- Type denoters --- */
 
 DEF_VISIT_PROC(ASTViewer, BuiltinTypeDenoter)

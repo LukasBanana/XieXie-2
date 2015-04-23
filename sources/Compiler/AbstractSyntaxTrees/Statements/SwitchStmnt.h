@@ -23,36 +23,34 @@ class SwitchStmnt : public Stmnt
     
     public:
         
-        struct IndexedCases
+        /* === Structures === */
+
+        struct CasesRange
         {
+            //! Returns true if this is an indexed range block, i.e. (| rangeEnd - rangeStart | + 1) = | casesRef |.
+            bool IsIndexed() const;
+            //! Returns the range, so that 'rangeStart <= rangeEnd' holds true.
+            void Repair();
+
             int                         rangeStart  = 0;
             int                         rangeEnd    = 0;
             std::vector<SwitchCase*>    casesRef;
         };
 
-        struct CaseIntRange
-        {
-            int         rangeStart  = 0;
-            int         rangeEnd    = 0;
-            SwitchCase* caseRef     = nullptr;
-        };
-
-        struct CaseFloatRange
-        {
-            float       rangeStart  = 0.0f;
-            float       rangeEnd    = 0.0f;
-            SwitchCase* caseRef     = nullptr;
-        };
+        /* === Functions === */
 
         AST_INTERFACE_EXT(SwitchStmnt, Stmnt);
+
+        bool IsIndexReserved(int value) const;
+        bool IsRangeReserved(int rangeStart, int rangeEnd) const;
+
+        /* === Members === */
 
         ExprPtr                     expr;
         std::vector<SwitchCasePtr>  cases;
 
         // dast
-        std::vector<IndexedCases>   indexedCases;
-        std::vector<CaseIntRange>   intRanges;
-        std::vector<CaseFloatRange> floatRanges;
+        std::vector<CasesRange>     caseRanges;
 
 };
 

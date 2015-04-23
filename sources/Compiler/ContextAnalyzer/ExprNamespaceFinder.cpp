@@ -106,6 +106,12 @@ DEF_VISIT_PROC(ExprNamespaceFinder, InitListExpr)
     Visit(&ast->typeDenoter);
 }
 
+DEF_VISIT_PROC(ExprNamespaceFinder, RangeExpr)
+{
+    Visit(ast->lhsExpr);
+    Visit(ast->rhsExpr);
+}
+
 /* --- Type denoters --- */
 
 static void ThrowSymbolTable(AST* declRef)

@@ -44,7 +44,7 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( Attrib               );    \
     DECL_VISIT_PROC( ArrayAccess          );    \
     DECL_VISIT_PROC( ProcCall             );    \
-    DECL_VISIT_PROC( SwitchCase           );    \
+    DECL_VISIT_PROC( SwitchCase           );
 
 #define DECL_VISITOR_INTERFACE_STMNTS           \
     DECL_VISIT_PROC( ReturnStmnt          );    \
@@ -68,7 +68,7 @@ namespace AbstractSyntaxTrees
                                                 \
     DECL_VISIT_PROC( CopyAssignStmnt      );    \
     DECL_VISIT_PROC( ModifyAssignStmnt    );    \
-    DECL_VISIT_PROC( PostOperatorStmnt    );    \
+    DECL_VISIT_PROC( PostOperatorStmnt    );
 
 #define DECL_VISITOR_INTERFACE_EXPRS            \
     DECL_VISIT_PROC( BinaryExpr           );    \
@@ -80,6 +80,7 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( AllocExpr            );    \
     DECL_VISIT_PROC( VarAccessExpr        );    \
     DECL_VISIT_PROC( InitListExpr         );    \
+    DECL_VISIT_PROC( RangeExpr            );
 
 #define DECL_VISITOR_INTERFACE_TDENOTER         \
     DECL_VISIT_PROC( BuiltinTypeDenoter   );    \
@@ -154,6 +155,7 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( AllocExpr            );
         DEF_ABSTRACT_VISIT_PROC( VarAccessExpr        );
         DEF_ABSTRACT_VISIT_PROC( InitListExpr         );
+        DEF_ABSTRACT_VISIT_PROC( RangeExpr            );
 
         /* --- Type denoters --- */
 

@@ -21,6 +21,7 @@
 #include "ProcOverloadSwitch.h"
 #include "ClassDeclStmnt.h"
 #include "SourceCode.h"
+#include "SwitchCase.h"
 
 #include <functional>
 
@@ -117,6 +118,7 @@ class Decorator final : private Visitor
         void DecorateMainProc(ProcSignature& ast);
 
         void DecorateSwitchStmnt(SwitchStmnt& ast);
+        void DecorateSwitchCaseItem(SwitchStmnt& ast, Expr& item);
 
         /* --- Symbol table --- */
 

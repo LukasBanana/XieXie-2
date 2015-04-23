@@ -7,12 +7,14 @@ class Test {
 	
 	int test1(int x) {
 		
+		const start := 2
+		const end := 10
 		int a
 		
 		switch x {
 			case 1:
 				a := 1
-			case 5 .. 10, 20:
+			case start .. end, 20:
 				if x = 6 {
 					break
 				}

@@ -75,6 +75,7 @@ DECL_SHR_PTR( PostfixValueExpr   );
 DECL_SHR_PTR( AllocExpr          );
 DECL_SHR_PTR( VarAccessExpr      );
 DECL_SHR_PTR( InitListExpr       );
+DECL_SHR_PTR( RangeExpr          );
 
 /* --- Type denoters --- */
 

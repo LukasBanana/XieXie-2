@@ -189,6 +189,12 @@ DEF_VISIT_PROC(ExprTypeChecker, InitListExpr)
         Error("initializer list must not be empty", *ast);
 }
 
+DEF_VISIT_PROC(ExprTypeChecker, RangeExpr)
+{
+    Visit(ast->lhsExpr);
+    Visit(ast->rhsExpr);
+}
+
 void ExprTypeChecker::Error(const std::string& msg, const AST& ast, bool breakAnalysis)
 {
     if (breakAnalysis)

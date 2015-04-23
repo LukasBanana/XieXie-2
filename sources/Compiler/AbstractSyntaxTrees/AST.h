@@ -111,6 +111,7 @@ class AST
             AllocExpr,
             VarAccessExpr,
             InitListExpr,
+            RangeExpr,
 
             /* --- Type denoters --- */
             BuiltinTypeDenoter,

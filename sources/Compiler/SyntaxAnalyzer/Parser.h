@@ -203,6 +203,8 @@ class Parser
         ProcCallExprPtr         ParseProcCallExpr(const VarNamePtr& varName = nullptr);
         PostfixValueExprPtr     ParsePostfixValueExpr(const ExprPtr& primaryValueExpr);
         VarAccessExprPtr        ParseVarAccessExpr(const VarNamePtr& varName = nullptr);
+        RangeExprPtr            ParseRangeExpr(const ExprPtr& lhsExpr = nullptr);
+        ExprPtr                 ParseSwitchCaseItemExpr();
 
         /* --- Type denoters --- */
 
@@ -234,6 +236,7 @@ class Parser
         std::vector<StmntPtr>               ParseExternProcDeclStmntList(const Tokens terminatorToken = Tokens::RCurly);
         std::vector<SwitchCasePtr>          ParseSwitchCaseList();
         std::vector<StmntPtr>               ParseSwitchCaseStmntList();
+        std::vector<ExprPtr>                ParseSwitchCaseItemExprList(const Tokens separatorToken = Tokens::Comma);
         std::vector<VarNamePtr>             ParseVarNameList(const Tokens separatorToken = Tokens::Comma);
         std::vector<VarDeclPtr>             ParseVarDeclList(const Tokens separatorToken = Tokens::Comma);
         std::vector<ExprPtr>                ParseExprList(const Tokens separatorToken = Tokens::Comma);

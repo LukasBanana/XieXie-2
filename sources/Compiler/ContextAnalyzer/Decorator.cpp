@@ -264,7 +264,8 @@ DEF_VISIT_PROC(Decorator, ProcCall)
 
 DEF_VISIT_PROC(Decorator, SwitchCase)
 {
-    Visit(ast->items);
+    for (auto& expr : ast->items)
+        DecorateExpr(*expr);
 
     OpenScope();
     {
@@ -312,8 +313,8 @@ DEF_VISIT_PROC(Decorator, SwitchStmnt)
 
     /* Verify switch expression type */
     auto exprType = ast->expr->GetTypeDenoter();
-    if (!exprType || !exprType->IsArithmetic())
-        Error("currently only arithmetic expressions are allowed for switch-statements", ast);
+    if (!exprType || !exprType->IsIntegral())
+        Error("only integral expressions are allowed for switch-statements", ast);
 
     DecorateSwitchStmnt(*ast);
 }
@@ -658,10 +659,29 @@ DEF_VISIT_PROC(Decorator, InitListExpr)
     ast->DeduceTypeDenoter();
 }
 
+DEF_VISIT_PROC(Decorator, RangeExpr)
+{
+    DecorateExpr(*ast->lhsExpr);
+    DecorateExpr(*ast->rhsExpr);
+
+    /* Check type compatibility */
+    auto lhsType = ast->lhsExpr->GetTypeDenoter();
+    auto rhsType = ast->rhsExpr->GetTypeDenoter();
+    
+    if (lhsType && rhsType && TypeDenoter::AreEqual(*lhsType, *rhsType))
+    {
+        if (!lhsType->IsArithmetic())
+            Error("range expression must have arithmetic type", ast);
+    }
+    else
+        Error("uneven types of sub-expressions in range expression", ast);
+}
+
 /* --- Type denoters --- */
 
 DEF_VISIT_PROC(Decorator, BuiltinTypeDenoter)
 {
+    // do nothing
 }
 
 DEF_VISIT_PROC(Decorator, ArrayTypeDenoter)
@@ -1618,15 +1638,18 @@ void Decorator::DecorateMainProc(ProcSignature& ast)
 void Decorator::DecorateSwitchStmnt(SwitchStmnt& ast)
 {
     /* Collect all ranges and decorate them with the respective switch-case reference */
-    for (const auto& caseRef : ast.cases)
+    for (auto& caseRef : ast.cases)
     {
-        
-
+        for (auto& item : caseRef->items)
+            DecorateSwitchCaseItem(ast, *item);
     }
 
+    //todo...
+}
 
-    //...
-
+void Decorator::DecorateSwitchCaseItem(SwitchStmnt& ast, Expr& item)
+{
+    //!TODO! -> statically evaluate integral expressions !!!
 }
 
 /* --- Symbol table --- */
