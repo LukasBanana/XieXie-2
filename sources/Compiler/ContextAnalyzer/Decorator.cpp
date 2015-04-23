@@ -1657,6 +1657,9 @@ void Decorator::DecorateSwitchStmnt(SwitchStmnt& ast)
         for (auto& item : caseRef->items)
             DecorateSwitchCaseItem(ast, *caseRef, *item);
     }
+
+    /* Optimize generated case ranges */
+    ast.OptimizeCaseRanges();
 }
 
 void Decorator::DecorateSwitchCaseItem(SwitchStmnt& ast, SwitchCase& caseRef, Expr& item)

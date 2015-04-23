@@ -37,6 +37,17 @@ void SwitchStmnt::CasesRange::Repair()
         std::swap(rangeStart, rangeEnd);
 }
 
+void SwitchStmnt::CasesRange::Merge(const CasesRange& rhs)
+{
+    casesRef.insert(casesRef.end(), rhs.casesRef.begin(), rhs.casesRef.end());
+    rangeEnd = rhs.rangeEnd;
+}
+
+bool SwitchStmnt::CasesRange::CanMerge(const CasesRange& lhs, const CasesRange& rhs)
+{
+    return lhs.IsIndexable() && rhs.IsIndexable() && (lhs.rangeEnd + 1 == rhs.rangeStart);
+}
+
 
 /*
  * SwitchStmnt class
@@ -71,14 +82,14 @@ bool SwitchStmnt::InsertCaseIndex(SwitchCase& caseRef, int index)
                     /* Append case index to current range */
                     range.casesRef.insert(range.casesRef.begin(), &caseRef);
                     --range.rangeStart;
-                    break;
+                    return true;
                 }
                 if (index == range.rangeEnd + 1)
                 {
                     /* Append case index to current range */
                     range.casesRef.push_back(&caseRef);
                     ++range.rangeEnd;
-                    break;
+                    return true;
                 }
             }
         }
@@ -99,6 +110,38 @@ bool SwitchStmnt::InsertCaseRange(SwitchCase& caseRef, int rangeStart, int range
         return true;
     }
     return false;
+}
+
+void SwitchStmnt::OptimizeCaseRanges()
+{
+    /* First, sort case ranges by their range-start */
+    std::sort(
+        caseRanges_.begin(), caseRanges_.end(),
+        [](const CasesRange& lhs, const CasesRange& rhs)
+        {
+            return lhs.rangeStart < rhs.rangeStart;
+        }
+    );
+
+    /* Then, try to merge ranges */
+    if (caseRanges_.size() >= 2)
+    {
+        for (auto cur = caseRanges_.begin(), next = cur + 1; next != caseRanges_.end();)
+        {
+            if (CasesRange::CanMerge(*cur, *next))
+            {
+                /* Merge ranges */
+                cur->Merge(*next);
+                next = caseRanges_.erase(next);
+            }
+            else
+            {
+                /* Go to next range pair */
+                cur = next;
+                ++next;
+            }
+        }
+    }
 }
 
 

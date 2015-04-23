@@ -10,13 +10,15 @@ class Test {
 	
 	int test1(int x) {
 		
-		const start := 2
+		const start := 5
 		const end := 10
 		int a
 		
 		switch x {
 			case 1:
 				a := 1
+			case 3, 4:
+				a := 4
 			case start .. end, 20:
 				if x = 6 {
 					break
@@ -28,6 +30,10 @@ class Test {
 				a := -1
 			case Test.g_b:
 				a := Test.g_a
+			case 2:
+				a := 2
+			default:
+				a := 0
 		}
 		
 		return a

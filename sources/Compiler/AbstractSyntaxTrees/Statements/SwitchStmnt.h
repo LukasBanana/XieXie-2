@@ -35,6 +35,11 @@ class SwitchStmnt : public Stmnt
             bool IsIndexable() const;
             //! Returns the range, so that 'rangeStart <= rangeEnd' holds true.
             void Repair();
+            //! Merges the specified case range into this range.
+            void Merge(const CasesRange& rhs);
+
+            //! Returns true if the two case-ranges can be merged.
+            static bool CanMerge(const CasesRange& lhs, const CasesRange& rhs);
 
             std::vector<SwitchCase*>    casesRef;
             int                         rangeStart  = 0;
@@ -50,6 +55,12 @@ class SwitchStmnt : public Stmnt
 
         bool InsertCaseIndex(SwitchCase& caseRef, int index);
         bool InsertCaseRange(SwitchCase& caseRef, int rangeStart, int rangeEnd);
+
+        /**
+        Re-arranges and merges the case ranges as much as possible.
+        \see GetCaseRanges
+        */
+        void OptimizeCaseRanges();
 
         const std::vector<CasesRange>& GetCaseRanges() const
         {
