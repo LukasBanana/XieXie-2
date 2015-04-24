@@ -13,7 +13,7 @@
 \usepackage{listings}
 \usepackage{color}
 \usepackage{pxfonts}
-\usepackage{geometry}
+\usepackage[a4paper]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[ngerman, english]{babel}
 \usepackage[ngerman]{hyperref}
@@ -23,12 +23,13 @@
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{scalerel,amssymb}
+\usepackage[graphicx]{realboxes}
 
 \geometry{
-	a4paper,
-	top=20mm,
-	bottom=20mm,
-	margin=20mm,
+	a5paper,
+	%top=15mm,
+	%bottom=15mm,
+	margin=15mm,
 }
 
 \hypersetup{
@@ -673,14 +674,15 @@ if conditionA {
 // Switch statement with many cases (only integers are allowed)
 int idx := getSwitchIndex()
 switch idx {
-    case 1: // idx = 1
-        print("case 1")
-    case 2: // idx = 2
-        print("case 2")
-    case 3 .. 10: // idx >= 3 and idx <= 10
-        print("case 3")
-    case 11, 20 .. 25, 30: // idx = 11 or (idx >= 20 and idx <= 25) or idx = 30
-        print("case 4")
+    case 1:
+        print("case 1") // idx = 1
+    case 2:
+        print("case 2") // idx = 2
+    case 3 .. 10:
+        print("case 3") // idx >= 3 and idx <= 10
+    case 11, 20 .. 25, 30:
+        print("case 4") // idx = 11 or (idx >= 20 and
+                        // idx <= 25) or idx = 30
     default:
         print("default case")
 }
@@ -1017,9 +1019,10 @@ class Widget {
     float f(float x := 0.0) { /* ... */ }
     
     void caller() {
-        int   a := f()    // Error, could be f(), f(int x := 0), or f(float x := 0.0)
-        int   b := f(1)   // OK, argument is from type 'int'
-        float c := f(2.0) // OK, argument is from type 'float'
+        int   a := f()    /* Error, could be f(), f(int x := 0),
+                             or f(float x := 0.0) */
+        int   b := f(1)   /* OK, argument is from type 'int' */
+        float c := f(2.0) /* OK, argument is from type 'float' */
     }
 }
 \end{lstlisting}
@@ -1048,9 +1051,11 @@ class S : B {
         return 3
     }
     void caller() {
-        int a := f(0)          // Equivalent to 'this.f(0)'
-        int b := super.f(0, 0) // 'super' is required, due to overloaded procedure 'f'
-        int c := g()           // No need for 'super', because 'g' is not overloaded
+        int a := f(0)          /* Equivalent to 'this.f(0)' */
+        int b := super.f(0, 0) /* 'super' is required,
+                                  due to overloaded procedure 'f' */
+        int c := g()           /* No need for 'super',
+                                  because 'g' is not overloaded */
     }
 }
 \end{lstlisting}
@@ -1078,8 +1083,9 @@ class Widget {
 class Widget {
     void f(int x := 1, int y := 2, int z := 3)
     void call() {
-        f(1, x: 1)    // Error, parameter 'x' already assigned
-        f(1, y: 2, 3) // Error, can not start with named arguments and continue with unnamed
+        f(1, x: 1)    /* Error, parameter 'x' already assigned */
+        f(1, y: 2, 3) /* Error, can not start with named
+                         arguments and continue with unnamed */
     }
 }
 \end{lstlisting}
@@ -1132,18 +1138,21 @@ class A {
     void p() {}
 }
 
-// Class B is marked as 'deprecated' with a hint.
-// Since B is deprecated as well, the deprecation of A is ignored here.
+/* Class B is marked as 'deprecated' with a hint.
+   Since B is deprecated as well, the deprecation
+   of A is ignored here. */
 [[deprecated("hint...")]]
 class B {
-    // Mark 'p' to override 'A.p'. If 'p' does not match the signature
-    // of procedure 'A.p', the compiler will throw an error message.
+    /* Mark 'p' to override 'A.p'. If 'p' does not match the
+       signature of procedure 'A.p', the compiler will
+       throw an error message. */
     [[override]]
     void p() {}
 }
 
-// Class C is 'final', i.e. no class can inherit from C.
-// Because A is deprecated but not C, the compiler will throw a warning.
+/* Class C is 'final', i.e. no class can inherit from C.
+   Because A is deprecated but not C,
+   the compiler will throw a warning. */
 [[final]]
 class C : A {}
 \end{lstlisting}
@@ -1174,8 +1183,8 @@ Here is a summary of all attributes:
 instantiated only once:
 \begin{lstlisting}
 class Hello {
-    // No code block after procedure declaration inside 
-    // a non-extern class implies an abstract procedure
+    /* No code block after procedure declaration inside 
+       a non-extern class implies an abstract procedure */
     String say()
 }
 
@@ -1186,10 +1195,11 @@ class EnglishHello : Hello {
 
 class Main {
     static void main() {
-        // Allocate class "EnglishHello"
+        /* Allocate class "EnglishHello" */
         var englishHello = new EnglishHello()
         
-        // Allocate anonymous class (internal name "__xx__AnonymousClass0")
+        /* Allocate anonymous class
+          (internal name "__xx__AnonymousClass0") */
         var germanHello = new Hello() {
             [[override]]
             String say() { return "Hallo" }
@@ -1238,7 +1248,7 @@ class FileHeader {
 \end{lstlisting}
 Like in \cpp, there are also \textit{'friends'}. And like in \cpp as well, friendship is not inherited:
 \begin{lstlisting}
-class PrivateClass {
+class Companion {
     protected:
         static int a
         friend MyFriend
@@ -1247,13 +1257,16 @@ class PrivateClass {
 }
 class MyFriend {
     static void f() {
-        var a := PrivateClass.a // OK, "MyFriend" is a 'protected friend' of "PrivateClass"
-        var b := PrivateClass.b // Error, "MyFriend" is not a 'private friend' of "PrivateClass"
+        var a := Companion.a /* OK, "MyFriend" is a
+                                'protected friend' of "Companion" */
+        var b := Companion.b /* Error, "MyFriend" is not a
+                                'private friend' of "Companion" */
     }
 }
 class Rival {
     static void f() {
-        var a := PrivateClass.a // Error, "Rival" is not a 'protected friend' of "PrivateClass"
+        var a := Companion.a /* Error, "Rival" is not a
+                                'protected friend' of "Companion" */
     }
 }
 \end{lstlisting}
@@ -1500,9 +1513,10 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 
 {\footnotesize
 \begin{center}
+\Rotatebox{90}{
 \begin{tabular}[ht]{
-	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.08 \textwidth} | p{0.08 \textwidth}
-	| p{0.08 \textwidth} | p{0.185 \textwidth} | p{0.2 \textwidth} |
+	| p{0.07 \textheight} | p{0.093 \textheight} | p{0.077 \textheight} | p{0.077 \textheight}
+	| p{0.077 \textheight} | p{0.175 \textheight} | p{0.18 \textheight} |
 }
 	\hline
 	\multicolumn{7}{|c|}{\texttt{3-Register Instruction OpCodes (00....)}} \\
@@ -1570,14 +1584,16 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 		\texttt{0 0 0 0 0 0 0 0 0 0 0} & Float div. (D := L $\div$ R). \\
 	\hline
 \end{tabular}
+}
 \end{center}
 }
 
 {\footnotesize
 \begin{center}
+\Rotatebox{90}{
 \begin{tabular}[ht]{
-	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.08 \textwidth} | p{0.08 \textwidth}
-	| p{0.27 \textwidth} | p{0.22 \textwidth} |
+	| p{0.07 \textheight} | p{0.093 \textheight} | p{0.077 \textheight} | p{0.077 \textheight}
+	| p{0.26 \textheight} | p{0.2 \textheight} |
 }
 	\hline
 	\multicolumn{6}{|c|}{\texttt{2-Register Instruction OpCodes (01....)}} \\
@@ -1652,6 +1668,7 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 		\texttt{0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0} & Float comparison ($\rightarrow$ \texttt{\$cf}). \\
 	\hline
 \end{tabular}
+}
 \end{center}
 }
 
