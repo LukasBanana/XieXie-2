@@ -427,7 +427,6 @@ static std::unique_ptr<ClassDeclStmnt> GenIntrinsicsClass()
     GenStaticProc(*ast, voidType, "copyMem", ( GenParam(intType, "destPtr"), GenParam(intType, "srcPtr"), GenParam(intType, "size") ));
     
     GenStaticProc(*ast, voidType, "sysCall", GenParam(intType, "commandPtr"));
-    GenStaticProc(*ast, voidType, "clearTerm");
     GenStaticProc(*ast, voidType, "print", GenParam(intType, "textPtr"));
     GenStaticProc(*ast, voidType, "printLn", GenParam(intType, "textPtr"));
     GenStaticProc(*ast, voidType, "printInt", GenParam(intType, "value"));
@@ -438,10 +437,9 @@ static std::unique_ptr<ClassDeclStmnt> GenIntrinsicsClass()
 
     GenStaticProc(*ast, intType, "createFile", GenParam(intType, "filenamePtr"));
     GenStaticProc(*ast, intType, "deleteFile", GenParam(intType, "filenamePtr"));
-    GenStaticProc(*ast, intType, "openFile", ( GenParam(intType, "filenamePtr"), GenParam(intType, "flagsPtr") ));
+    GenStaticProc(*ast, intType, "openFile", ( GenParam(intType, "filenamePtr"), GenParam(intType, "modePtr") ));
     GenStaticProc(*ast, voidType, "closeFile", GenParam(intType, "handlePtr"));
-    GenStaticProc(*ast, intType, "fileSize", GenParam(intType, "handlePtr"));
-    GenStaticProc(*ast, voidType, "fileSetPos", ( GenParam(intType, "handlePtr"), GenParam(intType, "pos") ));
+    GenStaticProc(*ast, voidType, "fileSetPos", ( GenParam(intType, "handlePtr"), GenParam(intType, "offset"), GenParam(intType, "origin") ));
     GenStaticProc(*ast, intType, "fileGetPos", GenParam(intType, "handlePtr"));
     GenStaticProc(*ast, intType, "fileEOF", GenParam(intType, "handlePtr"));
     GenStaticProc(*ast, voidType, "writeByte", ( GenParam(intType, "handlePtr"), GenParam(intType, "value") ));

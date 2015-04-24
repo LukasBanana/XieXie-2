@@ -4,152 +4,156 @@
 
 CIntrinsics.PallocMem,I:
 	call <AllocMem>
-	ret (0) 0
+	ret
 
 CIntrinsics.PfreeMem,I:
 	call <FreeMem>
-	ret (0) 0
+	ret
 
 CIntrinsics.PcopyMem,I,I,I:
 	call <CopyMem>
-	ret (0) 0
+	ret
 
 CIntrinsics.PsysCall,I:
 	call <SysCall>
-	ret (0) 0
+	ret
 
 CIntrinsics.PclearTerm:
 	call <ClearTerm>
-	ret (0) 0
+	ret
 
 CIntrinsics.Pprint,I:
 	call <Print>
-	ret (0) 0
+	ret
 
 CIntrinsics.PprintLn,I:
 	call <PrintLn>
-	ret (0) 0
+	ret
 
 CIntrinsics.PprintInt,I:
 	call <PrintInt>
-	ret (0) 0
+	ret
 
 CIntrinsics.PprintFloat,F:
 	call <PrintFloat>
-	ret (0) 0
+	ret
 
 CIntrinsics.Pinput:
 	call <Input>
-	ret (0) 0
+	ret
 
 CIntrinsics.PinputInt:
 	call <InputInt>
-	ret (0) 0
+	ret
 
 CIntrinsics.PinputFloat:
 	call <InputFloat>
-	ret (0) 0
+	ret
 
 CIntrinsics.PcreateFile,I:
 	call <CreateFile>
-	ret (0) 0
+	ret
 
 CIntrinsics.PdeleteFile,I:
 	call <DeleteFile>
-	ret (0) 0
+	ret
 
 CIntrinsics.PopenFile,I:
 	call <OpenFile>
-	ret (0) 0
+	ret
 
 CIntrinsics.PcloseFile,I:
 	call <CloseFile>
-	ret (0) 0
-
-CIntrinsics.PfileSize,I:
-	call <FileSize>
-	ret (0) 0
+	ret
 
 CIntrinsics.PfileSetPos,I,I:
 	call <FileSetPos>
-	ret (0) 0
+	ret
 
 CIntrinsics.PfileGetPos,I:
 	call <FileGetPos>
-	ret (0) 0
+	ret
 
 CIntrinsics.PfileEOF,I:
 	call <FileEOF>
-	ret (0) 0
+	ret
 
 CIntrinsics.PwriteByte,I,I:
 	call <WriteByte>
-	ret (0) 0
+	ret
 
 CIntrinsics.PwriteInt,I,I:
-	call <WriteInt>
-	ret (0) 0
+	call <WriteWord>
+	ret
+
+CIntrinsics.PwriteFloat,I,F:
+	call <WriteWord>
+	ret
 
 CIntrinsics.PwriteBuffer,I,I,I:
 	call <WriteBuffer>
-	ret (0) 0
+	ret
 
 CIntrinsics.PreadByte,I:
 	call <ReadByte>
-	ret (0) 0
+	ret
 
 CIntrinsics.PreadInt,I:
-	call <ReadInt>
-	ret (0) 0
+	call <ReadWord>
+	ret
+
+CIntrinsics.PreadFloat,I:
+	call <ReadWord>
+	ret
 
 CIntrinsics.PreadBuffer,I,I,I:
 	call <ReadBuffer>
-	ret (0) 0
+	ret
 
 CIntrinsics.Psin,F:
 	call <Sin>
-	ret (0) 0
+	ret
 
 CIntrinsics.Pcos,F:
 	call <Cos>
-	ret (0) 0
+	ret
 
 CIntrinsics.Ptan,F:
 	call <Tan>
-	ret (0) 0
+	ret
 
 CIntrinsics.Pasin,F:
 	call <ASin>
-	ret (0) 0
+	ret
 
 CIntrinsics.Pacos,F:
 	call <ACos>
-	ret (0) 0
+	ret
 
 CIntrinsics.Patan,F:
 	call <ATan>
-	ret (0) 0
+	ret
 
 CIntrinsics.Ppow,F,F:
 	call <Pow>
-	ret (0) 0
+	ret
 
 CIntrinsics.Psqrt,F:
 	call <Sqrt>
-	ret (0) 0
+	ret
 
 CIntrinsics.PrandInt:
 	call <RandInt>
-	ret (0) 0
+	ret
 
 CIntrinsics.PrandFloat:
 	call <RandFloat>
-	ret (0) 0
+	ret
 
 CIntrinsics.Ptime:
 	call <Time>
-	ret (0) 0
+	ret
 
 CIntrinsics.Psleep,I:
 	call <Sleep>
-	ret (0) 0
+	ret

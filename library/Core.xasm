@@ -489,3 +489,160 @@ BoolArray.vtable:
 	.word @CObject.PtoString
 	.word @CBoolArray.Pinit,I?size
 
+
+; ------- Intrinsics Class -------
+; built-in class for to access all VM intrinsics
+
+CIntrinsics.PallocMem,I?size:
+	insc AllocMem
+	ret
+
+CIntrinsics.PfreeMem,I?ptr:
+	insc FreeMem
+	ret
+
+CIntrinsics.PcopyMem,I?destPtr,I?srcPtr,I?size:
+	insc CopyMem
+	ret
+
+CIntrinsics.PsysCall,I?commandPtr:
+	insc SysCall
+	ret
+
+CIntrinsics.Pprint,I?textPtr:
+	insc Print
+	ret
+
+CIntrinsics.PprintLn,I?textPtr:
+	insc PrintLn
+	ret
+
+CIntrinsics.PprintInt,I?value:
+	insc PrintInt
+	ret
+
+CIntrinsics.PprintFloat,F?value:
+	insc PrintFloat
+	ret
+
+CIntrinsics.Pinput,I?stringPtr,I?maxLen:
+	insc Input
+	ret
+
+CIntrinsics.PinputInt:
+	insc InputInt
+	ret
+
+CIntrinsics.PinputFloat:
+	insc InputFloat
+	ret
+
+CIntrinsics.PcreateFile,I?filenamePtr:
+	insc CreateFile
+	ret
+
+CIntrinsics.PdeleteFile,I?filenamePtr:
+	insc DeleteFile
+	ret
+
+CIntrinsics.PopenFile,I?filenamePtr,I?modePtr:
+	insc OpenFile
+	ret
+
+CIntrinsics.PcloseFile,I?handlePtr:
+	insc CloseFile
+	ret
+
+CIntrinsics.PfileSetPos,I?handlePtr,I?offset,I?origin:
+	insc FileSetPos
+	ret
+
+CIntrinsics.PfileGetPos,I?handlePtr:
+	insc FileGetPos
+	ret
+
+CIntrinsics.PfileEOF,I?handlePtr:
+	insc FileEOF
+	ret
+
+CIntrinsics.PwriteByte,I?handlePtr,I?value:
+	insc WriteByte
+	ret
+
+CIntrinsics.PwriteInt,I?handlePtr,I?value:
+	insc WriteWord
+	ret
+
+CIntrinsics.PwriteFloat,I?handlePtr,F?value:
+	insc WriteWord
+	ret
+
+CIntrinsics.PwriteBuffer,I?handlePtr,I?bufferPtr,I?size:
+	insc WriteBuffer
+	ret
+
+CIntrinsics.PreadByte,I?handlePtr:
+	insc ReadByte
+	ret
+
+CIntrinsics.PreadInt,I?handlePtr:
+	insc ReadWord
+	ret
+
+CIntrinsics.PreadFloat,I?handlePtr:
+	insc ReadWord
+	ret
+
+CIntrinsics.PreadBuffer,I?handlePtr,I?bufferPtr,I?size:
+	insc ReadBuffer
+	ret
+
+CIntrinsics.Psin,F?x:
+	insc Sin
+	ret
+
+CIntrinsics.Pcos,F?x:
+	insc Cos
+	ret
+
+CIntrinsics.Ptan,F?x:
+	insc Tan
+	ret
+
+CIntrinsics.Pasin,F?x:
+	insc ASin
+	ret
+
+CIntrinsics.Pacos,F?x:
+	insc ACos
+	ret
+
+CIntrinsics.Patan,F?x:
+	insc ATan
+	ret
+
+CIntrinsics.Ppow,F?b,F?e:
+	insc Pow
+	ret
+
+CIntrinsics.Psqrt,F?x:
+	insc Sqrt
+	ret
+
+CIntrinsics.PrandInt:
+	insc RandInt
+	ret
+
+CIntrinsics.PrandFloat:
+	insc RandFloat
+	ret
+
+CIntrinsics.Ptime:
+	insc Time
+	ret
+
+CIntrinsics.Psleep,I?duration:
+	insc Sleep
+	ret
+
+

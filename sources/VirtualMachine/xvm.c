@@ -2217,7 +2217,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         /* --- File intrinsics --- */
 
-        // int CreateFile(const byte* stringPtr)
+        // int CreateFile(const byte* filenamePtr)
         case INSC_CREATE_FILE:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2232,7 +2232,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
-        // int DeleteFile(const byte* stringPtr)
+        // int DeleteFile(const byte* filenamePtr)
         case INSC_DELETE_FILE:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2240,7 +2240,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
-        // void* OpenFile(const byte* stringPtr, const byte* flagsAddress)
+        // void* OpenFile(const byte* filenamePtr, const byte* modePtr)
         case INSC_OPEN_FILE:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);

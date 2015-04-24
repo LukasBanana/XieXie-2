@@ -304,9 +304,9 @@ typedef enum
     INSC_INPUT_FLOAT,   // float InputFloat()
 
     /* --- File intrinsics --- */
-    INSC_CREATE_FILE,   // int CreateFile(const byte* stringPtr)
-    INSC_DELETE_FILE,   // int DeleteFile(const byte* stringPtr)
-    INSC_OPEN_FILE,     // void* OpenFile(const byte* stringPtr, const byte* flagsAddress)
+    INSC_CREATE_FILE,   // int CreateFile(const byte* filenamePtr)
+    INSC_DELETE_FILE,   // int DeleteFile(const byte* filenamePtr)
+    INSC_OPEN_FILE,     // void* OpenFile(const byte* filenamePtr, const byte* modePtr)
     INSC_CLOSE_FILE,    // void CloseFile(void* fileHandle)
     INSC_FILE_SET_POS,  // void FileSetPos(void* fileHandle, int offset, int origin)
     INSC_FILE_GET_POS,  // int FileGetPos(void* fileHandle)

@@ -183,7 +183,6 @@ extern class Intrinsics {
 	static void copyMem(int destPtr, int srcPtr, int size)
 	
 	static void sysCall(int commandPtr)
-	static void clearTerm()
 	static void print(int textPtr)
 	static void printLn(int textPtr)
 	static void printInt(int value)
@@ -194,10 +193,9 @@ extern class Intrinsics {
 	
 	static int createFile(int filenamePtr)
 	static int deleteFile(int filenamePtr)
-	static int openFile(int filenamePtr, int flagsPtr)
+	static int openFile(int filenamePtr, int modePtr)
 	static void closeFile(int handlePtr)
-	static int fileSize(int handlePtr)
-	static void fileSetPos(int handlePtr, int pos)
+	static void fileSetPos(int handlePtr, int offset, int origin)
 	static int fileGetPos(int handlePtr)
 	static int fileEOF(int handlePtr)
 	static void writeByte(int handlePtr, int value)
