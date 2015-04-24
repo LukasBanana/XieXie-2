@@ -1,0 +1,238 @@
+/*
+ * File.xx
+ * 
+ * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/// I/O file stream class.
+[[final]]
+class File {
+	
+	/* --- Enumerations --- */
+	
+	static const reading	:= 0x00000001	///< Open file for reading.
+	static const writing	:= 0x00000002	///< Open file for writing.
+	static const append		:= 0x00000004	///< Append new content at the end of the file.
+	
+	static const begin		:= 0			///< Set position from beginning.
+	static const current	:= 1			///< Set position from current position.
+	static const end		:= 2			///< Set position from end.
+	
+	/* --- Common --- */
+	
+	/**
+	Opens a file for input/output operations.
+	@param filename Specifies the file which is to be opened.
+	@param openFlags Specifies how the file is opened. This can be bitwise combination of the following values:
+	- File.reading
+	- File.writing
+	- File.append
+	By default the flags reading, writing, and append are enabled.
+	@return New "File" instance or null, if the file could not be opened.
+	*/
+	static File open(String filename, int openFlags := (File.reading | File.writing | File.append)) {
+		if filename != null {
+			// Open file and store handle pointer
+			var handlePtr := Intrinsics.openFile(
+				filename.pointer(), File.getModeString(openFlags).pointer()
+			)
+			
+			// Create class instance
+			if handlePtr != 0 {
+				return new File(handlePtr)
+			}
+		}
+		return null
+	}
+	
+	/**
+	Creates a new file on the hard-disk-drive (HDD).
+	@param filename Specifies the file which is to be created.
+	@return True on sucucess.
+	*/
+	static bool create(String filename) {
+		if filename != null {
+			return Intrinsics.createFile(filename.pointer()) != 0
+		}
+		return false
+	}
+	
+	/**
+	Deletes a file from the hard-disk-drive (HDD).
+	@param filename Specifies the file which is to be deleted.
+	@return True on sucucess.
+	*/
+	static bool delete(String filename) {
+		if filename != null {
+			return Intrinsics.deleteFile(filename.pointer()) != 0
+		}
+		return false
+	}
+	
+	/// Closes the file stream.
+	release {
+		Intrinsics.closeFile(handlePtr)
+	}
+	
+	/// Returns true if the end-of-file (EOF) has been reached.
+	bool eof() {
+		return Intrinsics.fileEOF(handlePtr) != 0
+	}
+	
+	/**
+	Sets the new reading/writing position for this file stream.
+	@param offset Specifies the position offset. This may also be negative.
+	@param origin Specifies the origin to start with the offset. This can be one of the following values:
+	- File.begin
+	- File.current
+	- File.end
+	By default File.begin.
+	@see position()
+	*/
+	void position(int offset, int origin := File.begin) {
+		Intrinsics.fileSetPos(handlePtr, offset, origin)
+	}
+	
+	/**
+	Returns the current file position from the beginning.
+	@see position(int offset, int origin)
+	*/
+	int position() {
+		return Intrinsics.fileGetPos(handlePtr)
+	}
+	
+	/* --- Writing --- */
+	
+	/**
+	Writes a single byte (8-bit) to this file.
+	@param value Specifies the value which is to be written.
+	If this is true, a 1 is written, and if this is false, a 0 is written.
+	@note The file must be have been opened with the 'File.writing' flag.
+	*/
+	void write(bool value) {
+		if value {
+			writeByte(1)
+		} else {
+			writeByte(0)
+		}
+	}
+	
+	/**
+	Writes a single byte (8-bit) to this file.
+	@param value Specifies the value which is to be written. Only the first byte of 'value' is used.
+	@note The file must be have been opened with the 'File.writing' flag.
+	*/
+	void writeByte(int value) {
+		Intrinsics.writeByte(handlePtr, value)
+	}
+	
+	/**
+	Writes a 32-bit integer to this file.
+	@param value Specifies the value which is to be written.
+	@note The file must be have been opened with the 'File.writing' flag.
+	*/
+	void write(int value) {
+		Intrinsics.writeInt(handlePtr, value)
+	}
+	
+	/**
+	Writes a 32-bit floating-point to this file.
+	@param value Specifies the value which is to be written.
+	@note The file must be have been opened with the 'File.writing' flag.
+	*/
+	void write(float value) {
+		Intrinsics.writeFloat(handlePtr, value)
+	}
+	
+	/**
+	Writes a buffer to this file.
+	@param buffer Specifies the buffer which is to be filled.
+	If this is null, the procedure call has no effect.
+	@remarks The buffer size specifies how many bytes are written.
+	@note The file must be have been opened with the 'File.writing' flag.
+	*/
+	void write(Buffer buffer) {
+		if buffer != null {
+			Intrinsics.writeBuffer(handlePtr, buffer.pointer(), buffer.size())
+		}
+	}
+	
+	/* --- Reading --- */
+	
+	/**
+	Reads a single byte (8-bit) from this file.
+	@return The value which has been read.
+	@note The file must be have been opened with the 'File.reading' flag.
+	*/
+	bool readBool() {
+		return Intrinsics.readByte(handlePtr) != 0
+	}
+	
+	/**
+	Reads a single byte (8-bit) from this file.
+	@return The value which has been read.
+	@note The file must be have been opened with the 'File.reading' flag.
+	*/
+	int readByte() {
+		return Intrinsics.readByte(handlePtr)
+	}
+	
+	/**
+	Reads a 32-bit integer from this file.
+	@return The value which has been read.
+	@note The file must be have been opened with the 'File.reading' flag.
+	*/
+	int readInt() {
+		return Intrinsics.readInt(handlePtr)
+	}
+	
+	/**
+	Reads a 32-bit floating-point from this file.
+	@return The value which has been read.
+	@note The file must be have been opened with the 'File.reading' flag.
+	*/
+	float readFloat() {
+		return Intrinsics.readFloat(handlePtr)
+	}
+	
+	/**
+	Reads a buffer from this file.
+	@param buffer Specifies the buffer which is to be filled.
+	If this is null, the procedure call has no effect.
+	@remarks The buffer size specifies how many bytes are read.
+	@note The file must be have been opened with the 'File.reading' flag.
+	*/
+	void readBuffer(Buffer buffer) {
+		if buffer != null {
+			Intrinsics.readBuffer(handlePtr, buffer.pointer(), buffer.size())
+		}
+	}
+	
+private:
+	
+	init(int handlePtr) {
+		this.handlePtr := handlePtr
+	}
+	
+	/// Returns the "mode" string for the "fileOpen" intrinsic.
+	static String getModeString(int openFlags) {
+		var mode := ""
+		
+		if (openFlags & File.reading) != 0 {
+			mode.append("r")
+		}
+		if (openFlags & File.writing) != 0 {
+			mode.append("w")
+		}
+		if (openFlags & File.append) != 0 {
+			mode.append("+")
+		}
+		
+		return mode
+	}
+	
+	int handlePtr
+	
+}
+
