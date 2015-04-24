@@ -119,9 +119,11 @@ class CompilerMessage : public std::exception
 //! Compiler message comfort class (inherits from CompilerMessage but does not extend the functionality).
 template <CompilerMessage::Categories C> class CommonCompilerMessage : public CompilerMessage
 {
+
     public:
+
         CommonCompilerMessage(const std::string& message) :
-            CompilerMessage{ message, C }
+            CompilerMessage{ SyntaxAnalyzer::SourceArea::ignore, message, C }
         {
         }
         CommonCompilerMessage(const SyntaxAnalyzer::SourceArea& sourceArea, const std::string& message) :
@@ -134,6 +136,7 @@ template <CompilerMessage::Categories C> class CommonCompilerMessage : public Co
                 CompilerMessage{ sourceArea, message, line, marker, C }
         {
         }
+
 };
 
 

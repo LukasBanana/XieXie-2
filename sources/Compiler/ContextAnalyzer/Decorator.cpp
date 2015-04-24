@@ -72,12 +72,18 @@ bool Decorator::DecorateProgram(Program& program, ErrorReporter& errorReporter)
 
 void Decorator::Error(const std::string& msg, const AST* ast)
 {
+    /* Check if number of errors exceeded limit */
+    if (errorReporter_->ExceededErrorLimit())
+        throw std::runtime_error("too many errors: break compilation");
+
+    /* Add error message to the report */
     errorReporter_->source = GetCurrentSource();
     errorReporter_->Add<ContextError>(msg, ast);
 }
 
 void Decorator::Warning(const std::string& msg, const AST* ast)
 {
+    /* Add warning message to the report */
     errorReporter_->source = GetCurrentSource();
     errorReporter_->Add<CompilerWarning>(msg, ast);
 }
@@ -1651,9 +1657,26 @@ void Decorator::DecorateMainProc(ProcSignature& ast)
 
 void Decorator::DecorateSwitchStmnt(SwitchStmnt& ast)
 {
-    /* Collect all ranges and decorate them with the respective switch-case reference */
+    SwitchCase* defaultCaseRef = nullptr;
+
     for (auto& caseRef : ast.cases)
     {
+        /* Check for multiple default cases */
+        if (caseRef->IsDefaultCase())
+        {
+            if (defaultCaseRef)
+            {
+                Error(
+                    "default case for switch statement already defined at (" +
+                    defaultCaseRef->sourceArea.ToString() + ")",
+                    caseRef.get()
+                );
+            }
+            else
+                defaultCaseRef = caseRef.get();
+        }
+
+        /* Collect all ranges and decorate them with the respective switch-case reference */
         for (auto& item : caseRef->items)
             DecorateSwitchCaseItem(ast, *caseRef, *item);
     }

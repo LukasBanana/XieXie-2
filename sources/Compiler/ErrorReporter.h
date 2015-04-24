@@ -58,25 +58,47 @@ class ErrorReporter
         */
         void Flush(Log& log, bool printMetaInfo = true);
 
+        //! Returns true if the limit of error messages has been exceeded.
+        bool ExceededErrorLimit() const;
+
+        //! Returns the number of errors, which are currently in the report.
+        size_t NumErrors() const
+        {
+            return numErrors_;
+        }
         //! Returns true if the current report has any errors.
         bool HasErrors() const
         {
-            return hasErrors_;
+            return NumErrors() > 0;
+        }
+
+        //! Returns the number of warnings, which are currently in the report.
+        size_t NumWarnings() const
+        {
+            return numWarnings_;
+        }
+        //! Returns true if the current report has any warnings.
+        bool HasWarnings() const
+        {
+            return NumWarnings() > 0;
         }
 
         /* === Members === */
 
         //! Optional source code reference. This can be used for better error outputs.
-        const SyntaxAnalyzer::SourceCode* source = nullptr;
+        const SyntaxAnalyzer::SourceCode*   source          = nullptr;
+
+        //! Specifies the limit for error messages. Zero specifies infinite error messages. By default 100.
+        size_t                              numErrorLimit   = 100u;
 
         //! Show warnings configuration. By default false.
-        static bool showWarnings;
+        static bool                         showWarnings;
 
     private:
 
-        std::vector<CompilerMessage> messages_;
-
-        bool hasErrors_ = false;
+        std::vector<CompilerMessage>    messages_;
+        size_t                          numErrors_      = 0;
+        size_t                          numWarnings_    = 0;
 
 };
 

@@ -18,7 +18,9 @@ void ErrorReporter::Add(const CompilerMessage& message)
     {
         messages_.push_back(message);
         if (message.IsError())
-            hasErrors_ = true;
+            ++numErrors_;
+        if (message.IsWarning())
+            ++numWarnings_;
     }
 }
 
@@ -29,17 +31,7 @@ void ErrorReporter::Flush(Log& log, bool printMetaInfo)
         if (printMetaInfo)
         {
             /* Print meta information */
-            size_t numErrors = 0, numWarnings = 0;
-        
-            for (const auto& msg : messages_)
-            {
-                if (msg.IsError())
-                    ++numErrors;
-                else if (msg.IsWarning())
-                    ++numWarnings;
-            }
-
-            auto info = ToStr(numErrors) + " error(s), " + ToStr(numWarnings) + " warning(s):";
+            auto info = ToStr(numErrors_) + " error(s), " + ToStr(numWarnings_) + " warning(s):";
             log.Message(info);
             log.Message(std::string(info.size(), '-'));
         }
@@ -48,10 +40,16 @@ void ErrorReporter::Flush(Log& log, bool printMetaInfo)
         for (const auto& msg : messages_)
             log.Message(msg);
 
-        /* Reset error-bit state */
-        hasErrors_ = false;
+        /* Reset states */
         messages_.clear();
+        numErrors_      = 0;
+        numWarnings_    = 0;
     }
+}
+
+bool ErrorReporter::ExceededErrorLimit() const
+{
+    return numErrorLimit > 0 && (NumErrors() + 1) >= numErrorLimit;
 }
 
 
