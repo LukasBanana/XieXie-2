@@ -16,35 +16,6 @@ class InputStream {
 	
 }
 
-/// Standard input stream implementation.
-class StdInputStream : InputStream {
-	
-	[[override]]
-	int readInt() {
-		return Intrinsics.inputInt()
-	}
-	
-	[[override]]
-	float readFloat() {
-		return Intrinsics.inputFloat()
-	}
-	
-	[[override]]
-	String read() {
-		/*static*/ const maxLen := 100
-		
-		// Store input inside new string
-		var s := new String(maxLen)
-		Intrinsics.input(s.pointer(), maxLen)
-		
-		// Adjust string to actual size
-		s.adjust()
-		
-		return s
-	}
-	
-}
-
 /// Output stream interface.
 class OutputStream {
 	
@@ -57,35 +28,6 @@ class OutputStream {
 	void write(String s)
 	/// Writes the specified string with a new-line character to the output stream.
 	void writeLine(String s)
-	
-}
-
-/// Standard output stream implementation.
-class StdOutputStream : OutputStream {
-	
-	[[override]]
-	void write(int value) {
-		Intrinsics.printInt(value)
-	}
-	
-	[[override]]
-	void write(float value) {
-		Intrinsics.printFloat(value)
-	}
-	
-	[[override]]
-	void write(String s) {
-		if s != null {
-			Intrinsics.print(s.pointer())
-		}
-	}
-	
-	[[override]]
-	void writeLine(String s) {
-		if s != null {
-			Intrinsics.printLn(s.pointer())
-		}
-	}
 	
 }
 

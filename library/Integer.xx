@@ -13,7 +13,10 @@ Integer class.
 @author Lukas Hermanns
 */
 class Integer {
-
+	
+	static const max := 2147483647	///< Maximal possible integer value.
+	static const min := -2147483648	///< Minimal possible integer value.
+	
 	init() {}
 	init(int value) {
 		this.value := value
@@ -28,7 +31,7 @@ class Integer {
 		int len, firstDigit, v := value
 		
 		if v < 0 {
-			len++
+			len := 1
 			firstDigit := 1
 			v := -v
 		}

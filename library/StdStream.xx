@@ -1,0 +1,55 @@
+/*
+ * IOStream.xx
+ * 
+ * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+import IOStream
+import Console
+
+/// Standard input stream implementation.
+class StdInputStream : InputStream {
+	
+	[[override]]
+	int readInt() {
+		return Console.readInt()
+	}
+	
+	[[override]]
+	float readFloat() {
+		return Console.readFloat()
+	}
+	
+	[[override]]
+	String read() {
+		return Console.readString()
+	}
+	
+}
+
+/// Standard output stream implementation.
+class StdOutputStream : OutputStream {
+	
+	[[override]]
+	void write(int value) {
+		Console.write(value)
+	}
+	
+	[[override]]
+	void write(float value) {
+		Console.write(value)
+	}
+	
+	[[override]]
+	void write(String s) {
+		Console.write(s)
+	}
+	
+	[[override]]
+	void writeLine(String s) {
+		Console.write(s)
+	}
+	
+}
+
