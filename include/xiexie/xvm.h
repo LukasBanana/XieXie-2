@@ -238,6 +238,13 @@ Returns the count of all memory references for this VM.
 */
 int xvm_memory_ref_count();
 
+/**
+Returns the count of all open file references for this VM.
+\note If '_ENABLE_LEAK_DETECTION_' was not defined, the return value is always 0.
+\see _ENABLE_LEAK_DETECTION_
+*/
+int xvm_file_ref_count();
+
 
 /* ----- Debug log ----- */
 
@@ -287,28 +294,29 @@ typedef enum
     INSC_FILL_MEM,      // void FillMem(void* memoryAddr, uint sizeInBytes, int value)
 
     /* --- Console intrinsics --- */
-    INSC_SYS_CALL,      // void SysCall(const byte* stringAddr)
-    INSC_PRINT,         // void Print(const byte* stringAddr)
-    INSC_PRINT_LN,      // void PrintLn(const byte* stringAddr)
+    INSC_SYS_CALL,      // void SysCall(const byte* stringPtr)
+    INSC_PRINT,         // void Print(const byte* stringPtr)
+    INSC_PRINT_LN,      // void PrintLn(const byte* stringPtr)
     INSC_PRINT_INT,     // void PrintInt(int value)
     INSC_PRINT_FLOAT,   // void PrintFloat(float value)
-    INSC_INPUT,         // void Input(byte* stringAddr, int maxLen)
+    INSC_INPUT,         // void Input(byte* stringPtr, int maxLen)
     INSC_INPUT_INT,     // int InputInt()
     INSC_INPUT_FLOAT,   // float InputFloat()
 
     /* --- File intrinsics --- */
-    INSC_CREATE_FILE,   // int CreateFile(const byte* stringAddress)
-    INSC_DELETE_FILE,   // int DeleteFile(const byte* stringAddress)
-    INSC_OPEN_FILE,     // void* OpenFile(const byte* stringAddress)
+    INSC_CREATE_FILE,   // int CreateFile(const byte* stringPtr)
+    INSC_DELETE_FILE,   // int DeleteFile(const byte* stringPtr)
+    INSC_OPEN_FILE,     // void* OpenFile(const byte* stringPtr, const byte* flagsAddress)
     INSC_CLOSE_FILE,    // void CloseFile(void* fileHandle)
-    INSC_FILE_SIZE,     // int FileSize(const void* fileHandle)
-    INSC_SET_FILE_POS,  // void FileSetPos(const void* fileHandle, int pos)
-    INSC_GET_FILE_POS,  // int FileGetPos(const void* fileHandle)
-    INSC_FILE_EOF,      // int FileEOF(const void* fileHandle)
-    INSC_WRITE_BYTE,    // void WriteByte(const void* fileHandle, const void* memoryAddress)
-    INSC_WRITE_WORD,    // void WriteWord(const void* fileHandle, const void* memoryAddress)
-    INSC_READ_BYTE,     // void ReadByte(const void* fileHandle, void* memoryAddress)
-    INSC_READ_WORD,     // void ReadWord(const void* fileHandle, void* memoryAddress)
+    INSC_FILE_SET_POS,  // void FileSetPos(void* fileHandle, int offset, int origin)
+    INSC_FILE_GET_POS,  // int FileGetPos(void* fileHandle)
+    INSC_FILE_EOF,      // int FileEOF(void* fileHandle)
+    INSC_WRITE_BYTE,    // void WriteByte(void* fileHandle, int value)
+    INSC_WRITE_WORD,    // void WriteWord(void* fileHandle, int value)
+    INSC_WRITE_BUFFER,  // void WriteBuffer(void* fileHandle, const void* memoryAddress, int size)
+    INSC_READ_BYTE,     // int ReadByte(void* fileHandle)
+    INSC_READ_WORD,     // int ReadWord(void* fileHandle)
+    INSC_READ_BUFFER,   // void ReadBuffer(void* fileHandle, void* memoryAddress, int size)
 
     /* --- Math intrinsics --- */
     INSC_SIN,           // float Sin(float x)

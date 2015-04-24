@@ -286,6 +286,11 @@ int main(int argc, char* argv[])
     if (ref_count != 0)
         xvm_log_warning("%i memory leak(s) detected", ref_count);
 
+    // Check for unclosed files
+    int file_count = xvm_file_ref_count();
+    if (file_count != 0)
+        xvm_log_warning("%i unclosed file(s) detected", file_count);
+
     return 0;
 }
 

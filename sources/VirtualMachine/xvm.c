@@ -96,10 +96,16 @@ INLINE static int _xvm_flt2int_signum(float val)
 #ifdef _ENABLE_LEAK_DETECTION_
 
 static long _mem_ref_count = 0;
+static long _file_ref_count = 0;
 
 int xvm_memory_ref_count()
 {
     return _mem_ref_count;
+}
+
+int xvm_file_ref_count()
+{
+    return _file_ref_count;
 }
 
 INLINE static void* _xvm_malloc(size_t size)
@@ -114,8 +120,22 @@ INLINE static void _xvm_free(void* ptr)
     free(ptr);
 }
 
+INLINE static FILE* _xvm_fopen(const char* filename, const char* mode)
+{
+    ++_file_ref_count;
+    return fopen(filename, mode);
+}
+
+INLINE static int _xvm_fclose(FILE* file)
+{
+    --_file_ref_count;
+    return fclose(file);
+}
+
 #define XVM_MALLOC  _xvm_malloc
 #define XVM_FREE    _xvm_free
+#define XVM_FOPEN   _xvm_fopen
+#define XVM_FCLOSE  _xvm_fclose
 
 #else
 
@@ -124,8 +144,15 @@ int xvm_memory_ref_count()
     return 0;
 }
 
+int xvm_file_ref_count()
+{
+    return 0;
+}
+
 #define XVM_MALLOC  malloc
 #define XVM_FREE    free
+#define XVM_FOPEN   fopen
+#define XVM_FCLOSE  fclose
 
 #endif
 
@@ -498,14 +525,15 @@ const char* xvm_intrinsic_get_ident(const xvm_intrinsic_id addr)
         case INSC_DELETE_FILE:  return "DeleteFile";
         case INSC_OPEN_FILE:    return "OpenFile";
         case INSC_CLOSE_FILE:   return "CloseFile";
-        case INSC_FILE_SIZE:    return "FileSize";
-        case INSC_SET_FILE_POS: return "SetFilePos";
-        case INSC_GET_FILE_POS: return "GetFilePos";
+        case INSC_FILE_SET_POS: return "FileSetPos";
+        case INSC_FILE_GET_POS: return "FileGetPos";
         case INSC_FILE_EOF:     return "FileEOF";
         case INSC_WRITE_BYTE:   return "WriteByte";
         case INSC_WRITE_WORD:   return "WriteWord";
+        case INSC_WRITE_BUFFER: return "WriteBuffer";
         case INSC_READ_BYTE:    return "ReadByte";
         case INSC_READ_WORD:    return "ReadWord";
+        case INSC_READ_BUFFER:  return "ReadBuffer";
 
         /* --- Math intrinsics --- */
 
@@ -1583,7 +1611,7 @@ n4 times:
 static int _xvm_close_file_with_error(FILE* file, const char* err)
 {
     xvm_log_error(err);
-    fclose(file);
+    XVM_FCLOSE(file);
     return 0;
 }
 
@@ -1597,7 +1625,7 @@ int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
     }
 
     // Open file for reading
-    FILE* file = fopen(filename, "rb");
+    FILE* file = XVM_FOPEN(filename, "rb");
     if (file == NULL)
     {
         xvm_log_error("unable to open file for reading");
@@ -1704,7 +1732,7 @@ int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
     }
 
     // Close file and return with success
-    fclose(file);
+    XVM_FCLOSE(file);
 
     return 1;
 }
@@ -1724,7 +1752,7 @@ int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filena
     }
 
     // Open file for writing
-    FILE* file = fopen(filename, "wb");
+    FILE* file = XVM_FOPEN(filename, "wb");
     if (file == NULL)
     {
         xvm_log_error("unable to open file for writing");
@@ -1800,7 +1828,7 @@ int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filena
     }
 
     // Close file and return with success
-    fclose(file);
+    XVM_FCLOSE(file);
 
     return 1;
 }
@@ -2093,7 +2121,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
-        // void FreeMem(void* memoryAddress)
+        // void FreeMem(void* memoryAddr)
         case INSC_FREE_MEM:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2112,7 +2140,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
-        // void FillMem(void* memoryAddress, uint sizeInByzes, int value)
+        // void FillMem(void* memoryAddr, uint sizeInByzes, int value)
         case INSC_FILL_MEM:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2124,6 +2152,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         /* --- Console intrinsics --- */
 
+        // void SysCall(const byte* stringPtr)
         case INSC_SYS_CALL:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2131,6 +2160,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // void Print(const byte* stringPtr)
         case INSC_PRINT:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2138,6 +2168,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // void PrintLn(const byte* stringPtr)
         case INSC_PRINT_LN:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2145,6 +2176,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // void PrintInt(int value)
         case INSC_PRINT_INT:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2152,6 +2184,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // void PrintFloat(float value)
         case INSC_PRINT_FLOAT:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2159,6 +2192,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // void Input(byte* stringPtr, int maxLen)
         case INSC_INPUT:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2167,12 +2201,14 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // int InputInt()
         case INSC_INPUT_INT:
         {
             scanf("%i", reg_ar);
         }
         break;
 
+        // float InputFloat()
         case INSC_INPUT_FLOAT:
         {
             scanf("%f", reg_ar);
@@ -2181,23 +2217,129 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         /* --- File intrinsics --- */
 
-        //!!!!!!!!! TODO !!!!!!!!!
+        // int CreateFile(const byte* stringPtr)
         case INSC_CREATE_FILE:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            FILE* file = XVM_FOPEN(INT_TO_STR_REINTERPRET(arg0), "w");
+            if (file != NULL)
+            {
+                XVM_FCLOSE(file);
+                *reg_ar = 1;
+            }
+            else
+                *reg_ar = 0;
+        }
+        break;
+
+        // int DeleteFile(const byte* stringPtr)
         case INSC_DELETE_FILE:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            *reg_ar = remove(INT_TO_STR_REINTERPRET(arg0));
+        }
+        break;
+
+        // void* OpenFile(const byte* stringPtr, const byte* flagsAddress)
         case INSC_OPEN_FILE:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            int arg1 = _xvm_stack_pop(stack, reg_sp);
+            *reg_ar = (regi_t)XVM_FOPEN(INT_TO_STR_REINTERPRET(arg0), INT_TO_STR_REINTERPRET(arg1));
+        }
+        break;
+
+        // void CloseFile(void* fileHandle)
         case INSC_CLOSE_FILE:
-        case INSC_FILE_SIZE:
-        case INSC_SET_FILE_POS:
-        case INSC_GET_FILE_POS:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            XVM_FCLOSE((FILE*)arg0);
+        }
+        break;
+
+        // void FileSetPos(void* fileHandle, int offset, int origin)
+        case INSC_FILE_SET_POS:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            int arg1 = _xvm_stack_pop(stack, reg_sp);
+            int arg2 = _xvm_stack_pop(stack, reg_sp);
+            fseek((FILE*)arg0, (long)arg1, arg2);
+        }
+        break;
+
+        // int FileGetPos(void* fileHandle)
+        case INSC_FILE_GET_POS:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            *reg_ar = (int)ftell((FILE*)arg0);
+        }
+        break;
+
+        // int FileEOF(void* fileHandle)
         case INSC_FILE_EOF:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            *reg_ar = feof((FILE*)arg0);
+        }
+        break;
+
+        // void WriteByte(void* fileHandle, int value)
         case INSC_WRITE_BYTE:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            int arg1 = _xvm_stack_pop(stack, reg_sp);
+            fwrite(&arg1, sizeof(char), 1, (FILE*)arg0);
+        }
+        break;
+
+        // void WriteWord(void* fileHandle, int value)
         case INSC_WRITE_WORD:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            int arg1 = _xvm_stack_pop(stack, reg_sp);
+            fwrite(&arg1, sizeof(int), 1, (FILE*)arg0);
+        }
+        break;
+
+        // void WriteBuffer(void* fileHandle, const void* memoryAddress, int size)
+        case INSC_WRITE_BUFFER:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            int arg1 = _xvm_stack_pop(stack, reg_sp);
+            int arg2 = _xvm_stack_pop(stack, reg_sp);
+            fwrite((const void*)arg1, sizeof(char), arg2, (FILE*)arg0);
+        }
+        break;
+
+        // int ReadByte(void* fileHandle)
         case INSC_READ_BYTE:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            fread(reg_ar, sizeof(char), 1, (FILE*)arg0);
+        }
+        break;
+
+        // int ReadWord(void* fileHandle)
         case INSC_READ_WORD:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            fread(reg_ar, sizeof(int), 1, (FILE*)arg0);
+        }
+        break;
+
+        // void ReadBuffer(void* fileHandle, void* memoryAddress, int size)
+        case INSC_READ_BUFFER:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            int arg1 = _xvm_stack_pop(stack, reg_sp);
+            int arg2 = _xvm_stack_pop(stack, reg_sp);
+            fread((void*)arg1, sizeof(char), arg2, (FILE*)arg0);
+        }
         break;
 
         /* --- Math intrinsics --- */
 
+        // float Sin(float x)
         case INSC_SIN:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2206,6 +2348,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // float Cos(float x)
         case INSC_COS:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2214,6 +2357,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // float Tan(float x)
         case INSC_TAN:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2222,6 +2366,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // float ASin(float x)
         case INSC_ASIN:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2230,6 +2375,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // float ACos(float x)
         case INSC_ACOS:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2238,6 +2384,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // float ATan(float x)
         case INSC_ATAN:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2246,6 +2393,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // float Pow(float base, float exp)
         case INSC_POW:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2255,6 +2403,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // float Sqrt(float x)
         case INSC_SQRT:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
@@ -2265,12 +2414,14 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         /* --- Other intrinsics --- */
         
+        // int RandInt() -> In range [0 .. MAX_INT]
         case INSC_RAND_INT:
         {
             *reg_ar = rand();
         }
         break;
 
+        // float RandFloat() -> In range [0.0 .. 1.0]
         case INSC_RAND_FLOAT:
         {
             float result = ((float)rand()) / RAND_MAX;
@@ -2278,6 +2429,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // int Time() -> Ellapsed time since program start (in ms.)
         case INSC_TIME:
         {
             clock_t ticks = clock() / (CLOCKS_PER_SEC / 1000);
@@ -2287,6 +2439,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
 
         #ifdef _ENABLE_OS_FEATURES_
 
+        // void Sleep(int duration)
         case INSC_SLEEP:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
