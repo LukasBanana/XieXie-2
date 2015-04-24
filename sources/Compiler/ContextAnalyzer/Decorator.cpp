@@ -665,6 +665,19 @@ DEF_VISIT_PROC(Decorator, AllocExpr)
 DEF_VISIT_PROC(Decorator, VarAccessExpr)
 {
     Visit(ast->varName);
+
+    /* Check if variable is deprecated */
+    if (!class_->HasAttribDeprecated())
+    {
+        auto varDecl = AST::Cast<VarDecl>(ast->varName->GetLast().declRef);
+        if (varDecl)
+        {
+            WarnDeprecation(
+                std::bind(&VarDeclStmnt::HasAttribDeprecated, varDecl->parentRef, _1),
+                "access of deprecated variable", ast
+            );
+        }
+    }
 }
 
 DEF_VISIT_PROC(Decorator, InitListExpr)
@@ -1432,14 +1445,10 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
         }
 
         /* Check if procedure is deprecated */
-        std::string hint;
-        if (procDecl->HasAttribDeprecated(&hint))
-        {
-            std::string info = "call of deprecated procedure";
-            if (!hint.empty())
-                info += ": " + hint;
-            Warning(info, &ast);
-        }
+        WarnDeprecation(
+            std::bind(&ProcDeclStmnt::HasAttribDeprecated, procDecl, _1),
+            "call of deprecated procedure", &ast
+        );
 
         /* Check procedure visibility */
         if (!VerifyVisibility(procDecl->visibility, procDecl->parentRef))
@@ -1708,6 +1717,19 @@ void Decorator::DecorateSwitchCaseItem(SwitchStmnt& ast, SwitchCase& caseRef, Ex
             if (!ast.InsertCaseIndex(caseRef, index))
                 Error("switch-case index [" + std::to_string(index) + "] is already reserved", &item);
         }
+    }
+}
+
+void Decorator::WarnDeprecation(
+    const std::function<bool(std::string*)>& deprecationCheck,
+    std::string&& warnInfo, const AST* ast)
+{
+    std::string hint;
+    if (deprecationCheck(&hint))
+    {
+        if (!hint.empty())
+            warnInfo += ": " + hint;
+        Warning(warnInfo, ast);
     }
 }
 

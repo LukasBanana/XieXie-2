@@ -123,6 +123,10 @@ class Decorator final : private Visitor
         void DecorateSwitchStmnt(SwitchStmnt& ast);
         void DecorateSwitchCaseItem(SwitchStmnt& ast, SwitchCase& caseRef, Expr& item);
 
+        void WarnDeprecation(
+            const std::function<bool(std::string*)>& deprecationCheck, std::string&& warnInfo, const AST* ast
+        );
+
         /* --- Symbol table --- */
 
         void PushSymTab(StmntSymbolTable& symTab, bool outsideClass = false);

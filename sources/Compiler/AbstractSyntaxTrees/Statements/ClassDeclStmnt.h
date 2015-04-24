@@ -173,6 +173,7 @@ class ClassDeclStmnt : public ScopedStmnt
     private:
         
         bool HasAttrib(const std::string& attribIdent) const;
+        bool HasAttrib(const std::string& attribIdent, std::string* arg) const;
 
         std::string HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const;
 

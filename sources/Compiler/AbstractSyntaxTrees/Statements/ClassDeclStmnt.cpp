@@ -164,45 +164,17 @@ void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
 
 bool ClassDeclStmnt::HasAttribFinal() const
 {
-    return HasAttrib("final");
+    return HasAttrib(Attrib::idFinal);
 }
 
 bool ClassDeclStmnt::HasAttribDeprecated(std::string* hint) const
 {
-    if (attribPrefix)
-    {
-        auto attr = attribPrefix->FindAttrib(Attrib::idDeprecated);
-        if (attr)
-        {
-            if (hint && attr->arg)
-            {
-                auto literalExpr = AST::Cast<const LiteralExpr>(attr->arg.get());
-                if (literalExpr)
-                    *hint = literalExpr->value;
-            }
-            return true;
-        }
-    }
-    return false;
+    return HasAttrib(Attrib::idDeprecated, hint);
 }
 
 bool ClassDeclStmnt::HasAttribBind(std::string* name) const
 {
-    if (attribPrefix)
-    {
-        auto attr = attribPrefix->FindAttrib("bind");
-        if (attr)
-        {
-            if (name && attr->arg)
-            {
-                auto literalExpr = AST::Cast<const LiteralExpr>(attr->arg.get());
-                if (literalExpr)
-                    *name = literalExpr->value;
-            }
-            return true;
-        }
-    }
-    return false;
+    return HasAttrib(Attrib::idBind, name);
 }
 
 
@@ -213,6 +185,11 @@ bool ClassDeclStmnt::HasAttribBind(std::string* name) const
 bool ClassDeclStmnt::HasAttrib(const std::string& attribIdent) const
 {
     return attribPrefix != nullptr ? attribPrefix->HasAttrib(attribIdent) : false;
+}
+
+bool ClassDeclStmnt::HasAttrib(const std::string& attribIdent, std::string* arg) const
+{
+    return attribPrefix != nullptr ? attribPrefix->HasAttrib(attribIdent, arg) : false;
 }
 
 std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const
