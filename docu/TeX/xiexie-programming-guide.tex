@@ -294,7 +294,7 @@ The design of the \xxlang is overall influenced by \java, \cpp, \swift, and \pyt
 \section{What is \xiexie?}
 
 The \xiexie programming language is a high-level, object-oriented, scripting language with compiler and virtual machine.
-The \xiexie compiler (XXC) translates the \xiexie code (XX) to a virtual assembler (XASM), then assembles it to
+The \xiexie compiler (XXC) translates the \xiexie code (XX) to a virtual assembly (XASM), then assembles it to
 \xiexie byte code (XBC), which can then be interpreted by the \xiexie virtual machine (XVM).
 
 
@@ -1201,10 +1201,10 @@ Now it should be clear why identifiers with the prefix "\_\_xx\_\_" are reserved
 
 
 %----------------------------------------------------------------------------------------
-%	CLASS VISIBILITES
+%	CLASS VISIBILITIES
 %----------------------------------------------------------------------------------------
 
-\section{Class Visibilites}
+\section{Class Visibilities}
 
 Like in \cpp and \java, \xiexie provides visibilites for all members within a class. The syntax for these visibilites
 are a mixture of \cpp and \java. You can declare the visibility for each class member like in \java and/or for a
@@ -1234,6 +1234,27 @@ class Vector3 { float x, y, z }
 class FileHeader {
     int magicNumber
     int formatVersion
+}
+\end{lstlisting}
+Like in \cpp, there are also \textit{'friends'}. And like in \cpp as well, friendship is not inherited:
+\begin{lstlisting}
+class PrivateClass {
+    protected:
+        static int a
+        friend MyFriend
+    private:
+        static int b
+}
+class MyFriend {
+    static void f() {
+        var a := PrivateClass.a // OK, "MyFriend" is a 'protected friend' of "PrivateClass"
+        var b := PrivateClass.b // Error, "MyFriend" is not a 'private friend' of "PrivateClass"
+    }
+}
+class Rival {
+    static void f() {
+        var a := PrivateClass.a // Error, "Rival" is not a 'protected friend' of "PrivateClass"
+    }
 }
 \end{lstlisting}
 
