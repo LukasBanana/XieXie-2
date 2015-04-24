@@ -1152,10 +1152,13 @@ Here is a summary of all attributes:
 	\item \textbf{\texttt{deprecated}}, \textbf{\texttt{deprecated(String hint)}}
 		Marks a \textit{class}, \textit{procedure}, or \textit{member-variable} as deprecated.
 	\item \textbf{\texttt{export}}, \textbf{\texttt{export(String label)}}
-		Exports the address of a \textit{static procedure}.
+		Exports the address of a \textit{static procedure}. The default label is \texttt{"CLASS.PROCEDURE"},
+		where \texttt{CLASS} is the class name, and \texttt{PROCEDURE} is the procedure name (without name mangling).
+		This can be used to start the program from a specific static procedure. This should be some kind of an entry point!
 	\item \textbf{\texttt{bind}}, \textbf{\texttt{bind(String name)}}
-		Binds a \textit{module} of the specified name. The default name is: \texttt{"<module-name>/<module-name>"},
-		where \texttt{<module-name>} is the name of the module.
+		Binds a \textit{module} of the specified name. The default name is: \texttt{"NAME/NAME"},
+		where \texttt{NAME} is the name of the module. Binding a module will make it loaded automatically when the
+		program is started within the \xvm.
 	\item \textbf{\texttt{override}} Overrides a procedure from a class in its inheritance hierarchy.
 	\item \textbf{\texttt{final}} Makes a class final, which disables to inherit from this class.
 \end{itemize}
