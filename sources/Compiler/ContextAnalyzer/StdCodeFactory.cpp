@@ -410,6 +410,10 @@ static std::unique_ptr<ClassDeclStmnt> GenBufferClass()
     auto ast = GenClass("Buffer");
 
     //...
+    GenMemberProc(*ast, Int(), "size");
+    GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
+    GenMemberProc(*ast, Bool(), "empty");
+    GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrOverrideFinal());
 
     return ast;
 }

@@ -117,9 +117,12 @@ Register all class member procedures. Identifiers of procedures can be overloade
 Register all class member variables.
 
 (Phase 6)
-Generate run-time type information (RTTI) for entire class hierarchy, i.e. recursively for the root class "Object".
+Analyze signatures of all class member procedures.
 
 (Phase 7)
+Generate run-time type information (RTTI) for entire class hierarchy, i.e. recursively for the root class "Object".
+
+(Phase 8)
 Analyze all procedure code blocks.
 */
 DEF_VISIT_PROC(Decorator, Program)
@@ -148,14 +151,18 @@ DEF_VISIT_PROC(Decorator, Program)
     state_ = States::RegisterMemberVars;
     Visit(ast->classDeclStmnts);
 
-    /* (6) Generate RTTI for the entire class hierarchy */
+    /* (6) Analyze return type of all member procedures */
+    state_ = States::AnalyzeProcReturn;
+    Visit(ast->classDeclStmnts);
+
+    /* (7) Generate RTTI for the entire class hierarchy */
     auto rootClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope("Object", ast->symTab, ast));
     if (rootClassDecl)
         rootClassDecl->GenerateRTTI(errorReporter_);
     else
         Error("missing root class \"Object\"");
 
-    /* (7) Analyze procedure code blocks */
+    /* (8) Analyze procedure code blocks */
     state_ = States::AnalyzeCode;
     Visit(ast->classDeclStmnts);
 }
@@ -203,8 +210,7 @@ DEF_VISIT_PROC(Decorator, Arg)
 
 DEF_VISIT_PROC(Decorator, ProcSignature)
 {
-    Visit(ast->returnTypeDenoter);
-    Visit(ast->params);
+    // do nothing (see 'ProcDeclStmnt')
 }
 
 DEF_VISIT_PROC(Decorator, AttribPrefix)
@@ -417,6 +423,7 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
 
         case States::RegisterMemberProcs:
         case States::RegisterMemberVars:
+        case States::AnalyzeProcReturn:
         case States::AnalyzeCode:
             PushSymTab(*ast);
             {
@@ -492,10 +499,14 @@ DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
             Visit(ast->attribPrefix);
             break;
 
+        case States::AnalyzeProcReturn:
+            Visit(ast->procSignature->returnTypeDenoter);
+            break;
+
         case States::AnalyzeCode:
             PushSymTab(*ast);
             {
-                Visit(ast->procSignature);
+                Visit(ast->procSignature->params);
                 Visit(ast->codeBlock);
             }
             PopSymTab();

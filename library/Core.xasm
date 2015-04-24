@@ -394,16 +394,16 @@ Array.vtable:
 	.word @CArray.Pinit
 	.word @CObject.PtypeID
 	.word @CObject.PrefCount
-	.word @CArray.Pequals,R@Object?rhs
-	.word @CArray.PtoString
-	.word @CArray.Ppointer
-	.word @CArray.Pinit,I?size
-	.word @CArray.Pcopy
-	.word @CArray.Psize
-	.word @CArray.Presize,I?size
-	.word @CArray.Pempty
-	.word @CArray.Padd,R@Object?entry
-	.word @CArray.Premove,I?pos
+;	.word @CArray.Pequals,R@Object?rhs
+;	.word @CArray.PtoString
+;	.word @CArray.Ppointer
+;	.word @CArray.Pinit,I?size
+;	.word @CArray.Pcopy
+;	.word @CArray.Psize
+;	.word @CArray.Presize,I?size
+;	.word @CArray.Pempty
+;	.word @CArray.Padd,R@Object?entry
+;	.word @CArray.Premove,I?pos
 
 
 ; ------- PrimArray Class -------
@@ -417,21 +417,21 @@ Array.vtable:
 
 ; todo...
 
-PrimArray.vtable:
-	.word @PrimArray.Prelease
-	.word @PrimArray.Pinit
-	.word @CObject.PtypeID
-	.word @CObject.PrefCount
-	.word @PrimArray.Pequals,R@Object?rhs
-	.word @PrimArray.PtoString
-	.word @PrimArray.Ppointer
-	.word @PrimArray.Pinit,I?size
-	.word @PrimArray.Pcopy
-	.word @PrimArray.Psize
-	.word @PrimArray.Presize,I?size
-	.word @PrimArray.Pempty
-	.word @PrimArray.Padd,R@Object?entry
-	.word @PrimArray.Premove,I?pos
+;PrimArray.vtable:
+;	.word @PrimArray.Prelease
+;	.word @PrimArray.Pinit
+;	.word @CObject.PtypeID
+;	.word @CObject.PrefCount
+;	.word @PrimArray.Pequals,R@Object?rhs
+;	.word @PrimArray.PtoString
+;	.word @PrimArray.Ppointer
+;	.word @PrimArray.Pinit,I?size
+;	.word @PrimArray.Pcopy
+;	.word @PrimArray.Psize
+;	.word @PrimArray.Presize,I?size
+;	.word @PrimArray.Pempty
+;	.word @PrimArray.Padd,R@Object?entry
+;	.word @PrimArray.Premove,I?pos
 
 
 ; ------- BoolArray Class -------

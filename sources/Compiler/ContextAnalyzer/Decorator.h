@@ -53,6 +53,7 @@ class Decorator final : private Visitor
             VerifyClassInheritance,
             RegisterMemberProcs,
             RegisterMemberVars,
+            AnalyzeProcReturn,
             AnalyzeCode,
         };
 
