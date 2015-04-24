@@ -12,14 +12,6 @@ namespace AbstractSyntaxTrees
 {
 
 
-/* --- VarDeclStmnt --- */
-
-const TypeDenoter* VarDeclStmnt::GetTypeDenoter() const
-{
-    return typeDenoter.get();
-}
-
-
 /* --- ForRangeStmnt --- */
 
 const TypeDenoter* ForRangeStmnt::GetTypeDenoter() const

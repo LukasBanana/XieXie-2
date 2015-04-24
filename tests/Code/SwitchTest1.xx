@@ -5,6 +5,7 @@
 /// Test for CFG generation of switch statements
 class Test {
 	
+	[[deprecated("use \"g_b\" instead"), final]]
 	static const g_a := 32
 	static const g_b := Test.g_a*2
 	

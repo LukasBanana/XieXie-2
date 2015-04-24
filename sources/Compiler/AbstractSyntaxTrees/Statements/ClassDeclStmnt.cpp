@@ -171,7 +171,7 @@ bool ClassDeclStmnt::HasAttribDeprecated(std::string* hint) const
 {
     if (attribPrefix)
     {
-        auto attr = attribPrefix->FindAttrib("deprecated");
+        auto attr = attribPrefix->FindAttrib(Attrib::idDeprecated);
         if (attr)
         {
             if (hint && attr->arg)
@@ -370,15 +370,15 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
 
         if (procDecl->attribPrefix)
         {
-            std::set<std::string> validAttribs { "deprecated" };
+            std::set<std::string> validAttribs { Attrib::idDeprecated };
 
             if (!isStatic)
             {
-                validAttribs.insert("override");
-                validAttribs.insert("final");
+                validAttribs.insert(Attrib::idOverride);
+                validAttribs.insert(Attrib::idFinal);
             }
             else if (procSig->params.empty())
-                validAttribs.insert("export");
+                validAttribs.insert(Attrib::idExport);
 
             for (auto attr : procDecl->attribPrefix->FindDuplicateAttribs())
                 Error(errorReporter, "duplicate attribute '" + attr->ident + "' for procedure \"" + procSig->ident + "\"", attr);
@@ -451,13 +451,13 @@ void ClassDeclStmnt::ProcessClassAttributes(ErrorReporter* errorReporter)
     /* Verify class attributes */
     if (attribPrefix)
     {
-        std::set<std::string> validAttribs { "deprecated" };
+        std::set<std::string> validAttribs { Attrib::idDeprecated };
 
         std::string typeName = (isModule ? "module" : "class");
         if (isModule)
-            validAttribs.insert("bind");
+            validAttribs.insert(Attrib::idBind);
         else
-            validAttribs.insert("final");
+            validAttribs.insert(Attrib::idFinal);
 
         for (auto attr : attribPrefix->FindDuplicateAttribs())
             Error(errorReporter, "duplicate attribute '" + attr->ident + "' for " + typeName + " declaration", this);

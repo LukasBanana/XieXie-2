@@ -21,9 +21,16 @@ class VarDeclStmnt : public Stmnt
     
     public:
         
+        /* === Functions === */
+
         AST_INTERFACE_EXT(VarDeclStmnt, Stmnt);
 
         const TypeDenoter* GetTypeDenoter() const override;
+
+        //! Returns true if this procedure has the "deprecated" attribute.
+        bool HasAttribDeprecated(std::string* arg = nullptr) const;
+
+        /* === Members === */
 
         AttribPrefixPtr         attribPrefix;               // may be null
         bool                    isStatic        = false;

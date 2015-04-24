@@ -23,22 +23,22 @@ const TypeDenoter* ProcDeclStmnt::GetTypeDenoter() const
 
 bool ProcDeclStmnt::HasAttribFinal() const
 {
-    return HasAttrib("final");
+    return HasAttrib(Attrib::idFinal);
 }
 
 bool ProcDeclStmnt::HasAttribOverride() const
 {
-    return HasAttrib("override");
+    return HasAttrib(Attrib::idOverride);
 }
 
 bool ProcDeclStmnt::HasAttribDeprecated(std::string* arg) const
 {
-    return HasAttrib("deprecated", arg);
+    return HasAttrib(Attrib::idDeprecated, arg);
 }
 
 bool ProcDeclStmnt::HasAttribExport(std::string* arg) const
 {
-    return HasAttrib("export", arg);
+    return HasAttrib(Attrib::idExport, arg);
 }
 
 bool ProcDeclStmnt::IsAbstract() const

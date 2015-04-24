@@ -226,12 +226,12 @@ DEF_VISIT_PROC(Decorator, Attrib)
     /* Verify attribute argument */
     try
     {
-        if (IsElementOf(ast->ident, { "deprecated", "export", "bind" }))
+        if (IsElementOf(ast->ident, { Attrib::idDeprecated, Attrib::idExport, Attrib::idBind }))
         {
             if (ast->arg && ast->arg->GetType() != Arg::String)
                 throw std::string("attribute '" + ast->ident + "' can only have a string as argument");
         }
-        else if (IsElementOf(ast->ident, { "final", "override", "get", "set" }))
+        else if (IsElementOf(ast->ident, { Attrib::idFinal, Attrib::idOverride, Attrib::idGet, Attrib::idSet }))
         {
             if (ast->arg)
                 throw std::string("attribute '" + ast->ident + "' can not have any arguments");

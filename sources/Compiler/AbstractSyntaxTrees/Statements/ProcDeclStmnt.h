@@ -25,6 +25,8 @@ class ProcDeclStmnt : public ScopedStmnt
         
         using Vis = ClassDeclStmnt::Visibilities;
 
+        /* === Functions === */
+
         AST_INTERFACE_EXT(ProcDeclStmnt, ScopedStmnt);
 
         //! Returns the type of the procedure signature.
@@ -41,6 +43,8 @@ class ProcDeclStmnt : public ScopedStmnt
 
         //! Returns true if this procedure is abstract, i.e. 'codeBlock' is null and its parent class is not an extern class.
         bool IsAbstract() const;
+
+        /* === Members === */
 
         AttribPrefixPtr         attribPrefix;                   // may be null
         ProcSignaturePtr        procSignature;
