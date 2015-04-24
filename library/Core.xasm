@@ -493,154 +493,207 @@ BoolArray.vtable:
 ; ------- Intrinsics Class -------
 ; built-in class for to access all VM intrinsics
 
+; int Intrinsics.allocMem(int size)
 CIntrinsics.PallocMem,I?size:
 	insc AllocMem
 	ret
 
+; void Intrinsics.freeMem(int ptr)
 CIntrinsics.PfreeMem,I?ptr:
 	insc FreeMem
 	ret
 
+; void Intrinsics.copyMem(int destPtr, int srcPtr, int size)
 CIntrinsics.PcopyMem,I?destPtr,I?srcPtr,I?size:
 	insc CopyMem
 	ret
 
+; void Intrinsics.sysCall(int commandPtr)
 CIntrinsics.PsysCall,I?commandPtr:
 	insc SysCall
 	ret
 
+; void Intrinsics.print(int textPtr)
 CIntrinsics.Pprint,I?textPtr:
 	insc Print
 	ret
 
+; void Intrinsics.printLn(int textPtr)
 CIntrinsics.PprintLn,I?textPtr:
 	insc PrintLn
 	ret
 
+; void Intrinsics.printInt(int value)
 CIntrinsics.PprintInt,I?value:
 	insc PrintInt
 	ret
 
+; void Intrinsics.printFloat(float value)
 CIntrinsics.PprintFloat,F?value:
 	insc PrintFloat
 	ret
 
+; void Intrinsics.input(int stringPtr, int maxLen)
 CIntrinsics.Pinput,I?stringPtr,I?maxLen:
 	insc Input
 	ret
 
+; int Intrinsics.inputInt()
 CIntrinsics.PinputInt:
 	insc InputInt
 	ret
 
+; float Intrinsics.inputFloat()
 CIntrinsics.PinputFloat:
 	insc InputFloat
 	ret
 
+; int Intrinsics.createFile(int filenamePtr)
 CIntrinsics.PcreateFile,I?filenamePtr:
 	insc CreateFile
 	ret
 
+; int Intrinsics.deleteFile(int filenamePtr)
 CIntrinsics.PdeleteFile,I?filenamePtr:
 	insc DeleteFile
 	ret
 
+; int Intrinsics.openFile(int filenamePtr, int modePtr)
 CIntrinsics.PopenFile,I?filenamePtr,I?modePtr:
 	insc OpenFile
 	ret
 
+; void Intrinsics.closeFile(int handlePtr)
 CIntrinsics.PcloseFile,I?handlePtr:
 	insc CloseFile
 	ret
 
+; void Intrinsics.fileSetPos(int handlePtr, int offset, int origin)
 CIntrinsics.PfileSetPos,I?handlePtr,I?offset,I?origin:
 	insc FileSetPos
 	ret
 
+; int Intrinsics.fileGetPos(int handlePtr)
 CIntrinsics.PfileGetPos,I?handlePtr:
 	insc FileGetPos
 	ret
 
+; int Intrinsics.fileEOF(int handlePtr)
 CIntrinsics.PfileEOF,I?handlePtr:
 	insc FileEOF
 	ret
 
+; void Intrinsics.writeByte(int handlePtr, int value)
 CIntrinsics.PwriteByte,I?handlePtr,I?value:
 	insc WriteByte
 	ret
 
+; void Intrinsics.writeInt(int handlePtr, int value)
 CIntrinsics.PwriteInt,I?handlePtr,I?value:
 	insc WriteWord
 	ret
 
+; void Intrinsics.writeFloat(int handlePtr, float value)
 CIntrinsics.PwriteFloat,I?handlePtr,F?value:
 	insc WriteWord
 	ret
 
+; void Intrinsics.writeBuffer(int handlePtr, int bufferPtr, int size)
 CIntrinsics.PwriteBuffer,I?handlePtr,I?bufferPtr,I?size:
 	insc WriteBuffer
 	ret
 
+; int Intrinsics.readByte(int handlePtr)
 CIntrinsics.PreadByte,I?handlePtr:
 	insc ReadByte
 	ret
 
+; int Intrinsics.readInt(int handlePtr)
 CIntrinsics.PreadInt,I?handlePtr:
 	insc ReadWord
 	ret
 
+; float Intrinsics.readFloat(int handlePtr)
 CIntrinsics.PreadFloat,I?handlePtr:
 	insc ReadWord
 	ret
 
+; void Intrinsics.readBuffer(int handlePtr, int bufferPtr, int size)
 CIntrinsics.PreadBuffer,I?handlePtr,I?bufferPtr,I?size:
 	insc ReadBuffer
 	ret
 
+; float Intrinsics.sin(float x)
 CIntrinsics.Psin,F?x:
 	insc Sin
 	ret
 
+; float Intrinsics.cos(float x)
 CIntrinsics.Pcos,F?x:
 	insc Cos
 	ret
 
+; float Intrinsics.tan(float x)
 CIntrinsics.Ptan,F?x:
 	insc Tan
 	ret
 
+; float Intrinsics.asin(float x)
 CIntrinsics.Pasin,F?x:
 	insc ASin
 	ret
 
+; float Intrinsics.acos(float x)
 CIntrinsics.Pacos,F?x:
 	insc ACos
 	ret
 
+; float Intrinsics.atan(float x)
 CIntrinsics.Patan,F?x:
 	insc ATan
 	ret
 
+; float Intrinsics.pow(float b, float e)
 CIntrinsics.Ppow,F?b,F?e:
 	insc Pow
 	ret
 
+; float Intrinsics.log(float x)
+CIntrinsics.Plog,F?x:
+	insc Log
+	ret
+
+; float Intrinsics.log2(float x)
+CIntrinsics.Plog2,F?x:
+	insc Log2
+	ret
+
+; float Intrinsics.log10(float x)
+CIntrinsics.Plog10,F?x:
+	insc Log10
+	ret
+
+; float Intrinsics.sqrt(float x)
 CIntrinsics.Psqrt,F?x:
 	insc Sqrt
 	ret
 
+; int Intrinsics.randInt()
 CIntrinsics.PrandInt:
 	insc RandInt
 	ret
 
+; float Intrinsics.randFloat()
 CIntrinsics.PrandFloat:
 	insc RandFloat
 	ret
 
+; int Intrinsics.time()
 CIntrinsics.Ptime:
 	insc Time
 	ret
 
+; void Intrinsics.sleep(int duration)
 CIntrinsics.Psleep,I?duration:
 	insc Sleep
 	ret

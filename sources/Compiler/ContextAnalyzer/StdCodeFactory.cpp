@@ -458,8 +458,10 @@ static std::unique_ptr<ClassDeclStmnt> GenIntrinsicsClass()
     GenStaticProc(*ast, floatType, "acos", GenParam(floatType, "x"));
     GenStaticProc(*ast, floatType, "atan", GenParam(floatType, "x"));
     GenStaticProc(*ast, floatType, "pow", ( GenParam(floatType, "b"), GenParam(floatType, "e") ));
-    GenStaticProc(*ast, floatType, "sqrt", GenParam(floatType, "x"));
     GenStaticProc(*ast, floatType, "log", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "log2", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "log10", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "sqrt", GenParam(floatType, "x"));
 
     GenStaticProc(*ast, intType, "randInt");
     GenStaticProc(*ast, floatType, "randFloat");

@@ -214,8 +214,10 @@ extern class Intrinsics {
 	static float acos(float x)
 	static float atan(float x)
 	static float pow(float b, float e)
-	static float sqrt(float x)
 	static float log(float x)
+	static float log2(float x)
+	static float log10(float x)
+	static float sqrt(float x)
 	
 	static int randInt()
 	static float randFloat()

@@ -544,6 +544,9 @@ const char* xvm_intrinsic_get_ident(const xvm_intrinsic_id addr)
         case INSC_ACOS:         return "ACos";
         case INSC_ATAN:         return "ATan";
         case INSC_POW:          return "Pow";
+        case INSC_LOG:          return "Log";
+        case INSC_LOG2:         return "Log2";
+        case INSC_LOG10:        return "Log10";
         case INSC_SQRT:         return "Sqrt";
 
         /* --- Other intrinsics --- */
@@ -2399,6 +2402,33 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
             int arg0 = _xvm_stack_pop(stack, reg_sp);
             int arg1 = _xvm_stack_pop(stack, reg_sp);
             float result = powf(INT_TO_FLT_REINTERPRET(arg0), INT_TO_FLT_REINTERPRET(arg1));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
+        }
+        break;
+
+        // float Log(float x)
+        case INSC_LOG:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            float result = logf(INT_TO_FLT_REINTERPRET(arg0));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
+        }
+        break;
+
+        // float Log2(float x)
+        case INSC_LOG2:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            float result = log2f(INT_TO_FLT_REINTERPRET(arg0));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
+        }
+        break;
+
+        // float Log10(float x)
+        case INSC_LOG10:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            float result = log10f(INT_TO_FLT_REINTERPRET(arg0));
             *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;

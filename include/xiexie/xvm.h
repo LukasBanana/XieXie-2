@@ -326,6 +326,9 @@ typedef enum
     INSC_ACOS,          // float ACos(float x)
     INSC_ATAN,          // float ATan(float x)
     INSC_POW,           // float Pow(float base, float exp)
+    INSC_LOG,           // float Log(float x)
+    INSC_LOG2,          // float Log2(float x)
+    INSC_LOG10,         // float Log10(float x)
     INSC_SQRT,          // float Sqrt(float x)
 
     /* --- Other intrinsics --- */
