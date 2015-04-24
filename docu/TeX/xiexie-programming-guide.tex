@@ -121,6 +121,9 @@
 
 \SetLanguageXX
 
+\newif\ifToDoList
+%\ToDoListtrue
+
 
 %----------------------------------------------------------------------------------------
 %	TITLE PAGE
@@ -134,7 +137,7 @@
 \hspace*{0.05\textwidth} % Whitespace between the vertical line and title page text
 \parbox[b]{0.75\textwidth}{ % Paragraph box which restricts text to less than the width of the page
 
-{\noindent\Huge\bfseries \xiexie \\ Programming Guide}\\[2\baselineskip] % Title
+{\noindent\Huge\bfseries {\xiexie} \\ Programming Guide}\\[2\baselineskip] % Title
 {\large \textit{A beginner guidance for the Xi\`eXie programming language}}\\[4\baselineskip] % Tagline or further description
 {\Large Lukas \textsc{Hermanns}} % Author name
 
@@ -184,6 +187,8 @@ or \href{https://bitbucket.org/LukasBanana}{Bitbucket}.
 %----------------------------------------------------------------------------------------
 %	TODO LIST
 %----------------------------------------------------------------------------------------
+
+\ifToDoList
 
 \chapter*{ToDo List}
 
@@ -263,6 +268,8 @@ may change over time. Here is a rough ToDo-list:
 	\hline
 \end{tabular}
 \end{center}
+
+\fi
 
 
 \tableofcontents
@@ -407,7 +414,7 @@ These are the kinds of literals:
 	\item Integer Literal (Decimal): e.g. \texttt{3}, \texttt{12}, \texttt{999}, \texttt{1234567890}
 	\item Integer Literal (Hexa-Decimal): e.g. \texttt{0xff}, \texttt{0x00}, \texttt{0xaB29}
 	\item Float Literal: e.g. \texttt{0.0}, \texttt{3.5}, \texttt{12.482}
-	\item String Literal: e.g. \texttt{"Foo Bar"}, \texttt{"Hello, World"}, \texttt{"\textbackslash n\textbackslash t"},
+	\item String Literal: e.g. \texttt{"Foo Bar"}, \texttt{"Hello, World"}, \texttt{"\textbackslash n\textbackslash t"},\\
 		\texttt{"1st fragment"\textvisiblespace"2nd fragment}
 	\item Verbatim String Literal: e.g. \texttt{@"\textbackslash home\textbackslash test"}, \texttt{@"a ""b"" c"}
 \end{itemize}
