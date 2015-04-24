@@ -134,7 +134,7 @@
 \hspace*{0.05\textwidth} % Whitespace between the vertical line and title page text
 \parbox[b]{0.75\textwidth}{ % Paragraph box which restricts text to less than the width of the page
 
-{\noindent\Huge\bfseries \xiexie Programming Guide}\\[2\baselineskip] % Title
+{\noindent\Huge\bfseries \xiexie \\ Programming Guide}\\[2\baselineskip] % Title
 {\large \textit{A beginner guidance for the Xi\`eXie programming language}}\\[4\baselineskip] % Tagline or further description
 {\Large Lukas \textsc{Hermanns}} % Author name
 
@@ -612,14 +612,14 @@ the following class declaration:
 class Widget {
     const c := 0 // Initialize member constant 'c' with 0
     int   v := c // Initialize member variable 'v' with constant 'c'
-    [entry]      // Mark next procedure as the main entry point with attribute 'entry'
-    static void main() {}
+    [final]      // Mark next procedure with attribute 'final'
+    void proc() {}
 }
 \end{lstlisting}
-Now this doesn't seem very complex. But the parser runs into trouble when reading \texttt{[entry]}.
+Now this doesn't seem very complex. But the parser runs into trouble when reading \texttt{[final]}.
 This is because the parser reads it as follows:
 \begin{lstlisting}
-int v := c[entry]
+int v := c[final]
 \end{lstlisting}
 But \texttt{c} is not an array. This is why attributes are written with a double paren, because array accesses
 never begin with '\texttt{[[}'. They may end with '\texttt{]]}', but this is not important for the parser.
@@ -1674,8 +1674,9 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 
 {\footnotesize
 \begin{center}
+\Rotatebox{90}{
 \begin{tabular}[ht]{
-	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.08 \textwidth} | p{0.36 \textwidth} | p{0.234 \textwidth} |
+	| p{0.07 \textheight} | p{0.093 \textheight} | p{0.077 \textheight} | p{0.34 \textheight} | p{0.23 \textheight} |
 }
 	\hline
 	\multicolumn{5}{|c|}{\texttt{1-Register Instruction OpCodes (100...)}} \\
@@ -1711,13 +1712,15 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 		& & & & (D := ByteCode + $\text{R}_{\text{word}}$ + $\text{O}_{\text{byte}}$). \\
 	\hline
 \end{tabular}
+}
 \end{center}
 }
 
 {\footnotesize
 \begin{center}
+\Rotatebox{90}{
 \begin{tabular}[ht]{
-	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.08 \textwidth} | p{0.36 \textwidth} | p{0.234 \textwidth} |
+	| p{0.07 \textheight} | p{0.093 \textheight} | p{0.077 \textheight} | p{0.34 \textheight} | p{0.234 \textheight} |
 }
 	\hline
 	\multicolumn{5}{|c|}{\texttt{Jump Instruction OpCodes (101...)}} \\
@@ -1762,14 +1765,16 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 		Jump to address. \\
 	\hline
 \end{tabular}
+}
 \end{center}
 }
 
 {\footnotesize
 \begin{center}
+\Rotatebox{90}{
 \begin{tabular}[ht]{
-	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.08 \textwidth} | p{0.08 \textwidth}
-	| p{0.27 \textwidth} | p{0.22 \textwidth} |
+	| p{0.07 \textheight} | p{0.093 \textheight} | p{0.077 \textheight} | p{0.077 \textheight}
+	| p{0.26 \textheight} | p{0.185 \textheight} |
 }
 	\hline
 	\multicolumn{6}{|c|}{\texttt{Load/Store Instruction OpCodes (1100..)}} \\
@@ -1796,13 +1801,15 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 		\texttt{O O O O O O O O O O O O O O O O} & Store word to memory. \\
 	\hline
 \end{tabular}
+}
 \end{center}
 }
 
 {\footnotesize
 \begin{center}
+\Rotatebox{90}{
 \begin{tabular}[ht]{
-	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.445 \textwidth} | p{0.255 \textwidth} |
+	| p{0.07 \textheight} | p{0.093 \textheight} | p{0.422 \textheight} | p{0.2 \textheight} |
 }
 	\hline
 	\multicolumn{4}{|c|}{\texttt{Special-1 Instruction OpCodes}} \\
@@ -1829,13 +1836,15 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 		\texttt{V V V V V V V V V V V V V V V V V V V V V V V V V V} & Call intrinsic. \\
 	\hline
 \end{tabular}
+}
 \end{center}
 }
 
 {\footnotesize
 \begin{center}
+\Rotatebox{90}{
 \begin{tabular}[ht]{
-	| p{0.07 \textwidth} | p{0.1 \textwidth} | p{0.165 \textwidth} | p{0.27 \textwidth} | p{0.24 \textwidth} |
+	| p{0.07 \textheight} | p{0.093 \textheight} | p{0.16 \textheight} | p{0.26 \textheight} | p{0.24 \textheight} |
 }
 	\hline
 	\multicolumn{5}{|c|}{\texttt{Special-2 Instruction OpCodes}} \\
@@ -1853,6 +1862,7 @@ This provides a maximum of 64 instructions. However, only 52 mnemonics are curre
 		Restore dynamic link (\texttt{\$lb} and \texttt{\$pc}) \\
 	\hline
 \end{tabular}
+}
 \end{center}
 }
 
@@ -1883,11 +1893,14 @@ Local variables can be store by increasing the \textit{stack pointer} (\texttt{\
 \begin{lstlisting}
 ; void proc() { ... }
 proc:
-  ADD $sp, $sp, 8   ; Allocate memory on the stack for two words (2*4 bytes)
+  ADD $sp, $sp, 8   ; Allocate memory on the stack ...
+                      ; ... for two words (2*4 bytes)
   MOV $r0, 42       ; Store value 42 in register $r0
-  STW $r0, ($lb) 8  ; Store register $r0 in local scope at first position (after dynamic link)
+  STW $r0, ($lb) 8  ; Store register $r0 in local scope ...
+                      ; ... at first position (after dynamic link)
   ADD $r0, $r0, 10  ; Increment value of register $r0
-  STW $r0, ($lb) 12 ; Store register $r0 in local scope at second position
+  STW $r0, ($lb) 12 ; Store register $r0 in local scope ...
+                      ; ... at second position
   ...
 \end{lstlisting}
 The arguments for a procedure call are meant to be pushed onto the stack from \textit{right-to-left}.
