@@ -106,11 +106,11 @@ std::string UniqueLabel(const ProcSignature& procSignature, const std::string* c
     return label;
 }
 
-std::string UniqueLabel(const AbstractSyntaxTrees::ProcDeclStmnt& procDecl)
+std::string UniqueLabel(const AbstractSyntaxTrees::ProcDeclStmnt& procDecl, bool appendClassIdent)
 {
     if (procDecl.procSignature)
     {
-        if (procDecl.parentRef)
+        if (appendClassIdent && procDecl.parentRef)
         {
             if (procDecl.parentRef->isModule)
             {
@@ -333,7 +333,7 @@ std::string DisplayLabel(const std::string& label)
 
 /* --- VirtualTable --- */
 
-std::string VirtualTable(const AbstractSyntaxTrees::ClassDeclStmnt& classDecl)
+std::string Vtable(const AbstractSyntaxTrees::ClassDeclStmnt& classDecl)
 {
     return classDecl.ident + ".vtable";
 }

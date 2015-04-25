@@ -19,7 +19,7 @@ TACIndirectCallInst::TACIndirectCallInst() :
     TACInst{ OpCodes::INDCALL }
 {
 }
-TACIndirectCallInst::TACIndirectCallInst(const std::string& procIden, const TACVar& objVar, unsigned int vtableOffset) :
+TACIndirectCallInst::TACIndirectCallInst(const std::string& procIdent, const TACVar& objVar, unsigned int vtableOffset) :
     TACInst     { OpCodes::INDCALL },
     procIdent   { procIdent        },
     objVar      { objVar           },
@@ -34,7 +34,7 @@ TACInst::Types TACIndirectCallInst::Type() const
 
 std::string TACIndirectCallInst::ToString() const
 {
-    return OpCodePrefix() + " | " + objVar.ToString() + "." + CodeGenerator::NameMangling::DisplayLabel(procIdent);
+    return OpCodePrefix() + " | (" + objVar.ToString() + ")." + CodeGenerator::NameMangling::DisplayLabel(procIdent);
 }
 
 TACInstPtr TACIndirectCallInst::Copy(const TACVar::IDType varIDOffset) const

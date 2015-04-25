@@ -21,6 +21,7 @@
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
 #include "TACDirectCallInst.h"
+#include "TACIndirectCallInst.h"
 #include "TACStackInst.h"
 #include "TACHeapInst.h"
 
@@ -150,6 +151,7 @@ class XASMGenerator final : public AsmGenerator, private RegisterAllocator::Call
         void GenerateRelationInst(const TACRelationInst& inst);
         void GenerateReturnInst(const TACReturnInst& inst);
         void GenerateDirectCallInst(const TACDirectCallInst& inst);
+        void GenerateIndirectCallInst(const TACIndirectCallInst& inst);
         void GenerateStackInst(const TACStackInst& inst);
         void GenerateHeapInst(const TACHeapInst& inst);
 

@@ -34,7 +34,7 @@ std::string UniqueLabel(const AbstractSyntaxTrees::ProcSignature& procSignature,
 Returns the unique label for the specified procedure signature including the identifier of its namespace (parent class).
 \throws std::invalid_argument If name mangling failed.
 */
-std::string UniqueLabel(const AbstractSyntaxTrees::ProcDeclStmnt& procDecl);
+std::string UniqueLabel(const AbstractSyntaxTrees::ProcDeclStmnt& procDecl, bool appendClassIdent = true);
 
 /**
 Converts the specified label into a string for display,
@@ -44,7 +44,7 @@ e.g. "CWidget.PdoSomething,I,A@R@String" -> "Widget.doSomething(int, String[])".
 std::string DisplayLabel(const std::string& label);
 
 //! Returns the label for the virutal-table (vtable) of the specified class, e.g. "MyClass.vtable".
-std::string VirtualTable(const AbstractSyntaxTrees::ClassDeclStmnt& classDecl);
+std::string Vtable(const AbstractSyntaxTrees::ClassDeclStmnt& classDecl);
 
 
 } // /namespace NameMangling

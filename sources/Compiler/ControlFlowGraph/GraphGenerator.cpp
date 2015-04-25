@@ -19,6 +19,7 @@
 #include "TACReturnInst.h"
 #include "TACSwitchInst.h"
 #include "TACDirectCallInst.h"
+#include "TACIndirectCallInst.h"
 #include "TACStackInst.h"
 #include "TACHeapInst.h"
 
@@ -238,7 +239,6 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     auto procDecl = ast->declStmntRef;
     auto procSig = procDecl->procSignature.get();
     auto procClass = procDecl->parentRef;
-    auto procIdent = UniqueLabel(*ast->declStmntRef);
 
     /* Make instructions to push arguments */
     for (auto it = ast->argExprs.rbegin(); it != ast->argExprs.rend(); ++it)
@@ -247,16 +247,17 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     if (procSig->isStatic)
     {
         /* Make direct call instruction */
+        auto procIdent = UniqueLabel(*ast->declStmntRef);
         BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
     }
     else
     {
         /* Generate instructions for variable-name, to acquire 'this' pointer */
         GenerateVarName(*ast->procName);
-        BB()->MakeInst<TACCopyInst>(ThisPtr(), PopVar());
 
         /* Make indirect call instruction */
-        BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
+        auto procIdent = UniqueLabel(*ast->declStmntRef, false);
+        BB()->MakeInst<TACIndirectCallInst>(procIdent, PopVar(), procDecl->vtableOffset);
     }
 }
 
@@ -1514,7 +1515,7 @@ void GraphGenerator::GenerateClassAlloc(unsigned int instanceSize, unsigned int 
 
 void GraphGenerator::GenerateClassAlloc(const ClassDeclStmnt& classDecl)
 {
-    GenerateClassAlloc(classDecl.GetInstanceSize(), classDecl.GetTypeID(), VirtualTable(classDecl));
+    GenerateClassAlloc(classDecl.GetInstanceSize(), classDecl.GetTypeID(), Vtable(classDecl));
 }
 
 void GraphGenerator::CopyAndPushResultVar(const TACVar& destVar)

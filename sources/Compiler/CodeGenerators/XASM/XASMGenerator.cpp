@@ -543,6 +543,9 @@ void XASMGenerator::GenerateInst(const TACInst& inst)
         case TACInst::Types::DirectCall:
             GenerateDirectCallInst(static_cast<const TACDirectCallInst&>(inst));
             break;
+        case TACInst::Types::IndirectCall:
+            GenerateIndirectCallInst(static_cast<const TACIndirectCallInst&>(inst));
+            break;
         case TACInst::Types::Stack:
             GenerateStackInst(static_cast<const TACStackInst&>(inst));
             break;
@@ -786,6 +789,14 @@ void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
     }
 }
 
+void XASMGenerator::GenerateIndirectCallInst(const TACIndirectCallInst& inst)
+{
+    auto reg0 = Reg(inst.objVar);
+    Line("ldw " + reg0 + ", (" + reg0 + ") 8");
+    Line("ldw " + reg0 + ", (" + reg0 + ") " + std::to_string(inst.vtableOffset * 4));
+    Line("call " + reg0);
+}
+
 void XASMGenerator::GenerateStackInst(const TACStackInst& inst)
 {
     if (inst.opcode == OpCodes::PUSH)
@@ -842,7 +853,7 @@ void XASMGenerator::GenerateVtable(const ClassDeclStmnt& classDecl)
 {
     const auto& vtable = classDecl.GetVtable();
 
-    GlobalLabel(classDecl.ident + ".vtable");
+    GlobalLabel(NameMangling::Vtable(classDecl));
     IncIndent();
     {
         for (const auto procDecl : vtable.procs)

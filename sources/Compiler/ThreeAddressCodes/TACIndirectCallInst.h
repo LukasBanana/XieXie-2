@@ -23,7 +23,7 @@ class TACIndirectCallInst : public TACInst
     public:
         
         TACIndirectCallInst();
-        TACIndirectCallInst(const std::string& procIden, const TACVar& objVar, unsigned int vtableOffset);
+        TACIndirectCallInst(const std::string& procIdent, const TACVar& objVar, unsigned int vtableOffset);
 
         Types Type() const override;
         std::string ToString() const override;
