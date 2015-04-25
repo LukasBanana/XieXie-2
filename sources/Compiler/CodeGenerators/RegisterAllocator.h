@@ -64,8 +64,16 @@ class RegisterAllocator
         //! Returns the register identifier for the specified TAC variable.
         RegIdent Reg(const TACVar& var);
 
-        //! Spills all registers. This must be used, before a CALL instruction.
-        void SpillAllRegs();
+        /**
+        Spills all variable registers.
+        \remarks This must be used, before a CALL instruction!
+        */
+        void SpillAllVars();
+        /**
+        Spills all member- and global variable registers.
+        \remarks This must be used, before a procedure returns!
+        */
+        void SpillAllMemberAndGlobals();
 
         //! Resets all registers to be available.
         void Reset();

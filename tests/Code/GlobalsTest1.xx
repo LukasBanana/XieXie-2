@@ -9,6 +9,7 @@ class Widget {
 	static const c := Widget.a + Widget.b
 	
 	static int g_a := 16
+	static int g_b
 	
 	static int test2(int x) {
 		return x*2
@@ -22,11 +23,15 @@ class Test {
 		
 		var x := Widget.c + Widget.g_a
 		
+		Widget.g_b++
+		
 		for int i := 0 ; i < 10 ; i++ {
 			// registers must be stored here
 			x += Widget.test2(i)
 			// registers must be restored here
 		}
+		
+		Widget.g_b++
 		
 		return x
 		
