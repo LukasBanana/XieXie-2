@@ -1,0 +1,47 @@
+
+// Proc Test 2
+// 25/04/2015
+
+class Widget {
+	
+	void setX(int x) {
+		this.x := x
+	}
+	
+	static void setRoot(Widget root) {
+		Widget.root := root
+	}
+	
+	Widget parent
+	Widget[] children
+	
+	static Widget root
+	
+	private int x
+	
+}
+
+class Test {
+	
+	static void test1(Widget w) {
+		w.setX(5)
+	}
+	
+	static void test2(Widget w) {
+		w.parent.setX(6)
+	}
+	
+	static void test3(Widget[] w) {
+		w[1].children[2].setX(7)
+	}
+	
+	static void test4() {
+		Widget.root.setX(8)
+	}
+	
+	static void test5() {
+		Widget.setRoot(null)
+	}
+	
+}
+
