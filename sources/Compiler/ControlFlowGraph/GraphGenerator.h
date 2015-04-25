@@ -166,7 +166,6 @@ class GraphGenerator final : private Visitor
         TACVar LValueVar(const AST& ast);
         //! Generates a local TAC variable for the specifid variable name.
         TACVar LValueVarFromVarName(const VarName& ast);
-        TACVar GlobalVar(const VarDecl& ast);
 
         //! Tries to evaluates the specified expression into a literal.
         bool EvaluateExpr(const Expr& ast, TACVar& var);

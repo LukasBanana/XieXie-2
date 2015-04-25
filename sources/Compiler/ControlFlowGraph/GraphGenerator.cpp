@@ -1572,7 +1572,7 @@ void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast)
         {
             if (varDecl->IsStatic())
                 BB()->MakeInst<TACHeapInst>(OpCodes::LDW, var, TACVar::varGlobalPtr, varDecl->memoryOffset);
-            if (!varDecl->IsLocal())
+            else if (!varDecl->IsLocal())
                 BB()->MakeInst<TACHeapInst>(OpCodes::LDW, var, var, varDecl->memoryOffset);
         }
         else
@@ -1843,14 +1843,12 @@ TACVar GraphGenerator::LValueVar(const AST& ast)
     return LValueVar(&ast);
 }
 
+//!!!TODO!!!
 TACVar GraphGenerator::LValueVarFromVarName(const VarName& ast)
 {
     return LValueVar(ast.GetLast().declRef);
-}
-
-TACVar GraphGenerator::GlobalVar(const VarDecl& ast)
-{
-    return varMngr_.GlobalVar(ast);
+    //GenerateVarNameAddress();
+    //return PopVar();
 }
 
 bool GraphGenerator::EvaluateExpr(const Expr& ast, TACVar& var)
