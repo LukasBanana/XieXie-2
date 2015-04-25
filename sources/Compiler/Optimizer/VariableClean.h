@@ -19,6 +19,7 @@ namespace Optimization
 {
 
 
+//! Removes instructions which write variables, which are no longer required.
 class VariableClean : public TACOptimizer
 {
     
@@ -33,6 +34,7 @@ class VariableClean : public TACOptimizer
         void TransformSwitchInst(TACInstPtr& inst) override;
         void TransformStackInst(TACInstPtr& inst) override;
         void TransformHeapInst(TACInstPtr& inst) override;
+        void TransformIndirectCallInst(TACInstPtr& inst) override;
 
         bool IsInstUnnecessary(const TACCopyInst& inst) const;
 

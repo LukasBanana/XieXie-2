@@ -16,6 +16,7 @@ namespace Optimization
 {
 
 
+//! Removes conditional branches which can be evaluated at compile time.
 class KillBranches : public CFGOptimizer
 {
     

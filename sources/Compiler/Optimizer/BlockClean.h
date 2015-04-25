@@ -16,6 +16,7 @@ namespace Optimization
 {
 
 
+//! Removes empty basic blocks.
 class BlockClean : public CFGOptimizer
 {
     

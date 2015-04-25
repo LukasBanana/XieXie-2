@@ -46,6 +46,7 @@ class TACOptimizer : public Optimizer
         virtual void TransformStackInst(TACInstPtr& inst);
         virtual void TransformHeapInst(TACInstPtr& inst);
         virtual void TransformDirectCallInst(TACInstPtr& inst);
+        virtual void TransformIndirectCallInst(TACInstPtr& inst);
 
         //! Notifies the optimization pass, that something has changed.
         void Changed();

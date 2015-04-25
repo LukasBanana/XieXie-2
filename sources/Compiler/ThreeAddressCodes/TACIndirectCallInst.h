@@ -29,6 +29,10 @@ class TACIndirectCallInst : public TACInst
         std::string ToString() const override;
         TACInstPtr Copy(const TACVar::IDType varIDOffset = 0) const override;
 
+        bool ReadsVar(const TACVar& var) const override;
+
+        void ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags = (VarFlags::Dest | VarFlags::Source)) override;
+
         std::string     procIdent;
         TACVar          objVar;
         unsigned int    vtableOffset = 0;

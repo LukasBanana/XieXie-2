@@ -7,8 +7,8 @@
 
 #include "TACDirectCallInst.h"
 #include "StringModifier.h"
-#include "CodeGenerators/NameMangling.h"
 #include "MakeUnique.h"
+#include "CodeGenerators/NameMangling.h"
 
 
 namespace ThreeAddressCodes

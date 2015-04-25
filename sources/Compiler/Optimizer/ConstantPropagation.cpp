@@ -128,6 +128,12 @@ void ConstantPropagation::TransformDirectCallInst(TACInstPtr& inst)
     vars_.clear();
 }
 
+void ConstantPropagation::TransformIndirectCallInst(TACInstPtr& inst)
+{
+    /* Call instruction kills all constants */
+    vars_.clear();
+}
+
 bool ConstantPropagation::IsNOP(const TACModifyInst& inst) const
 {
     /* Get single constant */

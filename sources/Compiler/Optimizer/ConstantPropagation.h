@@ -21,6 +21,7 @@ namespace Optimization
 {
 
 
+//! Performs constant-folding and propagates them through each basic block.
 class ConstantPropagation : public TACOptimizer
 {
     
@@ -36,6 +37,7 @@ class ConstantPropagation : public TACOptimizer
         void TransformStackInst(TACInstPtr& inst) override;
         void TransformHeapInst(TACInstPtr& inst) override;
         void TransformDirectCallInst(TACInstPtr& inst) override;
+        void TransformIndirectCallInst(TACInstPtr& inst) override;
 
         //! Returns true if this is equivalent to a no-operation instruction, e.g. "a + 0", or "a * 1".
         bool IsNOP(const TACModifyInst& inst) const;

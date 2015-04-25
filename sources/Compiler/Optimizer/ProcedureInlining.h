@@ -19,6 +19,7 @@ namespace Optimization
 {
 
 
+//! Replaces direct calls by the respective procedures, if possible.
 class ProcedureInlining : public TACOptimizer
 {
     

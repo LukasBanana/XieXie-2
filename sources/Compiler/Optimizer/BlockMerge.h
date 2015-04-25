@@ -16,6 +16,7 @@ namespace Optimization
 {
 
 
+//! Merges basic blocks.
 class BlockMerge : public CFGOptimizer
 {
     

@@ -42,6 +42,20 @@ TACInstPtr TACIndirectCallInst::Copy(const TACVar::IDType varIDOffset) const
     return MakeUnique<TACIndirectCallInst>(*this);
 }
 
+bool TACIndirectCallInst::ReadsVar(const TACVar& var) const
+{
+    return objVar == var;
+}
+
+void TACIndirectCallInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
+{
+    if (flags(VarFlags::Source))
+    {
+        if (!flags(VarFlags::TempOnly) || objVar.IsTemp())
+            objVar.Replace(varToReplace, replacedVar);
+    }
+}
+
 
 } // /namespace ThreeAddressCodes
 
