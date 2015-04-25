@@ -276,7 +276,7 @@ DEF_VISIT_PROC(GraphGenerator, ReturnStmnt)
     {
         PushBB(bb);
         {
-            Visit(ast->expr);
+            GenerateArithmeticExpr(*ast->expr);
             auto var = Var();
 
             /* Make instruction */
@@ -1568,8 +1568,15 @@ void GraphGenerator::GenerateVarNameValue(VarName& ast, const TACVar* baseVar)
 // Generates TAC instructions to access a dynamic variable name, i.e. only for reading
 void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast, const TACVar* baseVar)
 {
-    if (!ast || ast->declRef->Type() == AST::Types::ProcOverloadSwitch)
+    if (!ast)
         return;
+
+    /* Check if this is an immediate call of a member procedure */
+    if (ast->declRef->Type() == AST::Types::ProcOverloadSwitch)
+    {
+        PushVar(TACVar::varThisPtr);
+        return;
+    }
 
     TACVar var;
 
@@ -1596,7 +1603,10 @@ void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast, const TACVar* bas
         if (varDecl)
         {
             if (varDecl->IsStatic())
+            {
+                /* Generate code to access global variable */
                 BB()->MakeInst<TACHeapInst>(OpCodes::LDW, var, TACVar::varGlobalPtr, varDecl->memoryOffset);
+            }
             else if (!varDecl->IsLocal())
             {
                 /* Generate code to access member variable */
