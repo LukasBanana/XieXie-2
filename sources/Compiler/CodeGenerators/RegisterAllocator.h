@@ -15,6 +15,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <memory>
 
 
 namespace CodeGenerator
@@ -29,22 +30,42 @@ class RegisterAllocator
     
     public:
         
-        using LocationType  = size_t;
+        using RegLocation   = size_t;
         using RegIdent      = std::string;
         using RegList       = std::vector<RegIdent>;
-        using RegCallback   = std::function<void(const RegIdent& reg, LocationType location)>;
-        using MoveCallback  = std::function<void(const RegIdent& dest, const RegIdent& source)>;
+
+        enum class Scopes
+        {
+            Local,
+            Global,
+        };
+
+        //! Register allocation callback interface.
+        class Callback
+        {
+            
+            public:
+                
+                virtual ~Callback()
+                {
+                }
+
+                virtual void SaveReg(const RegIdent& reg, RegLocation location, Scopes scope) = 0;
+                virtual void LoadReg(const RegIdent& reg, RegLocation location, Scopes scope) = 0;
+                virtual void MoveReg(const RegIdent& dest, const RegIdent& source) = 0;
+
+        };
+
+        /* === Functions === */
 
         //! \throws std::invalid_argument If 'availableRegisters' is empty or any of the callbacks is null.
-        RegisterAllocator(
-            const RegList& availableRegisters,
-            const RegCallback& saveCallback,
-            const RegCallback& loadCallback,
-            const MoveCallback& moveCallback
-        );
+        RegisterAllocator(const RegList& availableRegisters, Callback& callback);
 
         //! Returns the register identifier for the specified TAC variable.
         RegIdent Reg(const TACVar& var);
+
+        //! Spills all registers. This must be used, before a CALL instruction.
+        void SpillAllRegs();
 
         //! Resets all registers to be available.
         void Reset();
@@ -53,8 +74,8 @@ class RegisterAllocator
         
         struct SpilledReg
         {
-            RegIdent        reg;
-            LocationType    loc;
+            RegIdent    reg;
+            RegLocation loc;
         };
 
         using VarAssignMap = std::map<TACVar, RegIdent>;
@@ -62,23 +83,30 @@ class RegisterAllocator
 
         /* === Functions === */
 
+        //! Acquires a new register for the specified variable.
+        RegIdent AcquireNewReg(const TACVar& var);
         //! Allocates a new register for the specified variable.
         RegIdent AllocNewReg(const TACVar& var);
-        //! Recover variable from spilled register.
-        RegIdent RecoverVar(const std::pair<TACVar, SpilledReg>& var);
+        
+        //! Spills (i.e. stores) a register.
+        void SpillVar(VarAssignMap::iterator& varToSpill);
+        //! Unspills (i.e. restores) a register.
+        RegIdent UnspillVar(SpilledVarMap::iterator spilledVar);
         //! Spills a register for the specified variable.
-        RegIdent SpillReg(VarAssignMap::iterator varToSpill, const TACVar& var);
+        RegIdent SpillVarAndReplace(VarAssignMap::iterator varToSpill, const TACVar& var);
+
         //! Returns a register which can be spilled.
         VarAssignMap::iterator SelectRegToSpill();
+
+        //! Load register from global scope.
+        void LoadGlobalReg(const RegIdent& reg, const TACVar& var);
 
         /* === Members === */
 
         RegList         regsOrig_;      //!< Original register list.
         RegList         regs_;          //!< List of all currently available registers.
 
-        RegCallback     saveReg_;       //!< Callback to save a register onto stack (spill).
-        RegCallback     loadReg_;       //!< Callback to load a register from stack.
-        MoveCallback    moveReg_;       //!< Callback to move a register into another register.
+        Callback&       callback_;      //!< Register allocation callback instance.
 
         VarAssignMap    vars_;          //!< Map of current available variables.
         SpilledVarMap   spilledVars_;   //!< Map of all spilled variables (map-value is location).

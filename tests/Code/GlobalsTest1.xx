@@ -2,13 +2,17 @@
 // Globals Test 1
 // 25/04/2015
 
-class Enum {
+class Widget {
 	
 	static const a := 1
 	static const b := 2
-	static const c := Enum.a + Enum.b
+	static const c := Widget.a + Widget.b
 	
-	static int g_a := 0
+	static int g_a := 16
+	
+	static int test2(int x) {
+		return x*2
+	}
 	
 }
 
@@ -16,7 +20,15 @@ class Test {
 	
 	static int test1() {
 		
-		return Enum.c + Enum.g_a
+		var x := Widget.c + Widget.g_a
+		
+		for int i := 0 ; i < 10 ; i++ {
+			// registers must be stored here
+			x += Widget.test2(i)
+			// registers must be restored here
+		}
+		
+		return x
 		
 	}
 	

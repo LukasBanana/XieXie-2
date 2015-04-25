@@ -39,12 +39,7 @@ static RegisterAllocator::RegList XASMRegList()
 
 XASMGenerator::XASMGenerator(std::ostream& outputStream, const std::string& indentStr) :
     AsmGenerator{ outputStream, indentStr },
-    regAlloc_{
-        XASMRegList(),
-        std::bind(&XASMGenerator::SaveReg, this, _1, _2),
-        std::bind(&XASMGenerator::LoadReg, this, _1, _2),
-        std::bind(&XASMGenerator::MoveReg, this, _1, _2)
-    }
+    regAlloc_   { XASMRegList(), *this    }
 {
 }
 
@@ -200,17 +195,23 @@ std::string XASMGenerator::Reg(const TACVar& var)
     return regAlloc_.Reg(var);
 }
 
-void XASMGenerator::SaveReg(const RegisterAllocator::RegIdent& reg, RegisterAllocator::LocationType location)
+void XASMGenerator::SaveReg(const RegAlloc::RegIdent& reg, RegAlloc::RegLocation location, RegAlloc::Scopes scope)
 {
-    Line("stw " + reg + ", ($lb) " + std::to_string(8 + location*4));
+    if (scope == RegAlloc::Scopes::Global)
+        Line("stw " + reg + ", ($gp) " + std::to_string(location));
+    else
+        Line("stw " + reg + ", ($lb) " + std::to_string(8 + location*4));
 }
 
-void XASMGenerator::LoadReg(const RegisterAllocator::RegIdent& reg, RegisterAllocator::LocationType location)
+void XASMGenerator::LoadReg(const RegAlloc::RegIdent& reg, RegAlloc::RegLocation location, RegAlloc::Scopes scope)
 {
-    Line("ldw " + reg + ", ($lb) " + std::to_string(8 + location*4));
+    if (scope == RegAlloc::Scopes::Global)
+        Line("ldw " + reg + ", ($gp) " + std::to_string(location));
+    else
+        Line("ldw " + reg + ", ($lb) " + std::to_string(8 + location*4));
 }
 
-void XASMGenerator::MoveReg(const RegisterAllocator::RegIdent& dest, const RegisterAllocator::RegIdent& source)
+void XASMGenerator::MoveReg(const RegAlloc::RegIdent& dest, const RegAlloc::RegIdent& source)
 {
     Line("mov " + dest + ", " + source);
 }
@@ -777,7 +778,10 @@ void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
     if (inst.isInvocation)
         Line("invk " + inst.procIdent);
     else
+    {
+        regAlloc_.SpillAllRegs();
         Line("call " + inst.procIdent);
+    }
 }
 
 void XASMGenerator::GenerateStackInst(const TACStackInst& inst)

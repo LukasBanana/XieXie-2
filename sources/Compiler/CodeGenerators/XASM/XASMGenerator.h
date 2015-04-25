@@ -35,7 +35,7 @@ using namespace ControlFlowGraph;
 using namespace ThreeAddressCodes;
 using namespace AbstractSyntaxTrees;
 
-class XASMGenerator final : public AsmGenerator
+class XASMGenerator final : public AsmGenerator, private RegisterAllocator::Callback
 {
     
     public:
@@ -47,6 +47,7 @@ class XASMGenerator final : public AsmGenerator
     private:
         
         using OpCodes = TACInst::OpCodes;
+        using RegAlloc = RegisterAllocator;
 
         /* === Functions === */
 
@@ -86,9 +87,9 @@ class XASMGenerator final : public AsmGenerator
 
         std::string Reg(const TACVar& var);
 
-        void SaveReg(const RegisterAllocator::RegIdent& reg, RegisterAllocator::LocationType location);
-        void LoadReg(const RegisterAllocator::RegIdent& reg, RegisterAllocator::LocationType location);
-        void MoveReg(const RegisterAllocator::RegIdent& dest, const RegisterAllocator::RegIdent& source);
+        void SaveReg(const RegAlloc::RegIdent& reg, RegAlloc::RegLocation location, RegAlloc::Scopes scope) override;
+        void LoadReg(const RegAlloc::RegIdent& reg, RegAlloc::RegLocation location, RegAlloc::Scopes scope) override;
+        void MoveReg(const RegAlloc::RegIdent& dest, const RegAlloc::RegIdent& source) override;
 
         /* --- Block References --- */
 
@@ -168,7 +169,7 @@ class XASMGenerator final : public AsmGenerator
 
         /* === Members === */
 
-        RegisterAllocator                       regAlloc_;
+        RegAlloc                                regAlloc_;
 
         BasicBlock::BlockList                   basicBlocks_;
 
