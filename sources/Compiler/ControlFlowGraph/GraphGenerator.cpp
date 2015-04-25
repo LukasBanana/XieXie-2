@@ -996,6 +996,10 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
                 var = (ast->value == "false" ? "0" : "1");
                 break;
 
+            case LiteralExpr::Literals::Pointer:
+                var = "0";
+                break;
+
             default:
                 var = ast->value;
                 break;
