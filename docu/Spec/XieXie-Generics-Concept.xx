@@ -1,0 +1,58 @@
+
+class Iterable<Type> {
+	
+	int size()
+	Type get(int i)
+	
+}
+
+class List<Type> : Iterable<Type> {
+	
+	void append(Type entry)
+	void remove(Type@ entry)
+	int find(Type@ entry)
+	
+}
+
+class ArrayList<Type> : List<Type> {
+	
+	[[override]]
+	int size() {
+		return array.size()
+	}
+	
+	Type get(int i) {
+		return array[i]
+	}
+	
+	int find(Type@ entry) {
+		int i
+		foreach e : array {
+			if e.equals(entry) {
+				return i
+			}
+			i++
+		}
+		return -1
+	}
+	
+	private Type[] array
+	
+}
+
+class Test {
+	
+	int countDuplicates<Type>(Iterable<Type>@ list) {
+		int count
+		for int i := 1 ; i < list.size() ; i++ {
+			for int j := 0 ; j < i ; j++ {
+				if list.get(i).equals(list.get(j)) {
+					count++
+					break
+				}
+			}
+		}
+		return count
+	}
+	
+}
