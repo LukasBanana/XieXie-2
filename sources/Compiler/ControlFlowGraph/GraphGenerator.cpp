@@ -1039,8 +1039,11 @@ DEF_VISIT_PROC(GraphGenerator, ProcCallExpr)
     PushVar(var);
 }
 
+//!!!INCOMPLETE!!! -> array access is missing
 DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)
 {
+    Visit(ast->primaryValueExpr);
+    Visit(ast->procCall);
 }
 
 DEF_VISIT_PROC(GraphGenerator, AllocExpr)
@@ -1544,9 +1547,10 @@ void GraphGenerator::GenerateVarNameValue(VarName& ast, bool* isFloat)
         *isFloat = IsASTFloat(lastName);
 }
 
+// Generates TAC instructions to access a dynamic variable name, i.e. only for reading
 void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast)
 {
-    if (!ast)
+    if (!ast || ast->declRef->Type() == AST::Types::ProcOverloadSwitch)
         return;
 
     TACVar var;
@@ -1606,6 +1610,7 @@ void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast)
     PushVar(var);
 }
 
+// Generates TAC instructions to access a static variable name, i.e. from global scope and only for reading
 void GraphGenerator::GenerateVarNameValueStatic(VarDecl* ast)
 {
     /* Generate code to access global variable */

@@ -12,6 +12,10 @@ class Widget {
 		Widget.root := root
 	}
 	
+	static Widget getRoot() {
+		return Widget.root
+	}
+	
 	Widget parent
 	Widget[] children
 	
@@ -45,6 +49,10 @@ class Test {
 	
 	static void test6() {
 		Widget.setRoot(null)
+	}
+	
+	static void test7() {
+		Widget.getRoot().setX(10)
 	}
 	
 }
