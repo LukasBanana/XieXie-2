@@ -92,6 +92,12 @@ TACVar TACVarManager::PopVar()
     return var;
 }
 
+void TACVarManager::ReleaseVar(const TACVar& var)
+{
+    if (var.type == TACVar::Types::Temp)
+        RemoveTempVarID(var.id);
+}
+
 TACVar TACVarManager::Var()
 {
     return varStack_.Top();

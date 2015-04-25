@@ -101,6 +101,7 @@ void VariableClean::TransformHeapInst(TACInstPtr& inst)
     auto heapInst = static_cast<TACHeapInst*>(inst.get());
 
     /* Propagate variable usage */
+    ReadVar(heapInst->baseVar);
     if (heapInst->IsLoadOp())
     {
         if (IsDestVarRequired(heapInst->var))
@@ -110,6 +111,12 @@ void VariableClean::TransformHeapInst(TACInstPtr& inst)
     }
     else
         ReadVar(heapInst->var);
+}
+
+void VariableClean::TransformIndirectCallInst(TACInstPtr& inst)
+{
+    /* Propagate variable usage */
+    ReadVar(TACVar::varThisPtr);
 }
 
 bool VariableClean::IsInstUnnecessary(const TACCopyInst& inst) const

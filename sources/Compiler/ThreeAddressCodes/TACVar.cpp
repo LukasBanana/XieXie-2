@@ -19,10 +19,11 @@ namespace ThreeAddressCodes
  * TACVar class
  */
 
-const TACVar TACVar::varResult   { 1, Types::Result   };
-const TACVar TACVar::varThisPtr  { 1, Types::ThisPtr  };
-const TACVar TACVar::varStackPtr { 1, Types::StackPtr };
-const TACVar TACVar::varFramePtr { 1, Types::FramePtr };
+const TACVar TACVar::varResult    { 1, Types::Result    };
+const TACVar TACVar::varThisPtr   { 1, Types::ThisPtr   };
+const TACVar TACVar::varGlobalPtr { 1, Types::GlobalPtr };
+const TACVar TACVar::varStackPtr  { 1, Types::StackPtr  };
+const TACVar TACVar::varFramePtr  { 1, Types::FramePtr  };
 
 TACVar::TACVar(IDType id, const Types type) :
     id  { id   },
@@ -83,6 +84,8 @@ std::string TACVar::ToString() const
             return "out";
         case Types::ThisPtr:
             return "this*";
+        case Types::GlobalPtr:
+            return "global*";
         case Types::StackPtr:
             return "stack*";
         case Types::FramePtr:
@@ -125,6 +128,11 @@ bool TACVar::IsMember() const
 bool TACVar::IsThisPtr() const
 {
     return type == Types::ThisPtr;
+}
+
+bool TACVar::IsGlobalPtr() const
+{
+    return type == Types::GlobalPtr;
 }
 
 bool TACVar::IsStackPtr() const

@@ -64,7 +64,7 @@ void VariableReduction::TransformReturnInst(TACInstPtr& inst)
 {
     auto returnInst = static_cast<TACReturnInst*>(inst.get());
 
-    /* Propagate variabel usage */
+    /* Propagate variable usage */
     if (returnInst->hasVar)
         ReadVar(returnInst->src, *inst);
 }
@@ -73,7 +73,7 @@ void VariableReduction::TransformSwitchInst(TACInstPtr& inst)
 {
     auto switchInst = static_cast<TACSwitchInst*>(inst.get());
 
-    /* Propagate variabel usage */
+    /* Propagate variable usage */
     ReadVar(switchInst->src, *inst);
 }
 
@@ -81,7 +81,7 @@ void VariableReduction::TransformStackInst(TACInstPtr& inst)
 {
     auto stackInst = static_cast<TACStackInst*>(inst.get());
 
-    /* Propagate variabel usage */
+    /* Propagate variable usage */
     if (stackInst->IsStoreOp())
         ReadVar(stackInst->var, *inst);
     else
@@ -92,11 +92,18 @@ void VariableReduction::TransformHeapInst(TACInstPtr& inst)
 {
     auto heapInst = static_cast<TACHeapInst*>(inst.get());
 
-    /* Propagate variabel usage */
+    /* Propagate variable usage */
+    ReadVar(heapInst->baseVar, *inst);
     if (heapInst->IsStoreOp())
         ReadVar(heapInst->var, *inst);
     else
         WriteVar(heapInst->var, *inst);
+}
+
+void VariableReduction::TransformIndirectCallInst(TACInstPtr& inst)
+{
+    /* Propagate variable usage */
+    ReadVar(TACVar::varThisPtr, *inst);
 }
 
 void VariableReduction::ReadVar(const TACVar& var, TACInst& inst)

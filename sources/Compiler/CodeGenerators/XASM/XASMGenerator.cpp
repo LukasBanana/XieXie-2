@@ -184,6 +184,8 @@ std::string XASMGenerator::Reg(const TACVar& var)
             return "$ar";
         case TACVar::Types::ThisPtr:
             return "$xr";
+        case TACVar::Types::GlobalPtr:
+            return "$gp";
         case TACVar::Types::StackPtr:
             return "$sp";
         case TACVar::Types::FramePtr:

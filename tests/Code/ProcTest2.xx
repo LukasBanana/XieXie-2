@@ -31,15 +31,19 @@ class Test {
 		w.parent.setX(6)
 	}
 	
-	static void test3(Widget[] w) {
-		w[1].children[2].setX(7)
+	static void test3(Widget w) {
+		w.parent.parent.parent.setX(7)
 	}
 	
-	static void test4() {
-		Widget.root.setX(8)
+	static void test4(Widget[] w) {
+		w[1].children[2].setX(8)
 	}
 	
 	static void test5() {
+		Widget.root.setX(9)
+	}
+	
+	static void test6() {
 		Widget.setRoot(null)
 	}
 	

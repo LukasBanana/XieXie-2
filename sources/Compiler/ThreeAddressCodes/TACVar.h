@@ -43,6 +43,7 @@ class TACVar
 
             Result,     //!< Argument return '$ar'.
             ThisPtr,    //!< This pointer '$xr'.
+            GlobalPtr,  //!< Global pointer '$gp'.
             StackPtr,   //!< Stack pointer '$sp'.
             FramePtr,   //!< Frame pointer '$lb'.
         };
@@ -86,6 +87,8 @@ class TACVar
 
         //! Returns true if this is a frame pointer variable.
         bool IsThisPtr() const;
+        //! Returns true if this is a global pointer variable.
+        bool IsGlobalPtr() const;
         //! Returns true if this is a frame pointer variable.
         bool IsStackPtr() const;
         //! Returns true if this is a frame pointer variable.
@@ -113,6 +116,7 @@ class TACVar
 
         static const TACVar varResult;
         static const TACVar varThisPtr;
+        static const TACVar varGlobalPtr;
         static const TACVar varStackPtr;
         static const TACVar varFramePtr;
 

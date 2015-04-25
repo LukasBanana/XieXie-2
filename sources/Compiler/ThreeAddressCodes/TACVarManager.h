@@ -53,6 +53,9 @@ class TACVarManager
         void PushVar(const TACVar& var);
         TACVar PopVar();
 
+        //! Release the specified variable.
+        void ReleaseVar(const TACVar& var);
+
         //! Returns the current TAC variable at the top of the stack.
         TACVar Var();
 
