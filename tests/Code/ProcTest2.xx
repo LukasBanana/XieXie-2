@@ -16,6 +16,10 @@ class Widget {
 		return Widget.root
 	}
 	
+	static Widget[] getList() {
+		return { new Widget() }
+	}
+	
 	Widget parent
 	Widget[] children
 	
@@ -53,6 +57,10 @@ class Test {
 	
 	static void test7() {
 		Widget.getRoot().setX(10)
+	}
+	
+	static void test8() {
+		Widget.getList()[3].parent.children[2].setX(11)
 	}
 	
 }

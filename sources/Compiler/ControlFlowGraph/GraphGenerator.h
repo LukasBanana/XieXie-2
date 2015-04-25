@@ -105,9 +105,10 @@ class GraphGenerator final : private Visitor
 
         void CopyAndPushResultVar(const TACVar& destVar);
 
-        void GenerateVarNameValue(VarName& ast, bool* isFloat = nullptr);
-        void GenerateVarNameValueDynamic(VarName* ast);
+        void GenerateVarNameValue(VarName& ast, const TACVar* baseVar = nullptr);
+        void GenerateVarNameValueDynamic(VarName* ast, const TACVar* baseVar);
         void GenerateVarNameValueStatic(VarDecl* ast);
+        void GenerateArrayAccess(ArrayAccess* ast, const TACVar& baseVar);
 
         //TACVar GenerateVarNameAddress(VarName& ast);
 

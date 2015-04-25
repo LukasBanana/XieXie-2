@@ -193,13 +193,13 @@ DEF_VISIT_PROC(GraphGenerator, Attrib)
 
 DEF_VISIT_PROC(GraphGenerator, ArrayAccess)
 {
-    /* Generate code for index expression */
+    /*
+    Generate code ONLY for this index expression,
+    don't move on to the next array index!
+    */
     Visit(ast->indexExpr);
-    //auto offsetVar = PopVar();
-    //todo...
 }
 
-//!!!INCOMPLETE!!!
 DEF_VISIT_PROC(GraphGenerator, ProcCall)
 {
     /* Get procedure identifier */
@@ -217,7 +217,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     if (!isDirectCall)
     {
         /* Generate instructions for variable-name, to acquire 'this' pointer */
-        GenerateVarNameValue(*ast->procName);
+        GenerateVarNameValue(*ast->procName, reinterpret_cast<const TACVar*>(args));
         auto objVar = PopVar();
 
         if (objVar != ThisPtr())
@@ -1039,11 +1039,19 @@ DEF_VISIT_PROC(GraphGenerator, ProcCallExpr)
     PushVar(var);
 }
 
-//!!!INCOMPLETE!!! -> array access is missing
 DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)
 {
     Visit(ast->primaryValueExpr);
-    Visit(ast->procCall);
+    
+    GenerateArrayAccess(ast->arrayAccess.get(), Var());
+
+    if (ast->procCall)
+    {
+        auto baseVar = Var();
+        Visit(ast->procCall, &baseVar);
+    }
+    else if (ast->varName)
+        GenerateVarNameValue(*ast->varName);
 }
 
 DEF_VISIT_PROC(GraphGenerator, AllocExpr)
@@ -1517,12 +1525,17 @@ void GraphGenerator::CopyAndPushResultVar(const TACVar& destVar)
     PushVar(destVar);
 }
 
-void GraphGenerator::GenerateVarNameValue(VarName& ast, bool* isFloat)
+void GraphGenerator::GenerateVarNameValue(VarName& ast, const TACVar* baseVar)
 {
-    auto& lastName = ast.GetLast();
-    
+    /* Check if this comes from a post-fix expression */
+    if (baseVar)
+    {
+        GenerateVarNameValueDynamic(&ast, baseVar);
+        return;
+    }
+
     /* Check if variable name refers to a static variable */
-    auto varDecl = AST::Cast<VarDecl>(lastName.declRef);
+    auto varDecl = AST::Cast<VarDecl>(ast.GetLast().declRef);
     if (varDecl && varDecl->IsStatic())
     {
         /* Check if variable is static-const */
@@ -1540,20 +1553,19 @@ void GraphGenerator::GenerateVarNameValue(VarName& ast, bool* isFloat)
             GenerateVarNameValueStatic(varDecl);
     }
     else
-        GenerateVarNameValueDynamic(&ast);
-
-    /* Return information, if this is a floating-point */
-    if (isFloat)
-        *isFloat = IsASTFloat(lastName);
+        GenerateVarNameValueDynamic(&ast, baseVar);
 }
 
 // Generates TAC instructions to access a dynamic variable name, i.e. only for reading
-void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast)
+void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast, const TACVar* baseVar)
 {
     if (!ast || ast->declRef->Type() == AST::Types::ProcOverloadSwitch)
         return;
 
     TACVar var;
+
+    if (baseVar)
+        var = *baseVar;
 
     while (ast && ast->declRef)
     {
@@ -1583,24 +1595,7 @@ void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast)
             var = varMngr_.LocalVar(*ast->declRef);
 
         /* Generate code for array access */
-        auto arrayAccess = ast->arrayAccess.get();
-        while (arrayAccess)
-        {
-            Visit(arrayAccess);
-            auto indexVar = PopVar();
-
-            /* Generate code to access array pointer */
-            auto offsetVar = TempVar();
-
-            BB()->MakeInst<TACHeapInst>(OpCodes::LDW, var, var, BuiltinClasses::Array_Offset_buffer);
-            BB()->MakeInst<TACModifyInst>(OpCodes::SLL, offsetVar, indexVar, TACVar("2"));
-            BB()->MakeInst<TACModifyInst>(OpCodes::ADD, var, var, offsetVar);
-
-            ReleaseVar(offsetVar);
-
-            /* Get next array access */
-            arrayAccess = arrayAccess->next.get();
-        }
+        GenerateArrayAccess(ast->arrayAccess.get(), var);
 
         /* Get next name */
         ast = ast->next.get();
@@ -1617,6 +1612,28 @@ void GraphGenerator::GenerateVarNameValueStatic(VarDecl* ast)
     auto var = TempVar();
     BB()->MakeInst<TACHeapInst>(OpCodes::LDW, var, TACVar::varGlobalPtr, ast->memoryOffset);
     PushVar(var);
+}
+
+void GraphGenerator::GenerateArrayAccess(ArrayAccess* ast, const TACVar& baseVar)
+{
+    while (ast)
+    {
+        /* Generate code for array index expression */
+        Visit(ast);
+        auto indexVar = PopVar();
+
+        /* Generate code to access array pointer */
+        auto offsetVar = TempVar();
+
+        BB()->MakeInst<TACHeapInst>(OpCodes::LDW, baseVar, baseVar, BuiltinClasses::Array_Offset_buffer);
+        BB()->MakeInst<TACModifyInst>(OpCodes::SLL, offsetVar, indexVar, TACVar("2"));
+        BB()->MakeInst<TACModifyInst>(OpCodes::ADD, baseVar, baseVar, offsetVar);
+
+        ReleaseVar(offsetVar);
+
+        /* Get next array access */
+        ast = ast->next.get();
+    }
 }
 
 #undef RETURN_BLOCK_REF
