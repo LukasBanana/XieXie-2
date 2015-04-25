@@ -236,18 +236,26 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     if (isDirectCall)
     {
         /* Make direct call instruction */
-        auto procIdent = UniqueLabel(*ast->declStmntRef);
+        auto procIdent = UniqueLabel(*procDecl);
         BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
     }
     else
     {
         /* Make indirect call instruction */
-        auto procIdent = UniqueLabel(*ast->declStmntRef, false);
+        auto procIdent = UniqueLabel(*procDecl, false);
         BB()->MakeInst<TACIndirectCallInst>(procIdent, procDecl->vtableOffset);
 
         /* Restore previous 'this' pointer */
         if (!keepThisPtr)
             BB()->MakeInst<TACStackInst>(OpCodes::POP, ThisPtr());
+    }
+
+    /* Store procedure result in temporary variable */
+    if (!procSig->returnTypeDenoter->IsVoid())
+    {
+        auto var = TempVar();
+        BB()->MakeInst<TACCopyInst>(var, ResultVar());
+        PushVar(var);
     }
 }
 
@@ -1038,9 +1046,6 @@ DEF_VISIT_PROC(GraphGenerator, CastExpr)
 DEF_VISIT_PROC(GraphGenerator, ProcCallExpr)
 {
     Visit(ast->procCall);
-    auto var = TempVar();
-    BB()->MakeInst<TACCopyInst>(var, ResultVar());
-    PushVar(var);
 }
 
 DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)
@@ -1593,7 +1598,16 @@ void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast, const TACVar* bas
             if (varDecl->IsStatic())
                 BB()->MakeInst<TACHeapInst>(OpCodes::LDW, var, TACVar::varGlobalPtr, varDecl->memoryOffset);
             else if (!varDecl->IsLocal())
-                BB()->MakeInst<TACHeapInst>(OpCodes::LDW, var, var, varDecl->memoryOffset);
+            {
+                /* Generate code to access member variable */
+                if (!var.IsValid())
+                {
+                    var = TempVar();
+                    BB()->MakeInst<TACHeapInst>(OpCodes::LDW, var, TACVar::varThisPtr, varDecl->memoryOffset);
+                }
+                else
+                    BB()->MakeInst<TACHeapInst>(OpCodes::LDW, var, var, varDecl->memoryOffset);
+            }
         }
         else
             var = varMngr_.LocalVar(*ast->declRef);
