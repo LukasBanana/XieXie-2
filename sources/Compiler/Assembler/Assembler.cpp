@@ -543,6 +543,10 @@ Assembler::Token Assembler::ScanRegister()
             if (IsDigit(chr_))
                 spell += TakeIt();
             break;
+        case 't':
+            spell += TakeIt();
+            spell += Take('r');
+            break;
         case 'a':
             spell += TakeIt();
             spell += Take('r');

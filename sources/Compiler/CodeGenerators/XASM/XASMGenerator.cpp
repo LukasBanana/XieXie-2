@@ -26,7 +26,7 @@ namespace CodeGenerator
 using namespace std::placeholders;
 
 static const std::string mainProcIdent = "__xx__main";
-static const std::string vtableReg = "$r24";
+static const std::string tempReg = "$tr";
 
 static RegisterAllocator::RegList XASMRegList()
 {
@@ -34,7 +34,7 @@ static RegisterAllocator::RegList XASMRegList()
     {
         "$r0", "$r1", "$r2", "$r3", "$r4", "$r5", "$r6", "$r7", "$r8", "$r9",
         "$r10", "$r11", "$r12", "$r13", "$r14", "$r15", "$r16", "$r17", "$r18", "$r19",
-        "$r20", "$r21", "$r22", "$r23", "$r24"
+        "$r20", "$r21", "$r22", "$r23", tempReg
     };
 }
 
@@ -792,9 +792,9 @@ void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
 
 void XASMGenerator::GenerateIndirectCallInst(const TACIndirectCallInst& inst)
 {
-    Line("ldw " + vtableReg + ", (" + vtableReg + ") 8");
-    Line("ldw " + vtableReg + ", (" + vtableReg + ") " + std::to_string(inst.vtableOffset * 4));
-    Line("call " + vtableReg);
+    Line("ldw " + tempReg + ", (" + tempReg + ") 8");
+    Line("ldw " + tempReg + ", (" + tempReg + ") " + std::to_string(inst.vtableOffset * 4));
+    Line("call " + tempReg);
 }
 
 void XASMGenerator::GenerateStackInst(const TACStackInst& inst)

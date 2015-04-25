@@ -50,7 +50,7 @@ const Register& Register::Get(size_t reg)
         case 0x15: return r21;
         case 0x16: return r22;
         case 0x17: return r23;
-        case 0x18: return r24;
+        case 0x18: return tr;
         case 0x19: return ar;
         case 0x1a: return xr;
         case 0x1b: return gp;
@@ -83,6 +83,7 @@ const Register& Register::Get(const std::string& name)
                 case '9': return r9;
             }
         }
+        else if (name == "$tr") return tr;
         else if (name == "$ar") return ar;
         else if (name == "$xr") return xr;
         else if (name == "$gp") return gp;
@@ -117,7 +118,6 @@ const Register& Register::Get(const std::string& name)
                 case '1': return r21;
                 case '2': return r22;
                 case '3': return r23;
-                case '4': return r24;
             }
         }
     }
@@ -149,8 +149,8 @@ const Register Register::r20(REG_R20);
 const Register Register::r21(REG_R21);
 const Register Register::r22(REG_R22);
 const Register Register::r23(REG_R23);
-const Register Register::r24(REG_R24);
 
+const Register Register::tr(REG_TR);
 const Register Register::ar(REG_AR);
 const Register Register::xr(REG_XR);
 const Register Register::gp(REG_GP);

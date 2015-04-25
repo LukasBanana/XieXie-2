@@ -89,9 +89,9 @@ typedef enum
     REG_R21 = 0x15, // $r21  ->  General purpose register 21.
     REG_R22 = 0x16, // $r22  ->  General purpose register 22.
     REG_R23 = 0x17, // $r23  ->  General purpose register 23.
-    REG_R24 = 0x18, // $r24  ->  General purpose register 24.
 
     /* --- Special purpose registers --- */
+    REG_TR  = 0x18, // $tr   ->  Temporary register for compiler, e.g. to schedule indirect calls.
     REG_AR  = 0x19, // $ar   ->  Argument return: can be used as 32-bit return value.
     REG_XR  = 0x1a, // $xr   ->  Extended register: register for special purposes (e.g. assembler temporary or 'this' pointer).
     REG_GP  = 0x1b, // $gp   ->  Global pointer: POINTER to the global variables in the stack.

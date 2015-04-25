@@ -90,8 +90,8 @@ class Register
         static const Register r21;  //!< $r21  ->  General purpose register 21.
         static const Register r22;  //!< $r22  ->  General purpose register 22.
         static const Register r23;  //!< $r23  ->  General purpose register 23.
-        static const Register r24;  //!< $r24  ->  General purpose register 24.
 
+        static const Register tr;   //!< $tr   ->  Temporary register for the compiler, e.g. to schedule indirect calls.
         static const Register ar;   //!< $ar   ->  Return value: can be used as return value.
         static const Register xr;   //!< $xr   ->  Extended register: can be used as assembler temporary or 'this' pointer of a class instance.
         static const Register gp;   //!< $gp   ->  Global pointer: should be used as the stack pointer where all global variables are stored.
@@ -125,7 +125,7 @@ class Register
         /**
         Returns the specified register via name.
         \param[in] name Specifies the register name (e.g. "$r0" or "$sp").
-        Valid register names are: "$r0" - "$r25", "$sr", "$gp", "$cf", "$lb", "$sp", and "$pc".
+        Valid register names are: "$r0" - "$r23", "$tr", "$ar", "$xr", "$gp", "$cf", "$lb", "$sp", and "$pc".
         \throws std::invalid_argument If the register name is invalid.
         \see Name
         */

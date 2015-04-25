@@ -187,8 +187,8 @@ const char* xvm_register_get_name(reg_t reg)
         case REG_R21: return "$r21";
         case REG_R22: return "$r22";
         case REG_R23: return "$r23";
-        case REG_R24: return "$r24";
 
+        case REG_TR:  return "$tr";
         case REG_AR:  return "$ar";
         case REG_XR:  return "$xr";
         case REG_GP:  return "$gp";
