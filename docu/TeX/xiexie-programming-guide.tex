@@ -39,6 +39,17 @@
 	citecolor = blue % Color of citations
 }
 
+
+%----------------------------------------------------------------------------------------
+%	CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\newif\ifToDoList
+%\ToDoListtrue
+
+\newif\ifFinalPrint
+%\FinalPrinttrue
+
 \definecolor{brightBlueColor}{rgb}{0.5, 0.5, 1.0}
 \definecolor{darkBlueColor}{rgb}{0.0, 0.0, 0.5}
 \definecolor{weakGreen}{rgb}{0.1, 0.9, 0.1}
@@ -119,10 +130,14 @@
 	}
 }
 
-\SetLanguageXX
+% Makes a blank page
+\newcommand\BlankPage{
+	\ifFinalPrint
+		\newpage \thispagestyle{empty} \mbox{}
+	\fi
+}
 
-\newif\ifToDoList
-%\ToDoListtrue
+\SetLanguageXX
 
 
 %----------------------------------------------------------------------------------------
@@ -160,6 +175,8 @@
 \titleGM
 %\maketitle
 
+\BlankPage
+
 
 %----------------------------------------------------------------------------------------
 %	ABOUT THE AUTHOR
@@ -182,6 +199,8 @@ general purposes.
 If you like, you can follow me on \href{https://twitter.com/LukasBanana}{Twitter},
 \href{https://www.youtube.com/user/SoftPixel}{YouTube}, \href{https://github.com/LukasBanana}{GitHub},
 or \href{https://bitbucket.org/LukasBanana}{Bitbucket}.
+
+\BlankPage
 
 
 %----------------------------------------------------------------------------------------
@@ -967,6 +986,7 @@ This works because the \textit{context analyzer} of the compiler works in severa
 	\item Class inheritance is verified (check for cycles).
 	\item Member procedures are registered in respective class scope.
 	\item Member variables are registered in respective class scope.
+	\item Return type of all member procedures is analyzed.
 	\item Run-time type information (RTTI) for the entire class hierarchy is generated.
 	\item Procedure code is analyzed.
 \end{enumerate}
