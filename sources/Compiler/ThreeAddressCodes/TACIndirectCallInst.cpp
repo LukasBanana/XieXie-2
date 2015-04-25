@@ -19,10 +19,9 @@ TACIndirectCallInst::TACIndirectCallInst() :
     TACInst{ OpCodes::INDCALL }
 {
 }
-TACIndirectCallInst::TACIndirectCallInst(const std::string& procIdent, const TACVar& objVar, unsigned int vtableOffset) :
+TACIndirectCallInst::TACIndirectCallInst(const std::string& procIdent, unsigned int vtableOffset) :
     TACInst     { OpCodes::INDCALL },
     procIdent   { procIdent        },
-    objVar      { objVar           },
     vtableOffset{ vtableOffset     }
 {
 }
@@ -34,26 +33,12 @@ TACInst::Types TACIndirectCallInst::Type() const
 
 std::string TACIndirectCallInst::ToString() const
 {
-    return OpCodePrefix() + " | (" + objVar.ToString() + ")." + CodeGenerator::NameMangling::DisplayLabel(procIdent);
+    return OpCodePrefix() + " | (this*)." + CodeGenerator::NameMangling::DisplayLabel(procIdent);
 }
 
 TACInstPtr TACIndirectCallInst::Copy(const TACVar::IDType varIDOffset) const
 {
     return MakeUnique<TACIndirectCallInst>(*this);
-}
-
-bool TACIndirectCallInst::ReadsVar(const TACVar& var) const
-{
-    return objVar == var;
-}
-
-void TACIndirectCallInst::ReplaceVar(const TACVar& varToReplace, const TACVar& replacedVar, const BitMask& flags)
-{
-    if (flags(VarFlags::Source))
-    {
-        if (!flags(VarFlags::TempOnly) || objVar.IsTemp())
-            objVar.Replace(varToReplace, replacedVar);
-    }
 }
 
 

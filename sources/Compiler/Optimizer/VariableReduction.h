@@ -34,7 +34,6 @@ class VariableReduction : public TACOptimizer
         void TransformSwitchInst(TACInstPtr& inst) override;
         void TransformStackInst(TACInstPtr& inst) override;
         void TransformHeapInst(TACInstPtr& inst) override;
-        void TransformIndirectCallInst(TACInstPtr& inst) override;
 
         void ReadVar(const TACVar& var, TACInst& inst);
         void WriteVar(TACVar var, TACInst& inst);

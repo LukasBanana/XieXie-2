@@ -13,7 +13,6 @@
 #include "TACSwitchInst.h"
 #include "TACStackInst.h"
 #include "TACHeapInst.h"
-#include "TACIndirectCallInst.h"
 
 #include <algorithm>
 
@@ -111,14 +110,6 @@ void VariableClean::TransformHeapInst(TACInstPtr& inst)
     }
     else
         ReadVar(heapInst->var);
-}
-
-void VariableClean::TransformIndirectCallInst(TACInstPtr& inst)
-{
-    auto callInst = static_cast<TACIndirectCallInst*>(inst.get());
-
-    /* Propagate variable usage */
-    ReadVar(callInst->objVar);
 }
 
 bool VariableClean::IsInstUnnecessary(const TACCopyInst& inst) const

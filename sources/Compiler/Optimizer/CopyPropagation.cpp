@@ -14,7 +14,6 @@
 #include "TACSwitchInst.h"
 #include "TACStackInst.h"
 #include "TACHeapInst.h"
-#include "TACIndirectCallInst.h"
 
 #include <algorithm>
 
@@ -107,11 +106,8 @@ void CopyPropagation::TransformDirectCallInst(TACInstPtr& inst)
 
 void CopyPropagation::TransformIndirectCallInst(TACInstPtr& inst)
 {
-    auto callInst = static_cast<TACIndirectCallInst*>(inst.get());
-
     /* Call instruction kills all constants */
     vars_.clear();
-    ReadVar(callInst->objVar);
 }
 
 void CopyPropagation::ReadVar(TACVar& src)

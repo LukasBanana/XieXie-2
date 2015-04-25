@@ -240,11 +240,30 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     auto procSig = procDecl->procSignature.get();
     auto procClass = procDecl->parentRef;
 
+    /* Preliminaries for call instruction */
+    bool isDirectCall = procSig->isStatic;
+    bool keepThisPtr = true;
+
+    if (!isDirectCall)
+    {
+        /* Generate instructions for variable-name, to acquire 'this' pointer */
+        GenerateVarName(*ast->procName);
+        auto objVar = PopVar();
+
+        if (objVar != ThisPtr())
+        {
+            /* Replace current 'this' pointer */
+            BB()->MakeInst<TACStackInst>(OpCodes::PUSH, ThisPtr());
+            BB()->MakeInst<TACCopyInst>(ThisPtr(), objVar);
+            keepThisPtr = false;
+        }
+    }
+
     /* Make instructions to push arguments */
     for (auto it = ast->argExprs.rbegin(); it != ast->argExprs.rend(); ++it)
         GenerateArgumentExpr(**it);
 
-    if (procSig->isStatic)
+    if (isDirectCall)
     {
         /* Make direct call instruction */
         auto procIdent = UniqueLabel(*ast->declStmntRef);
@@ -252,12 +271,13 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     }
     else
     {
-        /* Generate instructions for variable-name, to acquire 'this' pointer */
-        GenerateVarName(*ast->procName);
-
         /* Make indirect call instruction */
         auto procIdent = UniqueLabel(*ast->declStmntRef, false);
-        BB()->MakeInst<TACIndirectCallInst>(procIdent, PopVar(), procDecl->vtableOffset);
+        BB()->MakeInst<TACIndirectCallInst>(procIdent, procDecl->vtableOffset);
+
+        /* Restore previous 'this' pointer */
+        if (!keepThisPtr)
+            BB()->MakeInst<TACStackInst>(OpCodes::POP, ThisPtr());
     }
 }
 

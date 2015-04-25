@@ -26,6 +26,7 @@ namespace CodeGenerator
 using namespace std::placeholders;
 
 static const std::string mainProcIdent = "__xx__main";
+static const std::string vtableReg = "$r24";
 
 static RegisterAllocator::RegList XASMRegList()
 {
@@ -791,10 +792,9 @@ void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
 
 void XASMGenerator::GenerateIndirectCallInst(const TACIndirectCallInst& inst)
 {
-    auto reg0 = Reg(inst.objVar);
-    Line("ldw " + reg0 + ", (" + reg0 + ") 8");
-    Line("ldw " + reg0 + ", (" + reg0 + ") " + std::to_string(inst.vtableOffset * 4));
-    Line("call " + reg0);
+    Line("ldw " + vtableReg + ", (" + vtableReg + ") 8");
+    Line("ldw " + vtableReg + ", (" + vtableReg + ") " + std::to_string(inst.vtableOffset * 4));
+    Line("call " + vtableReg);
 }
 
 void XASMGenerator::GenerateStackInst(const TACStackInst& inst)

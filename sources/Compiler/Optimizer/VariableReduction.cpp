@@ -14,7 +14,6 @@
 #include "TACSwitchInst.h"
 #include "TACStackInst.h"
 #include "TACHeapInst.h"
-#include "TACIndirectCallInst.h"
 
 #include <algorithm>
 
@@ -98,14 +97,6 @@ void VariableReduction::TransformHeapInst(TACInstPtr& inst)
         ReadVar(heapInst->var, *inst);
     else
         WriteVar(heapInst->var, *inst);
-}
-
-void VariableReduction::TransformIndirectCallInst(TACInstPtr& inst)
-{
-    auto callInst = static_cast<TACIndirectCallInst*>(inst.get());
-
-    /* Propagate variable usage */
-    ReadVar(callInst->objVar, *inst);
 }
 
 void VariableReduction::ReadVar(const TACVar& var, TACInst& inst)
