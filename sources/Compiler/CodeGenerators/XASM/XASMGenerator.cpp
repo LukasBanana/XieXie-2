@@ -761,6 +761,8 @@ void XASMGenerator::GenerateRelationInst(const TACRelationInst& inst)
 
 void XASMGenerator::GenerateReturnInst(const TACReturnInst& inst)
 {
+    regAlloc_.SpillAllMemberAndGlobals();
+
     if (inst.hasVar)
         Line("mov $ar, " + Reg(inst.src));
 
@@ -779,7 +781,7 @@ void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
         Line("invk " + inst.procIdent);
     else
     {
-        regAlloc_.SpillAllRegs();
+        regAlloc_.SpillAllVars();
         Line("call " + inst.procIdent);
     }
 }

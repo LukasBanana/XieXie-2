@@ -46,11 +46,23 @@ RegisterAllocator::RegIdent RegisterAllocator::Reg(const TACVar& var)
     return reg;
 }
 
-void RegisterAllocator::SpillAllRegs()
+void RegisterAllocator::SpillAllVars()
 {
     auto it = vars_.begin();
     while (it != vars_.end())
         SpillVar(it);
+}
+
+void RegisterAllocator::SpillAllMemberAndGlobals()
+{
+    auto it = vars_.begin();
+    while (it != vars_.end())
+    {
+        if (it->first.IsMember() || it->first.IsGlobal())
+            SpillVar(it);
+        else
+            ++it;
+    }
 }
 
 void RegisterAllocator::Reset()
