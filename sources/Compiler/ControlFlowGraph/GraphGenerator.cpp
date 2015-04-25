@@ -251,14 +251,12 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     }
     else
     {
-        //!!!TODO!!!
-
-        /* Make instruction to set 'this' pointer */
-        if (ast->procName->declRef && ast->procName->declRef->Type() == AST::Types::VarDecl)
-            BB()->MakeInst<TACCopyInst>(ThisPtr(), LValueVar(ast->procName->declRef));
+        /* Generate instructions for variable-name, to acquire 'this' pointer */
+        GenerateVarName(*ast->procName);
+        BB()->MakeInst<TACCopyInst>(ThisPtr(), PopVar());
 
         /* Make indirect call instruction */
-        BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);//!!!!
+        BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
     }
 }
 
