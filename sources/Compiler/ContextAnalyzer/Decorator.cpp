@@ -1418,53 +1418,55 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
             Message(">>   " + procDecl->procSignature->ToString());
     }
     else
+        DecoreateProcCall(ast, *procDecls.front());
+}
+
+void Decorator::DecoreateProcCall(ProcCall& ast, ProcDeclStmnt& procDecl)
+{
+    /* Decorate procedure call with reference to final procedure delcaration statement */
+    ast.declStmntRef = &procDecl;
+
+    /* Assign final arguments to parameters */
+    const auto& procSig = *procDecl.procSignature;
+    const auto numArgs = procSig.params.size();
+    ast.argExprs.resize(numArgs);
+
+    /* (1) Assign default arguments */
+    for (size_t i = 0; i < numArgs; ++i)
     {
-        /* Decorate procedure call with reference to final procedure delcaration statement */
-        ast.declStmntRef = procDecls.front();
-        auto procDecl = ast.declStmntRef;
-
-        /* Assign final arguments to parameters */
-        const auto& procSig = *procDecl->procSignature;
-        const auto numArgs = procSig.params.size();
-        ast.argExprs.resize(numArgs);
-
-        /* (1) Assign default arguments */
-        for (size_t i = 0; i < numArgs; ++i)
-        {
-            const auto& prm = procSig.params[i];
-            if (prm->defaultArgExpr)
-                ast.argExprs[i] = prm->defaultArgExpr.get();
-            else
-                ast.argExprs[i] = nullptr;
-        }
-        
-        /* (2) Assign explicit arguments */
-        for (size_t i = 0, n = ast.args.size(), paramIndex = 0; i < n; ++i)
-        {
-            /* Get parameter index */
-            const auto& arg = *ast.args[i];
-            if (!arg.paramIdent.empty())
-                paramIndex = procSig.FindParamIndex(arg.paramIdent);
-            else
-                paramIndex = i;
-
-            /* Assign argument to parameter */
-            if (paramIndex < ast.argExprs.size())
-                ast.argExprs[paramIndex] = arg.expr.get();
-            else
-                Error("named parameter \"" + arg.paramIdent + "\" index out of range", &ast);
-        }
-
-        /* Check if procedure is deprecated */
-        WarnDeprecation(
-            std::bind(&ProcDeclStmnt::HasAttribDeprecated, procDecl, _1),
-            "call of deprecated procedure", &ast
-        );
-
-        /* Check procedure visibility */
-        if (!VerifyVisibility(procDecl->visibility, procDecl->parentRef))
-            Error("procedure \"" + procDecl->procSignature->ident + "\" is inaccessible from this class", &ast);
+        const auto& prm = procSig.params[i];
+        if (prm->defaultArgExpr)
+            ast.argExprs[i] = prm->defaultArgExpr.get();
+        else
+            ast.argExprs[i] = nullptr;
     }
+        
+    /* (2) Assign explicit arguments */
+    for (size_t i = 0, n = ast.args.size(), paramIndex = 0; i < n; ++i)
+    {
+        /* Get parameter index */
+        const auto& arg = *ast.args[i];
+        if (!arg.paramIdent.empty())
+            paramIndex = procSig.FindParamIndex(arg.paramIdent);
+        else
+            paramIndex = i;
+
+        /* Assign argument to parameter */
+        if (paramIndex < ast.argExprs.size())
+            ast.argExprs[paramIndex] = arg.expr.get();
+        else
+            Error("named parameter \"" + arg.paramIdent + "\" index out of range", &ast);
+    }
+
+    /* Check if procedure is deprecated */
+    WarnDeprecation(
+        std::bind(&ProcDeclStmnt::HasAttribDeprecated, &procDecl, _1),
+        "call of deprecated procedure", &ast
+    );
+
+    /* Check procedure visibility */
+    if (!VerifyVisibility(procDecl.visibility, procDecl.parentRef))
+        Error("procedure \"" + procDecl.procSignature->ident + "\" is inaccessible from this class", &ast);
 }
 
 /*

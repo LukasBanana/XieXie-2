@@ -11,6 +11,7 @@
 #include "CompilerMessage.h"
 #include "BuiltinClasses.h"
 #include "Optimizer.h"
+#include "ExprIntEvaluator.h"
 
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
@@ -243,8 +244,15 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     for (auto it = ast->argExprs.rbegin(); it != ast->argExprs.rend(); ++it)
         GenerateArgumentExpr(**it);
 
-    if (!procSig->isStatic)
+    if (procSig->isStatic)
     {
+        /* Make direct call instruction */
+        BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
+    }
+    else
+    {
+        //!!!TODO!!!
+
         /* Make instruction to set 'this' pointer */
         if (ast->procName->declRef && ast->procName->declRef->Type() == AST::Types::VarDecl)
             BB()->MakeInst<TACCopyInst>(ThisPtr(), LValueVar(ast->procName->declRef));
@@ -252,14 +260,6 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
         /* Make indirect call instruction */
         BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);//!!!!
     }
-    else
-    {
-        /* Make direct call instruction */
-        BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
-    }
-
-    //...
-
 }
 
 DEF_VISIT_PROC(GraphGenerator, SwitchCase)
@@ -1085,7 +1085,7 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 
 DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
 {
-    Visit(ast->varName);
+    GenerateVarName(*ast->varName);
 }
 
 DEF_VISIT_PROC(GraphGenerator, InitListExpr)
@@ -1525,6 +1525,38 @@ void GraphGenerator::CopyAndPushResultVar(const TACVar& destVar)
     PushVar(destVar);
 }
 
+TACVar GraphGenerator::GenerateVarName(VarName& ast, bool* isFloat)
+{
+    auto& lastName = ast.GetLast();
+    
+    /* Check if variable name refers to a static variable */
+    auto varDecl = AST::Cast<VarDecl>(lastName.declRef);
+    if (varDecl && varDecl->IsStatic())
+    {
+        /* Check if variable is static-const */
+        auto varType = varDecl->GetTypeDenoter();
+        if (varType && varType->IsConst())
+        {
+            /* Try to evaluate the expression at compile-time */
+            TACVar var;
+            if (EvaluateExpr(*varDecl->initExpr, var))
+                PushVar(var);
+            else
+                PushVar(GlobalVar(*varDecl));
+        }
+        else
+            PushVar(GlobalVar(*varDecl));
+    }
+    else
+        Visit(&ast);
+
+    /* Return information, if this is a floating-point */
+    if (isFloat)
+        *isFloat = IsASTFloat(lastName);
+
+    return Var();
+}
+
 #undef RETURN_BLOCK_REF
 //#undef VISIT_FLAGS
 
@@ -1752,6 +1784,33 @@ TACVar GraphGenerator::LValueVar(const AST& ast)
 TACVar GraphGenerator::LValueVarFromVarName(const VarName& ast)
 {
     return LValueVar(ast.GetLast().declRef);
+}
+
+TACVar GraphGenerator::GlobalVar(const VarDecl& ast)
+{
+    return varMngr_.GlobalVar(ast);
+}
+
+bool GraphGenerator::EvaluateExpr(const Expr& ast, TACVar& var)
+{
+    /* Try to evaluate the expression to an integer */
+    int result = 0;
+    if (ContextAnalyzer::ExprIntEvaluator().Evaluate(ast, result))
+    {
+        var = TACVar(ToStr(result));
+        return true;
+    }
+    
+    //!!!TODO!!!
+    /* Try to evaluate the expression to a floating-point */
+    /*float result = 0;
+    if (ContextAnalyzer::ExprFloatEvaluator().Evaluate(ast, result))
+    {
+        var = TACVar(ToStr(result));
+        return true;
+    }*/
+
+    return false;
 }
 
 const TACVar& GraphGenerator::ResultVar()

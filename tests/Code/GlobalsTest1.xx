@@ -1,0 +1,24 @@
+
+// Globals Test 1
+// 25/04/2015
+
+class Enum {
+	
+	static const a := 1
+	static const b := 2
+	static const c := Enum.a + Enum.b
+	
+	static int g_a := 0
+	
+}
+
+class Test {
+	
+	static int test1() {
+		
+		return Enum.c + Enum.g_a
+		
+	}
+	
+}
+

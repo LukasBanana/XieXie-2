@@ -105,6 +105,8 @@ class GraphGenerator final : private Visitor
 
         void CopyAndPushResultVar(const TACVar& destVar);
 
+        TACVar GenerateVarName(VarName& ast, bool* isFloat = nullptr);
+
         /* --- CFG Generation --- */
 
         template <typename T> VisitIO VisitAndLink(T ast);
@@ -158,6 +160,10 @@ class GraphGenerator final : private Visitor
         TACVar LValueVar(const AST& ast);
         //! Generates a local TAC variable for the specifid variable name.
         TACVar LValueVarFromVarName(const VarName& ast);
+        TACVar GlobalVar(const VarDecl& ast);
+
+        //! Tries to evaluates the specified expression into a literal.
+        bool EvaluateExpr(const Expr& ast, TACVar& var);
 
         const TACVar& ResultVar();
         const TACVar& ThisPtr();
