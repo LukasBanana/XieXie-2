@@ -96,6 +96,78 @@ dynamic_cast:
 	mov $ar, 0				; return null pointer
 	ret 3
 
+; void resize_buffer(Object this, int size)
+resize_buffer:
+	ldw $r0, ($lb) -4		; load size
+	ldw $r1, ($xr) 16		; load this.bufSize
+	
+	; check if buffer must be increased (size > this.bufSize)
+	cmp $r0, $r1
+	jle .else
+		; get further member variables
+		ldw $r2, ($xr) 12	; load this.size
+		ldw $r3, ($xr) 20	; load this.buffer
+		
+		; increase buffer (+32 pre-storage)
+		add $r4, $r0, 32	; set newSize := size + 32
+		push $r4
+		insc AllocMem		; allocate memory for 'newSize' bytes
+		
+		; store new values in object
+		stw $ar, ($xr) 20	; store: this.buffer := newBuffer
+		stw $r4, ($xr) 16	; store: this.bufSize := newSize
+		
+		; copy previous buffer into new one
+		push $r2			; push previous buffer size
+		push $r3			; push original buffer as source address
+		push $ar			; push new buffer as destination address
+		insc CopyMem
+		
+		; free previous buffer
+		push $r3
+		insc FreeMem
+		
+		; fill new elements with zeros
+		push 0				; fill with zeros
+		sub $r3, $r0, $r2	; fillSize := size - prevSize
+		push $r3
+		add $r3, $r4, $r2	; get address: newBuffer + prevSize
+		push $r3
+		insc FillMem
+	jmp .end
+	.else:
+	
+	; check if buffer should be decreased (this.bufSize > size * 2)
+	sub $cf, $r1, $r0
+	sub $cf, $cf, $r0
+	jle .end
+		; get further member variables
+		ldw $r2, ($xr) 12	; load this.size
+		ldw $r3, ($xr) 20	; load this.buffer
+		
+		; decrease buffer
+		push $r0
+		insc AllocMem		; allocate memory for 'size' bytes
+		
+		; store new values in object
+		stw $ar, ($xr) 20	; store: this.buffer := newBuffer
+		stw $r4, ($xr) 16	; store: this.bufSize := newSize
+		
+		; copy previous buffer into new one
+		push $r0			; push new buffer size
+		push $r3			; push original buffer as source address
+		push $ar			; push new buffer as destination address
+		insc CopyMem
+		
+		; free previous buffer
+		push $r3
+		insc FreeMem
+	.end:
+	
+	stw $r0, ($xr) 12		; store: this.size := size
+	
+	ret 1
+
 ; String String.copy_literal(String literal)
 String.copy_literal:
 	; allocate new "String" object
