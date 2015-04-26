@@ -108,8 +108,8 @@ resize_buffer:
 		ldw $r2, ($xr) 12	; load this.size
 		ldw $r3, ($xr) 20	; load this.buffer
 		
-		; increase buffer (+32 pre-storage)
-		add $r4, $r0, 32	; set newSize := size + 32
+		; increase buffer (2x size pre-allocated storage)
+		sll $r4, $r0, 1		; set newSize := size*2
 		push $r4
 		insc AllocMem		; allocate memory for 'newSize' bytes
 		
@@ -137,10 +137,10 @@ resize_buffer:
 	jmp .end
 	.else:
 	
-	; check if buffer should be decreased (this.bufSize > size * 2)
-	sub $cf, $r1, $r0
-	sub $cf, $cf, $r0
-	jle .end
+	; check if buffer should be decreased (size < this.bufSize/2)
+	sub $cf, $r0, $r1
+	sub $cf, $cf, $r1
+	jge .end
 		; get further member variables
 		ldw $r2, ($xr) 12	; load this.size
 		ldw $r3, ($xr) 20	; load this.buffer
@@ -208,20 +208,19 @@ CObject.PtypeID:
 ; bool Object.equals(Object this, Object rhs)
 CObject.Pequals,R@Object?rhs:
 	; check for null pointer
-	ldw $r0, ($lb) -4	; load object reference 'rhs'
-	mov $cf, $r0		; compare: rhs = null
-	je .end
+	ldw $cf, ($lb) -4	; load object reference 'rhs' and compare: rhs = null
+	je .false
 	
 	; load type ids
-	ldw $r1, ($xr) 4	; load type-id of 'this'
-	ldw $r2, ($r0) 4	; load type-id of 'rhs'
+	ldw $r0, ($xr) 4	; load type-id of 'this'
+	ldw $r1, ($cf) 4	; load type-id of 'rhs'
 	
 	; check: this.typeID = rhs.typeID
-	cmp $r1, $r2		; compare type-id of both object references
-	jne .end
+	cmp $r0, $r1		; compare type-id of both object references
+	jne .false
 		mov $ar, 1		; return true
 		ret 1
-	.end:
+	.false:
 	mov $ar, 0			; return false
 	ret 1
 
@@ -250,8 +249,8 @@ Object.vtable:
 
 ; String:
 ;	Object	super	( 0)
-;	int		size	(12) <- number of characters (bytes)
-;	int		bufSize	(16) <- actual number of characters (bytes)
+;	int		size	(12) <- buffer size (in bytes)
+;	int		bufSize	(16) <- actual buffer size (in bytes)
 ;	int		buffer	(20)
 
 ; void String.release(Object this)
@@ -264,11 +263,11 @@ CString.Prelease:
 
 ; void String.init(Object this)
 CString.Pinit:
-	; this.size := 0
-	mov $r0, 0
+	; this.size := 1 (null character)
+	mov $r0, 1
 	stw $r0, ($xr) 12
 	
-	; initialize string buffer with 16 elements
+	; initialize string buffer of 16 bytes
 	mov $r1, 16
 	stw $r1, ($xr) 16
 	
@@ -280,6 +279,55 @@ CString.Pinit:
 	; initialize string buffer with null terminator
 	stw $r0, ($ar) 0	; this.pointer[0] := 0
 	ret
+
+; bool String.equals(String this, Object rhs)
+CString.Pequals,R@Object?rhs:
+	; check for null pointer
+	ldw $cf, ($lb) -4		; load object reference 'rhs' and compare: rhs = null
+	je .false
+	
+	; compare type-id of both object references
+	mov $tr, $cf
+	ldw $r0, ($xr) 4		; load type-id of 'this'
+	ldw $r1, ($tr) 4		; load type-id of 'rhs'
+	cmp $r0, $r1			; check: this.typeID != rhs.typeID	
+	jne .false
+	
+	; compare size of both object references
+	ldw $r0, ($xr) 12		; load this.size
+	ldw $r1, ($tr) 12		; load rhs.size
+	cmp $r0, $r1			; check: this.size != rhs.size
+	jne .false
+	
+	; compare characters of both string
+	ldw $r2, ($xr) 20		; set ptrA := this.buffer
+	ldw $r3, ($tr) 20		; set ptrB := rhs.buffer
+	.loop:
+		; loop break condition
+		mov $cf, $r0
+		jle .break			; check if size <= 0
+		
+		; compare current two characters on equality
+		ldw $r4, ($r2) 0	; chrA := load ptrA[i]
+		ldw $r5, ($r3) 0	; chrB := load ptrB[i]
+		cmp $r4, $r5		; check chrA != chrB
+		jne .false
+		
+		; next iteration
+		inc $r2				; ptrA++
+		inc $r3				; ptrB++
+		dec $r0				; size--
+	jmp .loop
+	.break:
+	
+	; return true
+	mov $ar, 1
+	ret 1
+	
+	; return false
+	.false:
+	mov $ar, 0
+	ret 1
 
 ; void String.init(String this, String source)
 CString.Pinit,R@String?source:
@@ -333,21 +381,32 @@ CString.Pcopy:
 ; int String.size(String this)
 CString.Psize:
 	ldw $ar, ($xr) 12	; load and return member this.size
+	dec $ar				; remove null terminator from character counter
 	ret
 
 ; void String.resize(String this, int size)
 CString.Presize,I?size:
-	; ...
+	ldw $tr, ($lb) -4		; load size
+	ldw $cf, ($xr) 12		; load this.size
+	cmp $cf, $tr			; compare this.size = size
+	je .end
+		push $tr
+		call resize_buffer	; resize string buffer
+		ldw $r0, ($xr) 20	; load this.buffer
+		add $r0, $r0, $tr	; add offset to buffer
+		mov $tr, 0
+		stw $tr, ($r0) 0	; store null terminator at this.buffer[size]
+	.end:
 	ret 1
 
 ; bool String.empty(String this)
 CString.Pempty:
-	ldw $cf, ($xr) 12	; load member this.size and compare this.size = 0
-	je .empty
-		mov $ar, 0		; return false
+	ldw $cf, ($xr) 12	; load member this.size
+	jg .not_empty		; compare this.size > 0
+		mov $ar, 1		; return true
 		ret
-	.empty:
-	mov $ar, 1			; return true
+	.not_empty:
+	mov $ar, 0			; return false
 	ret
 
 ; String String.append(String this, String rhs)
@@ -359,6 +418,26 @@ CString.Pappend,R@String?rhs:
 CString.Pappend,R@Object?rhs:
 	; ...
 	ret 1
+
+; String String.append(String this, bool rhs)
+CString.Pappend,B?rhs:
+	; ...
+	ret 1
+
+; String String.append(String this, int rhs)
+CString.Pappend,I?rhs:
+	; ...
+	ret 1
+
+; String String.append(String this, float rhs)
+CString.Pappend,F?rhs:
+	; ...
+	ret 1
+
+; String String.subString(String this, int pos, int len)
+CString.PsubString,I?pos,I?len:
+	; ...
+	ret 2
 
 ; void String.setChar(String this, int pos, int char)
 CString.PsetChar,I?pos,I?char:
@@ -381,7 +460,7 @@ String.vtable:
 	.word @CString.Pinit
 	.word @CObject.PtypeID
 	.word @CObject.PrefCount
-	.word @CObject.Pequals,R@Object?rhs
+	.word @CString.Pequals,R@Object?rhs
 	.word @CString.PtoString
 	.word @CString.Ppointer
 	.word @CString.Pinit,R@String?source
@@ -391,6 +470,10 @@ String.vtable:
 	.word @CString.Pempty
 	.word @CString.Pappend,R@String?rhs
 	.word @CString.Pappend,R@Object?rhs
+	.word @CString.Pappend,B?rhs
+	.word @CString.Pappend,I?rhs
+	.word @CString.Pappend,F?rhs
+	.word @CString.PsubString,I?pos,I?len
 	.word @CString.PsetChar,I?pos,I?char
 	.word @CString.PgetChar,I?pos
 
