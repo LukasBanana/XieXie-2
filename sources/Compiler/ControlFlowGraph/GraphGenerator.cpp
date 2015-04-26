@@ -1618,6 +1618,8 @@ void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast, const TACVar* bas
                 else
                     BB()->MakeInst<TACHeapInst>(OpCodes::LDW, var, var, varDecl->memoryOffset);
             }
+            else
+                var = varMngr_.LocalVar(*ast->declRef);
         }
         else
             var = varMngr_.LocalVar(*ast->declRef);
