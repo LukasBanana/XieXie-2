@@ -211,6 +211,9 @@ class File {
 	
 private:
 	
+	init() {
+		// dummy
+	}
 	init(int handlePtr) {
 		this.handlePtr := handlePtr
 	}

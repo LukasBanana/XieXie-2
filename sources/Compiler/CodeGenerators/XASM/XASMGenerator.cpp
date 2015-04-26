@@ -794,9 +794,9 @@ void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
 
 void XASMGenerator::GenerateIndirectCallInst(const TACIndirectCallInst& inst)
 {
-    Line("ldw " + tempReg + ", (" + tempReg + ") 8");
-    Line("ldw " + tempReg + ", (" + tempReg + ") " + std::to_string(inst.vtableOffset * 4));
-    Line("call " + tempReg);
+    Line("ldw " + tempReg + ", ($xr) 8"); // load vtable address
+    Line("ldw " + tempReg + ", (" + tempReg + ") " + std::to_string(inst.vtableOffset * 4)); // load virtual procedure address
+    Line("call " + tempReg); // call virtual procedure
 }
 
 void XASMGenerator::GenerateStackInst(const TACStackInst& inst)
@@ -911,6 +911,8 @@ void XASMGenerator::GenerateStringLiteralAdjustment(const CFGProgram::StringLite
     Line("lda $r0, @" + constStr.ident);
     Line("add $r1, $r0, 24");
     Line("stw $r1, ($r0) 20");
+    Line("lda $r1, @String.vtable");
+    Line("stw $r1, ($r0) 8");
 }
 
 void XASMGenerator::GenerateBoolArrayLiteral(const CFGProgram::BoolArrayLiteral& constArray)

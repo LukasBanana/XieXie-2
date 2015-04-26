@@ -182,6 +182,7 @@ class GraphGenerator final : private Visitor
 
         CFGProgramPtr               program_;
         ClassTree*                  classTree_          = nullptr;  //!< Reference to the current class tree.
+        ProcDeclStmnt*              procedure_          = nullptr;  //!< Reference to the current procedure.
         unsigned int                numProcParams_      = 0;        //!< Number of parameters in the current procedure declaration.
 
         SafeStack<BasicBlock*>      stackBB_;

@@ -1,0 +1,23 @@
+
+// String Test 2
+// 26/04/2015
+
+import MsgBox
+
+/// Test for string code generation
+class Test {
+	
+	static void main() {
+		
+		var s1 := "Hello"
+		var s2 := "Hallo"
+		
+		s1.resize(3)
+		
+		//Intrinsics.printLn(s1.pointer())
+		MsgBox.show("Info", s1)
+		
+	}
+	
+}
+

@@ -223,9 +223,13 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
         if (objVar != ThisPtr())
         {
             /* Replace current 'this' pointer */
-            BB()->MakeInst<TACStackInst>(OpCodes::PUSH, ThisPtr());
+            if (procedure_ && !procedure_->procSignature->isStatic)
+            {
+                BB()->MakeInst<TACStackInst>(OpCodes::PUSH, ThisPtr());
+                keepThisPtr = false;
+            }
+
             BB()->MakeInst<TACCopyInst>(ThisPtr(), objVar);
-            keepThisPtr = false;
         }
     }
 
@@ -738,6 +742,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     if (!ast->codeBlock)
         return;
 
+    procedure_ = ast;
     auto& procSig = *ast->procSignature;
 
     /* Reset variable manager for this new procedure */
@@ -752,6 +757,10 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     
     /* Create procedure CFG */
     auto root = CT()->CreateRootBasicBlock(*ast, procDisplay);
+
+    #if 1//!DEBUGGING!
+    root->MakeInst<TACModifyInst>(OpCodes::ADD, TACVar::varStackPtr, TACVar::varStackPtr, "32");
+    #endif
 
     /* Register CFG root in procedure reference map */
     program_->procedures.Register(procSig.label, root);
@@ -793,6 +802,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
 
     /* Store final procedure information inside the CFG root */
     root->numParams = numProcParams_;
+    procedure_ = nullptr;
 
     RETURN_BLOCK_REF(VisitIO(root, graph.out));
 }
