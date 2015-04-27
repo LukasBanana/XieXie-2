@@ -363,6 +363,7 @@ CString.Pinit,R@String?source:
 
 ; String String.toString(Object this)
 CString.PtoString:
+	call inc_ref	; increment reference of this (return strong this)
 	mov $ar, $xr	; just return this pointer
 	ret
 
@@ -423,12 +424,34 @@ CString.Pempty:
 
 ; String String.append(String this, String rhs)
 CString.Pappend,R@String?rhs:
+	ldw $cf, ($lb) -4	; load rhs
+	je .end				; check if rhs = null
+	
 	; ...
+	
+	.end:
 	ret 1
 
 ; String String.append(String this, Object rhs)
 CString.Pappend,R@Object?rhs:
-	; ...
+	ldw $cf, ($lb) -4	; load rhs
+	je .end				; check if rhs = null
+	
+	; call rhs.toString()
+	ldw $cf, ($cf) 8	; load rhs.vtable
+	ldw $cf, ($cf) 20	; load rhs.vtable.toString
+	call $cf			; call rhs.vtable.toString()
+	
+	; call this.append(String)
+	push $ar			; store $ar
+	push $ar			; push $ar as argument for this.append($ar)
+	call CString.Pappend,R@String?rhs
+	
+	; decrement reference of temporary string from rhs.toString call
+	pop $xr
+	call dec_ref		; call rhs.dec_ref
+	
+	.end:
 	ret 1
 
 ; String String.append(String this, bool rhs)
