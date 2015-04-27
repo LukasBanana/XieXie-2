@@ -9,13 +9,13 @@ class Test {
 	
 	static void main() {
 		
-		var s1 := "Hello"
-		var s2 := "Hallo"
+		var s1 := "Info"
+		var s2 := "Hello"
 		
-		s1.resize(3)
+		s2.resize(3)
 		
 		//Intrinsics.printLn(s1.pointer())
-		MsgBox.show("Info", s1)
+		MsgBox.show(s1, s2)
 		
 	}
 	

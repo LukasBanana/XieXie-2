@@ -137,9 +137,11 @@ resize_buffer:
 	jmp .end
 	.else:
 	
-	; check if buffer should be decreased (size < this.bufSize/2)
-	sub $cf, $r0, $r1
-	sub $cf, $cf, $r1
+	; check if buffer should be decreased (this.bufSize > 16 AND size < this.bufSize/2)
+	cmp $r1, 16
+	jle .end
+	slr $r1, $r1, 1
+	cmp $r0, $r1
 	jge .end
 		; get further member variables
 		ldw $r2, ($xr) 12	; load this.size
@@ -405,7 +407,7 @@ CString.Presize,I?size:
 		ldw $r0, ($xr) 20	; load this.buffer
 		add $r0, $r0, $tr	; add offset to buffer
 		mov $tr, 0
-		stw $tr, ($r0) 0	; store null terminator at this.buffer[size]
+		stw $tr, ($r0) -1	; store null terminator at this.buffer[tr - 1]
 	.end:
 	ret 1
 
