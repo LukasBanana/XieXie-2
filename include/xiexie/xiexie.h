@@ -32,6 +32,8 @@ struct CompileFlags
         Optimize    = (1 << 2),
         ShowAST     = (1 << 3),
         ShowCFG     = (1 << 4),
+        ShowAsm     = (1 << 5),
+        ShowTokens  = (1 << 6),
         Default     = (Warn | Optimize),
     };
 };

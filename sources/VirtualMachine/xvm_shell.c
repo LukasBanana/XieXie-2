@@ -28,17 +28,20 @@ static void shell_print_help()
 
 static void shell_print_version()
 {
+    xvm_log_println("");
     #ifdef _ENABLE_RUNTIME_DEBUGGER_
-    xvm_log_println("XieXie 2.0 (Rev.1) VirtualMachine (XVM) with RuntimeDebugger (RTD)");
+    xvm_log_println("  XieXie Virtual Machine (XVM) with Run-Time Debugger (RTD)");
     #else
-    xvm_log_println("XieXie 2.0 (Rev.1) VirtualMachine (XVM)");
+    xvm_log_println("  XieXie Virtual Machine (XVM)");
     #endif
+    xvm_log_println("  Version 2.00 Alpha");
     xvm_log_println("");
-    xvm_log_println("Copyright (C) 2014 Lukas Hermanns");
-    xvm_log_println("All rights reserved.");
+    xvm_log_println("  Copyright (C) 2014-2015 Lukas Hermanns");
+    xvm_log_println("  All rights reserved.");
     xvm_log_println("");
-    xvm_log_println("This software may be modified and distributed under the terms");
-    xvm_log_println("of the BSD license.  See the LICENSE file for details.");
+    xvm_log_println("  This software may be modified and distributed under the terms");
+    xvm_log_println("  of the BSD license.  See the LICENSE file for details.");
+    xvm_log_println("");
 }
 
 static xvm_string extract_file_path(const char* filename)
