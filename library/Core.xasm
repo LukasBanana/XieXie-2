@@ -386,7 +386,11 @@ CString.Psize:
 
 ; void String.resize(String this, int size)
 CString.Presize,I?size:
-	ldw $tr, ($lb) -4		; load size
+	ldw $cf, ($lb) -4		; load size
+	jge .else				; check: size >= 0
+		mov $cf, 0			; clamp size to 0
+	.else:
+	add $tr, $cf, 1			; set tr := size + 1 (null terminator)
 	ldw $cf, ($xr) 12		; load this.size
 	cmp $cf, $tr			; compare this.size = size
 	je .end
