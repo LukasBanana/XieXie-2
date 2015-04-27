@@ -329,6 +329,12 @@ CString.Pequals,R@Object?rhs:
 	mov $ar, 0
 	ret 1
 
+; void String.init(String this, int size)
+CString.Pinit,I?size:
+	call CString.Pinit
+	call CString.Presize,I?size
+	ret
+
 ; void String.init(String this, String source)
 CString.Pinit,R@String?source:
 	; copy first 20 bytes from literal
@@ -467,6 +473,7 @@ String.vtable:
 	.word @CString.Pequals,R@Object?rhs
 	.word @CString.PtoString
 	.word @CString.Ppointer
+	.word @CString.Pinit,I?size
 	.word @CString.Pinit,R@String?source
 	.word @CString.Pcopy
 	.word @CString.Psize
