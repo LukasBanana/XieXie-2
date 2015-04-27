@@ -21,7 +21,7 @@ std::string StreamParser::Accept()
 {
     /* Parse next token */
     auto prev = tkn_;
-    stream_ >> tkn_;
+    std::getline(stream_, tkn_);
     return prev;
 }
 

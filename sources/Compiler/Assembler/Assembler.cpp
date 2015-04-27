@@ -20,15 +20,14 @@ namespace XieXie
 
 using namespace VirtualMachine;
 
-Assembler::Assembler(Log& log) :
-    log_        ( log                              ),
-    byteCode_   ( std::make_shared< ByteCode   >() ),
-    intrinsics_ ( std::make_shared< Intrinsics >() )
+Assembler::Assembler() :
+    byteCode_   { std::make_shared< ByteCode   >() },
+    intrinsics_ { std::make_shared< Intrinsics >() }
 {
     EstablishMnemonicTable();
 }
 
-bool Assembler::Assemble(std::istream& inStream, const std::string& outFilename)
+bool Assembler::Assemble(std::istream& inStream, const std::string& outFilename, ErrorReporter& errorReporter)
 {
     /* Initialize parsing */
     line_.clear();
@@ -43,7 +42,7 @@ bool Assembler::Assemble(std::istream& inStream, const std::string& outFilename)
     }
     catch (const CompilerMessage& err)
     {
-        errorReporter_.Add(err);
+        errorReporter.Add(err);
     }
 
     /* Read entire input file */
@@ -61,11 +60,11 @@ bool Assembler::Assemble(std::istream& inStream, const std::string& outFilename)
         }
         catch (const CompilerMessage& err)
         {
-            errorReporter_.Add(err);
+            errorReporter.Add(err);
         }
         catch (const std::exception& err)
         {
-            errorReporter_.Add(AssemblerError(sourceArea_, err.what()));
+            errorReporter.Add(AssemblerError(sourceArea_, err.what()));
         }
     }
 
@@ -78,35 +77,30 @@ bool Assembler::Assemble(std::istream& inStream, const std::string& outFilename)
         }
         catch (const CompilerMessage& err)
         {
-            errorReporter_.Add(err);
+            errorReporter.Add(err);
         }
     }
 
-    /* Prints errors */
-    bool hasErrors = errorReporter_.HasErrors();
-
-    errorReporter_.Flush(log_);
-
-    if (hasErrors)
+    if (errorReporter.HasErrors())
         return false;
 
     /* Write byte code to file */
-    return CreateByteCode(outFilename);
+    return CreateByteCode(outFilename, errorReporter);
 }
 
-bool Assembler::Assemble(const std::string& inFilename, const std::string& outFilename)
+bool Assembler::Assemble(const std::string& inFilename, const std::string& outFilename, ErrorReporter& errorReporter)
 {
     /* Read and parse input file */
     std::ifstream inFile(inFilename, std::ios_base::in);
 
     if (!inFile.good())
     {
-        log_.Error("reading file \"" + inFilename + "\" failed");
+        errorReporter.Add<FileError>("reading file \"" + inFilename + "\" failed");
         return false;
     }
 
     /* Assemble file stream */
-    return Assemble(inFile, outFilename);
+    return Assemble(inFile, outFilename, errorReporter);
 }
 
 void Assembler::QueryByteCodeInformation(Log& log, const std::string& filename, const BitMask& flags)
@@ -161,10 +155,18 @@ void Assembler::QueryByteCodeInformation(Log& log, const std::string& filename, 
         }
 
         /* Show import addresses */
-        //todo...
+        if (flags(QueryFlags::ImportAddresses))
+        {
+            //todo...
+            log.Error("replying import addresses not yet implemented");
+        }
 
         /* Show invocations */
-        //todo...
+        if (flags(QueryFlags::Invocations))
+        {
+            //todo...
+            log.Error("replying invocations not yet implemented");
+        }
     }
     else
         log.Error("reading byte-code \"" + filename + "\" failed");
@@ -1285,7 +1287,7 @@ void Assembler::ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr,
         Error("back-patch address index out of bounds");
 }
 
-bool Assembler::CreateByteCode(const std::string& outFilename)
+bool Assembler::CreateByteCode(const std::string& outFilename, ErrorReporter& errorReporter)
 {
     /* Add automatic export addresses */
     for (const auto addr : globalAddresses_)
@@ -1294,10 +1296,18 @@ bool Assembler::CreateByteCode(const std::string& outFilename)
     /* Finalize byte code */
     if (!byteCode_->Finalize())
     {
-        log_.Error("failed to finalize byte code");
+        errorReporter.Add<AssemblerError>("failed to finalize byte code");
         return false;
     }
-    return byteCode_->WriteToFile(outFilename);
+
+    /* Write byte code to file */
+    if (!byteCode_->WriteToFile(outFilename))
+    {
+        errorReporter.Add<AssemblerError>("failed to write byte code file");
+        return false;
+    }
+
+    return true;
 }
 
 unsigned int Assembler::InvokeID(const std::string& ident)

@@ -63,9 +63,9 @@ class Log
         
         /* === Members === */
 
-        std::ostream&   stream;         //!< Output log stream.
-        std::string     indent  = "  "; //!< Indentation string.
-        bool            verbose = true; //!< Verbose state.
+        std::ostream&   stream;             //!< Output log stream.
+        std::string     indent  = "  ";     //!< Indentation string.
+        bool            verbose = false;    //!< Verbose state.
 
     private:
         

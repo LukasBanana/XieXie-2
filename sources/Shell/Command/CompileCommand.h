@@ -34,19 +34,23 @@ class CompileCommand : public Command
         
         struct Options
         {
-            bool hasError       = false;
-            bool showAST        = false;
-            bool showTokens     = false;
-            bool showCFG        = false;
-            bool optimize       = false;
-            bool warnings       = false;
-            bool forceOverride  = false;
+            bool        hasError       = false;
+            
+            bool        showAST        = false;
+            bool        showTokens     = false;
+            bool        showCFG        = false;
+            bool        showAsm        = false;
+
+            bool        optimize       = false;
+            bool        warnings       = false;
+            bool        forceOverride  = false;
+            
+            std::string cfgDumpPath;
         };
 
         /* === Functions === */
 
-        void ReadFilenames(StreamParser& input);
-        void ReadOptions(StreamParser& input);
+        void ReadArgs(StreamParser& input);
 
         void ParseProgram(Program& program, Log& output);
         void DecorateProgram(Program& program, Log& output);
@@ -55,6 +59,14 @@ class CompileCommand : public Command
 
         void ShowAST(Program& program, Log& output);
         void ShowCFG(const CFGProgram& cfgProgram, Log& output);
+
+        /**
+        Returns an available output filename, for the specified input filename.
+        If the 'forceOverride' option is disabled, the user is asked to override an existing file.
+        */
+        std::string OutputFilename(
+            const std::string& inputFilename, const std::string& fileExt, Log& output
+        ) const;
 
         /* === Members === */
 

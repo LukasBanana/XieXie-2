@@ -11,7 +11,8 @@
 
 void AssembleCommand::Execute(StreamParser& input, Log& output)
 {
-    XieXie::Assembler assembler(output);
+    ErrorReporter errorReporter;
+    XieXie::Assembler assembler;
 
     /* Parse input filenames */
     while (input.Get() == "-f" || input.Get() == "--file")
@@ -23,8 +24,10 @@ void AssembleCommand::Execute(StreamParser& input, Log& output)
             output.Message("assemble file \"" + filename + "\" ...");
 
         /* Assemble source file */
-        if (assembler.Assemble(filename, filename + ".xbc"))
-            output.Success("assembly successful");
+        if (!assembler.Assemble(filename, filename + ".xbc", errorReporter))
+            errorReporter.Flush(output);
+        else
+            output.Success("assembling successful");
     }
 }
 

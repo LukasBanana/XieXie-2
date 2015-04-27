@@ -222,11 +222,14 @@ DEF_VISIT_PROC(ASTViewer, RepeatStmnt)
 
 DEF_VISIT_PROC(ASTViewer, ClassDeclStmnt)
 {
-    AST_INFO_COLOR("ClassDeclStmnt", colorStmnt);
-    Visit(ast->attribPrefix);
-    AST_STRING(ident);
-    AST_STRING(baseClassIdent);
-    Visit(ast->declStmnts);
+    if (!ast->isBuiltin)
+    {
+        AST_INFO_COLOR("ClassDeclStmnt", colorStmnt);
+        Visit(ast->attribPrefix);
+        AST_STRING(ident);
+        AST_STRING(baseClassIdent);
+        Visit(ast->declStmnts);
+    }
 }
 
 DEF_VISIT_PROC(ASTViewer, VarDeclStmnt)

@@ -15,13 +15,12 @@
 #include "GraphGenerator.h"
 #include "StdCodeFactory.h"
 #include "CodeGenerators/XASM/XASMGenerator.h"
+#include "Assembler.h"
 
 #include "ASTViewer.h"
 #include "CFGViewer.h"
 #include "Optimizer.h"
 
-
-#define _DEB_DISABLE_CFG_PER_DEFAULT_//!!!
 
 using namespace AbstractSyntaxTrees;
 using namespace SyntaxAnalyzer;
@@ -30,9 +29,10 @@ using namespace Platform::ConsoleManip;
 
 void CompileCommand::Execute(StreamParser& input, Log& output)
 {
+    /* --- Compilation --- */
+
     /* Parse input stream */
-    ReadFilenames(input);
-    ReadOptions(input);
+    ReadArgs(input);
 
     if (outputFilename_.empty())
     {
@@ -50,14 +50,6 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     if (!hasError_)
         DecorateProgram(program, output);
 
-    /* Show syntax tree (AST) */
-    if (options_.showAST)
-        ShowAST(program, output);
-
-    #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!
-    if (options_.showCFG){
-    #endif
-        
     /* Transform to CFG */
     CFGProgramPtr cfgProgram;
     if (!hasError_)
@@ -67,19 +59,21 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     if (!hasError_ && cfgProgram)
         GenerateCode(*cfgProgram, output);
 
-    /* Show flow graph (CFG) */
-    if (options_.showCFG && cfgProgram)
-        ShowCFG(*cfgProgram, output);
-
-    #ifdef _DEB_DISABLE_CFG_PER_DEFAULT_//!!!!!
-    }
-    #endif
+    /* --- Debug Output --- */
 
     /* Print out errors */
     errorReporter_.Flush(output);
 
     if (!hasError_)
         output.Success("compilation successful");
+
+    /* Show syntax tree (AST) */
+    if (options_.showAST)
+        ShowAST(program, output);
+
+    /* Show flow graph (CFG) */
+    if (options_.showCFG && cfgProgram)
+        ShowCFG(*cfgProgram, output);
 
     ErrorReporter::showWarnings = false;
 }
@@ -89,37 +83,38 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
  * ======= Private: =======
  */
 
-void CompileCommand::ReadFilenames(StreamParser& input)
-{
-    /* Get source filenames from input stream */
-    while (input.Get() == "-f" || input.Get() == "--file")
-    {
-        /* Parse filename */
-        input.Accept();
-        auto filename = input.Accept();
-
-        if (outputFilename_.empty())
-            outputFilename_ = filename;
-
-        /* Add filename to list */
-        sources_.push_back(filename);
-        passedSources_.insert(ToLower(filename));
-    }
-}
-
-void CompileCommand::ReadOptions(StreamParser& input)
+void CompileCommand::ReadArgs(StreamParser& input)
 {
     /* Parse options */
     while (true)
     {
-        if (input.Get() == "-out" || input.Get() == "--output")
+        if (input.Get() == "-f" || input.Get() == "--file")
+        {
+            /* Parse filename */
+            input.Accept();
+            auto filename = input.Accept();
+
+            if (outputFilename_.empty())
+                outputFilename_ = filename;
+
+            /* Add filename to list */
+            sources_.push_back(filename);
+            passedSources_.insert(ToLower(filename));
+        }
+        else if (input.Get() == "-out" || input.Get() == "--output")
         {
             input.Accept();
             outputFilename_ = input.Accept();
         }
+        else if (input.Get() == "--show-cfg")
+        {
+            input.Accept();
+            options_.cfgDumpPath    = input.Accept();
+            options_.showCFG        = true;
+        }
         else if ( !( input.AcceptOption(options_.showAST, "--show-ast") ||
                      input.AcceptOption(options_.showTokens, "--show-tokens") ||
-                     input.AcceptOption(options_.showCFG, "--show-cfg") ||
+                     input.AcceptOption(options_.showAsm, "--show-asm") ||
                      input.AcceptOption(options_.optimize, { "-O", "--optimize" }) ||
                      input.AcceptOption(options_.warnings, { "-W", "--warn" }) ||
                      input.AcceptOption(options_.forceOverride, { "-fo", "--force-override" }) ) )
@@ -217,42 +212,57 @@ CFGProgramPtr CompileCommand::GenerateCFG(Program& program, Log& output)
 
 void CompileCommand::GenerateCode(const CFGProgram& cfgProgram, Log& output)
 {
-    /* Create output file */
-    std::string fileId;
-    auto OutFile = [&]()
+    if (options_.showAsm)
     {
-        return outputFilename_ + fileId + ".xasm";
-    };
+        /* Create output file */
+        auto filenameAsm = OutputFilename(outputFilename_, "xasm", output);
+        std::ofstream outputFile(filenameAsm);
 
-    if (!options_.forceOverride && FileHelper::DoesFileExist(OutFile()))
-    {
-        /* Ask user to override file */
-        output.Warning("output file \"" + OutFile() + "\" already exists! override? (y/n)");
+        /* Generate code */
+        if (output.verbose)
+            output.Message("generate code file \"" + filenameAsm + "\" ...");
 
-        char answer = 0;
-        std::cin >> answer;
+        CodeGenerator::XASMGenerator generator(outputFile);
+        if (!generator.GenerateAsm(cfgProgram, errorReporter_))
+            hasError_ = true;
 
-        if (answer != 'y' && answer != 'Y')
+        if (!hasError_)
         {
-            /* Find available filename */
-            size_t i = 0;
-            do
-            {
-                fileId = std::to_string(++i);
-            }
-            while (FileHelper::DoesFileExist(OutFile()));
+            /* Assemble source file */
+            auto filenameByteCode = OutputFilename(outputFilename_, "xbc", output);
+            if (output.verbose)
+                output.Message("assemble file \"" + filenameByteCode + "\" ...");
+
+            XieXie::Assembler assembler;
+            if (!assembler.Assemble(filenameAsm, filenameByteCode, errorReporter_))
+                hasError_ = true;
         }
     }
+    else
+    {
+        /* Create I/O stream */
+        std::stringstream assembly;
 
-    std::ofstream outputFile(OutFile());
+        /* Generate code */
+        if (output.verbose)
+            output.Message("generate code ...");
 
-    /* Generate code */
-    if (output.verbose)
-        output.Message("generate code file \"" + OutFile() + "\" ...");
+        CodeGenerator::XASMGenerator generator(assembly);
+        if (!generator.GenerateAsm(cfgProgram, errorReporter_))
+            hasError_ = true;
 
-    CodeGenerator::XASMGenerator generator(outputFile);
-    if (!generator.GenerateAsm(cfgProgram, errorReporter_))
-        hasError_ = true;
+        if (!hasError_)
+        {
+            /* Assemble source file */
+            auto filenameByteCode = OutputFilename(outputFilename_, "xbc", output);
+            if (output.verbose)
+                output.Message("assemble file \"" + filenameByteCode + "\" ...");
+
+            XieXie::Assembler assembler;
+            if (!assembler.Assemble(assembly, filenameByteCode, errorReporter_))
+                hasError_ = true;
+        }
+    }
 }
 
 void CompileCommand::ShowAST(Program& program, Log& output)
@@ -273,13 +283,14 @@ void CompileCommand::ShowCFG(const CFGProgram& cfgProgram, Log& output)
         {
             if (output.verbose)
                 output.Message("dump CFG class tree \"" + classDecl->ident + "\"");
-            #ifdef _DEBUG
-            viewer.ViewGraph(*ct, "cfg-dump/");
-            #else
-            viewer.ViewGraph(*ct);
-            #endif
+            viewer.ViewGraph(*ct, options_.cfgDumpPath);
         }
     }
+}
+
+std::string CompileCommand::OutputFilename(const std::string& inputFilename, const std::string& fileExt, Log& output) const
+{
+    return FileHelper::SelectOutputFilename(inputFilename, fileExt, output, options_.forceOverride);
 }
 
 

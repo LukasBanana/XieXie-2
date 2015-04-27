@@ -129,6 +129,22 @@ std::string ExtractFileIdent(const std::string& filename)
     return filePart;
 }
 
+void RemoveFileExtension(std::string& filename)
+{
+    /* Remove file extension */
+    for (size_t i = filename.size(); i + 1 >= 0; --i)
+    {
+        auto chr = filename[i - 1];
+        if (chr == '/' || chr == '\\')
+            break;
+        if (chr == '.')
+        {
+            filename.resize(i - 1);
+            break;
+        }
+    }
+}
+
 std::string ReplaceString(
     std::string subject, const std::string& search, const std::string& replace)
 {

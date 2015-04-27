@@ -57,10 +57,10 @@ class Assembler
             };
         };
 
-        Assembler(Log& log);
+        Assembler();
 
-        bool Assemble(std::istream& inStream, const std::string& outFilename);
-        bool Assemble(const std::string& inFilename, const std::string& outFilename);
+        bool Assemble(std::istream& inStream, const std::string& outFilename, ErrorReporter& errorReporter);
+        bool Assemble(const std::string& inFilename, const std::string& outFilename, ErrorReporter& errorReporter);
 
         static void QueryByteCodeInformation(Log& log, const std::string& filename, const BitMask& flags);
 
@@ -265,16 +265,13 @@ class Assembler
         void ResolveBackPatchAddress(const std::string& label, BackPatchAddr& patchAddr);
         void ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr, const BackPatchAddr::InstrUse& instrUse);
 
-        bool CreateByteCode(const std::string& outFilename);
+        bool CreateByteCode(const std::string& outFilename, ErrorReporter& errorReporter);
 
         unsigned int InvokeID(const std::string& ident);
 
         void AcceptPragma(const std::string& cmd);
 
         /* === Members === */
-
-        Log&                                        log_;
-        ErrorReporter                               errorReporter_;
 
         std::string                                 line_;                  //!< Current source line.
         std::string::iterator                       lineIt_;                //!< Source line iterator.
