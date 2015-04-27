@@ -13,6 +13,8 @@
 
 #include <memory>
 #include <map>
+#include <vector>
+#include <initializer_list>
 
 
 //! Shell command factory singleton.
@@ -24,16 +26,16 @@ class CommandFactory
         CommandFactory(const CommandFactory&) = delete;
         CommandFactory& operator = (const CommandFactory&) = delete;
 
-        using CommandMap = std::map<std::string, std::unique_ptr<Command>>;
+        using CommandMap = std::map<std::string, Command*>;
 
         //! Returns the instance of this singleton.
         static CommandFactory* Instance();
         
         /**
-        Registers the new command under the specified name.
-        \throws std::invalid_argument If the name is already used for another command.
+        Registers the new command under the specified names.
+        \throws std::invalid_argument If the any of the names is already used for another command.
         */
-        void RegisterCommand(const std::string& name, std::unique_ptr<Command>&& command);
+        void RegisterCommand(const std::initializer_list<std::string>& names, std::unique_ptr<Command>&& command);
 
         //! Returns the command with the specified name, or null if there is no such command.
         Command* FindCommand(const std::string& name) const;
@@ -41,7 +43,7 @@ class CommandFactory
         //! Returns the map of all commands.
         const CommandMap& GetCommands() const
         {
-            return commands_;
+            return commandMap_;
         }
 
     private:
@@ -50,7 +52,8 @@ class CommandFactory
 
         void EstablishCommands();
 
-        CommandMap commands_;
+        std::vector<std::unique_ptr<Command>>   commands_;
+        CommandMap                              commandMap_;
 
 };
 
@@ -61,7 +64,7 @@ class CommandFactory
     {                                                                   \
         public:                                                         \
             void Execute(StreamParser& input, Log& output) override;    \
-            void Help(HelpPrinter& printer) override;                   \
+            void Help(HelpPrinter& printer)  const override;            \
     }
 
 DECL_COMMAND_IMPL( Log      );

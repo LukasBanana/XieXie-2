@@ -31,7 +31,7 @@ void AssembleCommand::Execute(StreamParser& input, Log& output)
     }
 }
 
-void AssembleCommand::Help(HelpPrinter& printer)
+void AssembleCommand::Help(HelpPrinter& printer) const
 {
     printer.Command("assemble, A [OPT+]", "assembles several files");
     printer.Flag("-f, --file FILE", "specifies a file to assemble to 'FILE.xbc'");

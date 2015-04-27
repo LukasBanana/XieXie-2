@@ -29,7 +29,7 @@ void HelpCommand::Execute(StreamParser& input, Log& output)
     printer.Flush(output);
 }
 
-void HelpCommand::Help(HelpPrinter& printer)
+void HelpCommand::Help(HelpPrinter& printer) const
 {
     printer.Command("help", "prints this man page");
 }

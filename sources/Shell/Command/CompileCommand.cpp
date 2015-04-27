@@ -78,7 +78,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     ErrorReporter::showWarnings = false;
 }
 
-void CompileCommand::Help(HelpPrinter& printer)
+void CompileCommand::Help(HelpPrinter& printer) const
 {
     printer.Command("compile, C [OPT+]", "compiles several files");
 

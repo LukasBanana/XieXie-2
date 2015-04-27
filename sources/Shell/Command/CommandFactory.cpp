@@ -21,18 +21,22 @@ CommandFactory* CommandFactory::Instance()
     return &instance;
 }
 
-void CommandFactory::RegisterCommand(const std::string& name, std::unique_ptr<Command>&& command)
+void CommandFactory::RegisterCommand(const std::initializer_list<std::string>& names, std::unique_ptr<Command>&& command)
 {
-    if (!FindCommand(name))
-        commands_[name] = std::move(command);
-    else
-        throw std::invalid_argument("\"" + name + "\" is already a registered shell command");
+    for (const auto& name : names)
+    {
+        if (!FindCommand(name))
+            commandMap_[name] = command.get();
+        else
+            throw std::invalid_argument("\"" + name + "\" is already a registered shell command");
+    }
+    commands_.emplace_back(std::forward<std::unique_ptr<Command>>(command));
 }
 
 Command* CommandFactory::FindCommand(const std::string& name) const
 {
-    auto it = commands_.find(name);
-    return it != commands_.end() ? it->second.get() : nullptr;
+    auto it = commandMap_.find(name);
+    return it != commandMap_.end() ? it->second : nullptr;
 }
 
 
@@ -42,16 +46,16 @@ Command* CommandFactory::FindCommand(const std::string& name) const
 
 void CommandFactory::EstablishCommands()
 {
-    RegisterCommand("log",      MakeUnique< LogCommand      >());
-    RegisterCommand("prompt",   MakeUnique< PromptCommand   >());
-    RegisterCommand("pause",    MakeUnique< PauseCommand    >());
-    RegisterCommand("compile",  MakeUnique< CompileCommand  >());
-    RegisterCommand("assemble", MakeUnique< AssembleCommand >());
-    RegisterCommand("version",  MakeUnique< VersionCommand  >());
-    RegisterCommand("help",     MakeUnique< HelpCommand     >());
-    RegisterCommand("verbose",  MakeUnique< VerboseCommand  >());
-    RegisterCommand("reply",    MakeUnique< ReplyCommand    >());
-    RegisterCommand("color",    MakeUnique< ColorCommand    >());
+    RegisterCommand({ "compile",  "C" }, MakeUnique< CompileCommand  >());
+    RegisterCommand({ "assemble", "A" }, MakeUnique< AssembleCommand >());
+    RegisterCommand({ "log"           }, MakeUnique< LogCommand      >());
+    RegisterCommand({ "prompt"        }, MakeUnique< PromptCommand   >());
+    RegisterCommand({ "pause"         }, MakeUnique< PauseCommand    >());
+    RegisterCommand({ "version"       }, MakeUnique< VersionCommand  >());
+    RegisterCommand({ "help"          }, MakeUnique< HelpCommand     >());
+    RegisterCommand({ "verbose"       }, MakeUnique< VerboseCommand  >());
+    RegisterCommand({ "reply"         }, MakeUnique< ReplyCommand    >());
+    RegisterCommand({ "color"         }, MakeUnique< ColorCommand    >());
 }
 
 

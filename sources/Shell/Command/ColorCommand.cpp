@@ -27,7 +27,7 @@ void ColorCommand::Execute(StreamParser& input, Log& output)
         ConsoleManip::Enable(true);
 }
 
-void ColorCommand::Help(HelpPrinter& printer)
+void ColorCommand::Help(HelpPrinter& printer) const
 {
     printer.Command("color [OPT]", "enables/ disables console color manipulation (by default disabled)");
     printer.Flag("-on", "enables colors (default)");

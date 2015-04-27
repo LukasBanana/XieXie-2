@@ -30,7 +30,7 @@ class CompileCommand : public Command
         
         void Execute(StreamParser& input, Log& output) override;
 
-        void Help(HelpPrinter& printer) override;
+        void Help(HelpPrinter& printer) const override;
 
     private:
         

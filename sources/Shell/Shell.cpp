@@ -34,11 +34,24 @@ void Shell::Execute(StreamParser parser)
             auto cmdName = parser.Get();
             auto cmd = CommandFactory::Instance()->FindCommand(cmdName);
 
-            /* Execute command */
+            /* Process command line */
             if (cmd)
             {
                 parser.Accept();
-                cmd->Execute(parser, log_);
+
+                if (parser.Get() == "--help")
+                {
+                    /* Print help for command */
+                    parser.Accept();
+                    HelpPrinter printer;
+                    cmd->Help(printer);
+                    printer.Flush(log_);
+                }
+                else
+                {
+                    /* Execute command */
+                    cmd->Execute(parser, log_);
+                }
             }
             else
             {

@@ -29,7 +29,7 @@ class Command
         virtual void Execute(StreamParser& input, Log& output) = 0;
 
         //! Adds the help document to the specified help printer.
-        virtual void Help(HelpPrinter& printer) = 0;
+        virtual void Help(HelpPrinter& printer) const = 0;
 
 };
 

@@ -26,7 +26,7 @@ void LogCommand::Execute(StreamParser& input, Log& output)
         output.Message(msg);
 }
 
-void LogCommand::Help(HelpPrinter& printer)
+void LogCommand::Help(HelpPrinter& printer) const
 {
     printer.Command("log TEXT [OPT]", "prints TEXT as a log message");
     printer.Flag("-W, --warn", "prints a warning");

@@ -23,7 +23,7 @@ void VersionCommand::Execute(StreamParser& input, Log& output)
     output.Blank();
 }
 
-void VersionCommand::Help(HelpPrinter& printer)
+void VersionCommand::Help(HelpPrinter& printer) const
 {
     printer.Command("version", "prints the version information");
 }

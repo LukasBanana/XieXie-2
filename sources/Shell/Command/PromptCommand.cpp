@@ -19,7 +19,7 @@ void PromptCommand::Execute(StreamParser& input, Log& output)
     shell.Execute(std::cin);
 }
 
-void PromptCommand::Help(HelpPrinter& printer)
+void PromptCommand::Help(HelpPrinter& printer) const
 {
     printer.Command("prompt", "enters the command line prompt inside the application");
 }

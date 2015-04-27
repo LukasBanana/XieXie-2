@@ -13,7 +13,7 @@ void PauseCommand::Execute(StreamParser& input, Log& output)
     system("pause");
 }
 
-void PauseCommand::Help(HelpPrinter& printer)
+void PauseCommand::Help(HelpPrinter& printer) const
 {
     printer.Command("pause", "pauses the application");
 }

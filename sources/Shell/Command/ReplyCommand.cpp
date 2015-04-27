@@ -52,7 +52,7 @@ void ReplyCommand::Execute(StreamParser& input, Log& output)
         output.Message("reply: nothing to be done");
 }
 
-void ReplyCommand::Help(HelpPrinter& printer)
+void ReplyCommand::Help(HelpPrinter& printer) const
 {
     printer.Command("reply FILE [OPT]", "shows information from the specified byte code file (*.xbc)");
 
