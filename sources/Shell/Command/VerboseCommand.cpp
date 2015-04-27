@@ -24,6 +24,13 @@ void VerboseCommand::Execute(StreamParser& input, Log& output)
         output.verbose = true;
 }
 
+void VerboseCommand::Help(HelpPrinter& printer)
+{
+    printer.Command("verbose [OPT]", "sets the log output to verbose or non-verbose");
+    printer.Flag("-on", "enables colors (default)");
+    printer.Flag("-off", "disables colors");
+}
+
 
 
 // ================================================================================

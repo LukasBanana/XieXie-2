@@ -10,37 +10,49 @@
 #include "MakeUnique.h"
 
 
-namespace CommandFactory
+CommandFactory::CommandFactory()
 {
+    EstablishCommands();
+}
 
-
-std::unique_ptr<Command> InstantiateCommand(const std::string& cmdName)
+CommandFactory* CommandFactory::Instance()
 {
-    if (cmdName == "log")
-        return MakeUnique<LogCommand>();
-    if (cmdName == "prompt")
-        return MakeUnique<PromptCommand>();
-    if (cmdName == "pause")
-        return MakeUnique<PauseCommand>();
-    if (cmdName == "compile" || cmdName == "C")
-        return MakeUnique<CompileCommand>();
-    if (cmdName == "assemble" || cmdName == "A")
-        return MakeUnique<AssembleCommand>();
-    if (cmdName == "version")
-        return MakeUnique<VersionCommand>();
-    if (cmdName == "help")
-        return MakeUnique<HelpCommand>();
-    if (cmdName == "verbose")
-        return MakeUnique<VerboseCommand>();
-    if (cmdName == "reply")
-        return MakeUnique<ReplyCommand>();
-    if (cmdName == "color")
-        return MakeUnique<ColorCommand>();
-    return nullptr;
+    static CommandFactory instance;
+    return &instance;
+}
+
+void CommandFactory::RegisterCommand(const std::string& name, std::unique_ptr<Command>&& command)
+{
+    if (!FindCommand(name))
+        commands_[name] = std::move(command);
+    else
+        throw std::invalid_argument("\"" + name + "\" is already a registered shell command");
+}
+
+Command* CommandFactory::FindCommand(const std::string& name) const
+{
+    auto it = commands_.find(name);
+    return it != commands_.end() ? it->second.get() : nullptr;
 }
 
 
-} // /namespace CommandFactory
+/*
+ * ======= Private: =======
+ */
+
+void CommandFactory::EstablishCommands()
+{
+    RegisterCommand("log",      MakeUnique< LogCommand      >());
+    RegisterCommand("prompt",   MakeUnique< PromptCommand   >());
+    RegisterCommand("pause",    MakeUnique< PauseCommand    >());
+    RegisterCommand("compile",  MakeUnique< CompileCommand  >());
+    RegisterCommand("assemble", MakeUnique< AssembleCommand >());
+    RegisterCommand("version",  MakeUnique< VersionCommand  >());
+    RegisterCommand("help",     MakeUnique< HelpCommand     >());
+    RegisterCommand("verbose",  MakeUnique< VerboseCommand  >());
+    RegisterCommand("reply",    MakeUnique< ReplyCommand    >());
+    RegisterCommand("color",    MakeUnique< ColorCommand    >());
+}
 
 
 

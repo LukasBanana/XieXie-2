@@ -30,6 +30,8 @@ class CompileCommand : public Command
         
         void Execute(StreamParser& input, Log& output) override;
 
+        void Help(HelpPrinter& printer) override;
+
     private:
         
         struct Options

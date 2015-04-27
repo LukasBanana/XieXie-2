@@ -6,6 +6,7 @@
  */
 
 #include "CommandFactory.h"
+#include "HelpPrinter.h"
 
 
 void HelpCommand::Execute(StreamParser& input, Log& output)
@@ -17,47 +18,20 @@ void HelpCommand::Execute(StreamParser& input, Log& output)
             "  xxc COMMAND+",
             "",
             "commands:",
-            "  assemble, A [OPT+]       assembles several files",
-            "    -f, --file FILE        specifies a file to assemble to 'FILE.xbc'",
-            "",
-            "  compile, C [OPT+]        compiles several files",
-            "    -f, --file FILE        specifies a file to compile to 'FILE.xasm'",
-            "    -O, --optimize         enables all optimization passes",
-            "    -W, --warn             enables all warnings",
-            "    -fo, --force-override  forces the compiler to override existing filed during code generation",
-            "    -out, --output FILE    specifies the output filename for the executable",
-            "    --show-ast             prints the abstract syntax tree (AST)",
-            "    --show-tokens          prints the token stream",
-            "    --show-cfg PATH        writes the control flow graph (CFG) to a *.vg (DOT) file to the PATH directory",
-            "    --show-asm             writes the assembly to an output file",
-            "",
-            "  reply FILE [OPT]         shows information from the specified byte code file (*.xbc)",
-            "    --exp-addr             shows all export addresses",
-            "    --imp-addr             shows all import addresses",
-            "    --invk                 shows all invocations",
-            "    -S, --sort             sort output by names",
-            "",
-            "  color [OPT]              enables/ disables console color manipulation (by default disabled)",
-            "    -on                    enables colors (default)",
-            "    -off                   disables colors",
-            "",
-            "  help                     prints this man page",
-            "",
-            "  log TEXT [OPT]           prints TEXT as a log message",
-            "    -W, --warn             prints a warning",
-            "    -E, --error            prints an error",
-            "",
-            "  pause                    pauses the application",
-            "",
-            "  prompt                   enters the command line prompt inside the application",
-            "",
-            "  verbose [OPT]            sets the log output to verbose or non-verbose",
-            "    -on                    enables colors (default)",
-            "    -off                   disables colors",
-            "",
-            "  version                  prints the version information",
         }
     );
+
+    HelpPrinter printer;
+    for (const auto& cmd : CommandFactory::Instance()->GetCommands())
+        cmd.second->Help(printer);
+
+    SCOPED_INDENT(output);
+    printer.Flush(output);
+}
+
+void HelpCommand::Help(HelpPrinter& printer)
+{
+    printer.Command("help", "prints this man page");
 }
 
 

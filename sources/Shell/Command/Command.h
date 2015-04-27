@@ -12,6 +12,7 @@
 #include "Command.h"
 #include "StreamParser.h"
 #include "Log.h"
+#include "HelpPrinter.h"
 
 
 //! Shell command interface.
@@ -24,7 +25,11 @@ class Command
         {
         }
 
+        //! Executes this shell command.
         virtual void Execute(StreamParser& input, Log& output) = 0;
+
+        //! Adds the help document to the specified help printer.
+        virtual void Help(HelpPrinter& printer) = 0;
 
 };
 

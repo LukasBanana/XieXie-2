@@ -52,6 +52,20 @@ void ReplyCommand::Execute(StreamParser& input, Log& output)
         output.Message("reply: nothing to be done");
 }
 
+void ReplyCommand::Help(HelpPrinter& printer)
+{
+    printer.Command("reply FILE [OPT]", "shows information from the specified byte code file (*.xbc)");
+
+    printer.Flags(
+        {
+            { "--exp-addr", "shows all export addresses" },
+            { "--imp-addr", "shows all import addresses" },
+            { "--invk",     "shows all invocations"      },
+            { "-S, --sort", "sort output by names"       },
+        }
+    );
+}
+
 
 
 // ================================================================================

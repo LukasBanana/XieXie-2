@@ -12,16 +12,47 @@
 #include "Command.h"
 
 #include <memory>
+#include <map>
 
 
-namespace CommandFactory
+//! Shell command factory singleton.
+class CommandFactory
 {
 
+    public:
+        
+        CommandFactory(const CommandFactory&) = delete;
+        CommandFactory& operator = (const CommandFactory&) = delete;
 
-std::unique_ptr<Command> InstantiateCommand(const std::string& cmdName);
+        using CommandMap = std::map<std::string, std::unique_ptr<Command>>;
 
+        //! Returns the instance of this singleton.
+        static CommandFactory* Instance();
+        
+        /**
+        Registers the new command under the specified name.
+        \throws std::invalid_argument If the name is already used for another command.
+        */
+        void RegisterCommand(const std::string& name, std::unique_ptr<Command>&& command);
 
-}; // /namespace CommandFactory
+        //! Returns the command with the specified name, or null if there is no such command.
+        Command* FindCommand(const std::string& name) const;
+
+        //! Returns the map of all commands.
+        const CommandMap& GetCommands() const
+        {
+            return commands_;
+        }
+
+    private:
+        
+        CommandFactory();
+
+        void EstablishCommands();
+
+        CommandMap commands_;
+
+};
 
 
 //! Declares an implementation of the "Command" interface
@@ -30,6 +61,7 @@ std::unique_ptr<Command> InstantiateCommand(const std::string& cmdName);
     {                                                                   \
         public:                                                         \
             void Execute(StreamParser& input, Log& output) override;    \
+            void Help(HelpPrinter& printer) override;                   \
     }
 
 DECL_COMMAND_IMPL( Log      );

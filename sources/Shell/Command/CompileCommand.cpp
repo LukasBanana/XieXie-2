@@ -78,6 +78,25 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     ErrorReporter::showWarnings = false;
 }
 
+void CompileCommand::Help(HelpPrinter& printer)
+{
+    printer.Command("compile, C [OPT+]", "compiles several files");
+
+    printer.Flags(
+        {
+            { "-f, --file FILE",       "specifies a file to compile to 'FILE.xasm'"                                     },
+            { "-O, --optimize",        "enables all optimization passes"                                                },
+            { "-W, --warn",            "enables all warnings"                                                           },
+            { "-fo, --force-override", "forces the compiler to override existing filed during code generation"          },
+            { "-out, --output FILE",   "specifies the output filename for the executable"                               },
+            { "--show-ast",            "prints the abstract syntax tree (AST)"                                          },
+            { "--show-tokens",         "prints the token stream"                                                        },
+            { "--show-cfg PATH",       "writes the control flow graph (CFG) to a *.vg (DOT) file to the PATH directory" },
+            { "--show-asm",            "writes the assembly to an output file"                                          },
+        }
+    );
+}
+
 
 /*
  * ======= Private: =======

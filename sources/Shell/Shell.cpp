@@ -32,7 +32,7 @@ void Shell::Execute(StreamParser parser)
         {
             /* Read next command */
             auto cmdName = parser.Get();
-            auto cmd = CommandFactory::InstantiateCommand(cmdName);
+            auto cmd = CommandFactory::Instance()->FindCommand(cmdName);
 
             /* Execute command */
             if (cmd)

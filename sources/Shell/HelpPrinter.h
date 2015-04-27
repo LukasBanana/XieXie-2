@@ -22,11 +22,15 @@ class HelpPrinter
         
         //! Adds a new command help description.
         void Command(const std::string& grammar, const std::string& desc);
+
         /**
         Adds a new flag help description.
         \throws std::runtime_error If "Command" has not been called first.
         */
         void Flag(const std::string& grammar, const std::string& desc);
+
+        //! Adds multiple flags at once.
+        void Flags(const std::vector<std::pair<std::string, std::string>>& flags);
 
         //! Prints all help messages to log output and clears the queue.
         void Flush(Log& log, char sep = '.');

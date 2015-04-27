@@ -22,7 +22,10 @@ void HelpPrinter::Help::MaxLength(size_t& maxLen, size_t offset) const
 void HelpPrinter::Help::Print(Log& log, char sep, size_t maxLen, size_t offset) const
 {
     auto reduce = std::min(maxLen, grammar.size() + offset);
-    log.Message(std::string(offset, ' ') + grammar + ' ' + std::string(maxLen - reduce + 1, sep) + ' ');
+    log.Message(
+        std::string(offset, ' ') + grammar + ' ' +
+        std::string(maxLen - reduce, sep) + ' ' + desc
+    );
 }
 
 
@@ -64,6 +67,12 @@ void HelpPrinter::Flag(const std::string& grammar, const std::string& desc)
         commandHelps_.back().flagsInfos.push_back({ grammar, desc });
     else
         throw std::runtime_error("now command added to the help printer");
+}
+
+void HelpPrinter::Flags(const std::vector<std::pair<std::string, std::string>>& flags)
+{
+    for (const auto& flag : flags)
+        Flag(flag.first, flag.second);
 }
 
 void HelpPrinter::Flush(Log& log, char sep)
