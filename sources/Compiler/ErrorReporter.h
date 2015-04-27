@@ -53,7 +53,7 @@ class ErrorReporter
         }
 
         /**
-        Prints all messages to console and clears the message list.
+        Prints all messages to log output and clears the queue.
         \param[in] printMetaInfo Specifies whether the number of errors and warnings are to be printed as well.
         */
         void Flush(Log& log, bool printMetaInfo = true);
