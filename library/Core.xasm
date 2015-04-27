@@ -426,8 +426,36 @@ CString.Pempty:
 CString.Pappend,R@String?rhs:
 	ldw $cf, ($lb) -4	; load rhs
 	je .end				; check if rhs = null
+	mov $r0, $cf		; store rhs
 	
-	; ...
+	; check if other string is empty
+	ldw $r2, ($cf) 12	; load rhs.size
+	cmp $r2, 1			; check: rhs.size <= 1
+	jle .end
+	
+	; determine new string size
+	ldw $r1, ($xr) 12	; load this.size
+	add $r2, $r2, $r1	; calculate size := this.size + rhs.size
+	sub $r2, $r2, 2		; subtract 2 from size because of both null terminators
+	
+	; resize this string
+	push $r0			; store rhs
+	push $r2
+	call CString.Presize,I?size
+	pop $r0				; restore rhs
+	
+	; copy other string into new buffer part
+	ldw $r1, ($xr) 12	; reload this.size
+	ldw $r2, ($xr) 20	; load this.buffer
+	ldw $r3, ($r0) 12	; reload rhs.size
+	ldw $r4, ($r0) 20	; load rhs.buffer
+	dec $r1				; decrement size because of null terminator
+	dec $r3				; decrement size because of null terminator
+	add $r2, $r2, $r1	; add offset to buffer
+	push $r3			; push buffer size
+	push $r4			; push source buffer
+	push $r2			; push destination buffer
+	insc CopyMem		; copy string part
 	
 	.end:
 	ret 1
