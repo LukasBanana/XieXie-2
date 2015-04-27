@@ -32,17 +32,6 @@ typedef BOOL (WINAPI* LPFN_QUERYFULLPROCESSIMAGENAME_PROC)(HANDLE, DWORD, LPTSTR
 
 static const size_t maxStringLength = 64;
 
-static void CopyString(char* dest, const char* source)
-{
-    if (dest)
-    {
-        size_t len = strlen(source);
-        if (len > maxStringLength)
-            len = maxStringLength;
-        memcpy(dest, source, len);
-    }
-}
-
 static void CopyInteger(int* dest, int value)
 {
     if (dest)
@@ -87,7 +76,7 @@ static BOOL IsWoW64()
 static void SetupPlatform(char* dest)
 {
     //TODO -> get more details!!!
-    CopyString(dest, "Microsoft Windows");
+    XVM_String_set(dest, "Microsoft Windows");
 }
 
 static void SetupCPUArch(char* dest, WORD arch)
@@ -95,19 +84,19 @@ static void SetupCPUArch(char* dest, WORD arch)
     switch (arch)
     {
         case PROCESSOR_ARCHITECTURE_AMD64:
-            CopyString(dest, "AMD64");
+            XVM_String_set(dest, "AMD64");
             break;
         case PROCESSOR_ARCHITECTURE_ARM:
-            CopyString(dest, "ARM");
+            XVM_String_set(dest, "ARM");
             break;
         case PROCESSOR_ARCHITECTURE_IA64:
-            CopyString(dest, "IA64");
+            XVM_String_set(dest, "IA64");
             break;
         case PROCESSOR_ARCHITECTURE_INTEL:
-            CopyString(dest, "IA32");
+            XVM_String_set(dest, "IA32");
             break;
         default:
-            CopyString(dest, "<unknown>");
+            XVM_String_set(dest, "<unknown>");
             break;
     }
 }
@@ -115,9 +104,9 @@ static void SetupCPUArch(char* dest, WORD arch)
 static void SetupCPUType(char* dest)
 {
     if (IsWoW64())
-        CopyString(dest, "64 bit");
+        XVM_String_set(dest, "64 bit");
     else
-        CopyString(dest, "32 bit");
+        XVM_String_set(dest, "32 bit");
 }
 
 static void SetupCPUName(char* dest, LPFN_QUERYFULLPROCESSIMAGENAME_PROC queryFullProcessImageName)
@@ -138,7 +127,7 @@ static void SetupCPUName(char* dest, LPFN_QUERYFULLPROCESSIMAGENAME_PROC queryFu
     );
 
     if (!result)
-        CopyString(dest, "<unknown>");
+        XVM_String_set(dest, "<unknown>");
 }
 
 
@@ -153,12 +142,12 @@ void querySystemInfo(
 void SysInfo_querySystemInfo(XVM_Env env)
 {
     // Get in/out string parameters
-    char* platform  = XVM_ParamString(env, 1);
-    char* cpuArch   = XVM_ParamString(env, 2);
-    char* cpuType   = XVM_ParamString(env, 3);
-    char* cpuName   = XVM_ParamString(env, 4);
-    int* cpuCount   = (int*)XVM_ParamPointer(env, 5);
-    int* cpuSpeed   = (int*)XVM_ParamPointer(env, 6);
+    XVM_String platform = XVM_ParamString(env, 1);
+    XVM_String cpuArch  = XVM_ParamString(env, 2);
+    XVM_String cpuType  = XVM_ParamString(env, 3);
+    XVM_String cpuName  = XVM_ParamString(env, 4);
+    int* cpuCount       = (int*)XVM_Object_pointer(XVM_ParamObject(env, 5));
+    int* cpuSpeed       = (int*)XVM_Object_pointer(XVM_ParamObject(env, 6));
 
     // Load Win32 query functions from Kernel32 library
     LPFN_GETNATIVESYSTEMINFO_PROC       getNativeSystemInfo         = NULL;
@@ -172,7 +161,7 @@ void SysInfo_querySystemInfo(XVM_Env env)
     }
 
     // Query CPU architecture
-    CopyString(cpuArch, "");
+    XVM_String_set(cpuArch, "");
     CopyInteger(cpuCount, 1);
 
     if (getNativeSystemInfo)

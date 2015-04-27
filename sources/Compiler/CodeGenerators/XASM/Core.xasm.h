@@ -406,7 +406,7 @@
 "		push $tr\n"
 "		call resize_buffer	; resize string buffer\n"
 "		ldw $r0, ($xr) 20	; load this.buffer\n"
-"		add $r0, $r0, $tr	; add offset to buffer\n"
+"		add $r0, $r0, $tr	; add offset to buffer ($tr is not modified by \"resize_buffer\")\n"
 "		mov $tr, 0\n"
 "		stw $tr, ($r0) -1	; store null terminator at this.buffer[tr - 1]\n"
 "	.end:\n"
