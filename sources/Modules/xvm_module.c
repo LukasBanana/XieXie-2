@@ -111,11 +111,6 @@ static _XVM_Object* _XVM_AllocObject(size_t size, unsigned typeID, void* vtable)
     return _obj;
 }
 
-XVM_Object XVM_NewObject()
-{
-    return _XVM_AllocObject(sizeof(_XVM_Object), 0, NULL);//!!!SET correct typeID and vtable!!!
-}
-
 int XVM_Object_refCount(XVM_Object obj)
 {
     return ((_XVM_Object*)obj)->refCount;
@@ -124,6 +119,11 @@ int XVM_Object_refCount(XVM_Object obj)
 int XVM_Object_typeID(XVM_Object obj)
 {
     return ((_XVM_Object*)obj)->typeID;
+}
+
+void* XVM_Object_pointer(XVM_Object obj)
+{
+    return ((char*)obj) + sizeof(_XVM_Object);
 }
 
 
@@ -138,34 +138,6 @@ typedef struct
 }
 _XVM_String;
 
-static const unsigned int String_typeID = 1;
-
-XVM_String XVM_NewString(const char* str)
-{
-    _XVM_String* _obj = (_XVM_String*)_XVM_AllocObject(sizeof(_XVM_String), String_typeID, NULL);//!!!SET correct vtable address!!!
-    
-    if (str != NULL)
-    {
-        unsigned len = (unsigned)strlen(str);
-
-        _obj->size      = len;
-        _obj->bufSize   = len;
-        _obj->buffer    = (char*)malloc(sizeof(char) * (len + 1));
-
-        memcpy(_obj->buffer, str, len + 1);
-    }
-    else
-    {
-        _obj->size      = 0;
-        _obj->bufSize   = 0;
-        _obj->buffer    = (char*)malloc(sizeof(char));
-
-        _obj->buffer[0] = '\0';
-    }
-
-    return _obj;
-}
-
 int XVM_String_size(XVM_String obj)
 {
     return ((_XVM_String*)obj)->size;
@@ -173,8 +145,14 @@ int XVM_String_size(XVM_String obj)
 
 void XVM_String_resize(XVM_String obj, int size)
 {
-    _XVM_String* _obj = (_XVM_String*)obj;
-    unsigned _size = (unsigned)size;
+    _XVM_String* _obj;
+    unsigned _size;
+
+    if (size < 0)
+        size = 0;
+
+    _obj = (_XVM_String*)obj;
+    _size = (unsigned)size;
 
     if (_obj == NULL || _obj->buffer == NULL)
     {
@@ -210,6 +188,30 @@ char* XVM_String_pointer(XVM_String obj)
     return ((_XVM_String*)obj)->buffer;
 }
 
+void XVM_String_set(XVM_String obj, const char* str)
+{
+    _XVM_String* _obj;
+
+    // Verify input parameters
+    if (obj == NULL)
+        return;
+
+    _obj = (_XVM_String*)obj;
+
+    if (str == NULL)
+    {
+        XVM_String_resize(obj, 0);
+        return;
+    }
+
+    // Resize string to new length
+    size_t size = strlen(str);
+    XVM_String_resize(obj, (int)size);
+
+    // Copy string
+    memcpy(_obj->buffer, str, size + 1);
+}
+
 
 /* ----- Array Class ----- */
 
@@ -221,25 +223,6 @@ typedef struct
     XVM_Object* buffer;
 }
 _XVM_Array;
-
-static const unsigned int Array_typeID = 2;
-
-XVM_Array XVM_NewArray(size_t initSize)
-{
-    _XVM_Array* _obj = (_XVM_Array*)_XVM_AllocObject(sizeof(_XVM_Array), Array_typeID, NULL);//!!!SET correct vtable address!!!
-
-    if (initSize == 0)
-        initSize = 1;
-
-    _obj->size      = initSize;
-    _obj->bufSize   = initSize;
-    _obj->buffer    = (XVM_Object*)malloc(sizeof(XVM_Object)*initSize);
-
-    while (initSize-- > 0)
-        _obj->buffer[initSize] = NULL;
-
-    return _obj;
-}
 
 XVM_Object* XVM_Array_pointer(XVM_Object obj)
 {

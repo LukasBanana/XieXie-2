@@ -95,23 +95,21 @@ void XVM_SetErrorCallback(XVM_ERROR_PROC callback);
 
 /* ----- Object Class ----- */
 
-XVM_Object XVM_NewObject();
-
 int XVM_Object_refCount(XVM_Object obj);
 int XVM_Object_typeID(XVM_Object obj);
+void* XVM_Object_pointer(XVM_Object obj);
 
 
 /* ----- String Class ----- */
 
-XVM_String XVM_NewString(const char* str);
 int XVM_String_size(XVM_String obj);
 void XVM_String_resize(XVM_String obj, int size);
 char* XVM_String_pointer(XVM_String obj);
+void XVM_String_set(XVM_String obj, const char* str);
 
 
 /* ----- Array Class ----- */
 
-XVM_Array XVM_NewArray(size_t initSize);
 XVM_Object* XVM_Array_pointer(XVM_Object obj);
 
 
