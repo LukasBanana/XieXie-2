@@ -794,6 +794,7 @@ void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
 
 void XASMGenerator::GenerateIndirectCallInst(const TACIndirectCallInst& inst)
 {
+    regAlloc_.SpillAllVars();
     Line("ldw " + tempReg + ", ($xr) 8"); // load vtable address
     Line("ldw " + tempReg + ", (" + tempReg + ") " + std::to_string(inst.vtableOffset * 4)); // load virtual procedure address
     Line("call " + tempReg); // call virtual procedure

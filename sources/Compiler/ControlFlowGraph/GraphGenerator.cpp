@@ -779,9 +779,6 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     auto graph = VisitAndLink(ast->codeBlock);
     if (graph.in)
         root->AddSucc(*graph.in);
-    
-    /* Clean local CFG of this procedure */
-    Optimization::Optimizer::OptimizeGraph(*root);
 
     /* Verify procedure return statements */
     if (procSig.returnTypeDenoter->IsVoid())
@@ -799,6 +796,9 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
         if (!root->VerifyProcReturn())
             Error("not all execution paths in \"" + procSig.ident + "\" end with a valid procedure return", ast);
     }
+    
+    /* Clean local CFG of this procedure */
+    Optimization::Optimizer::OptimizeGraph(*root);
 
     /* Store final procedure information inside the CFG root */
     root->numParams = numProcParams_;

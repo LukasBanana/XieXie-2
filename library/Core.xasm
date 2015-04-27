@@ -406,7 +406,7 @@ CString.Presize,I?size:
 		push $tr
 		call resize_buffer	; resize string buffer
 		ldw $r0, ($xr) 20	; load this.buffer
-		add $r0, $r0, $tr	; add offset to buffer
+		add $r0, $r0, $tr	; add offset to buffer ($tr is not modified by "resize_buffer")
 		mov $tr, 0
 		stw $tr, ($r0) -1	; store null terminator at this.buffer[tr - 1]
 	.end:
