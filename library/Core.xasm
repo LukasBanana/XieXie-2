@@ -131,7 +131,7 @@ resize_buffer:
 		push 0				; fill with zeros
 		sub $r3, $r0, $r2	; fillSize := size - prevSize
 		push $r3
-		add $r3, $r4, $r2	; get address: newBuffer + prevSize
+		add $r3, $ar, $r2	; get address: newBuffer + prevSize
 		push $r3
 		insc FillMem
 	jmp .end
@@ -412,6 +412,11 @@ CString.Presize,I?size:
 	.end:
 	ret 1
 
+; void String.adjust()
+CString.Padjust:
+	; ...
+	ret
+
 ; bool String.empty(String this)
 CString.Pempty:
 	ldw $cf, ($xr) 12	; load member this.size
@@ -429,18 +434,18 @@ CString.Pappend,R@String?rhs:
 	mov $r0, $cf		; store rhs
 	
 	; check if other string is empty
-	ldw $r2, ($cf) 12	; load rhs.size
-	cmp $r2, 1			; check: rhs.size <= 1
+	ldw $r1, ($r0) 12	; load rhs.size
+	cmp $r1, 1			; check: rhs.size <= 1
 	jle .end
 	
 	; determine new string size
-	ldw $r1, ($xr) 12	; load this.size
-	add $r2, $r2, $r1	; calculate size := this.size + rhs.size
-	sub $r2, $r2, 2		; subtract 2 from size because of both null terminators
+	ldw $r2, ($xr) 12	; load this.size
+	add $r1, $r1, $r2	; calculate size := this.size + rhs.size
+	sub $r1, $r1, 2		; subtract 2 from size because of both null terminators
 	
 	; resize this string
 	push $r0			; store rhs
-	push $r2
+	push $r1
 	call CString.Presize,I?size
 	pop $r0				; restore rhs
 	
@@ -531,6 +536,7 @@ String.vtable:
 	.word @CString.Pcopy
 	.word @CString.Psize
 	.word @CString.Presize,I?size
+	.word @CString.Padjust
 	.word @CString.Pempty
 	.word @CString.Pappend,R@String?rhs
 	.word @CString.Pappend,R@Object?rhs

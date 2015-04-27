@@ -12,7 +12,8 @@ class Test {
 		var s1 := "Info"
 		var s2 := "Hello"
 		
-		s2.resize(3)
+		//s2.resize(3)
+		s2.append(s1)
 		
 		//Intrinsics.printLn(s1.pointer())
 		MsgBox.show(s1, s2)

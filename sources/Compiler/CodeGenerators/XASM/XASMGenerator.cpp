@@ -889,7 +889,7 @@ void XASMGenerator::GenerateStringLiteral(const CFGProgram::StringLiteral& const
 {
     CommentHeadline("STRING \"" + constStr.ident + "\"");
     
-    auto size = static_cast<int>(constStr.value.size());
+    auto size = static_cast<int>(constStr.value.size()) + 1;
 
     GlobalLabel(constStr.ident);
     IncIndent();
