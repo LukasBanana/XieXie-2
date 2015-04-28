@@ -610,6 +610,7 @@ size_t Stack::Size() const
 
 /* --- Globals --- */
 
+// map: xvm_exit_codes -> ExitCodes
 static ExitCodes MapExitCode(xvm_exit_codes code)
 {
     switch (code)
@@ -638,6 +639,35 @@ static ExitCodes MapExitCode(xvm_exit_codes code)
             return ExitCodes::MemoryViolation;*/
     }
     return ExitCodes::__Unknown__;
+}
+
+// map: ExitCodes -> xvm_exit_codes
+static xvm_exit_codes MapExitCode(ExitCodes code)
+{
+    switch (code)
+    {
+        case ExitCodes::Success:
+            return EXITCODE_SUCCESS;
+        case ExitCodes::InvalidByteCode:
+            return EXITCODE_INVALID_BYTECODE;
+        case ExitCodes::InvalidStack:
+            return EXITCODE_INVALID_STACK;
+        case ExitCodes::InvalidOpCode:
+            return EXITCODE_INVALID_OPCODE;
+        case ExitCodes::InvalidIntrinsic:
+            return EXITCODE_INVALID_INTRINSIC;
+        case ExitCodes::StackOverflow:
+            return EXITCODE_STACK_OVERFLOW;
+        case ExitCodes::StackUnderflow:
+            return EXITCODE_STACK_UNDERFLOW;
+        case ExitCodes::DivisionByZero:
+            return EXITCODE_DIVISION_BY_ZERO;
+        case ExitCodes::UnknownEntryPoint:
+            return EXITCODE_UNKNOWN_ENTRY_POINT;
+        case ExitCodes::InvocationViolation:
+            return EXITCODE_INVOCATION_VIOLATION;
+    }
+    return EXITCODE_SUCCESS;
 }
 
 ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack)
@@ -685,6 +715,11 @@ ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const ByteCode:
         return MapExitCode(code);
     }
     return ExitCodes::InvalidByteCode;
+}
+
+std::string ExitCodeString(const ExitCodes exitCode)
+{
+    return std::string(xvm_exitcode_to_string(MapExitCode(exitCode)));
 }
 
 

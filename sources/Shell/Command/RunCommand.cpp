@@ -16,12 +16,15 @@ void RunCommand::Execute(StreamParser& input, Log& output)
 {
     auto filename = input.Accept();
 
-    RunFromFile(
+    auto exitCode = RunFromFile(
         filename,
         CompileFlags::Warn,
         VirtualMachine::Stack::defaultSize,
         &output.stream
     );
+
+    if (exitCode != VirtualMachine::ExitCodes::Success)
+        output.Error(VirtualMachine::ExitCodeString(exitCode));
 }
 
 void RunCommand::Help(HelpPrinter& printer) const

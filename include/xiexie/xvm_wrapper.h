@@ -680,6 +680,9 @@ Executes the program 'byteCode' from the specified entry point.
 */
 ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const ByteCode::EntryPoint& entryPoint);
 
+//! Returns a string for the specified exit code.
+std::string ExitCodeString(const ExitCodes exitCode);
+
 
 } // /namespace VirtualMachine
 

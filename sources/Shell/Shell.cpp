@@ -12,17 +12,12 @@
 #include "StringModifier.h"
 #include "MakeUnique.h"
 
-#include "SourceStream.h"
-#include "Parser.h"
-#include "Decorator.h"
-#include "GraphGenerator.h"
-#include "Program.h"
-#include "StdCodeFactory.h"
-
 #include <sstream>
+#include <xiexie/xiexie.h>
 
 
 using namespace Platform::ConsoleManip;
+using namespace XieXie;
 
 void Shell::Execute(StreamParser parser)
 {
@@ -70,19 +65,17 @@ void Shell::Execute(StreamParser parser)
 static void AppendDefaultScript(std::stringstream& sstr)
 {
     sstr
-        << "class XieXieScript { " << std::endl
-        << "void print(int val) { Intrinsics.printInt(val) }" << std::endl
-        << "void print(float val) { Intrinsics.printFloat(val) }" << std::endl
-        << "void print(String val) { Intrinsics.print(val.pointer()) }" << std::endl
-        << "void print(int[] val) { foreach v : val { print(v) } }" << std::endl
-        << "void print(float[] val) { foreach v : val { print(v) } }" << std::endl
-        << "void print(String[] val) { foreach v : val { print(v) } }" << std::endl
-        << "String str(int val) { return \"\" }" << std::endl
-        << "String str(float val) { return \"\" }" << std::endl
+        << "class Script { " << std::endl
+        << "static void print(int val) { Intrinsics.printInt(val) }" << std::endl
+        << "static void print(float val) { Intrinsics.printFloat(val) }" << std::endl
+        << "static void print(String val) { Intrinsics.print(val.pointer()) }" << std::endl
+        //<< "void print(int[] val) { foreach v : val { print(v) } }" << std::endl
+        //<< "void print(float[] val) { foreach v : val { print(v) } }" << std::endl
+        //<< "void print(String[] val) { foreach v : val { print(v) } }" << std::endl
         << "static void main() {" << std::endl
-        << "    XieXieScript script := new XieXieScript()" << std::endl
+        /*<< "    var script := new Script()" << std::endl
         << "}" << std::endl
-        << "init() {" << std::endl
+        << "init() {" << std::endl*/
     ;
 }
 
@@ -120,37 +113,16 @@ void Shell::Script(std::istream& stream, bool appendDefaultScript)
     if (appendDefaultScript)
         *source << "}}" << std::endl;
 
-    /* Compile and run script */
-    ErrorReporter errorReporter;
-    bool hasError = false;
+    /* Run script immediately */
+    auto exitCode = RunFromString(
+        source->str(),
+        CompileFlags::Warn,
+        VirtualMachine::Stack::defaultSize,
+        &log_.stream
+    );
 
-    /* Generate built-in class declarations */
-    AbstractSyntaxTrees::Program program;
-    SyntaxAnalyzer::Parser parser;
-
-    ContextAnalyzer::StdCodeFactory::GenerateBuiltinClasses(program);
-
-    /* Parse program */
-    if (!parser.ParseSource(program, std::make_shared<SyntaxAnalyzer::SourceStream>(std::move(source)), errorReporter))
-        hasError = true;
-
-    /* Decorate program */
-    if (!hasError)
-    {
-        ContextAnalyzer::Decorator decorator;
-        if (!decorator.DecorateProgram(program, errorReporter))
-            hasError = true;
-    }
-    
-    /* Generate CFG */
-    /*ControlFlowGraph::GraphGenerator converter;
-    auto classTrees = converter.GenerateCFG(program, errorReporter);
-
-    if (errorReporter.HasErrors())
-        hasError = true;*/
-
-    /* Print out errors */
-    errorReporter.Flush(log_);
+    if (exitCode != VirtualMachine::ExitCodes::Success)
+        log_.Error(VirtualMachine::ExitCodeString(exitCode));
 }
 
 

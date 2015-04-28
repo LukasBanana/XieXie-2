@@ -26,6 +26,7 @@ class CommandFactory
         CommandFactory(const CommandFactory&) = delete;
         CommandFactory& operator = (const CommandFactory&) = delete;
 
+        using CommandList = std::vector<std::unique_ptr<Command>>;
         using CommandMap = std::map<std::string, Command*>;
 
         //! Returns the instance of this singleton.
@@ -41,9 +42,9 @@ class CommandFactory
         Command* FindCommand(const std::string& name) const;
 
         //! Returns the map of all commands.
-        const CommandMap& GetCommands() const
+        const CommandList& GetCommands() const
         {
-            return commandMap_;
+            return commands_;
         }
 
     private:

@@ -23,7 +23,7 @@ void HelpCommand::Execute(StreamParser& input, Log& output)
 
     HelpPrinter printer;
     for (const auto& cmd : CommandFactory::Instance()->GetCommands())
-        cmd.second->Help(printer);
+        cmd->Help(printer);
 
     SCOPED_INDENT(output);
     printer.Flush(output);

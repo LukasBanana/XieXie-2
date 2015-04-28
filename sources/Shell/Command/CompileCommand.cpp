@@ -6,28 +6,12 @@
  */
 
 #include "CompileCommand.h"
-#include "SourceStream.h"
 #include "FileHelper.h"
-#include "Platform/ConsoleManip.h"
-#include "StdCodeFactory.h"
-
-#include "Parser.h"
-#include "Decorator.h"
-#include "GraphGenerator.h"
-#include "CodeGenerators/XASM/XASMGenerator.h"
-#include "Assembler.h"
-
-#include "ASTViewer.h"
-#include "CFGViewer.h"
-#include "Optimizer.h"
+#include "StringModifier.h"
 
 #include <xiexie/xiexie.h>
+#include <fstream>
 
-
-using namespace AbstractSyntaxTrees;
-using namespace SyntaxAnalyzer;
-using namespace ControlFlowGraph;
-using namespace Platform::ConsoleManip;
 
 void CompileCommand::Execute(StreamParser& input, Log& output)
 {

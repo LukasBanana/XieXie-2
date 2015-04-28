@@ -104,7 +104,7 @@ static void PrintMessageColored(Log& log, const CompilerMessage& message, const 
     log.EndLn();
 
     /* Print line and marker */
-    if (!message.GetLine().empty() && !message.GetMarker().empty() && log.verbose)
+    if (!message.GetLine().empty() && !message.GetMarker().empty())
     {
         PrintMark(log, message.GetLine(), color);
         PrintMark(log, message.GetMarker(), color);

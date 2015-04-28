@@ -96,7 +96,7 @@ bool SourceStream::FetchLineMarker(const SourceArea& area, std::string& line, st
         return false;
 
     auto row = area.start.Row();
-
+    
     if (row == pos_.Row())
         return FinalizeMarker(area, Line(), line, marker, markerChar);
     else if (row > 0)
