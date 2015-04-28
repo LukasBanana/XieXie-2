@@ -48,6 +48,7 @@ void CommandFactory::EstablishCommands()
 {
     RegisterCommand({ "compile",  "C" }, MakeUnique< CompileCommand  >());
     RegisterCommand({ "assemble", "A" }, MakeUnique< AssembleCommand >());
+    RegisterCommand({ "run"           }, MakeUnique< RunCommand      >());
     RegisterCommand({ "log"           }, MakeUnique< LogCommand      >());
     RegisterCommand({ "prompt"        }, MakeUnique< PromptCommand   >());
     RegisterCommand({ "pause"         }, MakeUnique< PauseCommand    >());

@@ -76,6 +76,7 @@ DECL_COMMAND_IMPL( Version  );
 DECL_COMMAND_IMPL( Help     );
 DECL_COMMAND_IMPL( Verbose  );
 DECL_COMMAND_IMPL( Color    );
+DECL_COMMAND_IMPL( Run      );
 
 #undef DECL_COMMAND_IMPL
 

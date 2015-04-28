@@ -327,12 +327,15 @@ static VirtualMachine::ByteCodePtr CompileFromStream(const std::shared_ptr<std::
     config.assembly = &assembly;
     config.flags    = compileFlags;
 
-    /* Compile and assemble */
+    /* Compile */
     ByteCodePtr byteCode;
     if (CompileExt(config, logger.get(), errorReporter))
     {
+        /* Assemble */
         assembly.seekg(0);
         byteCode = AssembleExt(assembly, errorReporter);
+        if (byteCode)
+            byteCode->BindAutomaticModules(SearchPaths::ModulesPath());
     }
 
     /* Flush errors and return byte code */
