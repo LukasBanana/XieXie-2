@@ -6,6 +6,22 @@
  */
 
 #include "SearchPaths.h"
+#include "Log.h"
+#include "BitMask.h"
+#include "SourceStream.h"
+#include "StdCodeFactory.h"
+#include "Platform/ConsoleManip.h"
+#include "FileHelper.h"
+
+#include "Parser.h"
+#include "Decorator.h"
+#include "GraphGenerator.h"
+#include "CodeGenerators/XASM/XASMGenerator.h"
+#include "Assembler.h"
+
+#include "ASTViewer.h"
+#include "CFGViewer.h"
+#include "Optimizer.h"
 
 #include <xiexie/xiexie.h>
 #include <sstream>
@@ -17,6 +33,10 @@ namespace XieXie
 
 
 using namespace VirtualMachine;
+using namespace AbstractSyntaxTrees;
+using namespace SyntaxAnalyzer;
+using namespace ControlFlowGraph;
+using namespace Platform::ConsoleManip;
 
 /* --- Common --- */
 
@@ -26,60 +46,268 @@ void SetupPaths(const std::string& libraryPath, const std::string& modulesPath)
     SearchPaths::ModulesPath() = modulesPath;
 }
 
+static std::unique_ptr<Log> MakeLogger(std::ostream* log)
+{
+    return log != nullptr ? MakeUnique<Log>(*log) : nullptr;
+}
+
+static void FlushErrors(ErrorReporter& errorReporter, const std::unique_ptr<Log>& log)
+{
+    if (log)
+        errorReporter.Flush(*log);
+}
+
 
 /* --- Compilation Functions --- */
 
+struct CompileOptions
+{
+    bool verbose        = false;
+    bool optimize       = false;
+    bool warnings       = false;
+    bool showAST        = false;
+    bool showTokens     = false;
+    bool showCFG        = false;
+    bool showAsm        = false;
+};
+
+struct CompileState
+{
+    CompileState(Log* output, ErrorReporter&  errorReporter) :
+        output          ( output        ),
+        errorReporter   ( errorReporter )
+    {
+    }
+
+    Log*            output;
+    ErrorReporter&  errorReporter;
+    CompileOptions  options;
+    Program         astProgram;
+    CFGProgramPtr   cfgProgram;
+};
+
+void GetCompileOptions(CompileOptions& options, const BitMask& flags)
+{
+    if (flags( CompileFlags::Verbose    )) options.verbose      = true;
+    if (flags( CompileFlags::Warn       )) options.warnings     = true;
+    if (flags( CompileFlags::Optimize   )) options.optimize     = true;
+    if (flags( CompileFlags::ShowAST    )) options.showAST      = true;
+    if (flags( CompileFlags::ShowCFG    )) options.showCFG      = true;
+    if (flags( CompileFlags::ShowAsm    )) options.showAsm      = true;
+    if (flags( CompileFlags::ShowTokens )) options.showTokens   = true;
+}
+
+static VirtualMachine::ByteCodePtr AssembleExt(std::istream& assembly, ErrorReporter& errorReporter)
+{
+    Assembler assembler;
+    return assembler.Assemble(assembly, errorReporter);
+}
+
+static void LogMessage(CompileState& state, const std::string& msg)
+{
+    if (state.options.verbose && state.output)
+        state.output->Message(msg);
+}
+
+static bool ParseProgram(const CompileConfig& config, CompileState& state)
+{
+    /* Initialize parser */
+    Parser parser;
+
+    std::stringstream tokenStream;
+    if (state.options.showTokens)
+        parser.tokenStream = &tokenStream;
+
+    /* Generate built-in class declarations */
+    ContextAnalyzer::StdCodeFactory::GenerateBuiltinClasses(state.astProgram);
+    
+    /* Parse input streams */
+    bool hasError = false;
+    LogMessage(state, "parse input streams ...");
+
+    for (auto& source : config.sources)
+    {
+        /* Parse source file */
+        if (!parser.ParseSource(state.astProgram, std::make_shared<SourceStream>(source), state.errorReporter))
+            hasError = true;
+    }
+
+    /* Parse input filenames */
+    std::vector<std::string> nextSources;
+    std::set<std::string> passedSources;
+
+    while (true)
+    {
+        /* Collect import filenames */
+        for (const auto& import : state.astProgram.importFilenames)
+        {
+            /* Check if filename has already been parsed */
+            auto importLower = ToLower(import);
+            if (passedSources.find(importLower) == passedSources.end())
+            {
+                nextSources.push_back(import);
+                passedSources.insert(importLower);
+            }
+        }
+        state.astProgram.importFilenames.clear();
+
+        if (nextSources.empty())
+            break;
+
+        /* Process next sources */
+        for (const auto& filename : nextSources)
+        {
+            LogMessage(state, "parse file \"" + ExtractFilename(filename) + "\" ...");
+
+            /* Parse source file */
+            if (!parser.ParseSource(state.astProgram, std::make_shared<SourceStream>(filename), state.errorReporter))
+                hasError = true;
+        }
+
+        nextSources.clear();
+    }
+
+    /* Show debug output */
+    if (state.options.showTokens && state.output)
+    {
+        LogMessage(state, "token stream dump:");
+        ScopedColor scopedColor(state.output->stream, Color::Cyan);
+        LogMessage(state, tokenStream.str());
+    }
+
+    return !hasError;
+}
+
+static bool DecorateProgram(CompileState& state)
+{
+    /* Decoreate AST */
+    LogMessage(state, "context analysis ...");
+    ContextAnalyzer::Decorator decorator;
+    return decorator.DecorateProgram(state.astProgram, state.errorReporter);
+}
+
+static bool GenerateCFG(CompileState& state)
+{
+    /* Generate CFG */
+    LogMessage(state, "graph generation ...");
+    GraphGenerator converter;
+    state.cfgProgram = converter.GenerateCFG(state.astProgram, state.errorReporter);
+
+    if (state.errorReporter.HasErrors())
+        return false;
+
+    if (state.options.optimize)
+    {
+        /* Optimize CFG */
+        LogMessage(state, "optimization ...");
+        Optimization::Optimizer::OptimizeProgram(*state.cfgProgram);
+    }
+
+    return true;
+}
+
+static bool GenerateCode(const CompileConfig& config, CompileState& state)
+{
+    /* Generate code */
+    LogMessage(state, "generate code ...");
+    CodeGenerator::XASMGenerator generator(*config.assembly);
+    return generator.GenerateAsm(*state.cfgProgram, state.errorReporter);
+}
+
+static bool CompileExt(const CompileConfig& config, Log* log, ErrorReporter& errorReporter)
+{
+    /* Determine compilation options */
+    CompileState state(log, errorReporter);
+    GetCompileOptions(state.options, config.flags);
+
+    ErrorReporter::showWarnings = state.options.warnings;
+
+    /* Parse program */
+    if (ParseProgram(config, state))
+    {
+        /* Decorate program */
+        if (DecorateProgram(state))
+        {
+            /* Transform to CFG */
+            auto cfgProgram = GenerateCFG(state);
+            if (cfgProgram)
+            {
+                /* Generate assembler code */
+                if (GenerateCode(config, state))
+                    return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 bool Compile(const CompileConfig& config, std::ostream* log)
 {
-    return false; //todo...
+    /* Initialize error reporter and logger */
+    ErrorReporter errorReporter;
+    auto logger = MakeLogger(log);
+
+    /* Compile */
+    auto result = CompileExt(config, logger.get(), errorReporter);
+
+    /* Flush errors and return byte code */
+    FlushErrors(errorReporter, logger);
+    return result;
 }
 
-bool Assemble(std::istream& inputStream, std::ostream& outputStream, std::ostream* log)
+VirtualMachine::ByteCodePtr Assemble(std::istream& assembly, std::ostream* log)
 {
-    return false; //todo...
-}
+    /* Initialize error reporter and logger */
+    ErrorReporter errorReporter;
+    auto logger = MakeLogger(log);
 
-std::unique_ptr<ByteCode> LoadAssembly(std::istream& inputStream)
-{
-    return nullptr; //todo...
+    /* Assemble */
+    auto byteCode = AssembleExt(assembly, errorReporter);
+
+    /* Flush errors and return byte code */
+    FlushErrors(errorReporter, logger);
+    return std::move(byteCode);
 }
 
 
 /* --- Very High-Level Functions --- */
 
-static std::unique_ptr<VirtualMachine::ByteCode> CompileFromStream(std::istream& inputStream, int compileFlags, std::ostream* log)
+static VirtualMachine::ByteCodePtr CompileFromStream(const std::shared_ptr<std::istream>& inputStream, int compileFlags, std::ostream* log)
 {
+    /* Initialize error reporter and logger */
+    ErrorReporter errorReporter;
+    auto logger = MakeLogger(log);
+
     /* Setup compilation configuration */
-    std::stringstream outputStream, assembly;
+    std::stringstream assembly;
 
     CompileConfig config;
-    config.inputStreams = { &inputStream };
-    config.outputStream = &outputStream;
-    config.flags        = compileFlags;
+    config.sources  = { std::move(inputStream) };
+    config.assembly = &assembly;
+    config.flags    = compileFlags;
 
-    /* Compile code string */
-    if (!Compile(config, log))
-        return nullptr;
+    /* Compile and assemble */
+    ByteCodePtr byteCode;
+    if (CompileExt(config, logger.get(), errorReporter))
+        byteCode = AssembleExt(assembly, errorReporter);
 
-    /* Assemble code */
-    if (!Assemble(outputStream, assembly))
-        return nullptr;
-
-    /* Load final assembly to byte code */
-    return LoadAssembly(assembly);
+    /* Flush errors and return byte code */
+    FlushErrors(errorReporter, logger);
+    return std::move(byteCode);
 }
 
-std::unique_ptr<VirtualMachine::ByteCode> CompileFromString(const std::string& codeString, int compileFlags, std::ostream* log)
+VirtualMachine::ByteCodePtr CompileFromString(const std::string& codeString, int compileFlags, std::ostream* log)
 {
-    std::stringstream inputStream;
-    inputStream << codeString;
+    auto inputStream = std::make_shared<std::stringstream>();
+    *inputStream << codeString;
     return CompileFromStream(inputStream, compileFlags, log);
 }
 
-std::unique_ptr<VirtualMachine::ByteCode> CompileFromFile(const std::string& codeFilename, int compileFlags, std::ostream* log)
+VirtualMachine::ByteCodePtr CompileFromFile(const std::string& codeFilename, int compileFlags, std::ostream* log)
 {
-    std::ifstream inputStream(codeFilename);
-    if (!inputStream.good())
+    auto inputStream = std::make_shared<std::ifstream>(codeFilename);
+    if (!inputStream->good())
         return nullptr;
     return CompileFromStream(inputStream, compileFlags, log);
 }

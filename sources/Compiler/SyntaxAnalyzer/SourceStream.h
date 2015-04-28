@@ -27,7 +27,7 @@ class SourceStream : public SourceCode
     public:
         
         SourceStream() = default;
-        SourceStream(std::unique_ptr<std::istream>&& stream);
+        SourceStream(const std::shared_ptr<std::istream>& stream);
         SourceStream(const std::string& filename);
 
         bool ReadFile(const std::string& filename);
@@ -48,7 +48,7 @@ class SourceStream : public SourceCode
 
     private:
         
-        std::unique_ptr<std::istream>   stream_;
+        std::shared_ptr<std::istream>   stream_;
         std::string                     filename_;
         std::vector<std::string>        content_;
 

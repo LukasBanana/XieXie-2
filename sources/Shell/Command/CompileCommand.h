@@ -36,8 +36,6 @@ class CompileCommand : public Command
         
         struct Options
         {
-            bool        hasError       = false;
-            
             bool        showAST        = false;
             bool        showTokens     = false;
             bool        showCFG        = false;

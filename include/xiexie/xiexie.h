@@ -27,13 +27,32 @@ struct CompileFlags
 {
     enum
     {
+        //! Enables additional output from the compiler.
         Verbose     = (1 << 0),
+
+        //! Enables compiler warnings.
         Warn        = (1 << 1),
+
+        //! Enables all optimization passes.
         Optimize    = (1 << 2),
+
+        //! Prints the abstract-syntax-tree (AST) to the standard output.
         ShowAST     = (1 << 3),
+
+        /**
+        Shows the control-flow-graph (CFG) as PNG images.
+        \remarks This option requires, that 'graphviz' is installed on your platform.
+        \see http://www.graphviz.org/
+        */
         ShowCFG     = (1 << 4),
+
+        //! Writes the assembly output to file (with *.xasm file extension).
         ShowAsm     = (1 << 5),
+
+        //! Prints the entire token stream to the standard output.
         ShowTokens  = (1 << 6),
+
+        //! Default compilation flags: warning and optimization is enabled.
         Default     = (Warn | Optimize),
     };
 };
@@ -41,9 +60,12 @@ struct CompileFlags
 //! Compilation configuration.
 struct CompileConfig
 {
-    std::vector<std::istream*>  inputStreams;
-    std::ostream*               outputStream;
-    int                         flags = CompileFlags::Default;
+    std::vector<std::shared_ptr<std::istream>>  sources;
+    std::iostream*                              assembly;
+    
+    int                                         flags = CompileFlags::Default;
+
+    std::string                                 cfgDumpPath;
 };
 
 
@@ -62,11 +84,22 @@ void SetupPaths(
 
 /* --- Compilation Functions --- */
 
+/**
+Compiles the input streams and writes the assembly to the output stream.
+\param[in] config Specifies the compilation configuration.
+\param[in] log Optional pointer to the log output. By default null.
+\return True on successful compilation. Otherwise the errors are written to the log output.
+*/
 bool Compile(const CompileConfig& config, std::ostream* log = nullptr);
 
-bool Assemble(std::istream& inputStream, std::ostream& outputStream, std::ostream* log = nullptr);
-
-std::unique_ptr<VirtualMachine::ByteCode> LoadAssembly(std::istream& inputStream);
+/**
+Assembles the specified assembly code to a byte code object.
+\param[in,out] assembly Specifies the assembly input stream. This must be valid XASM code.
+\param[in] log Optional pointer to the log output. By default null.
+\return Unique pointer to the byte code object on successful assembling.
+Otherwise the errors are written to the log output.
+*/
+VirtualMachine::ByteCodePtr Assemble(std::istream& assembly, std::ostream* log = nullptr);
 
 
 /* --- Very High-Level Functions --- */
@@ -78,7 +111,7 @@ Compiles XieXie code directly from the specified code string.
 \remarks This is a 'very high-level' function, to quickly execute XieXie code.
 \see CompileFlags
 */
-std::unique_ptr<VirtualMachine::ByteCode> CompileFromString(
+VirtualMachine::ByteCodePtr CompileFromString(
     const std::string& codeString,
     int compileFlags = CompileFlags::Default,
     std::ostream* log = nullptr
@@ -89,7 +122,7 @@ Compiles XieXie code directly from the specified file.
 \param[in] codeFilename Specifies the file which contains the XieXie code to execute.
 \see CompileFromString
 */
-std::unique_ptr<VirtualMachine::ByteCode> CompileFromFile(
+VirtualMachine::ByteCodePtr CompileFromFile(
     const std::string& codeFilename,
     int compileFlags = CompileFlags::Default,
     std::ostream* log = nullptr

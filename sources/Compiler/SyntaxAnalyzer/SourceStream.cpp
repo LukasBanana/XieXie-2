@@ -14,8 +14,8 @@ namespace SyntaxAnalyzer
 {
 
 
-SourceStream::SourceStream(std::unique_ptr<std::istream>&& stream) :
-    stream_{ std::move(stream) }
+SourceStream::SourceStream(const std::shared_ptr<std::istream>& stream) :
+    stream_{ stream }
 {
 }
 SourceStream::SourceStream(const std::string& filename)
@@ -27,13 +27,13 @@ bool SourceStream::ReadFile(const std::string& filename)
 {
     /* Open file and store filename */
     filename_ = filename;
-    stream_ = std::move(std::make_unique<std::ifstream>(filename, std::ios_base::in));
+    stream_ = std::make_shared<std::ifstream>(filename, std::ios_base::in);
     return stream_->good();
 }
 
 void SourceStream::Close()
 {
-    stream_.release();
+    stream_ = nullptr;
 }
 
 char SourceStream::Next()

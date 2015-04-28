@@ -14,6 +14,7 @@
 #include "ErrorReporter.h"
 #include "BitMask.h"
 
+#include <xiexie/xvm_wrapper.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -28,13 +29,6 @@ class Log;
 namespace XieXie
 {
 
-namespace VirtualMachine
-{
-    class ByteCode;
-    class Register;
-    class Intrinsics;
-}
-
 
 /**
 XieXie Assmbler (XASM).
@@ -46,6 +40,7 @@ class Assembler
     
     public:
         
+        //! 
         struct QueryFlags
         {
             enum
@@ -59,9 +54,14 @@ class Assembler
 
         Assembler();
 
-        bool Assemble(std::istream& inStream, const std::string& outFilename, ErrorReporter& errorReporter);
-        bool Assemble(const std::string& inFilename, const std::string& outFilename, ErrorReporter& errorReporter);
+        //! Assembles the specified assembly input stream and returns the byte code object.
+        VirtualMachine::ByteCodePtr Assemble(std::istream& assembly, ErrorReporter& errorReporter);
+        //! Assembles the specified assembly input stream and writes it to the specified output file.
+        bool Assemble(std::istream& assembly, const std::string& byteCodeFilename, ErrorReporter& errorReporter);
+        //! Assembles the specified assembly input file and writes it to the specified output file.
+        bool Assemble(const std::string& assemblyFilename, const std::string& byteCodeFilename, ErrorReporter& errorReporter);
 
+        //! \todo Move this function to "Disassembler" class.
         static void QueryByteCodeInformation(Log& log, const std::string& filename, const BitMask& flags);
 
     private:
@@ -265,7 +265,7 @@ class Assembler
         void ResolveBackPatchAddress(const std::string& label, BackPatchAddr& patchAddr);
         void ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr, const BackPatchAddr::InstrUse& instrUse);
 
-        bool CreateByteCode(const std::string& outFilename, ErrorReporter& errorReporter);
+        bool FinalizeByteCode(ErrorReporter& errorReporter);
 
         unsigned int InvokeID(const std::string& ident);
 
@@ -273,37 +273,37 @@ class Assembler
 
         /* === Members === */
 
-        std::string                                 line_;                  //!< Current source line.
-        std::string::iterator                       lineIt_;                //!< Source line iterator.
+        std::string                             line_;                  //!< Current source line.
+        std::string::iterator                   lineIt_;                //!< Source line iterator.
 
-        char                                        chr_                = 0;
-        Token                                       tkn_;
+        char                                    chr_                = 0;
+        Token                                   tkn_;
 
-        SyntaxAnalyzer::SourceArea                  sourceArea_;
+        SyntaxAnalyzer::SourceArea              sourceArea_;
 
         // (Can not be unique_ptr because of unknown type)
-        std::shared_ptr<VirtualMachine::ByteCode>   byteCode_;
-        std::shared_ptr<VirtualMachine::Intrinsics> intrinsics_;
+        VirtualMachine::ByteCodePtr             byteCode_;
+        VirtualMachine::IntrinsicsPtr           intrinsics_;
 
         /**
         Parent label will be pre-appended to all sub labels
         (e.g. parent is "Main", sub label is ".end" -> ".Main.end").
         */
-        std::string                                 globalLabel_;
+        std::string                             globalLabel_;
 
         //! [ label name | instruction index ].
-        std::map<std::string, size_t>               labelAddresses_;
+        std::map<std::string, size_t>           labelAddresses_;
         //! [ label name | back patch address ].
-        std::map<std::string, BackPatchAddr>        backPatchAddresses_;
+        std::map<std::string, BackPatchAddr>    backPatchAddresses_;
 
         //! Only used if '.init(export)' was defined.
-        Pragma                                      pragma_;
+        Pragma                                  pragma_;
         std::vector<std::pair<std::string, size_t>> globalAddresses_;
 
-        std::map<std::string, InstrCategory>        mnemonicTable_;
+        std::map<std::string, InstrCategory>    mnemonicTable_;
 
-        unsigned int                                invokeIDCounter_    = 0;
-        std::map<std::string, unsigned int>         invokeIdents_;
+        unsigned int                            invokeIDCounter_    = 0;
+        std::map<std::string, unsigned int>     invokeIdents_;
 
 };
 

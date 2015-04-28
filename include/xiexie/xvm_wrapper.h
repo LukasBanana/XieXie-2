@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 
 namespace XieXie
@@ -396,6 +397,9 @@ class Intrinsics
 
 };
 
+//! Intrinsics unique pointer type.
+using IntrinsicsPtr = std::unique_ptr<Intrinsics>;
+
 
 /* --- Module Class --- */
 
@@ -599,6 +603,9 @@ class ByteCode
         std::vector<std::string>                moduleNames_;
 
 };
+
+//! ByteCode unique pointer type.
+using ByteCodePtr = std::unique_ptr<ByteCode>;
 
 
 /* --- Stack Class --- */

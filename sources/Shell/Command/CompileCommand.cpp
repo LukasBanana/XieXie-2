@@ -9,11 +9,11 @@
 #include "SourceStream.h"
 #include "FileHelper.h"
 #include "Platform/ConsoleManip.h"
+#include "StdCodeFactory.h"
 
 #include "Parser.h"
 #include "Decorator.h"
 #include "GraphGenerator.h"
-#include "StdCodeFactory.h"
 #include "CodeGenerators/XASM/XASMGenerator.h"
 #include "Assembler.h"
 
@@ -143,7 +143,7 @@ void CompileCommand::ReadArgs(StreamParser& input)
     }
 }
 
-void CompileCommand::ParseProgram(AbstractSyntaxTrees::Program& program, Log& output)
+void CompileCommand::ParseProgram(Program& program, Log& output)
 {
     /* Initialize parser */
     Parser parser;
@@ -196,7 +196,7 @@ void CompileCommand::ParseProgram(AbstractSyntaxTrees::Program& program, Log& ou
     }
 }
 
-void CompileCommand::DecorateProgram(AbstractSyntaxTrees::Program& program, Log& output)
+void CompileCommand::DecorateProgram(Program& program, Log& output)
 {
     if (output.verbose)
         output.Message("context analysis ...");

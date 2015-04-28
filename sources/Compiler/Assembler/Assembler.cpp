@@ -8,8 +8,8 @@
 #include "Assembler.h"
 #include "StringModifier.h"
 #include "Log.h"
+#include "MakeUnique.h"
 
-#include <xiexie/xvm_wrapper.h>
 #include <exception>
 #include <algorithm>
 
@@ -21,14 +21,16 @@ namespace XieXie
 using namespace VirtualMachine;
 
 Assembler::Assembler() :
-    byteCode_   { std::make_shared< ByteCode   >() },
-    intrinsics_ { std::make_shared< Intrinsics >() }
+    intrinsics_ { MakeUnique< Intrinsics >() }
 {
     EstablishMnemonicTable();
 }
 
-bool Assembler::Assemble(std::istream& inStream, const std::string& outFilename, ErrorReporter& errorReporter)
+ByteCodePtr Assembler::Assemble(std::istream& inStream, ErrorReporter& errorReporter)
 {
+    /* Create new byte-code instance */
+    byteCode_ = MakeUnique<ByteCode>();
+
     /* Initialize parsing */
     line_.clear();
     lineIt_ = line_.end();
@@ -82,25 +84,44 @@ bool Assembler::Assemble(std::istream& inStream, const std::string& outFilename,
     }
 
     if (errorReporter.HasErrors())
-        return false;
+        return nullptr;
 
-    /* Write byte code to file */
-    return CreateByteCode(outFilename, errorReporter);
+    /* Finalize byte code */
+    if (!FinalizeByteCode(errorReporter))
+        return nullptr;
+
+    return std::move(byteCode_);
 }
 
-bool Assembler::Assemble(const std::string& inFilename, const std::string& outFilename, ErrorReporter& errorReporter)
+bool Assembler::Assemble(std::istream& assembly, const std::string& byteCodeFilename, ErrorReporter& errorReporter)
+{
+    /* Assemble and write byte code to file */
+    auto byteCode = Assemble(assembly, errorReporter);
+    if (!byteCode)
+        return false;
+
+    if (!byteCode->WriteToFile(byteCodeFilename))
+    {
+        errorReporter.Add<FileError>("writing file \"" + byteCodeFilename + "\" failed");
+        return false;
+    }
+
+    return true;
+}
+
+bool Assembler::Assemble(const std::string& assemblyFilename, const std::string& byteCodeFilename, ErrorReporter& errorReporter)
 {
     /* Read and parse input file */
-    std::ifstream inFile(inFilename, std::ios_base::in);
+    std::ifstream assembly(assemblyFilename, std::ios_base::in);
 
-    if (!inFile.good())
+    if (!assembly.good())
     {
-        errorReporter.Add<FileError>("reading file \"" + inFilename + "\" failed");
+        errorReporter.Add<FileError>("reading file \"" + assemblyFilename + "\" failed");
         return false;
     }
 
     /* Assemble file stream */
-    return Assemble(inFile, outFilename, errorReporter);
+    return Assemble(assembly, byteCodeFilename, errorReporter);
 }
 
 void Assembler::QueryByteCodeInformation(Log& log, const std::string& filename, const BitMask& flags)
@@ -1287,26 +1308,21 @@ void Assembler::ResolveBackPatchAddressReference(const BackPatchAddr& patchAddr,
         Error("back-patch address index out of bounds");
 }
 
-bool Assembler::CreateByteCode(const std::string& outFilename, ErrorReporter& errorReporter)
+bool Assembler::FinalizeByteCode(ErrorReporter& errorReporter)
 {
-    /* Add automatic export addresses */
-    for (const auto addr : globalAddresses_)
-        byteCode_->AddExportAddress(addr.first, addr.second);
-
-    /* Finalize byte code */
-    if (!byteCode_->Finalize())
+    if (byteCode_)
     {
-        errorReporter.Add<AssemblerError>("failed to finalize byte code");
-        return false;
-    }
+        /* Add automatic export addresses */
+        for (const auto addr : globalAddresses_)
+            byteCode_->AddExportAddress(addr.first, addr.second);
 
-    /* Write byte code to file */
-    if (!byteCode_->WriteToFile(outFilename))
-    {
-        errorReporter.Add<AssemblerError>("failed to write byte code file");
-        return false;
+        /* Finalize byte code */
+        if (!byteCode_->Finalize())
+        {
+            errorReporter.Add<AssemblerError>("failed to finalize byte code");
+            return false;
+        }
     }
-
     return true;
 }
 
