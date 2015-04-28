@@ -9,7 +9,7 @@ class Test {
 	
 	static void main() {
 		
-		var s1 := "Info"
+		var s1 := "INFO"
 		var s2 := "Hello"
 		
 		//s2.resize(3)

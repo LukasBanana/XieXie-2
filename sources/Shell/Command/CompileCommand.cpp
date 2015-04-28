@@ -21,6 +21,8 @@
 #include "CFGViewer.h"
 #include "Optimizer.h"
 
+#include <xiexie/xiexie.h>
+
 
 using namespace AbstractSyntaxTrees;
 using namespace SyntaxAnalyzer;
@@ -39,6 +41,60 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
         output.Error("missing output filename for code generation");
         return;
     }
+
+    #if 1
+
+    /* Setup I/O stream for assembly */
+    std::unique_ptr<std::iostream> assembly;
+    if (options_.showAsm)
+        assembly = MakeUnique<std::fstream>(OutputFilename(outputFilename_, "xasm", output));
+    else
+        assembly = MakeUnique<std::stringstream>();
+
+    /* Setup compilation falgs */
+    auto flags = GetCompilationFlags();
+
+    if (output.verbose)
+        flags << XieXie::CompileFlags::Verbose;
+    
+    /* Setup compilation configuration */
+    XieXie::CompileConfig config;
+
+    for (const auto& source : sources_)
+    {
+        auto file = std::make_shared<std::ifstream>(source);
+        if (!file->good())
+        {
+            output.Error("reading source file \"" + source + "\" failed");
+            return;
+        }
+        else
+            config.sources.push_back(file);
+    }
+
+    config.assembly     = assembly.get();
+    config.cfgDumpPath  = options_.cfgDumpPath;
+    config.flags        = flags;
+
+    /* Compile code */
+    if (XieXie::Compile(config, &output.stream))
+    {
+        /* Assemble code */
+        config.assembly->seekg(0);
+        auto byteCode = XieXie::Assemble(*config.assembly, &output.stream);
+        if (byteCode)
+        {
+            /* Write byte code to file */
+            if (byteCode->WriteToFile(OutputFilename(outputFilename_, "xbc", output)))
+            {
+                /* Print success message */
+                if (output.verbose)
+                    output.Success("compilation successful");
+            }
+        }
+    }
+
+    #else
 
     ErrorReporter::showWarnings = options_.warnings;
 
@@ -76,6 +132,8 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
         ShowCFG(*cfgProgram, output);
 
     ErrorReporter::showWarnings = false;
+
+    #endif
 }
 
 void CompileCommand::Help(HelpPrinter& printer) const
@@ -310,6 +368,20 @@ void CompileCommand::ShowCFG(const CFGProgram& cfgProgram, Log& output)
 std::string CompileCommand::OutputFilename(const std::string& inputFilename, const std::string& fileExt, Log& output) const
 {
     return FileHelper::SelectOutputFilename(inputFilename, fileExt, output, options_.forceOverride);
+}
+
+BitMask CompileCommand::GetCompilationFlags() const
+{
+    using Ty = XieXie::CompileFlags;
+    BitMask flags;
+
+    if ( options_.optimize   ) flags << Ty::Optimize;
+    if ( options_.warnings   ) flags << Ty::Warn;
+    if ( options_.showAST    ) flags << Ty::ShowAST;
+    if ( options_.showCFG    ) flags << Ty::ShowCFG;
+    if ( options_.showTokens ) flags << Ty::ShowTokens;
+
+    return flags;
 }
 
 

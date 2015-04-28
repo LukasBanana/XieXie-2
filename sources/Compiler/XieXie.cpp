@@ -86,14 +86,13 @@ struct CompileState
     CFGProgramPtr   cfgProgram;
 };
 
-void GetCompileOptions(CompileOptions& options, const BitMask& flags)
+static void GetCompileOptions(CompileOptions& options, const BitMask& flags)
 {
     if (flags( CompileFlags::Verbose    )) options.verbose      = true;
     if (flags( CompileFlags::Warn       )) options.warnings     = true;
     if (flags( CompileFlags::Optimize   )) options.optimize     = true;
     if (flags( CompileFlags::ShowAST    )) options.showAST      = true;
     if (flags( CompileFlags::ShowCFG    )) options.showCFG      = true;
-    if (flags( CompileFlags::ShowAsm    )) options.showAsm      = true;
     if (flags( CompileFlags::ShowTokens )) options.showTokens   = true;
 }
 
@@ -214,13 +213,44 @@ static bool GenerateCode(const CompileConfig& config, CompileState& state)
     return generator.GenerateAsm(*state.cfgProgram, state.errorReporter);
 }
 
+static void ShowAST(CompileState& state)
+{
+    if (state.output)
+    {
+        ASTViewer viewer(*state.output);
+        viewer.ViewProgram(state.astProgram);
+    }
+}
+
+static void ShowCFG(const CompileConfig& config, CompileState& state)
+{
+    if (!state.cfgProgram)
+        return;
+
+    CFGViewer viewer;
+
+    size_t i = 0;
+    for (const auto& ct : state.cfgProgram->classTrees)
+    {
+        const auto classDecl = ct->GetClassDeclAST();
+        if (!classDecl->isBuiltin && !classDecl->isExtern && !classDecl->isModule)
+        {
+            LogMessage(state, "dump CFG class tree \"" + classDecl->ident + "\"");
+            viewer.ViewGraph(*ct, config.cfgDumpPath);
+        }
+    }
+}
+
 static bool CompileExt(const CompileConfig& config, Log* log, ErrorReporter& errorReporter)
 {
     /* Determine compilation options */
     CompileState state(log, errorReporter);
     GetCompileOptions(state.options, config.flags);
 
+    auto showWarningsPrev = ErrorReporter::showWarnings;
     ErrorReporter::showWarnings = state.options.warnings;
+
+    bool result = false;
 
     /* Parse program */
     if (ParseProgram(config, state))
@@ -234,12 +264,22 @@ static bool CompileExt(const CompileConfig& config, Log* log, ErrorReporter& err
             {
                 /* Generate assembler code */
                 if (GenerateCode(config, state))
-                    return true;
+                    result = true;
             }
         }
     }
 
-    return false;
+    /* Show syntax tree (AST) */
+    if (state.options.showAST)
+        ShowAST(state);
+
+    /* Show flow graph (CFG) */
+    if (state.options.showCFG)
+        ShowCFG(config, state);
+
+    ErrorReporter::showWarnings = showWarningsPrev;
+
+    return result;
 }
 
 bool Compile(const CompileConfig& config, std::ostream* log)
@@ -290,7 +330,10 @@ static VirtualMachine::ByteCodePtr CompileFromStream(const std::shared_ptr<std::
     /* Compile and assemble */
     ByteCodePtr byteCode;
     if (CompileExt(config, logger.get(), errorReporter))
+    {
+        assembly.seekg(0);
         byteCode = AssembleExt(assembly, errorReporter);
+    }
 
     /* Flush errors and return byte code */
     FlushErrors(errorReporter, logger);

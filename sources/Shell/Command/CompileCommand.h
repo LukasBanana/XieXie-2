@@ -36,15 +36,15 @@ class CompileCommand : public Command
         
         struct Options
         {
-            bool        showAST        = false;
-            bool        showTokens     = false;
-            bool        showCFG        = false;
-            bool        showAsm        = false;
-
             bool        optimize       = false;
             bool        warnings       = false;
             bool        forceOverride  = false;
             
+            bool        showAST        = false;
+            bool        showCFG        = false;
+            bool        showTokens     = false;
+            bool        showAsm        = false;
+
             std::string cfgDumpPath;
         };
 
@@ -67,6 +67,9 @@ class CompileCommand : public Command
         std::string OutputFilename(
             const std::string& inputFilename, const std::string& fileExt, Log& output
         ) const;
+
+        //! Returns the flags for the compilation process.
+        BitMask GetCompilationFlags() const;
 
         /* === Members === */
 

@@ -46,11 +46,8 @@ struct CompileFlags
         */
         ShowCFG     = (1 << 4),
 
-        //! Writes the assembly output to file (with *.xasm file extension).
-        ShowAsm     = (1 << 5),
-
         //! Prints the entire token stream to the standard output.
-        ShowTokens  = (1 << 6),
+        ShowTokens  = (1 << 5),
 
         //! Default compilation flags: warning and optimization is enabled.
         Default     = (Warn | Optimize),
