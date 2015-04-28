@@ -720,48 +720,72 @@ BoolArray.vtable:
 
 ; int Intrinsics.allocMem(int size)
 CIntrinsics.PallocMem,I?size:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc AllocMem
-	ret
+	ret 1
 
 ; void Intrinsics.freeMem(int ptr)
 CIntrinsics.PfreeMem,I?ptr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc FreeMem
-	ret
+	ret 1
 
 ; void Intrinsics.copyMem(int destPtr, int srcPtr, int size)
 CIntrinsics.PcopyMem,I?destPtr,I?srcPtr,I?size:
+	ldw $tr, ($lb) -12
+	push $tr
+	ldw $tr, ($lb) -8
+	push $tr
+	ldw $tr, ($lb) -4
+	push $tr
 	insc CopyMem
-	ret
+	ret 3
 
 ; void Intrinsics.sysCall(int commandPtr)
 CIntrinsics.PsysCall,I?commandPtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc SysCall
-	ret
+	ret 1
 
 ; void Intrinsics.print(int textPtr)
 CIntrinsics.Pprint,I?textPtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Print
-	ret
+	ret 1
 
 ; void Intrinsics.printLn(int textPtr)
 CIntrinsics.PprintLn,I?textPtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc PrintLn
-	ret
+	ret 1
 
 ; void Intrinsics.printInt(int value)
 CIntrinsics.PprintInt,I?value:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc PrintInt
-	ret
+	ret 1
 
 ; void Intrinsics.printFloat(float value)
 CIntrinsics.PprintFloat,F?value:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc PrintFloat
-	ret
+	ret 1
 
 ; void Intrinsics.input(int stringPtr, int maxLen)
 CIntrinsics.Pinput,I?stringPtr,I?maxLen:
+	ldw $tr, ($lb) -8
+	push $tr
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Input
-	ret
+	ret 2
 
 ; int Intrinsics.inputInt()
 CIntrinsics.PinputInt:
@@ -775,133 +799,205 @@ CIntrinsics.PinputFloat:
 
 ; int Intrinsics.createFile(int filenamePtr)
 CIntrinsics.PcreateFile,I?filenamePtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc CreateFile
-	ret
+	ret 1
 
 ; int Intrinsics.deleteFile(int filenamePtr)
 CIntrinsics.PdeleteFile,I?filenamePtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc DeleteFile
-	ret
+	ret 1
 
 ; int Intrinsics.openFile(int filenamePtr, int modePtr)
 CIntrinsics.PopenFile,I?filenamePtr,I?modePtr:
+	ldw $tr, ($lb) -8
+	push $tr
+	ldw $tr, ($lb) -4
+	push $tr
 	insc OpenFile
-	ret
+	ret 2
 
 ; void Intrinsics.closeFile(int handlePtr)
 CIntrinsics.PcloseFile,I?handlePtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc CloseFile
-	ret
+	ret 1
 
 ; void Intrinsics.fileSetPos(int handlePtr, int offset, int origin)
 CIntrinsics.PfileSetPos,I?handlePtr,I?offset,I?origin:
+	ldw $tr, ($lb) -12
+	push $tr
+	ldw $tr, ($lb) -8
+	push $tr
+	ldw $tr, ($lb) -4
+	push $tr
 	insc FileSetPos
-	ret
+	ret 3
 
 ; int Intrinsics.fileGetPos(int handlePtr)
 CIntrinsics.PfileGetPos,I?handlePtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc FileGetPos
-	ret
+	ret 1
 
 ; int Intrinsics.fileEOF(int handlePtr)
 CIntrinsics.PfileEOF,I?handlePtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc FileEOF
-	ret
+	ret 1
 
 ; void Intrinsics.writeByte(int handlePtr, int value)
 CIntrinsics.PwriteByte,I?handlePtr,I?value:
+	ldw $tr, ($lb) -8
+	push $tr
+	ldw $tr, ($lb) -4
+	push $tr
 	insc WriteByte
-	ret
+	ret 2
 
 ; void Intrinsics.writeInt(int handlePtr, int value)
 CIntrinsics.PwriteInt,I?handlePtr,I?value:
+	ldw $tr, ($lb) -8
+	push $tr
+	ldw $tr, ($lb) -4
+	push $tr
 	insc WriteWord
-	ret
+	ret 2
 
 ; void Intrinsics.writeFloat(int handlePtr, float value)
 CIntrinsics.PwriteFloat,I?handlePtr,F?value:
+	ldw $tr, ($lb) -8
+	push $tr
+	ldw $tr, ($lb) -4
+	push $tr
 	insc WriteWord
-	ret
+	ret 2
 
 ; void Intrinsics.writeBuffer(int handlePtr, int bufferPtr, int size)
 CIntrinsics.PwriteBuffer,I?handlePtr,I?bufferPtr,I?size:
+	ldw $tr, ($lb) -12
+	push $tr
+	ldw $tr, ($lb) -8
+	push $tr
+	ldw $tr, ($lb) -4
+	push $tr
 	insc WriteBuffer
-	ret
+	ret 3
 
 ; int Intrinsics.readByte(int handlePtr)
 CIntrinsics.PreadByte,I?handlePtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc ReadByte
-	ret
+	ret 1
 
 ; int Intrinsics.readInt(int handlePtr)
 CIntrinsics.PreadInt,I?handlePtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc ReadWord
-	ret
+	ret 1
 
 ; float Intrinsics.readFloat(int handlePtr)
 CIntrinsics.PreadFloat,I?handlePtr:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc ReadWord
-	ret
+	ret 1
 
 ; void Intrinsics.readBuffer(int handlePtr, int bufferPtr, int size)
 CIntrinsics.PreadBuffer,I?handlePtr,I?bufferPtr,I?size:
+	ldw $tr, ($lb) -12
+	push $tr
+	ldw $tr, ($lb) -8
+	push $tr
+	ldw $tr, ($lb) -4
+	push $tr
 	insc ReadBuffer
-	ret
+	ret 3
 
 ; float Intrinsics.sin(float x)
 CIntrinsics.Psin,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Sin
-	ret
+	ret 1
 
 ; float Intrinsics.cos(float x)
 CIntrinsics.Pcos,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Cos
-	ret
+	ret 1
 
 ; float Intrinsics.tan(float x)
 CIntrinsics.Ptan,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Tan
-	ret
+	ret 1
 
 ; float Intrinsics.asin(float x)
 CIntrinsics.Pasin,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc ASin
-	ret
+	ret 1
 
 ; float Intrinsics.acos(float x)
 CIntrinsics.Pacos,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc ACos
-	ret
+	ret 1
 
 ; float Intrinsics.atan(float x)
 CIntrinsics.Patan,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc ATan
-	ret
+	ret 1
 
 ; float Intrinsics.pow(float b, float e)
 CIntrinsics.Ppow,F?b,F?e:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Pow
-	ret
+	ret 1
 
 ; float Intrinsics.log(float x)
 CIntrinsics.Plog,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Log
-	ret
+	ret 1
 
 ; float Intrinsics.log2(float x)
 CIntrinsics.Plog2,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Log2
-	ret
+	ret 1
 
 ; float Intrinsics.log10(float x)
 CIntrinsics.Plog10,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Log10
-	ret
+	ret 1
 
 ; float Intrinsics.sqrt(float x)
 CIntrinsics.Psqrt,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Sqrt
-	ret
+	ret 1
 
 ; int Intrinsics.randInt()
 CIntrinsics.PrandInt:
@@ -920,7 +1016,9 @@ CIntrinsics.Ptime:
 
 ; void Intrinsics.sleep(int duration)
 CIntrinsics.Psleep,I?duration:
+	ldw $tr, ($lb) -4
+	push $tr
 	insc Sleep
-	ret
+	ret 1
 
 
