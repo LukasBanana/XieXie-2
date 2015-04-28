@@ -392,6 +392,11 @@ bool ByteCode::ReadFromFile(const std::string& filename)
         exportAddresses_[i].label   = std::string(byteCode_.export_addresses[i].label.str);
     }
 
+    /* Extract module names */
+    moduleNames_.resize(byteCode_.num_module_names);
+    for (size_t i = 0; i < byteCode_.num_module_names; ++i)
+        moduleNames_[i] = std::string(byteCode_.module_names[i].str);
+
     return true;
 }
 
@@ -486,6 +491,35 @@ bool ByteCode::BindInvocation(const std::string& ident, xvm_invocation_proc proc
 bool ByteCode::BindModule(const Module& module)
 {
     return xvm_bytecode_bind_module(&byteCode_, &(module.module_)) != 0;
+}
+
+bool ByteCode::BindAutomaticModules(const std::string& modulePath)
+{
+    bool result = true;
+
+    automaticModules_.clear();
+
+    for (const auto& name : GetModuleNames())
+    {
+        /* Determine module filename */
+        auto filename = modulePath + name;
+
+        #if defined(_WIN32)
+        filename += ".dll";
+        #elif defined(__linux__)
+        filename += ".so";
+        #endif
+
+        /* Load and bind module to byte code */
+        auto module = std::unique_ptr<Module>(new Module());
+        if (!module->Load(filename) || !BindModule(*module))
+            result = false;
+
+        /* Add module to list */
+        automaticModules_.emplace_back(std::move(module));
+    }
+
+    return result;
 }
 
 bool ByteCode::Finalize()

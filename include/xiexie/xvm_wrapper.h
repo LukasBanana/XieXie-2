@@ -433,6 +433,9 @@ class Module
 
 };
 
+//! Moduel unique pointer type.
+using ModulePtr = std::unique_ptr<Module>;
+
 
 /* --- ByteCode Class --- */
 
@@ -543,6 +546,14 @@ class ByteCode
         \see BindInvocation
         */
         bool BindModule(const Module& module);
+        /**
+        Loads and binds all automatic modules, this byte code has.
+        \param[in] modulePath Optional path where the modules are stored, e.g. "XieXie/modules/".
+        \return True if all automatic modules have been bound successful.
+        \see GetModuleNames
+        \see BindModule
+        */
+        bool BindAutomaticModules(const std::string& modulePath = "");
 
         /**
         Finalizes the instruction building. After this call no further
@@ -602,6 +613,9 @@ class ByteCode
         //! Array list of all module names.
         std::vector<std::string>                moduleNames_;
 
+        //! List of all automatic modules.
+        std::vector<ModulePtr>                  automaticModules_;
+
 };
 
 //! ByteCode unique pointer type.
@@ -616,8 +630,8 @@ class Stack
 
     public:
 
-        //! Default stack size (in 32-bit word size). By default 256 words = 1024 bytes.
-        static const size_t defaultSize = 256;
+        //! Default stack size (in 32-bit word size). By default 2048 words = 8192 bytes.
+        static const size_t defaultSize = 2048;
 
         Stack(const Stack&) = delete;
         Stack& operator = (const Stack&) = delete;
