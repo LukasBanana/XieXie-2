@@ -1,0 +1,12 @@
+
+// Temp XieXie Test
+
+class Test {
+	
+	static void main() {
+		
+		Intrinsics.printInt(10)
+		
+	}
+	
+}
