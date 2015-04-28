@@ -255,7 +255,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     }
 
     /* Store procedure result in temporary variable */
-    if (!procSig->returnTypeDenoter->IsVoid())
+    if (procSig->returnTypeDenoter && !procSig->returnTypeDenoter->IsVoid())
     {
         auto var = TempVar();
         BB()->MakeInst<TACCopyInst>(var, ResultVar());

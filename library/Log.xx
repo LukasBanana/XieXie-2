@@ -43,7 +43,7 @@ public:
 	void incIndent() {
 		if indent != null {
 			indentStack.push(new Integer(indent.size()))
-			indentState.add(indent)
+			indentState.append(indent)
 		}
 	}
 	

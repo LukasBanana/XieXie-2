@@ -126,14 +126,14 @@ static bool ParseProgram(const CompileConfig& config, CompileState& state)
 
     for (auto& source : config.sources)
     {
-        /* Parse source file */
+        /* Parse source stream */
         if (!parser.ParseSource(state.astProgram, std::make_shared<SourceStream>(source), state.errorReporter))
             hasError = true;
     }
 
     /* Parse input filenames */
     std::vector<std::string> nextSources;
-    std::set<std::string> passedSources;
+    auto passedSources = config.filenames;
 
     while (true)
     {

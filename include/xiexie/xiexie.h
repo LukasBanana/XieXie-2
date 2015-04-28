@@ -14,6 +14,7 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <set>
 
 
 namespace XieXie
@@ -59,6 +60,9 @@ struct CompileConfig
 {
     std::vector<std::shared_ptr<std::istream>>  sources;
     std::iostream*                              assembly;
+
+    //! Optional set of filenames, which are already included, i.e. which are to be ignored.
+    std::set<std::string>                       filenames;
     
     int                                         flags = CompileFlags::Default;
 

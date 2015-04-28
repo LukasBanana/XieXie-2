@@ -52,14 +52,6 @@ class CompileCommand : public Command
 
         void ReadArgs(StreamParser& input);
 
-        void ParseProgram(Program& program, Log& output);
-        void DecorateProgram(Program& program, Log& output);
-        CFGProgramPtr GenerateCFG(Program& program, Log& output);
-        void GenerateCode(const CFGProgram& cfgProgram, Log& output);
-
-        void ShowAST(Program& program, Log& output);
-        void ShowCFG(const CFGProgram& cfgProgram, Log& output);
-
         /**
         Returns an available output filename, for the specified input filename.
         If the 'forceOverride' option is disabled, the user is asked to override an existing file.

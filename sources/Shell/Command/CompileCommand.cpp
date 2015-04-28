@@ -42,12 +42,15 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
         return;
     }
 
-    #if 1
-
     /* Setup I/O stream for assembly */
     std::unique_ptr<std::iostream> assembly;
     if (options_.showAsm)
-        assembly = MakeUnique<std::fstream>(OutputFilename(outputFilename_, "xasm", output));
+    {
+        assembly = MakeUnique<std::fstream>(
+            OutputFilename(outputFilename_, "xasm", output),
+            (std::fstream::in | std::fstream::out | std::fstream::trunc)
+        );
+    }
     else
         assembly = MakeUnique<std::stringstream>();
 
@@ -73,6 +76,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     }
 
     config.assembly     = assembly.get();
+    config.filenames    = std::move(passedSources_);
     config.cfgDumpPath  = options_.cfgDumpPath;
     config.flags        = flags;
 
@@ -93,47 +97,6 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             }
         }
     }
-
-    #else
-
-    ErrorReporter::showWarnings = options_.warnings;
-
-    /* Parse program */
-    Program program;
-    ParseProgram(program, output);
-
-    /* Decorate program */
-    if (!hasError_)
-        DecorateProgram(program, output);
-
-    /* Transform to CFG */
-    CFGProgramPtr cfgProgram;
-    if (!hasError_)
-        cfgProgram = GenerateCFG(program, output);
-
-    /* Generate assembler code */
-    if (!hasError_ && cfgProgram)
-        GenerateCode(*cfgProgram, output);
-
-    /* --- Debug Output --- */
-
-    /* Print out errors */
-    errorReporter_.Flush(output);
-
-    if (!hasError_)
-        output.Success("compilation successful");
-
-    /* Show syntax tree (AST) */
-    if (options_.showAST)
-        ShowAST(program, output);
-
-    /* Show flow graph (CFG) */
-    if (options_.showCFG && cfgProgram)
-        ShowCFG(*cfgProgram, output);
-
-    ErrorReporter::showWarnings = false;
-
-    #endif
 }
 
 void CompileCommand::Help(HelpPrinter& printer) const
@@ -197,170 +160,6 @@ void CompileCommand::ReadArgs(StreamParser& input)
                      input.AcceptOption(options_.forceOverride, { "-fo", "--force-override" }) ) )
         {
             break;
-        }
-    }
-}
-
-void CompileCommand::ParseProgram(Program& program, Log& output)
-{
-    /* Initialize parser */
-    Parser parser;
-
-    std::stringstream tokenStream;
-    if (options_.showTokens)
-        parser.tokenStream = &tokenStream;
-
-    /* Generate built-in class declarations */
-    ContextAnalyzer::StdCodeFactory::GenerateBuiltinClasses(program);
-    
-    /* Parse input filenames */
-    std::vector<std::string> nextSources;
-
-    while (!sources_.empty())
-    {
-        for (const auto& filename : sources_)
-        {
-            if (output.verbose)
-                output.Message("parse file \"" + ExtractFilename(filename) + "\" ...");
-
-            /* Parse source file */
-            if (!parser.ParseSource(program, std::make_shared<SourceStream>(filename), errorReporter_))
-                hasError_ = true;
-        }
-
-        /* Collect import filenames */
-        for (const auto& import : program.importFilenames)
-        {
-            /* Check if filename has already been parsed */
-            auto importLower = ToLower(import);
-            if (passedSources_.find(importLower) == passedSources_.end())
-            {
-                nextSources.push_back(import);
-                passedSources_.insert(importLower);
-            }
-        }
-        program.importFilenames.clear();
-
-        /* Process next sources */
-        sources_ = std::move(nextSources);
-    }
-
-    /* Show debug output */
-    if (options_.showTokens)
-    {
-        output.Message("token stream dump:");
-        ScopedColor scopedColor(output.stream, Color::Cyan);
-        output.Message(tokenStream.str());
-    }
-}
-
-void CompileCommand::DecorateProgram(Program& program, Log& output)
-{
-    if (output.verbose)
-        output.Message("context analysis ...");
-
-    /* Decoreate AST */
-    ContextAnalyzer::Decorator decorator;
-    if (!decorator.DecorateProgram(program, errorReporter_))
-        hasError_ = true;
-}
-
-CFGProgramPtr CompileCommand::GenerateCFG(Program& program, Log& output)
-{
-    if (output.verbose)
-        output.Message("graph generation ...");
-
-    GraphGenerator converter;
-    auto cfgProgram = converter.GenerateCFG(program, errorReporter_);
-
-    if (errorReporter_.HasErrors())
-        hasError_ = true;
-    else if (options_.optimize)
-    {
-        if (output.verbose)
-            output.Message("optimization ...");
-
-        /* Optimize CFG */
-        Optimization::Optimizer::OptimizeProgram(*cfgProgram);
-    }
-
-    return cfgProgram;
-}
-
-void CompileCommand::GenerateCode(const CFGProgram& cfgProgram, Log& output)
-{
-    if (options_.showAsm)
-    {
-        /* Create output file */
-        auto filenameAsm = OutputFilename(outputFilename_, "xasm", output);
-        std::ofstream outputFile(filenameAsm);
-
-        /* Generate code */
-        if (output.verbose)
-            output.Message("generate code file \"" + filenameAsm + "\" ...");
-
-        CodeGenerator::XASMGenerator generator(outputFile);
-        if (!generator.GenerateAsm(cfgProgram, errorReporter_))
-            hasError_ = true;
-
-        if (!hasError_)
-        {
-            /* Assemble source file */
-            auto filenameByteCode = OutputFilename(outputFilename_, "xbc", output);
-            if (output.verbose)
-                output.Message("assemble file \"" + filenameByteCode + "\" ...");
-
-            XieXie::Assembler assembler;
-            if (!assembler.Assemble(filenameAsm, filenameByteCode, errorReporter_))
-                hasError_ = true;
-        }
-    }
-    else
-    {
-        /* Create I/O stream */
-        std::stringstream assembly;
-
-        /* Generate code */
-        if (output.verbose)
-            output.Message("generate code ...");
-
-        CodeGenerator::XASMGenerator generator(assembly);
-        if (!generator.GenerateAsm(cfgProgram, errorReporter_))
-            hasError_ = true;
-
-        if (!hasError_)
-        {
-            /* Assemble source file */
-            auto filenameByteCode = OutputFilename(outputFilename_, "xbc", output);
-            if (output.verbose)
-                output.Message("assemble file \"" + filenameByteCode + "\" ...");
-
-            XieXie::Assembler assembler;
-            if (!assembler.Assemble(assembly, filenameByteCode, errorReporter_))
-                hasError_ = true;
-        }
-    }
-}
-
-void CompileCommand::ShowAST(Program& program, Log& output)
-{
-    ASTViewer viewer(output);
-    viewer.ViewProgram(program);
-}
-
-void CompileCommand::ShowCFG(const CFGProgram& cfgProgram, Log& output)
-{
-    CFGViewer viewer;
-
-    size_t i = 0;
-    for (const auto& ct : cfgProgram.classTrees)
-    {
-        const auto classDecl = ct->GetClassDeclAST();
-        if (!classDecl->isBuiltin && !classDecl->isExtern && !classDecl->isModule)
-        {
-            if (output.verbose)
-                output.Message("dump CFG class tree \"" + classDecl->ident + "\"");
-            viewer.ViewGraph(*ct, options_.cfgDumpPath);
         }
     }
 }
