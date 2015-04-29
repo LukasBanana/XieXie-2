@@ -15,8 +15,10 @@ class Test {
 		//s2.resize(3)
 		s2.append(s1)
 		
-		//Intrinsics.printLn(s2.pointer())
-		StdOut.print(s2.pointer())
+		Intrinsics.print(s2.pointer())
+		//Intrinsics.printInt(s2.size())
+		
+		Intrinsics.printLn(0)
 		
 	}
 	

@@ -82,6 +82,7 @@ static KeywordMapType GenerateKeywordMap()
         { "alias",       Ty::Reserved       },
         { "pattern",     Ty::Reserved       },
         { "sync",        Ty::Reserved       },
+        { "synchronize", Ty::Reserved       },
         { "byte",        Ty::Reserved       },
         { "ubyte",       Ty::Reserved       },
         { "short",       Ty::Reserved       },
@@ -91,6 +92,12 @@ static KeywordMapType GenerateKeywordMap()
         { "ulong",       Ty::Reserved       },
         { "double",      Ty::Reserved       },
         { "readonly",    Ty::Reserved       },
+        { "is",          Ty::Reserved       },
+        { "instanceof",  Ty::Reserved       },
+        { "try",         Ty::Reserved       },
+        { "catch",       Ty::Reserved       },
+        { "except",      Ty::Reserved       },
+        { "throw",       Ty::Reserved       },
     };
 }
 
