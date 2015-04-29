@@ -467,14 +467,14 @@ void xvm_log_warning(const char* format, ...)
 
 void xvm_log_readfile_error(const char* filename)
 {
-    xvm_log_error("reading file \"%s\" failed\n", filename);
+    xvm_log_error("reading file \"%s\" failed", filename);
 }
 
 void xvm_log_exitcode_error(const xvm_exit_codes exit_code)
 {
     const char* err = xvm_exitcode_to_string(exit_code);
     if (err != NULL)
-        xvm_log_error("program terminated with error: \"%s\"\n", err);
+        xvm_log_error("program terminated with error: \"%s\"", err);
 }
 
 
@@ -894,7 +894,7 @@ static void _xvm_instr_print_debug_info(const instr_t instr, regi_t instr_index,
     else if (opcode == OPCODE_PUSHC)
         printf("%i", _xvm_instr_get_sgn_value26(instr));
 
-    printf("\n");
+    puts("");
 }
 
 #endif
@@ -1863,7 +1863,7 @@ int xvm_module_load(xvm_module* module, const char* filename)
     module->handle = LoadLibraryA(filename);
     if (module->handle == 0)
     {
-        xvm_log_error("loading module \"%s\" failed\n", filename);
+        xvm_log_error("loading module \"%s\" failed", filename);
         return 0;
     }
 
@@ -1878,7 +1878,7 @@ int xvm_module_load(xvm_module* module, const char* filename)
     module->handle = dlopen(filename, RTLD_LAZY);
     if (module->handle == NULL)
     {
-        xvm_log_error("loading module \"%s\" failed\n", filename);
+        xvm_log_error("loading module \"%s\" failed", filename);
         return 0;
     }
 
@@ -1891,7 +1891,7 @@ int xvm_module_load(xvm_module* module, const char* filename)
 
     if (module->proc_count == NULL || module->fetch_proc == NULL || module->fetch_ident == NULL)
     {
-        xvm_log_error("loading interface of module \"%s\" failed\n", filename);
+        xvm_log_error("loading interface of module \"%s\" failed", filename);
         return 0;
     }
 
@@ -1929,6 +1929,10 @@ int xvm_module_unload(xvm_module* module)
     return 0;
 }
 
+/*
+This function binds all invocations of the specified module to the byte code.
+All module invocations, which are not part of the byte code, are ignored.
+*/
 static int _xvm_bytecode_bind_module_ext(xvm_bytecode* byte_code, const xvm_module* module, int unbindFlag)
 {
     if (byte_code == NULL || module == NULL)
@@ -1944,8 +1948,6 @@ static int _xvm_bytecode_bind_module_ext(xvm_bytecode* byte_code, const xvm_modu
     int num_procs = module->proc_count();
 
     // Bind all module invocation procedures to byte code
-    size_t num_errors = 0;
-
     for (int i = 0; i < num_procs; ++i)
     {
         // Fetch invocation identifier
@@ -1956,8 +1958,7 @@ static int _xvm_bytecode_bind_module_ext(xvm_bytecode* byte_code, const xvm_modu
         if (unbindFlag != 0)
         {
             // Unbind procedure invocation
-            if (xvm_bytecode_bind_invocation(byte_code, ident, NULL) == 0)
-                ++num_errors;
+            xvm_bytecode_bind_invocation(byte_code, ident, NULL);
         }
         else
         {
@@ -1965,16 +1966,8 @@ static int _xvm_bytecode_bind_module_ext(xvm_bytecode* byte_code, const xvm_modu
             xvm_invocation_proc proc = module->fetch_proc(i);
 
             // Bind procedure invocation
-            if (xvm_bytecode_bind_invocation(byte_code, ident, proc) == 0)
-                ++num_errors;
+            xvm_bytecode_bind_invocation(byte_code, ident, proc);
         }
-    }
-
-    // Check for errors during binding/unbinding
-    if (num_errors > 0)
-    {
-        xvm_log_error("%i invocation binding(s)/unbinding(s) from module to byte code failed\n", num_errors);
-        return 0;
     }
 
     return 1;
@@ -2159,7 +2152,8 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         case INSC_SYS_CALL:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
-            system(INT_TO_STR_REINTERPRET(arg0));
+            if (arg0)
+                system(INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
@@ -2167,7 +2161,8 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         case INSC_PRINT:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
-            printf("%s", INT_TO_STR_REINTERPRET(arg0));
+            if (arg0)
+                printf("%s", INT_TO_STR_REINTERPRET(arg0));
         }
         break;
 
@@ -2175,7 +2170,10 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         case INSC_PRINT_LN:
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
-            puts(INT_TO_STR_REINTERPRET(arg0));
+            if (arg0)
+                puts(INT_TO_STR_REINTERPRET(arg0));
+            else
+                puts("");
         }
         break;
 
