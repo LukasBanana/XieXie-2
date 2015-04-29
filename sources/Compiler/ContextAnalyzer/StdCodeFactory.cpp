@@ -201,6 +201,7 @@ static ExprPtr GenIntExpr(std::string&& value)
     {
         ast->typeDenoter    = Int();
         ast->value          = std::move(value);
+        ast->SetType(LiteralExpr::Literals::Int);
     }
     return ast;
 }
@@ -212,6 +213,7 @@ static ExprPtr GenFloatExpr(std::string&& value)
     {
         ast->typeDenoter    = Float();
         ast->value          = std::move(value);
+        ast->SetType(LiteralExpr::Literals::Float);
     }
     return ast;
 }

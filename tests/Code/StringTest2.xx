@@ -5,6 +5,8 @@
 /// Test for string code generation
 class Test {
 	
+	static int g_a
+	
 	static void main() {
 		
 		var s1 := "INFO"
@@ -13,7 +15,8 @@ class Test {
 		//s2.resize(3)
 		s2.append(s1)
 		
-		Intrinsics.printLn(s2.pointer())
+		//Intrinsics.printLn(s2.pointer())
+		StdOut.print(s2.pointer())
 		
 	}
 	

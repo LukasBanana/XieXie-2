@@ -12,6 +12,7 @@
 #include "BuiltinClasses.h"
 #include "Optimizer.h"
 #include "ExprIntEvaluator.h"
+#include "ExprFloatEvaluator.h"
 
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
@@ -759,7 +760,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     auto root = CT()->CreateRootBasicBlock(*ast, procDisplay);
 
     #if 1//!DEBUGGING!
-    root->MakeInst<TACModifyInst>(OpCodes::ADD, TACVar::varStackPtr, TACVar::varStackPtr, "32");
+    root->MakeInst<TACModifyInst>(OpCodes::ADD, TACVar::varStackPtr, TACVar::varStackPtr, "100");
     #endif
 
     /* Register CFG root in procedure reference map */
@@ -1916,21 +1917,20 @@ TACVar GraphGenerator::LValueVarFromVarName(const VarName& ast)
 bool GraphGenerator::EvaluateExpr(const Expr& ast, TACVar& var)
 {
     /* Try to evaluate the expression to an integer */
-    int result = 0;
-    if (ContextAnalyzer::ExprIntEvaluator().Evaluate(ast, result))
+    int resultInt = 0;
+    if (ContextAnalyzer::ExprIntEvaluator().Evaluate(ast, resultInt))
     {
-        var = TACVar(ToStr(result));
+        var = TACVar(ToStr(resultInt));
         return true;
     }
     
-    //!!!TODO!!!
     /* Try to evaluate the expression to a floating-point */
-    /*float result = 0;
-    if (ContextAnalyzer::ExprFloatEvaluator().Evaluate(ast, result))
+    float resultFloat = 0;
+    if (ContextAnalyzer::ExprFloatEvaluator().Evaluate(ast, resultFloat))
     {
-        var = TACVar(ToStr(result));
+        var = TACVar(ToStr(resultFloat, 8));
         return true;
-    }*/
+    }
 
     return false;
 }
