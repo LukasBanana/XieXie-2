@@ -2,8 +2,6 @@
 // String Test 2
 // 26/04/2015
 
-import MsgBox
-
 /// Test for string code generation
 class Test {
 	
@@ -15,8 +13,7 @@ class Test {
 		//s2.resize(3)
 		s2.append(s1)
 		
-		//Intrinsics.printLn(s1.pointer())
-		MsgBox.show(s1, s2)
+		Intrinsics.printLn(s2.pointer())
 		
 	}
 	
