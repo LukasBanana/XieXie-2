@@ -176,6 +176,7 @@ extern class Buffer {
 Low-level intrinsic functions.
 \note typeID = 6
 */
+[[final]]
 extern class Intrinsics {
 	
 	static int allocMem(int size)
@@ -207,6 +208,21 @@ extern class Intrinsics {
 	static float readFloat(int handlePtr)
 	static void readBuffer(int handlePtr, int bufferPtr, int size)
 	
+	static int time()
+	static void sleep(int duration)
+	
+}
+
+/// Core math class.
+[[final]]
+extern class Math {
+	
+	/// Math constant PI (~3.14).
+	static const pi := 3.14159265358979
+	
+	/// Math constant E (~2.71).
+	static const e := 2.71828182845905
+	
 	static float sin(float x)
 	static float cos(float x)
 	static float tan(float x)
@@ -221,8 +237,6 @@ extern class Intrinsics {
 	
 	static int randInt()
 	static float randFloat()
-	static int time()
-	static void sleep(int duration)
 	
 }
 

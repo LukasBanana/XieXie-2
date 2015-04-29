@@ -716,7 +716,7 @@ BoolArray.vtable:
 
 
 ; ------- Intrinsics Class -------
-; built-in class for to access all VM intrinsics
+; built-in class to access all VM intrinsics
 
 ; int Intrinsics.allocMem(int size)
 CIntrinsics.PallocMem,I?size:
@@ -922,93 +922,6 @@ CIntrinsics.PreadBuffer,I?handlePtr,I?bufferPtr,I?size:
 	insc ReadBuffer
 	ret 3
 
-; float Intrinsics.sin(float x)
-CIntrinsics.Psin,F?x:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc Sin
-	ret 1
-
-; float Intrinsics.cos(float x)
-CIntrinsics.Pcos,F?x:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc Cos
-	ret 1
-
-; float Intrinsics.tan(float x)
-CIntrinsics.Ptan,F?x:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc Tan
-	ret 1
-
-; float Intrinsics.asin(float x)
-CIntrinsics.Pasin,F?x:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc ASin
-	ret 1
-
-; float Intrinsics.acos(float x)
-CIntrinsics.Pacos,F?x:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc ACos
-	ret 1
-
-; float Intrinsics.atan(float x)
-CIntrinsics.Patan,F?x:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc ATan
-	ret 1
-
-; float Intrinsics.pow(float b, float e)
-CIntrinsics.Ppow,F?b,F?e:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc Pow
-	ret 1
-
-; float Intrinsics.log(float x)
-CIntrinsics.Plog,F?x:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc Log
-	ret 1
-
-; float Intrinsics.log2(float x)
-CIntrinsics.Plog2,F?x:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc Log2
-	ret 1
-
-; float Intrinsics.log10(float x)
-CIntrinsics.Plog10,F?x:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc Log10
-	ret 1
-
-; float Intrinsics.sqrt(float x)
-CIntrinsics.Psqrt,F?x:
-	ldw $tr, ($lb) -4
-	push $tr
-	insc Sqrt
-	ret 1
-
-; int Intrinsics.randInt()
-CIntrinsics.PrandInt:
-	insc RandInt
-	ret
-
-; float Intrinsics.randFloat()
-CIntrinsics.PrandFloat:
-	insc RandFloat
-	ret
-
 ; int Intrinsics.time()
 CIntrinsics.Ptime:
 	insc Time
@@ -1020,5 +933,96 @@ CIntrinsics.Psleep,I?duration:
 	push $tr
 	insc Sleep
 	ret 1
+
+
+; ------- Math Class -------
+; built-in class for core math functionality
+
+; float Math.sin(float x)
+CMath.Psin,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Sin
+	ret 1
+
+; float Math.cos(float x)
+CMath.Pcos,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Cos
+	ret 1
+
+; float Math.tan(float x)
+CMath.Ptan,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Tan
+	ret 1
+
+; float Math.asin(float x)
+CMath.Pasin,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc ASin
+	ret 1
+
+; float Math.acos(float x)
+CMath.Pacos,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc ACos
+	ret 1
+
+; float Math.atan(float x)
+CMath.Patan,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc ATan
+	ret 1
+
+; float Math.pow(float b, float e)
+CMath.Ppow,F?b,F?e:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Pow
+	ret 1
+
+; float Math.log(float x)
+CMath.Plog,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Log
+	ret 1
+
+; float Math.log2(float x)
+CMath.Plog2,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Log2
+	ret 1
+
+; float Math.log10(float x)
+CMath.Plog10,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Log10
+	ret 1
+
+; float Math.sqrt(float x)
+CMath.Psqrt,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Sqrt
+	ret 1
+
+; int Math.randInt()
+CMath.PrandInt:
+	insc RandInt
+	ret
+
+; float Math.randFloat()
+CMath.PrandFloat:
+	insc RandFloat
+	ret
 
 
