@@ -39,6 +39,7 @@ static const ClassRTTI PrimArray   { 3, 24, "PrimArray"  };
 static const ClassRTTI BoolArray   { 4, 24, "BoolArray"  };
 static const ClassRTTI Buffer      { 5, 24, "Buffer"     };
 static const ClassRTTI Intrinsics  { 6, 12, "Intrinsics" };
+static const ClassRTTI Math        { 7, 12, "Math"       };
 
 //! Offset (in bytes) of the member "buffer" in the "Array" class.
 static const int Array_Offset_buffer = 20;
