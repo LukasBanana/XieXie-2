@@ -121,19 +121,28 @@ static bool ParseProgram(const CompileConfig& config, CompileState& state)
     ContextAnalyzer::StdCodeFactory::GenerateBuiltinClasses(state.astProgram);
     
     /* Parse input streams */
+    std::set<std::string> passedSources;
     bool hasError = false;
-    LogMessage(state, "parse input streams ...");
+    size_t numStreams = 0;
 
     for (auto& source : config.sources)
     {
+        /* Keep track of files which have already been parsed */
+        if (!source.filename.empty())
+        {
+            LogMessage(state, "parse file \"" + ExtractFilename(source.filename) + "\" ...");
+            passedSources.insert(ToLower(source.filename));
+        }
+        else
+            LogMessage(state, "parse stream (" + std::to_string(++numStreams) + ") ...");
+
         /* Parse source stream */
-        if (!parser.ParseSource(state.astProgram, std::make_shared<SourceStream>(source), state.errorReporter))
+        if (!parser.ParseSource(state.astProgram, std::make_shared<SourceStream>(source.stream), state.errorReporter))
             hasError = true;
     }
 
     /* Parse input filenames */
     std::vector<std::string> nextSources;
-    auto passedSources = config.filenames;
 
     while (true)
     {
@@ -313,7 +322,8 @@ VirtualMachine::ByteCodePtr Assemble(std::istream& assembly, std::ostream* log)
 
 /* --- Very High-Level Functions --- */
 
-static VirtualMachine::ByteCodePtr CompileFromStream(const std::shared_ptr<std::istream>& inputStream, int compileFlags, std::ostream* log)
+static VirtualMachine::ByteCodePtr CompileFromStream(
+    const std::shared_ptr<std::istream>& inputStream, const std::string& filename, int compileFlags, std::ostream* log)
 {
     /* Initialize error reporter and logger */
     ErrorReporter errorReporter;
@@ -323,7 +333,7 @@ static VirtualMachine::ByteCodePtr CompileFromStream(const std::shared_ptr<std::
     std::stringstream assembly;
 
     CompileConfig config;
-    config.sources  = { std::move(inputStream) };
+    config.sources  = { { std::move(inputStream), filename } };
     config.assembly = &assembly;
     config.flags    = compileFlags;
 
@@ -347,7 +357,7 @@ VirtualMachine::ByteCodePtr CompileFromString(const std::string& codeString, int
 {
     auto inputStream = std::make_shared<std::stringstream>();
     *inputStream << codeString;
-    return CompileFromStream(inputStream, compileFlags, log);
+    return CompileFromStream(inputStream, "", compileFlags, log);
 }
 
 VirtualMachine::ByteCodePtr CompileFromFile(const std::string& codeFilename, int compileFlags, std::ostream* log)
@@ -355,7 +365,7 @@ VirtualMachine::ByteCodePtr CompileFromFile(const std::string& codeFilename, int
     auto inputStream = std::make_shared<std::ifstream>(codeFilename);
     if (!inputStream->good())
         return nullptr;
-    return CompileFromStream(inputStream, compileFlags, log);
+    return CompileFromStream(inputStream, codeFilename, compileFlags, log);
 }
 
 ExitCodes RunFromString(const std::string& codeString, int compileFlags, const size_t stackSize, std::ostream* log)

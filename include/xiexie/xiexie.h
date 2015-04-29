@@ -58,15 +58,18 @@ struct CompileFlags
 //! Compilation configuration.
 struct CompileConfig
 {
-    std::vector<std::shared_ptr<std::istream>>  sources;
-    std::iostream*                              assembly;
+    struct Source
+    {
+        std::shared_ptr<std::istream>   stream;     //!< Input source stream.
+        std::string                     filename;   //!< Optional filename.
+    };
 
-    //! Optional set of filenames, which are already included, i.e. which are to be ignored.
-    std::set<std::string>                       filenames;
-    
-    int                                         flags = CompileFlags::Default;
+    std::vector<Source>     sources;
+    std::iostream*          assembly;
 
-    std::string                                 cfgDumpPath;
+    int                     flags = CompileFlags::Default;
+
+    std::string             cfgDumpPath;
 };
 
 

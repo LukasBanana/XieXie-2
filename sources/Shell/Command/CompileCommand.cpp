@@ -56,11 +56,10 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             return;
         }
         else
-            config.sources.push_back(file);
+            config.sources.push_back({ file, source });
     }
 
     config.assembly     = assembly.get();
-    config.filenames    = std::move(passedSources_);
     config.cfgDumpPath  = options_.cfgDumpPath;
     config.flags        = flags;
 
