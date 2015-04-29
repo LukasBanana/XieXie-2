@@ -175,9 +175,20 @@ std::string XASMGenerator::ResolveStringLiteral(const std::string& str) const
 
 std::string XASMGenerator::Reg(const TACVar& var)
 {
-    if (var.IsConst() || var.IsLabel())
-        return var.ToString();
+    /* Check for literal */
+    if (var.IsConst())
+    {
+        if (var.value.find('.') != std::string::npos)
+        {
+            Line("mov " + tempReg + ", " + var.value);
+            return tempReg;
+        }
+        return var.value;
+    }
+    if (var.IsLabel())
+        return var.value;
 
+    /* Check for special register */
     switch (var.type)
     {
         case TACVar::Types::Result:
@@ -195,6 +206,7 @@ std::string XASMGenerator::Reg(const TACVar& var)
     if (!var.IsValid())
         ErrorIntern("invalid ID for TAC variable");
 
+    /* Allocate register */
     return regAlloc_.Reg(var);
 }
 
