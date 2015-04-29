@@ -444,13 +444,14 @@ CString.Pappend,R@String?rhs:
 	sub $r1, $r1, 2		; subtract 2 from size because of both null terminators
 	
 	; resize this string
+	push $r2			; store this.size
 	push $r0			; store rhs
 	push $r1
 	call CString.Presize,I?size
 	pop $r0				; restore rhs
+	pop $r1				; restore this.size
 	
 	; copy other string into new buffer part
-	ldw $r1, ($xr) 12	; reload this.size
 	ldw $r2, ($xr) 20	; load this.buffer
 	ldw $r3, ($r0) 12	; reload rhs.size
 	ldw $r4, ($r0) 20	; load rhs.buffer
@@ -463,6 +464,7 @@ CString.Pappend,R@String?rhs:
 	insc CopyMem		; copy string part
 	
 	.end:
+	mov $ar, $xr		; return weak reference of this
 	ret 1
 
 ; String String.append(String this, Object rhs)
