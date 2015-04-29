@@ -822,11 +822,11 @@ void XASMGenerator::GenerateStackInst(const TACStackInst& inst)
 
 void XASMGenerator::GenerateHeapInst(const TACHeapInst& inst)
 {
+    auto reg0 = Reg(inst.var);
+    auto reg1 = Reg(inst.baseVar);
+
     StartLn();
     {
-        auto reg0 = Reg(inst.var);
-        auto reg1 = Reg(inst.baseVar);
-
         switch (inst.opcode)
         {
             case OpCodes::LDB:
