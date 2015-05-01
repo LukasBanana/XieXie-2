@@ -51,22 +51,6 @@ class Mouse {
 		
 }
 
-extern class Math {
-	
-	static float sqrt(float x)
-	
-	static float sin(float x)
-	static float cos(float x)
-	static float tan(float x)
-	
-	static float asin(float x)
-	static float acos(float x)
-	static float atan(float x)
-	
-	static float random()
-	
-}
-
 class Vector3 {
 	
 	init() {
@@ -189,7 +173,7 @@ class AppTest {
 		Vector3[] vertices := new Vector3[](100)
 		
 		foreach vert : vertices {
-			vert.x := Math.random()
+			vert.x := Math.randFloat()
 		}
 		
 		// Switch/case

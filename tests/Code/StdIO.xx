@@ -63,14 +63,14 @@ class Main {
 		String s1 := "hello"
 		String s2 := " "
 		String s3 := "world"
-		String s4 := s1.add(s2).add(s3)
+		String s4 := s1.append(s2).append(s3)
 		
 		String[] sl := { "a", "b", "c" }
 		int len := sl[0].size()
 		
 		for int i := 0 ; i < sl[0].size() ; i++ {
 			len += "test".size()
-			len += ((InputStream)System.in).readLine().add(sl[i]).size()
+			len += ((InputStream)System.in).readLine().append(sl[i]).size()
 		}
 		
 		int num := { 5, { "bar" }.toString().size() }.size()

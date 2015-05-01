@@ -69,7 +69,7 @@ class Test : EnglishHello {
 		//var d := v.privVar
 		
 		// Procedure calls
-		EnglishHello.hello() // error, "hello" is not static!
+		//EnglishHello.hello() // error, "hello" is not static!
 		
 	}
 	
