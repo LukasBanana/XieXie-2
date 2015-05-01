@@ -522,6 +522,7 @@ DEF_VISIT_PROC(GraphGenerator, WhileStmnt)
       /  |   ^
       |  v   |
  false| Body |
+      |  |   |
       |  v   |
       | Iter |
       |   \__/
@@ -619,7 +620,9 @@ DEF_VISIT_PROC(GraphGenerator, ForStmnt)
 }
 
 /*
-       ForRange
+      ForRange
+         v
+      Condition
       /  \    ^
       |   v   |
       |  Body |
@@ -681,9 +684,79 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
     RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
+/*
+       ForEach
+          v
+      Condition
+      /  \    ^
+      |   v   |
+      |  Body |
+ false|   |   |
+      |   v   |
+      |  Iter |
+      |   \___/
+      v
+ EndForEach
+*/
 DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
 {
-    //TODO ...
+    auto in = MakeBlock("ForEach");
+    auto out = MakeBlock("EndForEach");
+
+    auto cond = MakeBlock("ForEachCond");
+    in->AddSucc(*cond);
+
+    /* Loop initialization */
+    TACVar arrayVar;
+    PushBB(in);
+    {
+        Visit(ast->listExpr);
+        arrayVar = PopVar();
+    }
+    PopBB();
+
+    /* Generate code to get the pointer to the array buffer */
+    auto valueVar = LValueVar(ast);
+    auto ptrVar = TempVar();
+    in->MakeInst<TACHeapInst>(OpCodes::LDW, ptrVar, arrayVar, 20);
+
+    /* Generate code to get the end-pointer of the array buffer (ptrEndVar := (array.size << 2) + ptrVar) */
+    auto ptrEndVar = TempVar();
+    in->MakeInst<TACHeapInst>(OpCodes::LDW, ptrEndVar, arrayVar, 12);
+    in->MakeInst<TACModifyInst>(OpCodes::SLL, ptrEndVar, ptrEndVar, "2");
+    in->MakeInst<TACModifyInst>(OpCodes::ADD, ptrEndVar, ptrEndVar, ptrVar);
+
+    /* Loop condition */
+    cond->MakeInst<TACRelationInst>(OpCodes::CMPNE, ptrVar, ptrEndVar);
+
+    /* Build loop body CFG */
+    PushBreakBB(out);
+    {
+        auto body = VisitAndLink(ast->codeBlock);
+
+        if (body.in && body.out)
+        {
+            /* Insert instruction at the beginning, to load the value (valueVar) from the current iteration pointer (ptrVar) */
+            body.in->InsertInst<TACHeapInst>(0, OpCodes::LDW, valueVar, ptrVar, 0);
+
+            /* Add successors */
+            cond->AddSucc(*body.in, "true");
+            body.out->AddSucc(*cond, "loop");
+
+            /* Add instruction to increment the iterator */
+            body.out->MakeInst<TACModifyInst>(OpCodes::ADD, ptrVar, ptrVar, "4");
+        }
+        else
+        {
+            RETURN_BLOCK_REF(MakeBlock());
+            return;
+        }
+    }
+    PopBreakBB();
+
+    cond->AddSucc(*out, "false");
+
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 /*
