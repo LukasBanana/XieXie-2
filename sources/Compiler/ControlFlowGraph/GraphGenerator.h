@@ -105,12 +105,12 @@ class GraphGenerator final : private Visitor
 
         void CopyAndPushResultVar(const TACVar& destVar);
 
-        void GenerateVarNameValue(VarName& ast, const TACVar* baseVar = nullptr);
-        void GenerateVarNameValueDynamic(VarName* ast, const TACVar* baseVar);
-        void GenerateVarNameValueStatic(VarDecl* ast);
+        void GenerateVarNameRValue(VarName& ast, const TACVar* baseVar = nullptr);
+        void GenerateVarNameRValueDynamic(VarName* ast, const TACVar* baseVar);
+        void GenerateVarNameRValueStatic(VarDecl* ast);
         void GenerateArrayAccess(ArrayAccess* ast, const TACVar& baseVar);
 
-        //TACVar GenerateVarNameAddress(VarName& ast);
+        //void GenerateVarNameLValue(VarName& ast);
 
         /* --- CFG Generation --- */
 

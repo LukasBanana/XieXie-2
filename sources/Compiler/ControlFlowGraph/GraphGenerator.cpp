@@ -77,8 +77,6 @@ CFGProgramPtr GraphGenerator::GenerateCFG(Program& program, ErrorReporter& error
  * ======= Private: =======
  */
 
-//#define VISIT_FLAGS reinterpret_cast<const VisitIO*>(args)->flags
-
 #define RETURN_BLOCK_REF(expr)                      \
     auto&& _result = expr;                          \
     if (args)                                       \
@@ -120,7 +118,7 @@ DEF_VISIT_PROC(GraphGenerator, CodeBlock)
 
 DEF_VISIT_PROC(GraphGenerator, VarName)
 {
-    // do nothing -> see "GenerateVarNameValue" and "GenerateVarNameAddress"
+    // do nothing -> see "GenerateVarNameLValue" and "GenerateVarNameRValue"
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarDecl)
@@ -218,7 +216,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     if (!isDirectCall)
     {
         /* Generate instructions for variable-name, to acquire 'this' pointer */
-        GenerateVarNameValue(*ast->procName, reinterpret_cast<const TACVar*>(args));
+        GenerateVarNameRValue(*ast->procName, reinterpret_cast<const TACVar*>(args));
         auto objVar = PopVar();
 
         if (objVar != ThisPtr())
@@ -1071,7 +1069,7 @@ DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)
         Visit(ast->procCall, &baseVar);
     }
     else if (ast->varName)
-        GenerateVarNameValue(*ast->varName);
+        GenerateVarNameRValue(*ast->varName);
 }
 
 DEF_VISIT_PROC(GraphGenerator, AllocExpr)
@@ -1105,7 +1103,7 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 
 DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
 {
-    GenerateVarNameValue(*ast->varName);
+    GenerateVarNameRValue(*ast->varName);
 }
 
 DEF_VISIT_PROC(GraphGenerator, InitListExpr)
@@ -1545,12 +1543,12 @@ void GraphGenerator::CopyAndPushResultVar(const TACVar& destVar)
     PushVar(destVar);
 }
 
-void GraphGenerator::GenerateVarNameValue(VarName& ast, const TACVar* baseVar)
+void GraphGenerator::GenerateVarNameRValue(VarName& ast, const TACVar* baseVar)
 {
     /* Check if this comes from a post-fix expression */
     if (baseVar)
     {
-        GenerateVarNameValueDynamic(&ast, baseVar);
+        GenerateVarNameRValueDynamic(&ast, baseVar);
         return;
     }
 
@@ -1567,17 +1565,17 @@ void GraphGenerator::GenerateVarNameValue(VarName& ast, const TACVar* baseVar)
             if (EvaluateExpr(*varDecl->initExpr, var))
                 PushVar(var);
             else
-                GenerateVarNameValueStatic(varDecl);
+                GenerateVarNameRValueStatic(varDecl);
         }
         else
-            GenerateVarNameValueStatic(varDecl);
+            GenerateVarNameRValueStatic(varDecl);
     }
     else
-        GenerateVarNameValueDynamic(&ast, baseVar);
+        GenerateVarNameRValueDynamic(&ast, baseVar);
 }
 
 // Generates TAC instructions to access a dynamic variable name, i.e. only for reading
-void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast, const TACVar* baseVar)
+void GraphGenerator::GenerateVarNameRValueDynamic(VarName* ast, const TACVar* baseVar)
 {
     if (!ast)
         return;
@@ -1647,7 +1645,7 @@ void GraphGenerator::GenerateVarNameValueDynamic(VarName* ast, const TACVar* bas
 }
 
 // Generates TAC instructions to access a static variable name, i.e. from global scope and only for reading
-void GraphGenerator::GenerateVarNameValueStatic(VarDecl* ast)
+void GraphGenerator::GenerateVarNameRValueStatic(VarDecl* ast)
 {
     /* Generate code to access global variable */
     auto var = TempVar();
@@ -1678,7 +1676,6 @@ void GraphGenerator::GenerateArrayAccess(ArrayAccess* ast, const TACVar& baseVar
 }
 
 #undef RETURN_BLOCK_REF
-//#undef VISIT_FLAGS
 
 /* --- CFG Generation --- */
 
@@ -1910,7 +1907,7 @@ TACVar GraphGenerator::LValueVar(const AST& ast)
 TACVar GraphGenerator::LValueVarFromVarName(const VarName& ast)
 {
     return LValueVar(ast.GetLast().declRef);
-    //GenerateVarNameAddress();
+    //GenerateVarNameLValue();
     //return PopVar();
 }
 
