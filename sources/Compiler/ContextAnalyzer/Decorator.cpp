@@ -111,18 +111,16 @@ Analyze signature of all classes (decorate attributes and type inheritance).
 Verify that the inheritance tree of all classes are free of cycles.
 
 (Phase 4)
-Register all class member procedures. Identifiers of procedures can be overloaded.
+Register all class member procedures and friends. Identifiers of procedures can be overloaded.
+Also analyze the procedure return types.
 
 (Phase 5)
 Register all class member variables.
 
 (Phase 6)
-Analyze signatures of all class member procedures.
-
-(Phase 7)
 Generate run-time type information (RTTI) for entire class hierarchy, i.e. recursively for the root class "Object".
 
-(Phase 8)
+(Phase 7)
 Analyze all procedure code blocks.
 */
 DEF_VISIT_PROC(Decorator, Program)
@@ -143,7 +141,7 @@ DEF_VISIT_PROC(Decorator, Program)
     state_ = States::VerifyClassInheritance;
     Visit(ast->classDeclStmnts);
 
-    /* (4) Register member procedures (and friends) */
+    /* (4) Register member procedures and friends, and analyze procedure return types */
     state_ = States::RegisterMemberProcs;
     Visit(ast->classDeclStmnts);
 
@@ -151,18 +149,14 @@ DEF_VISIT_PROC(Decorator, Program)
     state_ = States::RegisterMemberVars;
     Visit(ast->classDeclStmnts);
 
-    /* (6) Analyze return type of all member procedures */
-    state_ = States::AnalyzeProcReturn;
-    Visit(ast->classDeclStmnts);
-
-    /* (7) Generate RTTI for the entire class hierarchy */
+    /* (6) Generate RTTI for the entire class hierarchy */
     auto rootClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope("Object", ast->symTab, ast));
     if (rootClassDecl)
         rootClassDecl->GenerateRTTI(errorReporter_);
     else
         Error("missing root class \"Object\"");
 
-    /* (8) Analyze procedure code blocks */
+    /* (7) Analyze procedure code blocks */
     state_ = States::AnalyzeCode;
     Visit(ast->classDeclStmnts);
 }
@@ -423,7 +417,6 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
 
         case States::RegisterMemberProcs:
         case States::RegisterMemberVars:
-        case States::AnalyzeProcReturn:
         case States::AnalyzeCode:
             PushSymTab(*ast);
             {
@@ -497,9 +490,6 @@ DEF_VISIT_PROC(Decorator, ProcDeclStmnt)
         case States::RegisterMemberProcs:
             RegisterProcSymbol(*ast);
             Visit(ast->attribPrefix);
-            break;
-
-        case States::AnalyzeProcReturn:
             Visit(ast->procSignature->returnTypeDenoter);
             break;
 
