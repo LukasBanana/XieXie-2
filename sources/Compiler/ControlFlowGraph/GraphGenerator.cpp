@@ -728,9 +728,11 @@ DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
 
     /* Loop condition */
     cond->MakeInst<TACRelationInst>(OpCodes::CMPNE, ptrVar, ptrEndVar);
+    auto iterCFG = MakeBlock("ForEachIter");
 
     /* Build loop body CFG */
     PushBreakBB(out);
+    PushIterBB(iterCFG);
     {
         auto body = VisitAndLink(ast->codeBlock);
 
@@ -741,10 +743,11 @@ DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
 
             /* Add successors */
             cond->AddSucc(*body.in, "true");
-            body.out->AddSucc(*cond, "loop");
+            body.out->AddStrictSucc(*iterCFG);
+            iterCFG->AddSucc(*cond, "loop");
 
             /* Add instruction to increment the iterator */
-            body.out->MakeInst<TACModifyInst>(OpCodes::ADD, ptrVar, ptrVar, "4");
+            iterCFG->MakeInst<TACModifyInst>(OpCodes::ADD, ptrVar, ptrVar, "4");
         }
         else
         {
@@ -752,6 +755,7 @@ DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
             return;
         }
     }
+    PopIterBB();
     PopBreakBB();
 
     cond->AddSucc(*out, "false");

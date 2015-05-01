@@ -14,9 +14,9 @@ class Test {
 		int sum
 		
 		foreach x : list {
-			sum += x
-			if sum = 5 { break }
+			//if sum = 5 { break }
 			if sum = 6 { continue }
+			sum += x
 		}
 		
 		return sum
