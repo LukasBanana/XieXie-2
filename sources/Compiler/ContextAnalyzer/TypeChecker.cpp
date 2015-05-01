@@ -94,6 +94,9 @@ bool VerifyTypeCompatibility(const TypeDenoter& lhs, const TypeDenoter& rhs, std
 {
     try
     {
+        if (lhs.IsNullable() && rhs.IsNull())
+            return true;
+
         AssertTypeEquality(lhs, rhs);
 
         switch (lhs.Type())

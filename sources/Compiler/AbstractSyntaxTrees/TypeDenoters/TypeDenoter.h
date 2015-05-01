@@ -93,6 +93,11 @@ class TypeDenoter : public AST
         {
             return IsIntegral() || IsFloat();
         }
+        //! Returns true if this is a nullable type (pointer or array).
+        bool IsNullable() const
+        {
+            return IsPointer() || IsArray();
+        }
 
         //! Sets this type denoter to constant.
         virtual void SetConst(bool isConst)
