@@ -5,16 +5,43 @@
 /// Test for array code generation
 class Test {
 	
-	int test1(int x) {
+	static void print(int x) {
+		Intrinsics.printInt(x)
+		Intrinsics.printLn(0)
+	}
+	
+	static void main() {
 		
-		var list := new int[](10)
+		var list := Test.genArray1()
+		Test.print(Test.sum1(list))
+		Test.print(Test.sum2(list))
 		
-		for int i := 0 ; i < 10 ; i++ {
-			x += list[i]
+	}
+	
+	static int[] genArray1() {
+		
+		var list :=
+		//	new int[](10)
+			{ 1, 2, 3 }
+		
+		return list
+		
+	}
+	
+	static int sum1(int[] list) {
+		int n
+		foreach x : list {
+			n += x
 		}
-		
-		return x//list[x]
-		
+		return n
+	}
+	
+	static int sum2(int[] list) {
+		int n
+		for int i := 0 ; i < list.size() ; i++ {
+			n += list[i]
+		}
+		return n
 	}
 	
 }

@@ -6,13 +6,27 @@
 class Test {
 	
 	static void main() {
+		Test.testForLoop()
+		Test.testRangeForLoop()
 		Test.testForEachLoop(null)
 		Test.testWhileLoop(10)
 		Test.testDoWhileLoop(15)
+		Test.testRepeatLoop(20)
 	}
 	
 	static bool getBoolean() {
 		return true
+	}
+	
+	static int testForLoop() {
+		
+		int count
+		for float f := 0.0 ; f < 3.5 ; f += 0.1 {
+			count++
+		}
+		
+		return count
+		
 	}
 	
 	static int testRangeForLoop() {
@@ -65,6 +79,20 @@ class Test {
 			if i > 100 { break }
 			Intrinsics.printInt(i)
 		} while i < n
+		
+	}
+	
+	static void testRepeatLoop(int n) {
+		
+		int i
+		repeat {
+			
+			i++
+			if i > n/2 { continue }
+			if i > 100 { break }
+			Intrinsics.printInt(i)
+			
+		}
 		
 	}
 	
