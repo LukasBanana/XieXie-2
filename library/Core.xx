@@ -72,7 +72,9 @@ extern class String {
 	String@ append(int rhs)
 	String@ append(float rhs)
 	
-	String subString(int pos, int len := -1)
+	String subString(int pos, int len := String.end)
+	
+	int find(String search, int from := 0)
 	
 	void setChar(int pos, int char)
 	int getChar(int pos)
@@ -111,10 +113,7 @@ extern class Array {
 	
 	void append(Object entry)
 	void insert(Object entry, int pos)
-	void remove(int pos)
-	
-	void setEntry(int pos, Object entry)
-	Object getEntry(int pos)
+	bool remove(int pos)
 	
 	//! Returns the index (beginning from 0) for the entry or -1, if the array does not contain it
 	int find(Object entry, int from := 0)

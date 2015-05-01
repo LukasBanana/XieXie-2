@@ -411,6 +411,8 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
 {
     auto ast = GenClass("String");
 
+    GenStaticConst(*ast, "end", GenIntExpr("-1"));
+
     GenReleaseProc(*ast);
     GenInitProc(*ast);
     GenInitProc(*ast, GenParam(Int(), "size"));
@@ -429,6 +431,7 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     GenMemberProc(*ast, String(), "append", GenParam(Int(), "rhs"));
     GenMemberProc(*ast, String(), "append", GenParam(Float(), "rhs"));
     GenMemberProc(*ast, String(), "subString", ( GenParam(Int(), "pos"), GenParam(Int(), "len", GenIntExpr("-1")) ));
+    GenMemberProc(*ast, Int(), "find", ( GenParam(String(), "search"), GenParam(Int(), "from", GenIntExpr("0")) ));
     GenMemberProc(*ast, Void(), "setChar", ( GenParam(Int(), "pos"), GenParam(Int(), "char") ));
     GenMemberProc(*ast, Int(), "getChar", GenParam(Int(), "pos"));
     GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrOverrideFinal());
@@ -445,10 +448,15 @@ static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& i
     GenInitProc(*ast, GenParam(Int(), "size"));
 
     GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"), AttrOverride());
-    //GenMemberProc(*ast, GenericArray(), "copy");
+    GenMemberProc(*ast, GenPointerType(ident), "copy");
     GenMemberProc(*ast, Int(), "size");
     GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
     GenMemberProc(*ast, Bool(), "empty");
+    GenMemberProc(*ast, Void(), "append", GenParam(Object(), "entry"));
+    GenMemberProc(*ast, Void(), "insert", ( GenParam(Object(), "entry"), GenParam(Int(), "pos") ));
+    GenMemberProc(*ast, Bool(), "remove", GenParam(Int(), "pos"));
+    GenMemberProc(*ast, Int(), "find", ( GenParam(Object(), "entry"), GenParam(Int(), "from", GenIntExpr("0")) ));
+    GenMemberProc(*ast, Bool(), "contains", GenParam(Object(), "entry"));
     GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrOverrideFinal());
 
     return ast;

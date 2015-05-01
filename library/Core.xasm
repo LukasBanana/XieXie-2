@@ -507,6 +507,13 @@ CString.Pappend,F?rhs:
 ; String String.subString(String this, int pos, int len)
 CString.PsubString,I?pos,I?len:
 	; ...
+	mov $ar, 0 ; !!!
+	ret 2
+
+; int String.find(String this, String search, int from)
+CString.Pfind,R@String?search,I?from:
+	; ...
+	mov $ar, -1 ; !!!
 	ret 2
 
 ; void String.setChar(String this, int pos, int char)
@@ -546,6 +553,7 @@ String.vtable:
 	.word @CString.Pappend,I?rhs
 	.word @CString.Pappend,F?rhs
 	.word @CString.PsubString,I?pos,I?len
+	.word @CString.Pfind,R@String?search,I?from
 	.word @CString.PsetChar,I?pos,I?char
 	.word @CString.PgetChar,I?pos
 
@@ -616,49 +624,187 @@ CArray.Pinit,I?size:
 	; ...
 	ret 1
 
+; bool Array.equals(Array this, Object rhs)
+CArray.Pequals,R@Object?rhs:
+	; ...
+	ret 1
+
+; String Array.toString(Array this)
+CArray.PtoString:
+	; ...
+	ret
+
+; int Array.pointer(Array this)
+CArray.Ppointer:
+	; ...
+	ret
+
+; void Array.init(Array this, int size)
+CArray.Pinit,I?size:
+	; ...
+	ret 1
+
+; Array Array.copy(Array this)
+CArray.Pcopy:
+	; ...
+	ret
+
+; int Array.size(Array this)
+CArray.Psize:
+	; ...
+	ret
+
+; void Array.resize(Array this, int size)
+CArray.Presize,I?size:
+	; ...
+	ret 1
+
+; bool Array.empty(Array this)
+CArray.Pempty:
+	; ...
+	ret
+
+; void Array.append(Array this, Object entry)
+CArray.Pappend,R@Object?entry:
+	; ...
+	ret 1
+
+; void Array.insert(Array this, Object entry, int pos)
+CArray.Pinsert,R@Object?entry,I?pos:
+	; ...
+	ret 2
+
+; bool Array.remove(Array this, int pos)
+CArray.Premove,I?pos:
+	; ...
+	ret 1
+
+; int Array.find(Array this, Object entry, int from)
+CArray.Pfind,R@Object?entry,I?from:
+	; ...
+	ret 2
+
+; bool Array.contains(Array this, Object entry)
+CArray.Pcontains,R@Object?entry:
+	; ...
+	ret 1
+
 Array.vtable:
 	.word @CArray.Prelease
 	.word @CArray.Pinit
 	.word @CObject.PtypeID
 	.word @CObject.PrefCount
-;	.word @CArray.Pequals,R@Object?rhs
-;	.word @CArray.PtoString
-;	.word @CArray.Ppointer
-;	.word @CArray.Pinit,I?size
-;	.word @CArray.Pcopy
-;	.word @CArray.Psize
-;	.word @CArray.Presize,I?size
-;	.word @CArray.Pempty
-;	.word @CArray.Padd,R@Object?entry
-;	.word @CArray.Premove,I?pos
+	.word @CArray.Pequals,R@Object?rhs
+	.word @CArray.PtoString
+	.word @CArray.Ppointer
+	.word @CArray.Pinit,I?size
+	.word @CArray.Pcopy
+	.word @CArray.Psize
+	.word @CArray.Presize,I?size
+	.word @CArray.Pempty
+	.word @CArray.Pappend,R@Object?entry
+	.word @CArray.Pinsert,R@Object?entry,I?pos
+	.word @CArray.Premove,I?pos
+	.word @CArray.Pfind,R@Object?entry,I?from
+	.word @CArray.Pcontains,R@Object?entry
 
 
-; ------- PrimArray Class -------
-; built-in array for built-in types 'int' and 'float' and for all arrays of 'weak-references'
+; ------- IntArray Class -------
+; built-in array for built-in type 'int'
 
-; PrimArray:
+; IntArray:
 ;	Object	super	( 0)
 ;	int		size	(12) <- number of entries
 ;	int		bufSize	(16) <- actual number of entries
 ;	int		buffer	(20)
 
-; todo...
+; void IntArray.release(Object this)
+CIntArray.Prelease:
+	; ...
+	ret
 
-;PrimArray.vtable:
-;	.word @PrimArray.Prelease
-;	.word @PrimArray.Pinit
-;	.word @CObject.PtypeID
-;	.word @CObject.PrefCount
-;	.word @PrimArray.Pequals,R@Object?rhs
-;	.word @PrimArray.PtoString
-;	.word @PrimArray.Ppointer
-;	.word @PrimArray.Pinit,I?size
-;	.word @PrimArray.Pcopy
-;	.word @PrimArray.Psize
-;	.word @PrimArray.Presize,I?size
-;	.word @PrimArray.Pempty
-;	.word @PrimArray.Padd,R@Object?entry
-;	.word @PrimArray.Premove,I?pos
+; String IntArray.toString(IntArray this)
+CIntArray.PtoString:
+	; ...
+	ret
+
+; int IntArray.find(IntArray this, int entry, int from)
+CIntArray.Pfind,I?entry,I?from:
+	; ...
+	ret 2
+
+; bool IntArray.find(IntArray this, int entry)
+CIntArray.Pcontains,I?entry:
+	; ...
+	ret 1
+
+IntArray.vtable:
+	.word @CIntArray.Prelease
+	.word @CArray.Pinit
+	.word @CObject.PtypeID
+	.word @CObject.PrefCount
+	.word @CArray.Pequals,R@Object?rhs
+	.word @CIntArray.PtoString
+	.word @CArray.Ppointer
+	.word @CArray.Pinit,I?size
+	.word @CArray.Pcopy
+	.word @CArray.Psize
+	.word @CArray.Presize,I?size
+	.word @CArray.Pempty
+	.word @CArray.Pappend,R@Object?entry
+	.word @CArray.Pinsert,R@Object?entry,I?pos
+	.word @CArray.Premove,I?pos
+	.word @CIntArray.Pfind,I?entry,I?from
+	.word @CIntArray.Pcontains,I?entry
+
+
+; ------- FloatArray Class -------
+; built-in array for built-in type 'float'
+
+; FloatArray:
+;	Object	super	( 0)
+;	int		size	(12) <- number of entries
+;	int		bufSize	(16) <- actual number of entries
+;	int		buffer	(20)
+
+; void FloatArray.release(Object this)
+CFloatArray.Prelease:
+	; ...
+	ret
+
+; String FloatArray.toString(FloatArray this)
+CFloatArray.PtoString:
+	; ...
+	ret
+
+; int FloatArray.find(FloatArray this, float entry, int from)
+CFloatArray.Pfind,F?entry,I?from:
+	; ...
+	ret 2
+
+; bool FloatArray.find(FloatArray this, float entry)
+CFloatArray.Pcontains,F?entry:
+	; ...
+	ret 1
+
+FloatArray.vtable:
+	.word @CFloatArray.Prelease
+	.word @CArray.Pinit
+	.word @CObject.PtypeID
+	.word @CObject.PrefCount
+	.word @CArray.Pequals,R@Object?rhs
+	.word @CFloatArray.PtoString
+	.word @CArray.Ppointer
+	.word @CArray.Pinit,I?size
+	.word @CArray.Pcopy
+	.word @CArray.Psize
+	.word @CArray.Presize,I?size
+	.word @CArray.Pempty
+	.word @CArray.Pappend,R@Object?entry
+	.word @CArray.Pinsert,R@Object?entry,I?pos
+	.word @CArray.Premove,I?pos
+	.word @CFloatArray.Pfind,F?entry,I?from
+	.word @CFloatArray.Pcontains,F?entry
 
 
 ; ------- BoolArray Class -------
@@ -715,6 +861,7 @@ BoolArray.vtable:
 	.word @CBoolArray.Pinit
 	.word @CObject.PtoString
 	.word @CBoolArray.Pinit,I?size
+	; ...
 
 
 ; ------- Intrinsics Class -------
