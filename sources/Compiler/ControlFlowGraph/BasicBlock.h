@@ -88,9 +88,26 @@ class BasicBlock
         //! Makes a new instruction and appends it at end of the instruction list of this basic block.
         template <typename T, typename... Args> T* MakeInst(Args&&... args)
         {
+            /* Make new TAC instruction and append at the end of the list */
             auto inst = MakeUnique<T>(std::forward<Args>(args)...);
             auto instRef = inst.get();
             insts.emplace_back(std::move(inst));
+            return instRef;
+        }
+
+        //! Makes a new instruction and appends it at end of the instruction list of this basic block.
+        template <typename T, typename... Args> T* InsertInst(size_t position, Args&&... args)
+        {
+            /* Make new TAC instruction */
+            auto inst = MakeUnique<T>(std::forward<Args>(args)...);
+            auto instRef = inst.get();
+
+            /* Append or insert instruction */
+            if (position < insts.size())
+                insts.insert(insts.begin() + position, std::move(inst));
+            else
+                insts.emplace_back(std::move(inst));
+
             return instRef;
         }
 
