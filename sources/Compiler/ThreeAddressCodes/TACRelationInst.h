@@ -24,6 +24,7 @@ class TACRelationInst : public TACInst
         
         TACRelationInst() = default;
         TACRelationInst(const TACVar& lhs, const TACVar& rhs);
+        TACRelationInst(OpCodes opcode, const TACVar& lhs, const TACVar& rhs);
 
         Types Type() const override;
         std::string ToString() const override;

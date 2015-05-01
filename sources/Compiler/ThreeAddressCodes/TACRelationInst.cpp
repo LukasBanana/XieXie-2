@@ -22,6 +22,12 @@ TACRelationInst::TACRelationInst(const TACVar& lhs, const TACVar& rhs) :
     srcRhs  { rhs          }
 {
 }
+TACRelationInst::TACRelationInst(OpCodes opcode, const TACVar& lhs, const TACVar& rhs) :
+    TACInst { opcode },
+    srcLhs  { lhs    },
+    srcRhs  { rhs    }
+{
+}
 
 TACInst::Types TACRelationInst::Type() const
 {
