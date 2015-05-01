@@ -91,13 +91,14 @@ void BasicBlock::RemoveSucc(BasicBlock& bb)
         return;
 
     /* Remove block from the list */
-    succ_.erase(it);
+    auto place = succ_.erase(it);
 
     /* Add all successors of the input block to this block and replace its predecessor to this block */
     for (const auto& next : bb.GetSucc())
     {
         next->ReplacePred(bb, this);
-        succ_.push_back(next);
+        place = succ_.insert(place, next);
+        ++place;
     }
 
     /* Remove this block from the predecessor list of the specified block */
