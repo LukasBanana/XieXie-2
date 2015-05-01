@@ -71,9 +71,19 @@ void Optimizer::OptimizeProgram(CFGProgram& program)
 
 void Optimizer::OptimizeGraph(BasicBlock& root)
 {
-    KillBranches().Transform(root);
-    BlockMerge  ().Transform(root);
-    BlockClean  ().Transform(root);
+    static const unsigned char maxNumPasses = 3;
+    
+    for (unsigned char i = 0; i < maxNumPasses; ++i)
+    {
+        bool hasChanged = false;
+
+        Opt<KillBranches>(root, hasChanged);
+        Opt<BlockMerge  >(root, hasChanged);
+        Opt<BlockClean  >(root, hasChanged);
+
+        if (!hasChanged)
+            break;
+    }
 }
 
 

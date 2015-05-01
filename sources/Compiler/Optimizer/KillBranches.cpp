@@ -26,21 +26,32 @@ void KillBranches::TransformHierarchy(BasicBlock& basicBlock, BasicBlock::VisitS
 
     if (!insts.empty() && insts.back()->Type() == TACInst::Types::Relation && succ.size() == 2)
     {
-        /* Check if a branch can be killed */
-        const auto& relationInst = static_cast<const TACRelationInst&>(*insts.back());
-        if (relationInst.IsAlwaysTrue())
+        /* Check if 'then' and 'else' branches point to the same successor */
+        if (succ[0].succ == succ[1].succ)
         {
-            /* Kill 'false' branch */
+            /* Kill one of the two branches */
             basicBlock.KillSucc(*succ.back());
             insts.pop_back();
             hasChanged = true;
         }
-        else if (relationInst.IsAlwaysFalse())
+        else
         {
-            /* Kill 'true' branch */
-            basicBlock.KillSucc(*succ.front());
-            insts.pop_back();
-            hasChanged = true;
+            /* Check if a condition can be evaluated at compile time */
+            const auto& relationInst = static_cast<const TACRelationInst&>(*insts.back());
+            if (relationInst.IsAlwaysTrue())
+            {
+                /* Kill 'false' branch */
+                basicBlock.KillSucc(*succ.back());
+                insts.pop_back();
+                hasChanged = true;
+            }
+            else if (relationInst.IsAlwaysFalse())
+            {
+                /* Kill 'true' branch */
+                basicBlock.KillSucc(*succ.front());
+                insts.pop_back();
+                hasChanged = true;
+            }
         }
     }
 
