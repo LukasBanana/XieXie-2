@@ -16,8 +16,15 @@ using namespace XieXie;
 
 void VerifyCommand::Execute(StreamParser& input, Log& output)
 {
+    /*
+    Setup compilation configuration, and skip "assembly",
+    since this command shall not create any output file!
+    */
     CompileConfig config;
     config.flags = CompileFlags::Warn;
+
+    if (output.verbose)
+        config.flags |= CompileFlags::Verbose;
 
     /* Parse input filenames */
     while (input.Get() == "-f" || input.Get() == "--file")
@@ -40,7 +47,7 @@ void VerifyCommand::Execute(StreamParser& input, Log& output)
     if (Compile(config, &output.stream))
         output.Success("verification successful");
     else
-        output.Error("verification failed");
+        output.Error("verification failed", false);
 }
 
 void VerifyCommand::Help(HelpPrinter& printer) const

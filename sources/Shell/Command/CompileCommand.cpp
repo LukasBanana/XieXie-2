@@ -13,6 +13,8 @@
 #include <fstream>
 
 
+using namespace XieXie;
+
 void CompileCommand::Execute(StreamParser& input, Log& output)
 {
     /* --- Compilation --- */
@@ -42,10 +44,10 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     auto flags = GetCompilationFlags();
 
     if (output.verbose)
-        flags << XieXie::CompileFlags::Verbose;
+        flags << CompileFlags::Verbose;
     
     /* Setup compilation configuration */
-    XieXie::CompileConfig config;
+    CompileConfig config;
 
     for (const auto& source : sources_)
     {
@@ -64,11 +66,11 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
     config.flags        = flags;
 
     /* Compile code */
-    if (XieXie::Compile(config, &output.stream))
+    if (Compile(config, &output.stream))
     {
         /* Assemble code */
         config.assembly->seekg(0);
-        auto byteCode = XieXie::Assemble(*config.assembly, &output.stream);
+        auto byteCode = Assemble(*config.assembly, &output.stream);
         if (byteCode)
         {
             /* Write byte code to file */
@@ -154,14 +156,13 @@ std::string CompileCommand::OutputFilename(const std::string& inputFilename, con
 
 BitMask CompileCommand::GetCompilationFlags() const
 {
-    using Ty = XieXie::CompileFlags;
     BitMask flags;
 
-    if ( options_.optimize   ) flags << Ty::Optimize;
-    if ( options_.warnings   ) flags << Ty::Warn;
-    if ( options_.showAST    ) flags << Ty::ShowAST;
-    if ( options_.showCFG    ) flags << Ty::ShowCFG;
-    if ( options_.showTokens ) flags << Ty::ShowTokens;
+    if ( options_.optimize   ) flags << CompileFlags::Optimize;
+    if ( options_.warnings   ) flags << CompileFlags::Warn;
+    if ( options_.showAST    ) flags << CompileFlags::ShowAST;
+    if ( options_.showCFG    ) flags << CompileFlags::ShowCFG;
+    if ( options_.showTokens ) flags << CompileFlags::ShowTokens;
 
     return flags;
 }

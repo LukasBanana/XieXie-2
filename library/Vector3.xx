@@ -9,13 +9,14 @@
 Vector3 class with components: x, y, z.
 \author Lukas Hermanns
 */
+[[final]]
 class Vector3 {
 	
 	init() {}
-	init(float xx, float yy, float zz) {
-		x := xx
-		y := yy
-		z := zz
+	init(float x, float y, float z) {
+		this.x := x
+		this.y := y
+		this.z := z
 	}
 	init(Vector3 rhs) {
 		if rhs != null {
@@ -41,17 +42,28 @@ class Vector3 {
 		}
 	}
 	
-	//! Computes the squared length of this vector.
+	/// Computes the squared length of this vector.
 	float lengthSq() {
-		return Vector3.dot(this, this)
+		return x*x + y*y + z*z
 	}
 	
-	//! Computes the length of this vector.
+	/// Computes the length of this vector.
 	float length() {
-		return Intrinsics.sqrt(lengthSq())
+		return Math.sqrt(lengthSq())
 	}
 	
-	//! Computes the scalar product for lhs and rhs.
+	/// Normalizes this vector to the unit length 1.0.
+	void normalize() {
+		var len := lengthSq()
+		if len != 0.0 and len != 1.0 {
+			len := 1.0 / Math.sqrt(len)
+			x *= len
+			y *= len
+			z *= len
+		}
+	}
+	
+	/// Computes the scalar product for lhs and rhs.
 	static float dot(Vector3 lhs, Vector3 rhs) {
 		if lhs != null and rhs != null {
 			return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z
@@ -60,7 +72,7 @@ class Vector3 {
 		}
 	}
 	
-	//! Computes the cross product for lhs and rhs.
+	/// Computes the cross product for lhs and rhs.
 	static Vector3 cross(Vector3 lhs, Vector3 rhs) {
 		if lhs != null and rhs != null {
 			return new Vector3(
