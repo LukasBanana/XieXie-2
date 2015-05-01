@@ -56,7 +56,7 @@ void CompileCommand::Execute(StreamParser& input, Log& output)
             return;
         }
         else
-            config.sources.push_back({ file, source });
+            config.sources.push_back({ source, file });
     }
 
     config.assembly     = assembly.get();

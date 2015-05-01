@@ -267,13 +267,24 @@ static bool CompileExt(const CompileConfig& config, Log* log, ErrorReporter& err
         /* Decorate program */
         if (DecorateProgram(state))
         {
-            /* Transform to CFG */
-            auto cfgProgram = GenerateCFG(state);
-            if (cfgProgram)
+            if (config.assembly)
             {
-                /* Generate assembler code */
-                if (GenerateCode(config, state))
-                    result = true;
+                /* Transform to CFG */
+                auto cfgProgram = GenerateCFG(state);
+                if (cfgProgram)
+                {
+                    /* Generate assembler code */
+                    if (GenerateCode(config, state))
+                        result = true;
+                }
+            }
+            else
+            {
+                /*
+                If code generation is to be ignored,
+                set result to 'true' for success here
+                */
+                result = true;
             }
         }
     }
@@ -333,7 +344,7 @@ static VirtualMachine::ByteCodePtr CompileFromStream(
     std::stringstream assembly;
 
     CompileConfig config;
-    config.sources  = { { std::move(inputStream), filename } };
+    config.sources  = { { filename, std::move(inputStream) } };
     config.assembly = &assembly;
     config.flags    = compileFlags;
 

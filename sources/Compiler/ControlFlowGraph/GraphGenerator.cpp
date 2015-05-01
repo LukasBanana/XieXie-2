@@ -759,7 +759,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     /* Create procedure CFG */
     auto root = CT()->CreateRootBasicBlock(*ast, procDisplay);
 
-    #if 1//!DEBUGGING!
+    #if 1//!!!DEBUGGING!!!
     root->MakeInst<TACModifyInst>(OpCodes::ADD, TACVar::varStackPtr, TACVar::varStackPtr, "100");
     #endif
 

@@ -26,7 +26,7 @@ class CommandFactory
         CommandFactory(const CommandFactory&) = delete;
         CommandFactory& operator = (const CommandFactory&) = delete;
 
-        using CommandList = std::vector<std::unique_ptr<Command>>;
+        using CommandList = std::vector<CommandPtr>;
         using CommandMap = std::map<std::string, Command*>;
 
         //! Returns the instance of this singleton.
@@ -36,7 +36,7 @@ class CommandFactory
         Registers the new command under the specified names.
         \throws std::invalid_argument If the any of the names is already used for another command.
         */
-        void RegisterCommand(const std::initializer_list<std::string>& names, std::unique_ptr<Command>&& command);
+        void RegisterCommand(const std::initializer_list<std::string>& names, CommandPtr&& command);
 
         //! Returns the command with the specified name, or null if there is no such command.
         Command* FindCommand(const std::string& name) const;
@@ -53,8 +53,8 @@ class CommandFactory
 
         void EstablishCommands();
 
-        std::vector<std::unique_ptr<Command>>   commands_;
-        CommandMap                              commandMap_;
+        std::vector<CommandPtr> commands_;
+        CommandMap              commandMap_;
 
 };
 
@@ -78,6 +78,7 @@ DECL_COMMAND_IMPL( Help     );
 DECL_COMMAND_IMPL( Verbose  );
 DECL_COMMAND_IMPL( Color    );
 DECL_COMMAND_IMPL( Run      );
+DECL_COMMAND_IMPL( Verify   );
 
 #undef DECL_COMMAND_IMPL
 

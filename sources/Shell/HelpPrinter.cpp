@@ -52,6 +52,11 @@ void HelpPrinter::CommandHelp::Print(Log& log, char sep, size_t maxLen, size_t f
  * HelpPrinter class
  */
 
+HelpPrinter::HelpPrinter(bool briefHelp) :
+    briefHelp_{ briefHelp }
+{
+}
+
 void HelpPrinter::Command(const std::string& grammar, const std::string& desc)
 {
     CommandHelp help;
@@ -63,10 +68,13 @@ void HelpPrinter::Command(const std::string& grammar, const std::string& desc)
 
 void HelpPrinter::Flag(const std::string& grammar, const std::string& desc)
 {
-    if (!commandHelps_.empty())
-        commandHelps_.back().flagsInfos.push_back({ grammar, desc });
-    else
-        throw std::runtime_error("now command added to the help printer");
+    if (!briefHelp_)
+    {
+        if (!commandHelps_.empty())
+            commandHelps_.back().flagsInfos.push_back({ grammar, desc });
+        else
+            throw std::runtime_error("now command added to the help printer");
+    }
 }
 
 void HelpPrinter::Flags(const std::vector<std::pair<std::string, std::string>>& flags)
@@ -99,6 +107,21 @@ void HelpPrinter::Flush(Log& log, char sep)
 
     /* Clear command help list */
     commandHelps_.clear();
+}
+
+bool HelpPrinter::CompareSWO(const HelpPrinter& lhs, const HelpPrinter& rhs)
+{
+    return lhs.StringForSWO() < rhs.StringForSWO();
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+std::string HelpPrinter::StringForSWO() const
+{
+    return commandHelps_.empty() ? "" : commandHelps_.front().commandInfo.grammar;
 }
 
 

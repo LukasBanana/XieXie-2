@@ -20,23 +20,39 @@ class HelpPrinter
     
     public:
         
+        HelpPrinter() = default;
+        HelpPrinter(bool briefHelp);
+
         //! Adds a new command help description.
         void Command(const std::string& grammar, const std::string& desc);
 
         /**
         Adds a new flag help description.
+        \remarks If this help printer is only for brief helps, this function call has no effect.
         \throws std::runtime_error If "Command" has not been called first.
         */
         void Flag(const std::string& grammar, const std::string& desc);
 
-        //! Adds multiple flags at once.
+        /**
+        Adds multiple flags at once.
+        \see Flag
+        */
         void Flags(const std::vector<std::pair<std::string, std::string>>& flags);
 
         //! Prints all help messages to log output and clears the queue.
         void Flush(Log& log, char sep = '.');
 
+        /**
+        Compares the two help printers for a strict-weak-order (SWO).
+        \remarks This is used to sort the help output.
+        Only the grammar of the first two commands are compared.
+        */
+        static bool CompareSWO(const HelpPrinter& lhs, const HelpPrinter& rhs);
+
     private:
         
+        /* === Structures === */
+
         struct Help
         {
             void MaxLength(size_t& maxLen, size_t offset = 0) const;
@@ -55,7 +71,16 @@ class HelpPrinter
             std::vector<Help>   flagsInfos;
         };
 
-        std::vector<CommandHelp> commandHelps_;
+        /* === Functions === */
+
+        //! Returns the string which is used to compare two help printers for a strict-weak-order (SWO).
+        std::string StringForSWO() const;
+
+        /* === Members === */
+
+        std::vector<CommandHelp>    commandHelps_;
+
+        bool                        briefHelp_ = false;
 
 };
 

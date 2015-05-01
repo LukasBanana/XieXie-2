@@ -14,6 +14,8 @@
 #include "Log.h"
 #include "HelpPrinter.h"
 
+#include <memory>
+
 
 //! Shell command interface.
 class Command
@@ -32,6 +34,9 @@ class Command
         virtual void Help(HelpPrinter& printer) const = 0;
 
 };
+
+//! Command unique pointer type.
+using CommandPtr = std::unique_ptr<Command>;
 
 
 #endif

@@ -54,7 +54,7 @@ void ReplyCommand::Execute(StreamParser& input, Log& output)
 
 void ReplyCommand::Help(HelpPrinter& printer) const
 {
-    printer.Command("reply FILE [OPT]", "shows information from the specified byte code file (*.xbc)");
+    printer.Command("reply FILE [OPT+]", "shows information from the specified byte code file (*.xbc)");
 
     printer.Flags(
         {

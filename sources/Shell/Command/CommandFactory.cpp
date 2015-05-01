@@ -9,6 +9,8 @@
 #include "CompileCommand.h"
 #include "MakeUnique.h"
 
+#include <algorithm>
+
 
 CommandFactory::CommandFactory()
 {
@@ -21,8 +23,9 @@ CommandFactory* CommandFactory::Instance()
     return &instance;
 }
 
-void CommandFactory::RegisterCommand(const std::initializer_list<std::string>& names, std::unique_ptr<Command>&& command)
+void CommandFactory::RegisterCommand(const std::initializer_list<std::string>& names, CommandPtr&& command)
 {
+    /* Check if a name from the list is already registered */
     for (const auto& name : names)
     {
         if (!FindCommand(name))
@@ -30,7 +33,21 @@ void CommandFactory::RegisterCommand(const std::initializer_list<std::string>& n
         else
             throw std::invalid_argument("\"" + name + "\" is already a registered shell command");
     }
-    commands_.emplace_back(std::forward<std::unique_ptr<Command>>(command));
+
+    /* Add the new command */
+    commands_.emplace_back(std::forward<CommandPtr>(command));
+
+    /* Sort command list by names */
+    std::sort(
+        commands_.begin(), commands_.end(),
+        [](const CommandPtr& lhs, const CommandPtr& rhs)
+        {
+            HelpPrinter lhsHelp(true), rhsHelp(true);
+            lhs->Help(lhsHelp);
+            rhs->Help(rhsHelp);
+            return HelpPrinter::CompareSWO(lhsHelp, rhsHelp);
+        }
+    );
 }
 
 Command* CommandFactory::FindCommand(const std::string& name) const
@@ -48,6 +65,7 @@ void CommandFactory::EstablishCommands()
 {
     RegisterCommand({ "compile",  "C" }, MakeUnique< CompileCommand  >());
     RegisterCommand({ "assemble", "A" }, MakeUnique< AssembleCommand >());
+    RegisterCommand({ "verify", "V"   }, MakeUnique< VerifyCommand   >());
     RegisterCommand({ "run"           }, MakeUnique< RunCommand      >());
     RegisterCommand({ "log"           }, MakeUnique< LogCommand      >());
     RegisterCommand({ "prompt"        }, MakeUnique< PromptCommand   >());

@@ -60,14 +60,14 @@ struct CompileConfig
 {
     struct Source
     {
-        std::shared_ptr<std::istream>   stream;     //!< Input source stream.
         std::string                     filename;   //!< Optional filename.
+        std::shared_ptr<std::istream>   stream;     //!< Input source stream.
     };
 
     std::vector<Source>     sources;
-    std::iostream*          assembly;
+    std::iostream*          assembly    = nullptr;
 
-    int                     flags = CompileFlags::Default;
+    int                     flags       = CompileFlags::Default;
 
     std::string             cfgDumpPath;
 };
