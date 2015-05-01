@@ -786,6 +786,7 @@ DEF_VISIT_PROC(GraphGenerator, RepeatStmnt)
     auto out = MakeBlock("EndRepeat");
 
     PushBreakBB(out);
+    PushIterBB(in);
     {
         auto body = VisitAndLink(ast->codeBlock);
 
@@ -797,6 +798,7 @@ DEF_VISIT_PROC(GraphGenerator, RepeatStmnt)
         else
             in->AddSucc(*in);
     }
+    PopIterBB();
     PopBreakBB();
 
     RETURN_BLOCK_REF(VisitIO(in, out));
