@@ -976,7 +976,7 @@ void XASMGenerator::GenerateIntArrayLiteral(const CFGProgram::IntArrayLiteral& c
     GlobalLabel(constArray.ident);
     IncIndent();
     {
-        GenerateClassRTTI(BuiltinClasses::PrimArray);
+        GenerateClassRTTI(BuiltinClasses::IntArray);
         WORDField(size);                                    // PrimArray.size
         WORDField(size);                                    // PrimArray.bufSize
         WORDAddress(".buffer");                             // PrimArray.buffer
@@ -998,7 +998,7 @@ void XASMGenerator::GenerateFloatArrayLiteral(const CFGProgram::FloatArrayLitera
     GlobalLabel(constArray.ident);
     IncIndent();
     {
-        GenerateClassRTTI(BuiltinClasses::PrimArray);
+        GenerateClassRTTI(BuiltinClasses::FloatArray);
         WORDField(size);                                    // PrimArray.size
         WORDField(size);                                    // PrimArray.bufSize
         WORDAddress(".buffer");                             // PrimArray.buffer

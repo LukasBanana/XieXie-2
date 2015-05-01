@@ -1200,8 +1200,10 @@ DEF_VISIT_PROC(GraphGenerator, InitListExpr)
     auto arrayType = ast->GetDeducedTypeDenoter();
     if (arrayType)
     {
-        if (arrayType->IsIntegral() || arrayType->IsFloat())
-            classRTTI = &(BuiltinClasses::PrimArray);
+        if (arrayType->IsIntegral())
+            classRTTI = &(BuiltinClasses::IntArray);
+        else if (arrayType->IsFloat())
+            classRTTI = &(BuiltinClasses::FloatArray);
         else if (arrayType->IsBoolean())
             classRTTI = &(BuiltinClasses::BoolArray);
     }

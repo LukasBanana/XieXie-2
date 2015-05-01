@@ -439,7 +439,7 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     return ast;
 }
 
-static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& ident)
+static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& ident, const TypeDenoterPtr& entryType)
 {
     auto ast = GenClass(ident);
 
@@ -452,11 +452,11 @@ static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& i
     GenMemberProc(*ast, Int(), "size");
     GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
     GenMemberProc(*ast, Bool(), "empty");
-    GenMemberProc(*ast, Void(), "append", GenParam(Object(), "entry"));
-    GenMemberProc(*ast, Void(), "insert", ( GenParam(Object(), "entry"), GenParam(Int(), "pos") ));
+    GenMemberProc(*ast, Void(), "append", GenParam(entryType, "entry"));
+    GenMemberProc(*ast, Void(), "insert", ( GenParam(entryType, "entry"), GenParam(Int(), "pos") ));
     GenMemberProc(*ast, Bool(), "remove", GenParam(Int(), "pos"));
-    GenMemberProc(*ast, Int(), "find", ( GenParam(Object(), "entry"), GenParam(Int(), "from", GenIntExpr("0")) ));
-    GenMemberProc(*ast, Bool(), "contains", GenParam(Object(), "entry"));
+    GenMemberProc(*ast, Int(), "find", ( GenParam(entryType, "entry"), GenParam(Int(), "from", GenIntExpr("0")) ));
+    GenMemberProc(*ast, Bool(), "contains", GenParam(entryType, "entry"));
     GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrOverrideFinal());
 
     return ast;
@@ -464,17 +464,22 @@ static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& i
 
 static std::unique_ptr<ClassDeclStmnt> GenArrayClass()
 {
-    return GenGenericArrayClass("Array");
+    return GenGenericArrayClass("Array", Object());
 }
 
-static std::unique_ptr<ClassDeclStmnt> GenPrimArrayClass()
+static std::unique_ptr<ClassDeclStmnt> GenIntArrayClass()
 {
-    return GenGenericArrayClass("PrimArray");
+    return GenGenericArrayClass("IntArray", Int());
+}
+
+static std::unique_ptr<ClassDeclStmnt> GenFloatArrayClass()
+{
+    return GenGenericArrayClass("FloatArray", Float());
 }
 
 static std::unique_ptr<ClassDeclStmnt> GenBoolArrayClass()
 {
-    return GenGenericArrayClass("BoolArray");
+    return GenGenericArrayClass("BoolArray", Bool());
 }
 
 static std::unique_ptr<ClassDeclStmnt> GenBufferClass()
@@ -591,7 +596,8 @@ void GenerateBuiltinClasses(std::vector<std::unique_ptr<ClassDeclStmnt>>& classD
     classDeclList.push_back( GenObjectClass()     );
     classDeclList.push_back( GenStringClass()     );
     classDeclList.push_back( GenArrayClass()      );
-    classDeclList.push_back( GenPrimArrayClass()  );
+    classDeclList.push_back( GenIntArrayClass()   );
+    classDeclList.push_back( GenFloatArrayClass() );
     classDeclList.push_back( GenBoolArrayClass()  );
     classDeclList.push_back( GenBufferClass()     );
     classDeclList.push_back( GenIntrinsicsClass() );

@@ -639,11 +639,6 @@ CArray.Ppointer:
 	; ...
 	ret
 
-; void Array.init(Array this, int size)
-CArray.Pinit,I?size:
-	; ...
-	ret 1
-
 ; Array Array.copy(Array this)
 CArray.Pcopy:
 	; ...
@@ -728,6 +723,16 @@ CIntArray.PtoString:
 	; ...
 	ret
 
+; void IntArray.append(IntArray this, int entry)
+CIntArray.Pappend,I?entry:
+	; ...
+	ret 1
+
+; void IntArray.insert(IntArray this, int entry, int pos)
+CIntArray.Pinsert,I?entry,I?pos:
+	; ...
+	ret 2
+
 ; int IntArray.find(IntArray this, int entry, int from)
 CIntArray.Pfind,I?entry,I?from:
 	; ...
@@ -751,8 +756,8 @@ IntArray.vtable:
 	.word @CArray.Psize
 	.word @CArray.Presize,I?size
 	.word @CArray.Pempty
-	.word @CArray.Pappend,R@Object?entry
-	.word @CArray.Pinsert,R@Object?entry,I?pos
+	.word @CIntArray.Pappend,I?entry
+	.word @CIntArray.Pinsert,I?entry,I?pos
 	.word @CArray.Premove,I?pos
 	.word @CIntArray.Pfind,I?entry,I?from
 	.word @CIntArray.Pcontains,I?entry
@@ -777,6 +782,16 @@ CFloatArray.PtoString:
 	; ...
 	ret
 
+; void FloatArray.append(FloatArray this, float entry)
+CFloatArray.Pappend,F?entry:
+	; ...
+	ret 1
+
+; void FloatArray.insert(FloatArray this, float entry, int pos)
+CFloatArray.Pinsert,F?entry,I?pos:
+	; ...
+	ret 2
+
 ; int FloatArray.find(FloatArray this, float entry, int from)
 CFloatArray.Pfind,F?entry,I?from:
 	; ...
@@ -800,8 +815,8 @@ FloatArray.vtable:
 	.word @CArray.Psize
 	.word @CArray.Presize,I?size
 	.word @CArray.Pempty
-	.word @CArray.Pappend,R@Object?entry
-	.word @CArray.Pinsert,R@Object?entry,I?pos
+	.word @CFloatArray.Pappend,F?entry
+	.word @CFloatArray.Pinsert,F?entry,I?pos
 	.word @CArray.Premove,I?pos
 	.word @CFloatArray.Pfind,F?entry,I?from
 	.word @CFloatArray.Pcontains,F?entry

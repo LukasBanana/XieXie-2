@@ -35,11 +35,12 @@ struct ClassRTTI
 static const ClassRTTI Object      { 0, 12, "Object"     };
 static const ClassRTTI String      { 1, 24, "String"     };
 static const ClassRTTI Array       { 2, 24, "Array"      };
-static const ClassRTTI PrimArray   { 3, 24, "PrimArray"  };
-static const ClassRTTI BoolArray   { 4, 24, "BoolArray"  };
-static const ClassRTTI Buffer      { 5, 24, "Buffer"     };
-static const ClassRTTI Intrinsics  { 6, 12, "Intrinsics" };
-static const ClassRTTI Math        { 7, 12, "Math"       };
+static const ClassRTTI IntArray    { 3, 24, "IntArray"   };
+static const ClassRTTI FloatArray  { 4, 24, "FloatArray" };
+static const ClassRTTI BoolArray   { 5, 24, "BoolArray"  };
+static const ClassRTTI Buffer      { 6, 24, "Buffer"     };
+static const ClassRTTI Intrinsics  { 7, 12, "Intrinsics" };
+static const ClassRTTI Math        { 8, 12, "Math"       };
 
 //! Offset (in bytes) of the member "buffer" in the "Array" class.
 static const int Array_Offset_buffer = 20;
