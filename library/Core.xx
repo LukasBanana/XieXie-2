@@ -92,6 +92,9 @@ Array class for pointers.
 */
 extern class Array {
 	
+	/// String end position.
+	static const end := -1
+	
 	init()
 	init(int size)
 	
@@ -106,14 +109,15 @@ extern class Array {
 	
 	bool empty()
 	
-	void add(Object entry)
+	void append(Object entry)
+	void insert(Object entry, int pos)
 	void remove(int pos)
 	
 	void setEntry(int pos, Object entry)
 	Object getEntry(int pos)
 	
 	//! Returns the index (beginning from 0) for the entry or -1, if the array does not contain it
-	int find(Object entry, int startPos := 0)
+	int find(Object entry, int from := 0)
 	bool contains(Object entry)
 	
 	//! Returns the raw pointer (as integer) of this array.
