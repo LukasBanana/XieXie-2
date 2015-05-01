@@ -493,6 +493,7 @@ DEF_VISIT_PROC(GraphGenerator, WhileStmnt)
 
         /* Build loop body CFG */
         PushBreakBB(out);
+        PushIterBB(condCFG.in);
         {
             auto body = VisitAndLink(ast->codeBlock);
 
@@ -506,6 +507,7 @@ DEF_VISIT_PROC(GraphGenerator, WhileStmnt)
             else
                 condCFG.out->AddSucc(*condCFG.in, "true");
         }
+        PopIterBB();
         PopBreakBB();
 
         condCFG.outAlt->AddSucc(*out, "false");
@@ -654,18 +656,22 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
     else
         condInst->opcode = OpCodes::CMPGE;
 
+    auto iterCFG = MakeBlock("ForRangeIter");
+
     /* Build loop body CFG */
     PushBreakBB(out);
+    PushIterBB(iterCFG);
     {
         auto body = VisitAndLink(ast->codeBlock);
 
         if (body.in && body.out)
         {
             cond->AddSucc(*body.in, "true");
-            body.out->AddSucc(*cond, "loop");
+            body.out->AddSucc(*iterCFG, "iteration");
+            iterCFG->AddSucc(*cond, "loop");
 
             /* Add instruction to increment the iterator */
-            auto incInst = body.out->MakeInst<TACModifyInst>(idxVar, idxVar, ToStr(ast->rangeStep));
+            auto incInst = iterCFG->MakeInst<TACModifyInst>(idxVar, idxVar, ToStr(ast->rangeStep));
             if (isForwards)
                 incInst->opcode = OpCodes::ADD;
             else
@@ -677,6 +683,7 @@ DEF_VISIT_PROC(GraphGenerator, ForRangeStmnt)
             return;
         }
     }
+    PopIterBB();
     PopBreakBB();
 
     cond->AddSucc(*out, "false");

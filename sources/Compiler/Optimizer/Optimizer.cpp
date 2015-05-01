@@ -77,9 +77,9 @@ void Optimizer::OptimizeGraph(BasicBlock& root)
     {
         bool hasChanged = false;
 
-        Opt<KillBranches>(root, hasChanged);
-        Opt<BlockMerge  >(root, hasChanged);
-        Opt<BlockClean  >(root, hasChanged);
+        Opt< KillBranches >(root, hasChanged);
+        Opt< BlockMerge   >(root, hasChanged);
+        Opt< BlockClean   >(root, hasChanged);
 
         if (!hasChanged)
             break;
