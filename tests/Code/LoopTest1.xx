@@ -1,0 +1,72 @@
+
+// Loop Test 1
+// 01/05/2015
+
+/// Test for loop code generation
+class Test {
+	
+	static void main() {
+		Test.testForEachLoop(null)
+		Test.testWhileLoop(10)
+		Test.testDoWhileLoop(15)
+	}
+	
+	static bool getBoolean() {
+		return true
+	}
+	
+	static int testRangeForLoop() {
+		
+		int x
+		
+		for i : 1 .. 10 {
+			if i = 3 { continue }
+			else if i = 8 { break }
+			x += i*i
+		}
+		
+		return x
+		
+	}
+	
+	static int testForEachLoop(int[] list) {
+		
+		int sum
+		
+		foreach x : list {
+			sum += x
+			if sum = 5 { break }
+			if Test.getBoolean() { continue }
+			x++
+		}
+		
+		return sum
+		
+	}
+	
+	static void testWhileLoop(int n) {
+		
+		int i
+		while i < n {
+			i++
+			if i > n/2 { continue }
+			if i > 100 { break }
+			Intrinsics.printInt(i)
+		}
+		
+	}
+	
+	static void testDoWhileLoop(int n) {
+		
+		int i
+		do {
+			i++
+			if i > n/2 { continue }
+			if i > 100 { break }
+			Intrinsics.printInt(i)
+		} while i < n
+		
+	}
+	
+}
+
