@@ -202,7 +202,10 @@ static void ExtractParamBuiltin(const std::string& label, size_t& pos, std::stri
     ++pos;
 }
 
-static void ExtractParam(const std::string& label, size_t& pos, std::string& str, bool* hasParam = nullptr);
+static void ExtractParam(
+    const std::string& label, size_t& pos, std::string& str,
+    bool isArray = false, bool* hasParam = nullptr
+);
 
 static void ExtractParamArray(const std::string& label, size_t& pos, std::string& str)
 {
@@ -210,9 +213,7 @@ static void ExtractParamArray(const std::string& label, size_t& pos, std::string
         throw std::invalid_argument("expected '@' after array type denoter in label \"" + label + "\"");
 
     ++pos;
-    ExtractParam(label, pos, str);
-
-    str += "[]";
+    ExtractParam(label, pos, str, true);
 }
 
 static void ExtractIdent(const std::string& label, size_t& pos, const size_t end, std::string& str)
@@ -254,7 +255,7 @@ static void ExtractParamIdent(const std::string& label, size_t& pos, std::string
     ExtractIdent(label, pos, end, str);
 }
 
-static void ExtractParam(const std::string& label, size_t& pos, std::string& str, bool* hasParam)
+static void ExtractParam(const std::string& label, size_t& pos, std::string& str, bool isArray, bool* hasParam)
 {
     if (hasParam)
     {
@@ -280,6 +281,9 @@ static void ExtractParam(const std::string& label, size_t& pos, std::string& str
             ExtractParamPointer(label, pos, str);
             break;
     }
+
+    if (isArray)
+        str += "[]";
 
     if (pos < label.size() && label[pos] == '?')
         ExtractParamIdent(label, pos, str);
@@ -317,7 +321,7 @@ std::string DisplayLabel(const std::string& label)
             case 'F':
             case 'A':
             case 'R':
-                ExtractParam(label, pos, str, &hasParam);
+                ExtractParam(label, pos, str, false, &hasParam);
                 ++pos;
                 break;
             default:
