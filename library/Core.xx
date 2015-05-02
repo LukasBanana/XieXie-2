@@ -5,17 +5,14 @@
  * See "LICENSE.txt" for license information.
  */
 
-/**
-Root base object for all classes.
-\note typeID = 0
-*/
+/// Implicit base class of all other classes.
 extern class Object {
 	
-	/// Returns the reference count of this object
+	/// Returns the reference count of this object.
 	[[final]]
 	int refCount()
 	
-	/// Returns the type ID of this object
+	/// Returns the type ID of this object.
 	[[final]]
 	int typeID()
 	
@@ -35,25 +32,31 @@ extern class Object {
 	
 }
 
-/**
-UTF-8 string class.
-\note typeID = 1
-*/
+/// UTF-8 string class.
 extern class String {
 	
 	/// String end position.
 	static const end := -1
 	
+	/// Initializes an empty string.
 	init()
+	/// Initializes an string with 'size' characters.
 	init(int size)
+	/// Initailizes a string from the specified source.
 	init(String source)
 	
+	/// Returns true if this string is equal to the specified string instance.
 	[[override]]
 	bool equals(Object rhs)
 	
+	/// Returns a strong reference of this string.
 	[[override]]
 	String toString()
 	
+	/**
+	Returns a copy of this string instance.
+	@see String.init(String source)
+	*/
 	String copy()
 	
 	/// Returns the size (or rather length) of the string.
@@ -63,35 +66,90 @@ extern class String {
 	/// Adjusts the string size to the first appearance of a null terminator.
 	void adjust()
 	
+	/// Returns true if this string is empty, i.e. the string only contains the null terminator.
 	bool empty()
 	
+	/**
+	Appends the specified string at the end of this string.
+	@return Weak reference to this string.
+	*/
 	String@ append(String rhs)
+	/**
+	Appends the string representation of the specified object at the end of this string.
+	@return Weak reference to this string.
+	@see Object.toString
+	*/
 	String@ append(Object rhs)
-	
+	/**
+	Appends the specified value as string at the end of this string.
+	@param rhs Specifies the boolean value which is to be appended. If true, "true" is appended, otherwise "false".
+	@return Weak reference to this string.
+	*/
 	String@ append(bool rhs)
+	/**
+	Appends the specified value as string at the end of this string.
+	@param rhs Specifies the integer value which is to be appended.
+	@return Weak reference to this string.
+	*/
 	String@ append(int rhs)
+	/**
+	Appends the specified value as string at the end of this string.
+	@param rhs Specifies the floating-point value which is to be appended.
+	@return Weak reference to this string.
+	*/
 	String@ append(float rhs)
 	
-	String subString(int pos, int len := String.end)
+	/**
+	Returns a sub-string of this string.
+	@param from Specifies the start position from which the sub-string is to be fetched.
+	@param length Specifies the length of the sub-string. If this is 'String.end',
+	the length ranges to the end of this string. By default 'String.end'.
+	@param New instance of the sub-string.
+	*/
+	String subString(int from, int length := String.end)
 	
+	/**
+	Returns the position of the search string inside this string.
+	@param search Specifies the sub-string to search for inside this string. This is case sensitive!
+	@param from Specifies the start position from which the search shall begin.
+	@return Position (beginning with zero) of the sub-string 'search',
+	or 'String.end' if the sub-string could not be found.
+	*/
 	int find(String search, int from := 0)
 	
+	/**
+	Replaces a character in this string at the specified position.
+	@param pos Specifies the position where to replace the character.
+	If this is out of range, the procedure call has no effect.
+	@param char Specifies the new character value.
+	*/
 	void setChar(int pos, int char)
+	/**
+	Returns the character in this string at the specified position.
+	@param pos Specifies the position where to read the character.
+	@return The character in this string at position 'pos', or 0 if the position is out of range.
+	*/
 	int getChar(int pos)
+	
+	/// Returns true, if this string is equal to the string literal "true", and false otherwise.
+	bool toBool()
+	/// Returns the integer value of this string, or 0 if the string contains non-integer characters.
+	int toInt()
+	/// Returns the floating-point value of this string, or 0.0 if the string contains non-floating-point characters.
+	float toFloat()
 	
 	/**
 	Returns the raw pointer (as integer) which points to
 	the first character in this null terminated string.
+	@remarks This pointer is compliant to a 32-bit ANSI-C and ISO-C++ application.
 	*/
 	[[override, final]]
 	int pointer()
 	
 }
 
-/**
-Array class for pointers.
-\note typeID = 2
-*/
+/// Array class for pointers.
+[[final]]
 extern class Array {
 	
 	/// String end position.
@@ -125,35 +183,44 @@ extern class Array {
 	
 }
 
-/**
-Array class for built-in data types.
-\note typeID = 3
-*/
-extern class PrimArray {
+/// Array class for built-in integer data type.
+[[final]]
+extern class IntArray {
 	//...
 }
 
-/**
-Array class for built-in boolean data types.
-\note typeID = 4
-*/
+/// Array class for built-in floating-point data type.
+[[final]]
+extern class FloatArray {
+	//...
+}
+
+/// Array class for built-in boolean data type.
+[[final]]
 extern class BoolArray {
 	//...
 }
 
-/**
-General purpose buffer. This class manages a pointer.
-\note typeID = 5
-*/
+/// General purpose buffer. This class manages a pointer.
+[[final]]
 extern class Buffer {
+	
+	init()
+	/**
+	Initializes the buffer with the specified 'size' (in bytes),
+	and fills it with the value specified by 'fill'.
+	*/
+	init(int size, int fill := 0)
 	
 	[[override]]
 	bool equals(Object rhs)
 	
 	Buffer copy()
 	
+	/// Returns the size (in bytes) of this buffer.
 	int size()
-	void resize(int s)
+	/// Resizes this buffer (in bytes).
+	void resize(int size)
 	
 	void writeByte(int offset, int value)
 	int readByte(int offset)
@@ -165,9 +232,9 @@ extern class Buffer {
 	float readFloat(int offset)
 	
 	//! Writes the specified sub buffer into this buffer.
-	void writeBuffer(int offset, int size, Buffer subBuffer)
+	void writeBuffer(int offset, int size, Buffer buffer)
 	//! Reads this buffer into the specified sub buffer.
-	void readBuffer(int offset, int size, Buffer subBuffer)
+	void readBuffer(int offset, int size, Buffer buffer)
 	
 	//! Returns the raw pointer (as integer) of this buffer.
 	[[override, final]]
@@ -175,10 +242,7 @@ extern class Buffer {
 	
 }
 
-/**
-Low-level intrinsic functions.
-\note typeID = 6
-*/
+/// Low-level intrinsic functions.
 [[final]]
 extern class Intrinsics {
 	

@@ -99,6 +99,12 @@ static PointerTypeDenoterPtr String(bool isWeakRef = false)
     return GenPointerType("String", isWeakRef);
 }
 
+// Generate "Buffer" pointer type-denoter AST
+static PointerTypeDenoterPtr Buffer(bool isWeakRef = false)
+{
+    return GenPointerType("Buffer", isWeakRef);
+}
+
 
 /*
  * Attribute generation functions
@@ -430,7 +436,7 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     GenMemberProc(*ast, String(), "append", GenParam(Bool(), "rhs"));
     GenMemberProc(*ast, String(), "append", GenParam(Int(), "rhs"));
     GenMemberProc(*ast, String(), "append", GenParam(Float(), "rhs"));
-    GenMemberProc(*ast, String(), "subString", ( GenParam(Int(), "pos"), GenParam(Int(), "len", GenIntExpr("-1")) ));
+    GenMemberProc(*ast, String(), "subString", ( GenParam(Int(), "from"), GenParam(Int(), "length", GenIntExpr("-1")) ));
     GenMemberProc(*ast, Int(), "find", ( GenParam(String(), "search"), GenParam(Int(), "from", GenIntExpr("0")) ));
     GenMemberProc(*ast, Void(), "setChar", ( GenParam(Int(), "pos"), GenParam(Int(), "char") ));
     GenMemberProc(*ast, Int(), "getChar", GenParam(Int(), "pos"));
@@ -441,13 +447,14 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
 
 static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& ident, const TypeDenoterPtr& entryType)
 {
-    auto ast = GenClass(ident);
+    auto ast = GenClass(ident, AttrFinal());
 
     GenReleaseProc(*ast);
     GenInitProc(*ast);
     GenInitProc(*ast, GenParam(Int(), "size"));
 
     GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"), AttrOverride());
+    GenMemberProc(*ast, String(), "toString", ParamList(), AttrOverride());
     GenMemberProc(*ast, GenPointerType(ident), "copy");
     GenMemberProc(*ast, Int(), "size");
     GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
@@ -484,13 +491,28 @@ static std::unique_ptr<ClassDeclStmnt> GenBoolArrayClass()
 
 static std::unique_ptr<ClassDeclStmnt> GenBufferClass()
 {
-    auto ast = GenClass("Buffer");
+    auto ast = GenClass("Buffer", AttrFinal());
 
-    //...
-    GenMemberProc(*ast, Int(), "size");
-    GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
-    GenMemberProc(*ast, Bool(), "empty");
-    GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrOverrideFinal());
+    auto voidType   = Void();
+    auto intType    = Int();
+
+    GenReleaseProc(*ast);
+    GenInitProc(*ast);
+    GenInitProc(*ast, ( GenParam(intType, "size"), GenParam(intType, "fill", GenIntExpr("0")) ));
+
+    GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"), AttrOverride());
+    GenMemberProc(*ast, Buffer(), "copy");
+    GenMemberProc(*ast, intType, "size");
+    GenMemberProc(*ast, intType, "resize", GenParam(intType, "size"));
+    GenMemberProc(*ast, voidType, "writeByte", ( GenParam(intType, "offset"), GenParam(intType, "value") ));
+    GenMemberProc(*ast, intType, "readByte", GenParam(intType, "offset"));
+    GenMemberProc(*ast, voidType, "writeInt", ( GenParam(intType, "offset"), GenParam(intType, "value") ));
+    GenMemberProc(*ast, intType, "readInt", GenParam(intType, "offset"));
+    GenMemberProc(*ast, voidType, "writeFloat", ( GenParam(intType, "offset"), GenParam(Float(), "value") ));
+    GenMemberProc(*ast, Float(), "readFloat", GenParam(intType, "offset"));
+    GenMemberProc(*ast, voidType, "writeBuffer", ( GenParam(intType, "offset"), GenParam(intType, "size"), GenParam(Buffer(), "buffer") ));
+    GenMemberProc(*ast, voidType, "readBuffer", ( GenParam(intType, "offset"), GenParam(intType, "size"), GenParam(Buffer(), "buffer") ));
+    GenMemberProc(*ast, intType, "pointer", ParamList(), AttrOverrideFinal());
 
     return ast;
 }

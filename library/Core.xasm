@@ -183,6 +183,19 @@ String.copy_literal:
 	ret 1
 
 
+; ------- Shared Procedures -------
+
+; int <Array like Class>.pointer(Object this)
+CString.Ppointer:
+CArray.Ppointer:
+CIntArray.Ppointer:
+CFloatArray.Ppointer:
+CBoolArray.Ppointer:
+CBuffer.Ppointer:
+	ldw $ar, ($xr) 20	; load and return member this.buffer
+	ret
+
+
 ; ------- Object Class -------
 
 ; Object:
@@ -251,8 +264,8 @@ Object.vtable:
 
 ; String:
 ;	Object	super	( 0)
-;	int		size	(12) <- buffer size (in bytes)
-;	int		bufSize	(16) <- actual buffer size (in bytes)
+;	int		size	(12)
+;	int		bufSize	(16)
 ;	int		buffer	(20)
 
 ; void String.release(Object this)
@@ -504,8 +517,8 @@ CString.Pappend,F?rhs:
 	; ...
 	ret 1
 
-; String String.subString(String this, int pos, int len)
-CString.PsubString,I?pos,I?len:
+; String String.subString(String this, int from, int length)
+CString.PsubString,I?from,I?length:
 	; ...
 	mov $ar, 0 ; !!!
 	ret 2
@@ -527,11 +540,6 @@ CString.PgetChar,I?pos:
 	mov $ar, 0 ; !!!
 	ret 1
 
-; int String.pointer(Object this)
-CString.Ppointer:
-	ldw $ar, ($xr) 20	; load and return member this.buffer
-	ret
-
 String.vtable:
 	.word @CString.Prelease
 	.word @CString.Pinit
@@ -552,7 +560,7 @@ String.vtable:
 	.word @CString.Pappend,B?rhs
 	.word @CString.Pappend,I?rhs
 	.word @CString.Pappend,F?rhs
-	.word @CString.PsubString,I?pos,I?len
+	.word @CString.PsubString,I?from,I?length
 	.word @CString.Pfind,R@String?search,I?from
 	.word @CString.PsetChar,I?pos,I?char
 	.word @CString.PgetChar,I?pos
@@ -563,8 +571,8 @@ String.vtable:
 
 ; Array:
 ;	Object	super	( 0)
-;	int		size	(12) <- number of entries
-;	int		bufSize	(16) <- actual number of entries
+;	int		size	(12)
+;	int		bufSize	(16)
 ;	int		buffer	(20)
 
 ; void Array.release(Object this)
@@ -603,8 +611,9 @@ CArray.Prelease:
 
 ; void Array.init(Object this)
 CArray.Pinit:
-; void PrimArray.init(Object this)
-CPrimArray.Pinit:
+CIntArray.Pinit:
+CFloatArray.Pinit:
+CBoolArray.Pinit:
 	; this.size := 0
 	mov $r0, 0
 	stw $r0, ($xr) 12
@@ -621,6 +630,7 @@ CPrimArray.Pinit:
 
 ; void Array.init(Array this, int size)
 CArray.Pinit,I?size:
+CIntArray.Pinit,I?size:
 	; ...
 	ret 1
 
@@ -634,28 +644,31 @@ CArray.PtoString:
 	; ...
 	ret
 
-; int Array.pointer(Array this)
-CArray.Ppointer:
-	; ...
-	ret
-
 ; Array Array.copy(Array this)
 CArray.Pcopy:
+CIntArray.Pcopy:
+CFloatArray.Pcopy:
 	; ...
 	ret
 
 ; int Array.size(Array this)
 CArray.Psize:
+CIntArray.Psize:
+CFloatArray.Psize:
 	; ...
 	ret
 
 ; void Array.resize(Array this, int size)
 CArray.Presize,I?size:
+CIntArray.Presize,I?size:
+CFloatArray.Presize,I?size:
 	; ...
 	ret 1
 
 ; bool Array.empty(Array this)
 CArray.Pempty:
+CIntArray.Pempty:
+CFloatArray.Pempty:
 	; ...
 	ret
 
@@ -671,6 +684,8 @@ CArray.Pinsert,R@Object?entry,I?pos:
 
 ; bool Array.remove(Array this, int pos)
 CArray.Premove,I?pos:
+CIntArray.Premove,I?pos:
+CFloatArray.Premove,I?pos:
 	; ...
 	ret 1
 
@@ -709,14 +724,19 @@ Array.vtable:
 
 ; IntArray:
 ;	Object	super	( 0)
-;	int		size	(12) <- number of entries
-;	int		bufSize	(16) <- actual number of entries
+;	int		size	(12)
+;	int		bufSize	(16)
 ;	int		buffer	(20)
 
 ; void IntArray.release(Object this)
 CIntArray.Prelease:
 	; ...
 	ret
+
+; bool IntArray.equals(IntArray this, Object rhs)
+CIntArray.Pequals,R@Object?rhs:
+	; ...
+	ret 1
 
 ; String IntArray.toString(IntArray this)
 CIntArray.PtoString:
@@ -745,20 +765,20 @@ CIntArray.Pcontains,I?entry:
 
 IntArray.vtable:
 	.word @CIntArray.Prelease
-	.word @CArray.Pinit
+	.word @CIntArray.Pinit
 	.word @CObject.PtypeID
 	.word @CObject.PrefCount
-	.word @CArray.Pequals,R@Object?rhs
+	.word @CIntArray.Pequals,R@Object?rhs
 	.word @CIntArray.PtoString
-	.word @CArray.Ppointer
-	.word @CArray.Pinit,I?size
-	.word @CArray.Pcopy
-	.word @CArray.Psize
-	.word @CArray.Presize,I?size
-	.word @CArray.Pempty
+	.word @CIntArray.Ppointer
+	.word @CIntArray.Pinit,I?size
+	.word @CIntArray.Pcopy
+	.word @CIntArray.Psize
+	.word @CIntArray.Presize,I?size
+	.word @CIntArray.Pempty
 	.word @CIntArray.Pappend,I?entry
 	.word @CIntArray.Pinsert,I?entry,I?pos
-	.word @CArray.Premove,I?pos
+	.word @CIntArray.Premove,I?pos
 	.word @CIntArray.Pfind,I?entry,I?from
 	.word @CIntArray.Pcontains,I?entry
 
@@ -768,8 +788,8 @@ IntArray.vtable:
 
 ; FloatArray:
 ;	Object	super	( 0)
-;	int		size	(12) <- number of entries
-;	int		bufSize	(16) <- actual number of entries
+;	int		size	(12)
+;	int		bufSize	(16)
 ;	int		buffer	(20)
 
 ; void FloatArray.release(Object this)
@@ -804,20 +824,20 @@ CFloatArray.Pcontains,F?entry:
 
 FloatArray.vtable:
 	.word @CFloatArray.Prelease
-	.word @CArray.Pinit
+	.word @CFloatArray.Pinit
 	.word @CObject.PtypeID
 	.word @CObject.PrefCount
-	.word @CArray.Pequals,R@Object?rhs
+	.word @CFloatArray.Pequals,R@Object?rhs
 	.word @CFloatArray.PtoString
-	.word @CArray.Ppointer
-	.word @CArray.Pinit,I?size
-	.word @CArray.Pcopy
-	.word @CArray.Psize
-	.word @CArray.Presize,I?size
-	.word @CArray.Pempty
+	.word @CFloatArray.Ppointer
+	.word @CFloatArray.Pinit,I?size
+	.word @CFloatArray.Pcopy
+	.word @CFloatArray.Psize
+	.word @CFloatArray.Presize,I?size
+	.word @CFloatArray.Pempty
 	.word @CFloatArray.Pappend,F?entry
 	.word @CFloatArray.Pinsert,F?entry,I?pos
-	.word @CArray.Premove,I?pos
+	.word @CFloatArray.Premove,I?pos
 	.word @CFloatArray.Pfind,F?entry,I?from
 	.word @CFloatArray.Pcontains,F?entry
 
@@ -827,8 +847,8 @@ FloatArray.vtable:
 
 ; BoolArray:
 ;	Object	super	( 0)
-;	int		size	(12) <- number of entries
-;	int		bufSize	(16) <- actual number of entries
+;	int		size	(12)
+;	int		bufSize	(16)
 ;	int		buffer	(20)
 
 ; void BoolArray.release(Object this)
@@ -877,6 +897,100 @@ BoolArray.vtable:
 	.word @CObject.PtoString
 	.word @CBoolArray.Pinit,I?size
 	; ...
+
+
+; ------- Buffer Class -------
+; built-in class as general purpose buffer
+
+; Buffer:
+;	Object	super	( 0)
+;	int		size	(12)
+;	int		bufSize	(16)
+;	int		buffer	(20)
+
+; void Buffer.release(Buffer this)
+CBuffer.Prelease:
+	; ...
+	ret
+
+; void Buffer.init(Buffer this)
+CBuffer.Pinit:
+	; ...
+	ret
+
+; bool Buffer.equals(Buffer this, Object rhs)
+CBuffer.Pequals,R@Object?rhs:
+	; ...
+	ret 1
+
+CBuffer.Pinit,I?size,I?fill:
+	; ...
+	ret
+
+CBuffer.Pcopy:
+	; ...
+	ret
+
+CBuffer.Psize:
+	; ...
+	ret
+
+CBuffer.Presiz,I?size:
+	; ...
+	ret
+
+CBuffer.PwriteByte,I?offset,I?value:
+	; ...
+	ret
+
+CBuffer.PreadByte,I?offset:
+	; ...
+	ret
+
+CBuffer.PwriteInt,I?offset,I?value:
+	; ...
+	ret
+
+CBuffer.PreadInt,I?offset:
+	; ...
+	ret
+
+CBuffer.PwriteFloat,I?offset,F?value:
+	; ...
+	ret
+
+CBuffer.PreadFloat,I?offset:
+	; ...
+	ret
+
+CBuffer.PwriteBuffer,I?offset,I?size,R@Buffer?buffer:
+	; ...
+	ret
+
+CBuffer.PreadBuffer,I?offset,I?size,R@Buffer?buffer:
+	; ...
+	ret
+
+Buffer.vtable:
+	.word @CBuffer.Prelease
+	.word @CBuffer.Pinit
+	.word @CObject.PtypeID
+	.word @CObject.PrefCount
+	.word @CBuffer.Pequals,R@Object?rhs
+	.word @CObject.PtoString
+	.word @CBuffer.Ppointer
+	.word @CBuffer.Pinit,I?size,I?fill
+	.word @CBuffer.Pcopy
+	.word @CBuffer.Psize
+	.word @CBuffer.Presize,I?size
+	.word @CBuffer.PwriteByte,I?offset,I?value
+	.word @CBuffer.PreadByte,I?offset
+	.word @CBuffer.PwriteInt,I?offset,I?value
+	.word @CBuffer.PreadInt,I?offset
+	.word @CBuffer.PwriteFloat,I?offset,F?value
+	.word @CBuffer.PreadFloat,I?offset
+	.word @CBuffer.PwriteBuffer,I?offset,I?size,R@Buffer?buffer
+	.word @CBuffer.PreadBuffer,I?offset,I?size,R@Buffer?buffer
 
 
 ; ------- Intrinsics Class -------
