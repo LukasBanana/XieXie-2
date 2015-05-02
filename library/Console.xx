@@ -20,16 +20,28 @@ class Console {
 	}
 	
 	/// Writes the specified string to the console output.
-	static void write(String s) {
-		if s != null {
-			Intrinsics.print(s.pointer())
+	static void write(String value) {
+		if value != null {
+			Intrinsics.print(value.pointer())
 		}
 	}
 	
+	/// Writes the specified integer value with a new-line character to the console output.
+	static void writeLine(int value) {
+		Intrinsics.printInt(value)
+		Intrinsics.printLn(0)
+	}
+	
+	/// Writes the specified floating-point value with a new-line character to the console output.
+	static void writeLine(float value) {
+		Intrinsics.printFloat(value)
+		Intrinsics.printLn(0)
+	}
+	
 	/// Writes the specified string with a new-line character to the console output.
-	static void writeLine(String s) {
-		if s != null {
-			Intrinsics.printLn(s.pointer())
+	static void writeLine(String value) {
+		if value != null {
+			Intrinsics.printLn(value.pointer())
 		}
 	}
 	
