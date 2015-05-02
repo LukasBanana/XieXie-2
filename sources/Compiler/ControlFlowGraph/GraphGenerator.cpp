@@ -727,14 +727,13 @@ DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
     auto ptrVar = TempVar();
     in->MakeInst<TACHeapInst>(OpCodes::LDW, ptrVar, arrayVar, 20);
 
-    /* Generate code to get the end-pointer of the array buffer (ptrEndVar := (array.size << 2) + ptrVar) */
+    /* Generate code to get the end-pointer of the array buffer (ptrEndVar := array.size + ptrVar) */
     auto ptrEndVar = TempVar();
     in->MakeInst<TACHeapInst>(OpCodes::LDW, ptrEndVar, arrayVar, 12);
-    in->MakeInst<TACModifyInst>(OpCodes::SLL, ptrEndVar, ptrEndVar, "2");
     in->MakeInst<TACModifyInst>(OpCodes::ADD, ptrEndVar, ptrEndVar, ptrVar);
 
     /* Loop condition */
-    cond->MakeInst<TACRelationInst>(OpCodes::CMPNE, ptrVar, ptrEndVar);
+    cond->MakeInst<TACRelationInst>(OpCodes::CMPL, ptrVar, ptrEndVar);
     auto iterCFG = MakeBlock("ForEachIter");
 
     /* Build loop body CFG */
