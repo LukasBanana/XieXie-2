@@ -447,7 +447,8 @@ CString.Padjust:
 ; bool String.empty()
 CString.Pempty:
 	ldw $cf, ($xr) 12	; load this.size
-	jg .not_empty		; compare this.size > 0
+	dec $cf
+	jg .not_empty		; compare this.size > 1
 		mov $ar, 1		; return true
 		ret
 	.not_empty:
@@ -631,23 +632,25 @@ CArray.Pinit:
 CIntArray.Pinit:
 CFloatArray.Pinit:
 CBoolArray.Pinit:
+CBuffer.Pinit:
 	; this.size := 0
 	mov $r0, 0
 	stw $r0, ($xr) 12
 	
-	; initialize array buffer with 16 elements
-	mov $r1, 16
+	; initialize buffer with 64 bytes
+	mov $r1, 64
 	stw $r1, ($xr) 16
 	
-	; allocate array buffer
+	; allocate buffer
 	push 64
-	insc AllocMem		; allocate 16*4 bytes
+	insc AllocMem		; allocate 64 bytes
 	stw $ar, ($xr) 20	; store pointer to buffer in array instance
 	ret
 
 ; void Array.init(int size)
 CArray.Pinit,I?size:
 CIntArray.Pinit,I?size:
+CFloatArray.Pinit,I?size:
 	; ...
 	ret 1
 
@@ -672,21 +675,37 @@ CFloatArray.Pcopy:
 CArray.Psize:
 CIntArray.Psize:
 CFloatArray.Psize:
-	; ...
+	ldw $ar, ($xr) 12	; load this.size
+	slr $ar, $ar, 2		; return this.size/4
 	ret
 
 ; void Array.resize(int size)
 CArray.Presize,I?size:
 CIntArray.Presize,I?size:
 CFloatArray.Presize,I?size:
-	; ...
+	ldw $cf, ($lb) -4		; load size
+	jge .else				; check: size >= 0
+		mov $cf, 0			; clamp size to 0
+	.else:
+	sll $tr, $cf, 2			; set tr := size*4
+	ldw $cf, ($xr) 12		; load this.size
+	cmp $cf, $tr			; compare this.size = size
+	je .end
+		push $tr
+		call resize_buffer	; resize array buffer
+	.end:
 	ret 1
 
 ; bool Array.empty()
 CArray.Pempty:
 CIntArray.Pempty:
 CFloatArray.Pempty:
-	; ...
+	ldw $cf, ($xr) 12	; load this.size
+	jg .not_empty		; compare this.size > 0
+		mov $ar, 1		; return true
+		ret
+	.not_empty:
+	mov $ar, 0			; return false
 	ret
 
 ; void Array.append(Object entry)
@@ -747,7 +766,13 @@ Array.vtable:
 
 ; void IntArray.release()
 CIntArray.Prelease:
-	; ...
+CFloatArray.Prelease:
+CBoolArray.Prelease:
+CBuffer.Prelease:
+	; free buffer
+	ldw $r0, ($xr) 20	; load this.buffer
+	push $r0
+	insc FreeMem		; FreeMem(this.buffer)
 	ret
 
 ; bool IntArray.equals(Object rhs)
@@ -809,10 +834,10 @@ IntArray.vtable:
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
 
-; void FloatArray.release()
-CFloatArray.Prelease:
+; bool FloatArray.equals(Object rhs)
+CFloatArray.Pequals,R@Object?rhs:
 	; ...
-	ret
+	ret 1
 
 ; String FloatArray.toString()
 CFloatArray.PtoString:
@@ -868,19 +893,6 @@ FloatArray.vtable:
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
 
-; void BoolArray.release()
-CBoolArray.Prelease:
-	; free string buffer
-	ldw $r0, ($xr) 20	; load pointer to array buffer
-	push $r0
-	insc FreeMem		; delete array buffer
-	ret
-
-; void BoolArray.init()
-CBoolArray.Pinit:
-	; ...
-	ret
-
 ; void BoolArray.init(int size)
 CBoolArray.Pinit,I?size:
 	; initialize array members
@@ -925,16 +937,6 @@ BoolArray.vtable:
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
 
-; void Buffer.release()
-CBuffer.Prelease:
-	; ...
-	ret
-
-; void Buffer.init()
-CBuffer.Pinit:
-	; ...
-	ret
-
 ; bool Buffer.equals(Object rhs)
 CBuffer.Pequals,R@Object?rhs:
 	; ...
@@ -942,7 +944,32 @@ CBuffer.Pequals,R@Object?rhs:
 
 ; void Buffer.init(int size, int fill)
 CBuffer.Pinit,I?size,I?fill:
-	; ...
+	; setup size
+	ldw $cf, ($lb) -4	; load size
+	jge .gt_zero		; check: size >= 0
+		mov $cf, 0		; clamp size to 0
+	.gt_zero:
+	stw $cf, ($xr) 12	; this.size := size
+	
+	; setup actual buffer size
+	mov $r0, $cf		; set bufSize := size
+	cmp $r0, 64			; check: bufSize >= 64
+	jge .gt_64
+		mov $r0, 64		; clamp bufSize to 64
+	.gt_64:
+	stw $r0, ($xr) 16	; this.bufSize := bufSize
+	
+	; allocate buffer
+	push $r0
+	insc AllocMem		; allocate buffer
+	stw $ar, ($xr) 20	; store pointer to buffer in array instance
+	
+	; initialize buffer
+	ldw $r1, ($lb) -8	; load fill
+	push $r1			; push fill
+	push $r0			; push bufSize
+	push $ar			; push buffer
+	insc FillMem		; call FillMem(buffer, bufSize, fill)
 	ret 2
 
 ; Buffer Buffer.copy()
@@ -952,12 +979,22 @@ CBuffer.Pcopy:
 
 ; int Buffer.size()
 CBuffer.Psize:
-	; ...
+	ldw $ar, ($xr) 12	; load and return this.size
 	ret
 
 ; void Buffer.resize(int size)
 CBuffer.Presize,I?size:
-	; ...
+	ldw $cf, ($lb) -4		; load size
+	jge .else				; check: size >= 0
+		mov $cf, 0			; clamp size to 0
+	.else:
+	mov $tr, $cf			; set tr := size
+	ldw $cf, ($xr) 12		; load this.size
+	cmp $cf, $tr			; compare this.size = size
+	je .end
+		push $tr
+		call resize_buffer	; resize array buffer
+	.end:
 	ret 1
 
 ; void Buffer.writeByte(int offset, int value)
