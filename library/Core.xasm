@@ -319,7 +319,7 @@ CString.Pequals,R@Object?rhs:
 		inc $r2				; ptrA++
 		inc $r3				; ptrB++
 		dec $r0				; size--
-	jmp .loop
+		jmp .loop
 	.break:
 	
 	; return true
@@ -424,12 +424,29 @@ CString.Presize,I?size:
 
 ; void String.adjust()
 CString.Padjust:
-	; ...
+	ldw $r0, ($xr) 12			; load this.size
+	ldw $r1, ($xr) 20			; load this.buffer
+	
+	; iterate over string buffer until null terminator is found
+	mov $r2, 0					; set i := 0
+	.loop:
+		cmp $r2, $r0			; compare i >= this.size
+		jge .break
+		ldw $cf, ($r1) 0		; load character from buffer
+		je .break				; break loop if null terminator is found
+		inc $r2					; i++
+		inc $r1					; buffer++
+		jmp .loop
+	.break:
+	
+	; resize string buffer
+	push $r2
+	call CString.Presize,I?size	; call String.resize(i)
 	ret
 
 ; bool String.empty()
 CString.Pempty:
-	ldw $cf, ($xr) 12	; load member this.size
+	ldw $cf, ($xr) 12	; load this.size
 	jg .not_empty		; compare this.size > 0
 		mov $ar, 1		; return true
 		ret
@@ -583,8 +600,9 @@ CArray.Prelease:
 	sll $r0, $r0, 2		; calculate: size := this.size * 4
 	add $r0, $r0, $xr	; determine end iterator: itEnd := it + size
 	.loop:
-	cmp $xr, $r0		; compare: it >= itEnd
-	jge .end
+		cmp $xr, $r0	; compare: it >= itEnd
+		jge .break
+		
 		; store registers
 		push $xr
 		push $r0
@@ -597,9 +615,11 @@ CArray.Prelease:
 		pop $r1
 		pop $r0
 		pop $xr
-	add $xr, $xr, 4		; it += 4
-	jmp .loop
-	.end:
+		
+		; next loop iteration
+		add $xr, $xr, 4		; it += 4
+		jmp .loop
+	.break:
 	
 	; free array buffer
 	push $r1
@@ -880,12 +900,12 @@ CBoolArray.Pinit,I?size:
 	; initialize buffer with zeros
 	mov $r0, 0
 	.loop:
-	jle .end				; compare: numBytes <= 0
+		jle .break			; compare: numBytes <= 0
 		stw $r0, ($ar) 0	; store zero at (*buffer)
 		inc $ar				; buffer++
-	dec $cf					; numBytes--
-	jmp .loop
-	.end:
+		dec $cf				; numBytes--
+		jmp .loop
+	.break:
 	ret 1
 
 BoolArray.vtable:
