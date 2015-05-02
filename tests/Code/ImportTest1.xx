@@ -7,8 +7,9 @@ class Test {
 	
 	static void main() {
 		
-		var str1 := import "ImportTest1.xx"
-		var str1_len := "{ ".append(import "ImportTest1.xx").append(" }").size()
+		//var str1 := import "ImportTest1.xx"
+		//var str1_len := "{ ".append(import "ImportTest1.xx").append(" }").size()
+		Intrinsics.printLn((import "ImportTest1.xx").pointer())
 		
 	}
 	

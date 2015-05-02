@@ -1706,7 +1706,7 @@ ExprPtr Parser::ParseValueExpr(const TokenPtr& identTkn, const VarNamePtr& varNa
     return expr;
 }
 
-// primary_value_expr : literal_expr | var_access_expr | alloc_expr | bracket_expr | cast_expr | call_expr | unary_expr | init_list_expr | postfix_value_expr;
+// primary_value_expr : literal_expr | var_access_expr | alloc_expr | import_expr | bracket_expr | cast_expr | call_expr | unary_expr | init_list_expr | postfix_value_expr;
 ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn, const VarNamePtr& varName)
 {
     if (!identTkn && !varName)
@@ -1721,6 +1721,8 @@ ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn, const VarNamePtr
                 return ParseLiteralExpr();
             case Tokens::New:
                 return ParseAllocExpr();
+            case Tokens::Import:
+                return ParseImportExpr();
             case Tokens::LBracket:
                 return ParseBracketOrCastExpr();
             case Tokens::Not:
@@ -1834,6 +1836,20 @@ AllocExprPtr Parser::ParseAllocExpr()
         ast->procCall.procName = Make<VarName>(std::vector<std::string>{ "Array", "init" });
     else
         Error("only class and array types are allowed for dynamic allocation", typeTkn, false);
+
+    return ast;
+}
+
+// import_expr: 'import' STRING_LITERAL;
+LiteralExprPtr Parser::ParseImportExpr()
+{
+    auto ast = Make<LiteralExpr>();
+
+    Accept(Tokens::Import);
+    auto filename = Accept(Tokens::StringLiteral)->Spell();
+
+    ast->SetType(LiteralExpr::Literals::String);
+    ast->value = ReadImportExprFile(filename);
 
     return ast;
 }
@@ -2333,6 +2349,20 @@ bool Parser::FindImport(std::string& filename) const
     }
 
     return false;
+}
+
+std::string Parser::ReadImportExprFile(const std::string& filename)
+{
+    /* Open file for reading */
+    std::ifstream file(filename);
+    if (!file.good())
+    {
+        Error("reading import file \"" + filename + "\" failed", false);
+        return "";
+    }
+
+    /* Read file content */
+    return FileHelper::ReadFileContent(file);
 }
 
 bool Parser::ConvertExprToSignedIntLiteral(const Expr& ast, int& value) const

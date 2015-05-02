@@ -33,6 +33,9 @@ std::string SelectOutputFilename(
     Log& output, bool forceOverride = false
 );
 
+//! Reads the entire content of the specified file.
+std::string ReadFileContent(std::ifstream& file);
+
 
 } // /namespace FileHelper
 

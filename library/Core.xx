@@ -40,8 +40,10 @@ extern class String {
 	
 	/// Initializes an empty string.
 	init()
-	/// Initializes an string with 'size' characters.
+	/// Initializes a string with 'size' characters.
 	init(int size)
+	/// Initializes a string 'count' times with the character 'char'.
+	init(int char, int count)
 	/// Initailizes a string from the specified source.
 	init(String source)
 	

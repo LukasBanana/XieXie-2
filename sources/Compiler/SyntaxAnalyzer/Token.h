@@ -151,28 +151,28 @@ class Token
         static std::string TypeToString(const Types type);
 
         //! Returns the token start source position.
-        inline const SourcePosition& PosStart() const
+        const SourcePosition& PosStart() const
         {
             return Area().start;
         }
         //! Returns the token start source position.
-        inline const SourcePosition& PosEnd() const
+        const SourcePosition& PosEnd() const
         {
             return Area().end;
         }
 
         //! Returns the token type.
-        inline Types Type() const
+        Types Type() const
         {
             return type_;
         }
         //! Returns the token source area.
-        inline const SourceArea& Area() const
+        const SourceArea& Area() const
         {
             return area_;
         }
         //! Returns the token spelling.
-        inline const std::string& Spell() const
+        const std::string& Spell() const
         {
             return spell_;
         }

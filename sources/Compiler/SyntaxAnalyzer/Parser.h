@@ -194,6 +194,7 @@ class Parser
         ExprPtr                 ParseBracketOrCastExprSub();
 
         AllocExprPtr            ParseAllocExpr();
+        LiteralExprPtr          ParseImportExpr();
         UnaryExprPtr            ParseUnaryExpr();
         InitListExprPtr         ParseInitListExpr();
         LiteralExprPtr          ParseLiteralExpr();
@@ -262,6 +263,9 @@ class Parser
 
         //! Returns this the import filename with possible path augmentation.
         bool FindImport(std::string& filename) const;
+
+        //! Reads the specified file and returns its content as string for an import expression.
+        std::string ReadImportExprFile(const std::string& filename);
 
         //! Converts the specified expression AST node to a signed integer literal. If this is not possible, the return value is false.
         bool ConvertExprToSignedIntLiteral(const Expr& ast, int& value) const;

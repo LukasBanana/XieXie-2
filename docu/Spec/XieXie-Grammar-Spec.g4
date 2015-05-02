@@ -116,8 +116,8 @@ array_access:		'[' array_index ']' array_access?;
 array_index:		expr;
 
 // IMPORTS
-import_stmnt:		IMPORT (STRING_LITERAL | IDENT);
-import_expr:		IMPORT STRING_LITERAL;
+import_stmnt:		'import' (STRING_LITERAL | IDENT);
+import_expr:		'import' STRING_LITERAL;
 
 // FRIENDS
 friend_decl_stmnt:	'friend' friend_list;
@@ -202,6 +202,7 @@ value_expr:			primary_value_expr;
 primary_value_expr	: literal_expr
 					| var_access_expr
 					| alloc_expr
+					| import_expr
 					| bracket_expr
 					| cast_expr
 					| call_expr
@@ -218,9 +219,7 @@ init_list_expr: 	'{' expr_list? '}';
 alloc_expr:			'new' type_denoter ctor_init anonymous_class?;
 ctor_init:			'(' arg_list? ')';
 
-literal_expr		: LITERAL
-					| import_expr;
-
+literal_expr:		LITERAL;
 bracket_expr:		'(' expr ')';
 cast_expr: 			'(' type_denoter ')' value_expr;
 call_expr:			proc_call;
@@ -255,8 +254,6 @@ VOID_TYPE_DENOTER:		'void';
 BOOL_TYPE_DENOTER:		'bool';
 INT_TYPE_DENOTER:		'int';
 FLOAT_TYPE_DENOTER:		'float';
-
-IMPORT:	'import';
 
 // LITERALS
 LETTER:	[a-zA-Z];

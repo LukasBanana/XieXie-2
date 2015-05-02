@@ -9,6 +9,7 @@
 #include "StringModifier.h"
 
 #include <fstream>
+#include <streambuf>
 
 
 namespace FileHelper
@@ -50,6 +51,28 @@ std::string SelectOutputFilename(std::string inputFilename, const std::string& f
     }
 
     return OutFile();
+}
+
+std::string ReadFileContent(std::ifstream& file)
+{
+    std::string content;
+
+    /* Determine file size */
+    file.seekg(0, std::ios::end);
+    content.reserve(static_cast<std::string::size_type>(file.tellg()));
+    file.seekg(0, std::ios::beg);
+
+    /*
+    Read file content with stream buffer
+    -> Extra parentheses is required to avoid the "Most Vexing Parse" problem!
+       -> see http://www.informit.com/guides/content.aspx?g=cplusplus&seqNum=439
+    */
+    content.assign(
+        ( std::istreambuf_iterator<char>(file) ),
+        ( std::istreambuf_iterator<char>(    ) )
+    );
+
+    return content;
 }
 
 

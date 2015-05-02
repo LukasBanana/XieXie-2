@@ -337,6 +337,11 @@ CString.Pinit,I?size:
 	call CString.Presize,I?size
 	ret
 
+; void String.init(int char, int count)
+CString.Pinit,I?char,I?count:
+	; ...
+	ret 2
+
 ; void String.init(String source)
 CString.Pinit,R@String?source:
 	; copy first 20 bytes from literal
@@ -564,6 +569,7 @@ String.vtable:
 	.word @CString.PtoString
 	.word @CString.Ppointer
 	.word @CString.Pinit,I?size
+	.word @CString.Pinit,I?char,I?count
 	.word @CString.Pinit,R@String?source
 	.word @CString.Pcopy
 	.word @CString.Psize
