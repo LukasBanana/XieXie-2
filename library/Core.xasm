@@ -27,7 +27,7 @@ new:
 	
 	ret 3				; return object reference (ar)
 
-; void inc_ref(Object this)
+; void inc_ref({Object this})
 inc_ref:
 	; check for null pointer
 	mov $cf, $xr			; compare: this = null
@@ -39,7 +39,7 @@ inc_ref:
 	.end:
 	ret
 
-; void dec_ref(Object this)
+; void dec_ref({Object this})
 dec_ref:
 	; check for null pointer
 	mov $cf, $xr			; compare: this = null
@@ -96,7 +96,7 @@ dynamic_cast:
 	mov $ar, 0				; return null pointer
 	ret 3
 
-; void resize_buffer(Object this, int size)
+; void resize_buffer({Object this} int size)
 resize_buffer:
 	ldw $r0, ($lb) -4		; load size
 	ldw $r1, ($xr) 16		; load this.bufSize
@@ -183,19 +183,6 @@ String.copy_literal:
 	ret 1
 
 
-; ------- Shared Procedures -------
-
-; int <Array like Class>.pointer(Object this)
-CString.Ppointer:
-CArray.Ppointer:
-CIntArray.Ppointer:
-CFloatArray.Ppointer:
-CBoolArray.Ppointer:
-CBuffer.Ppointer:
-	ldw $ar, ($xr) 20	; load and return member this.buffer
-	ret
-
-
 ; ------- Object Class -------
 
 ; Object:
@@ -203,24 +190,24 @@ CBuffer.Ppointer:
 ;	int typeID		(4)
 ;	int vtableAddr	(8)
 
-; void Object.release(Object this)
+; void Object.release()
 CObject.Prelease:
 
-; void Object.init(Object this)
+; void Object.init()
 CObject.Pinit:
 	ret
 
-; int Object.refCount(Object this)
+; int Object.refCount()
 CObject.PrefCount:
 	ldw $ar, ($xr) 0	; load and return reference counter of 'this'
 	ret
 
-; int Object.typeID(Object this)
+; int Object.typeID()
 CObject.PtypeID:
 	ldw $ar, ($xr) 4	; load and return type-id of 'this'
 	ret
 
-; bool Object.equals(Object this, Object rhs)
+; bool Object.equals(Object rhs)
 CObject.Pequals,R@Object?rhs:
 	; check for null pointer
 	ldw $cf, ($lb) -4	; load object reference 'rhs' and compare: rhs = null
@@ -240,12 +227,12 @@ CObject.Pequals,R@Object?rhs:
 	ret 1
 
 ; TODO: currently returns null pointer !!!
-; String Object.toString(Object this)
+; String Object.toString()
 CObject.PtoString:
 	mov $ar, 0	; return null pointer
 	ret
 
-; int Object.pointer(Object this)
+; int Object.pointer()
 CObject.Ppointer:
 	add $ar, $xr, 12	; return pointer to first member variables of derived class
 	ret
@@ -268,7 +255,7 @@ Object.vtable:
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
 
-; void String.release(Object this)
+; void String.release()
 CString.Prelease:
 	; free string buffer
 	ldw $r0, ($xr) 20	; load pointer to string buffer
@@ -276,7 +263,7 @@ CString.Prelease:
 	insc FreeMem		; delete string buffer
 	ret
 
-; void String.init(Object this)
+; void String.init()
 CString.Pinit:
 	; this.size := 1 (null character)
 	mov $r0, 1
@@ -295,7 +282,7 @@ CString.Pinit:
 	stw $r0, ($ar) 0	; this.pointer[0] := 0
 	ret
 
-; bool String.equals(String this, Object rhs)
+; bool String.equals(Object rhs)
 CString.Pequals,R@Object?rhs:
 	; check for null pointer
 	ldw $cf, ($lb) -4		; load object reference 'rhs' and compare: rhs = null
@@ -344,13 +331,13 @@ CString.Pequals,R@Object?rhs:
 	mov $ar, 0
 	ret 1
 
-; void String.init(String this, int size)
+; void String.init(int size)
 CString.Pinit,I?size:
 	call CString.Pinit
 	call CString.Presize,I?size
 	ret
 
-; void String.init(String this, String source)
+; void String.init(String source)
 CString.Pinit,R@String?source:
 	; copy first 20 bytes from literal
 	ldw $r0, ($lb) -4	; load address of string literal
@@ -374,13 +361,23 @@ CString.Pinit,R@String?source:
 	insc CopyMem
 	ret 1
 
-; String String.toString(Object this)
+; String String.toString()
 CString.PtoString:
 	call inc_ref	; increment reference of this (return strong this)
 	mov $ar, $xr	; just return this pointer
 	ret
 
-; String String.copy(String this)
+; int String.pointer()
+CString.Ppointer:
+CArray.Ppointer:
+CIntArray.Ppointer:
+CFloatArray.Ppointer:
+CBoolArray.Ppointer:
+CBuffer.Ppointer:
+	ldw $ar, ($xr) 20	; load and return member this.buffer
+	ret
+
+; String String.copy()
 CString.Pcopy:
 	; allocate new String instance
 	push @String.vtable					; push String vtable
@@ -400,13 +397,13 @@ CString.Pcopy:
 	pop $ar								; get return value from back-up $r0 on stack
 	ret
 
-; int String.size(String this)
+; int String.size()
 CString.Psize:
 	ldw $ar, ($xr) 12	; load and return member this.size
 	dec $ar				; remove null terminator from character counter
 	ret
 
-; void String.resize(String this, int size)
+; void String.resize(int size)
 CString.Presize,I?size:
 	ldw $cf, ($lb) -4		; load size
 	jge .else				; check: size >= 0
@@ -430,7 +427,7 @@ CString.Padjust:
 	; ...
 	ret
 
-; bool String.empty(String this)
+; bool String.empty()
 CString.Pempty:
 	ldw $cf, ($xr) 12	; load member this.size
 	jg .not_empty		; compare this.size > 0
@@ -440,7 +437,7 @@ CString.Pempty:
 	mov $ar, 0			; return false
 	ret
 
-; String String.append(String this, String rhs)
+; String String.append(String rhs)
 CString.Pappend,R@String?rhs:
 	ldw $cf, ($lb) -4	; load rhs
 	je .end				; check if rhs = null
@@ -480,7 +477,7 @@ CString.Pappend,R@String?rhs:
 	mov $ar, $xr		; return weak reference of this
 	ret 1
 
-; String String.append(String this, Object rhs)
+; String String.append(Object rhs)
 CString.Pappend,R@Object?rhs:
 	ldw $cf, ($lb) -4	; load rhs
 	je .end				; check if rhs = null
@@ -502,39 +499,39 @@ CString.Pappend,R@Object?rhs:
 	.end:
 	ret 1
 
-; String String.append(String this, bool rhs)
+; String String.append(bool rhs)
 CString.Pappend,B?rhs:
 	; ...
 	ret 1
 
-; String String.append(String this, int rhs)
+; String String.append(int rhs)
 CString.Pappend,I?rhs:
 	; ...
 	ret 1
 
-; String String.append(String this, float rhs)
+; String String.append(float rhs)
 CString.Pappend,F?rhs:
 	; ...
 	ret 1
 
-; String String.subString(String this, int from, int length)
+; String String.subString(int from, int length)
 CString.PsubString,I?from,I?length:
 	; ...
 	mov $ar, 0 ; !!!
 	ret 2
 
-; int String.find(String this, String search, int from)
+; int String.find(String search, int from)
 CString.Pfind,R@String?search,I?from:
 	; ...
 	mov $ar, -1 ; !!!
 	ret 2
 
-; void String.setChar(String this, int pos, int char)
+; void String.setChar(int pos, int char)
 CString.PsetChar,I?pos,I?char:
 	; ...
 	ret 2
 
-; int String.getChar(String this, int pos)
+; int String.getChar(int pos)
 CString.PgetChar,I?pos:
 	; ...
 	mov $ar, 0 ; !!!
@@ -575,7 +572,7 @@ String.vtable:
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
 
-; void Array.release(Object this)
+; void Array.release()
 CArray.Prelease:
 	; load object members
 	ldw $r0, ($xr) 12	; load this.size
@@ -609,7 +606,7 @@ CArray.Prelease:
 	insc FreeMem		; delete array buffer
 	ret
 
-; void Array.init(Object this)
+; void Array.init()
 CArray.Pinit:
 CIntArray.Pinit:
 CFloatArray.Pinit:
@@ -628,73 +625,73 @@ CBoolArray.Pinit:
 	stw $ar, ($xr) 20	; store pointer to buffer in array instance
 	ret
 
-; void Array.init(Array this, int size)
+; void Array.init(int size)
 CArray.Pinit,I?size:
 CIntArray.Pinit,I?size:
 	; ...
 	ret 1
 
-; bool Array.equals(Array this, Object rhs)
+; bool Array.equals(Object rhs)
 CArray.Pequals,R@Object?rhs:
 	; ...
 	ret 1
 
-; String Array.toString(Array this)
+; String Array.toString()
 CArray.PtoString:
 	; ...
 	ret
 
-; Array Array.copy(Array this)
+; Array Array.copy()
 CArray.Pcopy:
 CIntArray.Pcopy:
 CFloatArray.Pcopy:
 	; ...
 	ret
 
-; int Array.size(Array this)
+; int Array.size()
 CArray.Psize:
 CIntArray.Psize:
 CFloatArray.Psize:
 	; ...
 	ret
 
-; void Array.resize(Array this, int size)
+; void Array.resize(int size)
 CArray.Presize,I?size:
 CIntArray.Presize,I?size:
 CFloatArray.Presize,I?size:
 	; ...
 	ret 1
 
-; bool Array.empty(Array this)
+; bool Array.empty()
 CArray.Pempty:
 CIntArray.Pempty:
 CFloatArray.Pempty:
 	; ...
 	ret
 
-; void Array.append(Array this, Object entry)
+; void Array.append(Object entry)
 CArray.Pappend,R@Object?entry:
 	; ...
 	ret 1
 
-; void Array.insert(Array this, Object entry, int pos)
+; void Array.insert(Object entry, int pos)
 CArray.Pinsert,R@Object?entry,I?pos:
 	; ...
 	ret 2
 
-; bool Array.remove(Array this, int pos)
+; bool Array.remove(int pos)
 CArray.Premove,I?pos:
 CIntArray.Premove,I?pos:
 CFloatArray.Premove,I?pos:
 	; ...
 	ret 1
 
-; int Array.find(Array this, Object entry, int from)
+; int Array.find(Object entry, int from)
 CArray.Pfind,R@Object?entry,I?from:
 	; ...
 	ret 2
 
-; bool Array.contains(Array this, Object entry)
+; bool Array.contains(Object entry)
 CArray.Pcontains,R@Object?entry:
 	; ...
 	ret 1
@@ -728,37 +725,37 @@ Array.vtable:
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
 
-; void IntArray.release(Object this)
+; void IntArray.release()
 CIntArray.Prelease:
 	; ...
 	ret
 
-; bool IntArray.equals(IntArray this, Object rhs)
+; bool IntArray.equals(Object rhs)
 CIntArray.Pequals,R@Object?rhs:
 	; ...
 	ret 1
 
-; String IntArray.toString(IntArray this)
+; String IntArray.toString()
 CIntArray.PtoString:
 	; ...
 	ret
 
-; void IntArray.append(IntArray this, int entry)
+; void IntArray.append(int entry)
 CIntArray.Pappend,I?entry:
 	; ...
 	ret 1
 
-; void IntArray.insert(IntArray this, int entry, int pos)
+; void IntArray.insert(int entry, int pos)
 CIntArray.Pinsert,I?entry,I?pos:
 	; ...
 	ret 2
 
-; int IntArray.find(IntArray this, int entry, int from)
+; int IntArray.find(int entry, int from)
 CIntArray.Pfind,I?entry,I?from:
 	; ...
 	ret 2
 
-; bool IntArray.find(IntArray this, int entry)
+; bool IntArray.find(int entry)
 CIntArray.Pcontains,I?entry:
 	; ...
 	ret 1
@@ -792,32 +789,32 @@ IntArray.vtable:
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
 
-; void FloatArray.release(Object this)
+; void FloatArray.release()
 CFloatArray.Prelease:
 	; ...
 	ret
 
-; String FloatArray.toString(FloatArray this)
+; String FloatArray.toString()
 CFloatArray.PtoString:
 	; ...
 	ret
 
-; void FloatArray.append(FloatArray this, float entry)
+; void FloatArray.append(float entry)
 CFloatArray.Pappend,F?entry:
 	; ...
 	ret 1
 
-; void FloatArray.insert(FloatArray this, float entry, int pos)
+; void FloatArray.insert(float entry, int pos)
 CFloatArray.Pinsert,F?entry,I?pos:
 	; ...
 	ret 2
 
-; int FloatArray.find(FloatArray this, float entry, int from)
+; int FloatArray.find(float entry, int from)
 CFloatArray.Pfind,F?entry,I?from:
 	; ...
 	ret 2
 
-; bool FloatArray.find(FloatArray this, float entry)
+; bool FloatArray.find(float entry)
 CFloatArray.Pcontains,F?entry:
 	; ...
 	ret 1
@@ -851,7 +848,7 @@ FloatArray.vtable:
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
 
-; void BoolArray.release(Object this)
+; void BoolArray.release()
 CBoolArray.Prelease:
 	; free string buffer
 	ldw $r0, ($xr) 20	; load pointer to array buffer
@@ -859,12 +856,12 @@ CBoolArray.Prelease:
 	insc FreeMem		; delete array buffer
 	ret
 
-; void BoolArray.init(Object this)
+; void BoolArray.init()
 CBoolArray.Pinit:
 	; ...
 	ret
 
-; void BoolArray.init(BoolArray this, int size)
+; void BoolArray.init(int size)
 CBoolArray.Pinit,I?size:
 	; initialize array members
 	ldw $cf, ($lb) -8		; load 'size'
@@ -908,68 +905,80 @@ BoolArray.vtable:
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
 
-; void Buffer.release(Buffer this)
+; void Buffer.release()
 CBuffer.Prelease:
 	; ...
 	ret
 
-; void Buffer.init(Buffer this)
+; void Buffer.init()
 CBuffer.Pinit:
 	; ...
 	ret
 
-; bool Buffer.equals(Buffer this, Object rhs)
+; bool Buffer.equals(Object rhs)
 CBuffer.Pequals,R@Object?rhs:
 	; ...
 	ret 1
 
+; void Buffer.init(int size, int fill)
 CBuffer.Pinit,I?size,I?fill:
 	; ...
-	ret
+	ret 2
 
+; Buffer Buffer.copy()
 CBuffer.Pcopy:
 	; ...
 	ret
 
+; int Buffer.size()
 CBuffer.Psize:
 	; ...
 	ret
 
-CBuffer.Presiz,I?size:
+; void Buffer.resize(int size)
+CBuffer.Presize,I?size:
 	; ...
-	ret
+	ret 1
 
+; void Buffer.writeByte(int offset, int value)
 CBuffer.PwriteByte,I?offset,I?value:
 	; ...
-	ret
+	ret 2
 
+; int Buffer.readByte(int offset)
 CBuffer.PreadByte,I?offset:
 	; ...
-	ret
+	ret 1
 
+; void Buffer.writeInt(int offset, int value)
 CBuffer.PwriteInt,I?offset,I?value:
 	; ...
-	ret
+	ret 2
 
+; int Buffer.readInt(int offset)
 CBuffer.PreadInt,I?offset:
 	; ...
-	ret
+	ret 1
 
+; void Buffer.writeFloat(int offset, float value)
 CBuffer.PwriteFloat,I?offset,F?value:
 	; ...
-	ret
+	ret 2
 
+; float Buffer.readFloat(int offset)
 CBuffer.PreadFloat,I?offset:
 	; ...
-	ret
+	ret 1
 
+; void Buffer.writeBuffer(int offset, int size, Buffer buffer)
 CBuffer.PwriteBuffer,I?offset,I?size,R@Buffer?buffer:
 	; ...
-	ret
+	ret 3
 
+; void Buffer.readBuffer(int offset, int size, Buffer buffer)
 CBuffer.PreadBuffer,I?offset,I?size,R@Buffer?buffer:
 	; ...
-	ret
+	ret 3
 
 Buffer.vtable:
 	.word @CBuffer.Prelease
