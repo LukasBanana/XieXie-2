@@ -15,7 +15,7 @@
 
 // INVOCATIONS
 
-// int messageBox(String title, String text, int bitFlags)
+// int MsgBox.show(String title, String text, int bitFlags)
 void MsgBox_show(XVM_Env env)
 {
     XVM_String title = XVM_ParamString(env, 1);

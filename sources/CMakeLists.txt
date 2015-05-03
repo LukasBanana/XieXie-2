@@ -42,6 +42,17 @@ macro(SETUP_STD_C_MODULE MODULE_NAME)
 	target_link_libraries("Module_${MODULE_NAME}" xvm_module)
 endmacro()
 
+macro(SETUP_CPP_MODULE MODULE_NAME)
+	set_target_properties(
+		"Module_${MODULE_NAME}" PROPERTIES
+		LINKER_LANGUAGE CXX
+		DEBUG_POSTFIX "D"
+		OUTPUT_NAME ${MODULE_NAME}
+		RUNTIME_OUTPUT_DIRECTORY_RELEASE "${MODULES_OUTPUT_DIR}/${MODULE_NAME}"
+	)
+	target_link_libraries("Module_${MODULE_NAME}" xvm_module)
+endmacro()
+
 
 # === Global files ===
 
@@ -66,6 +77,8 @@ file(GLOB FilesCompilerCFG						${PROJECT_SOURCE_DIR}/Compiler/ControlFlowGraph/
 file(GLOB FilesShell							${PROJECT_SOURCE_DIR}/Shell/*.*)
 file(GLOB FilesShellCommand						${PROJECT_SOURCE_DIR}/Shell/Command/*.*)
 
+file(GLOB FilesModuleBigNumDetails				${PROJECT_MODULES_DIR}/BigNum/Details/*.*)
+
 file(GLOB FilesPlatform ${PROJECT_SOURCE_DIR}/Platform/*.*)
 if(WIN32)
 	file(GLOB FilesPlatformDependent ${PROJECT_SOURCE_DIR}/Platform/Win32/*.*)
@@ -77,7 +90,6 @@ endif()
 
 set(
 	FilesAll
-	
 	${FilesBaseAll}
 	${FilesCompilerAll}
 	${FilesShellAll}
@@ -109,6 +121,12 @@ set(
 )
 
 set(FilesCoreAsmGen ${PROJECT_SOURCE_DIR}/Tools/CoreAssemblyGenerator.cpp)
+
+set(
+	FilesModuleBigNum
+	${PROJECT_MODULES_DIR}/BigNum/BigNum.cpp
+	${FilesModuleBigNumDetails}
+)
 
 
 # === Source group folders ===
@@ -167,6 +185,12 @@ source_group(
 	${PROJECT_MODULES_DIR}/MsgBox/MsgBox.c
 	${PROJECT_MODULES_DIR}/Socket/Socket.c
 	${PROJECT_MODULES_DIR}/SysInfo/SysInfo.c
+	${PROJECT_MODULES_DIR}/BigNum/BigNum.cpp
+)
+
+source_group(
+	"Modules\\Details" FILES
+	${FilesModuleBigNumDetails}
 )
 
 
@@ -191,6 +215,7 @@ include_directories("${PROJECT_SOURCE_DIR}/Platform")
 include_directories("${PROJECT_SOURCE_DIR}/Shell")
 include_directories("${PROJECT_SOURCE_DIR}/Shell/Command")
 
+
 # === Binaries ===
 
 add_executable(xxc ${FilesAll})
@@ -204,6 +229,9 @@ SETUP_STD_C_MODULE(MsgBox)
 SETUP_STD_C_MODULE(Socket)
 SETUP_STD_C_MODULE(SysInfo)
 
+add_library(Module_BigNum SHARED ${FilesModuleBigNum})
+SETUP_CPP_MODULE(BigNum)
+
 SETUP_LIB_OUTPUT(xxc CXX)
 SETUP_LIB_OUTPUT(xvmlib C)
 SETUP_LIB_OUTPUT(xvm C)
@@ -211,6 +239,9 @@ SETUP_LIB_OUTPUT(xvm_wrapper CXX)
 SETUP_LIB_OUTPUT(xvm_module C)
 
 add_executable(CoreAssemblyGenerator ${FilesCoreAsmGen})
+
+
+# === Additional Link Libraries ===
 
 set_target_properties(
 	CoreAssemblyGenerator PROPERTIES

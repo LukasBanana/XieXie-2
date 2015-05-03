@@ -1,0 +1,69 @@
+/*
+ * BigNum.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/// Big number module.
+[[bind]]
+/*private*/ module BigNum {
+	
+	/* --- BigInteger --- */
+	
+	static int allocBigInteger()
+	static void freeBigInteger(int bigNumPtr)
+	
+	static void setBigInteger(int bigNumPtr, String value)
+	
+	//...
+	
+	/* --- BigFloat --- */
+	
+	static int allocBigFloat()
+	static void freeBigFloat(int bigNumPtr)
+	
+	static void setBigFloat(int bigNumPtr, String value)
+	
+	//...
+	
+}
+
+/// Integer class with arbitrary precision.
+class BigInteger {
+	
+	init() {
+		bigNumPtr = BigNum.allocBigInteger()
+	}
+	init(String value) : this() {
+		BigNum.setBigInteger(bigNumPtr, value)
+	}
+	release {
+		BigNum.freeBigInteger(bigNumPtr)
+	}
+	
+	//...
+	
+	private int bigNumPtr
+	
+}
+
+/// Float class with arbitrary precision.
+class BigFloat {
+	
+	init() {
+		bigNumPtr = BigNum.allocBigFloat()
+	}
+	init(String value) : this() {
+		BigNum.setBigFloat(bigNumPtr, value)
+	}
+	release {
+		BigNum.freeBigFloat(bigNumPtr)
+	}
+	
+	//...
+	
+	private int bigNumPtr
+	
+}
+

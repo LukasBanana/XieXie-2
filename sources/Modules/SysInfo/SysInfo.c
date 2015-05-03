@@ -134,7 +134,7 @@ static void SetupCPUName(char* dest, LPFN_QUERYFULLPROCESSIMAGENAME_PROC queryFu
 // INVOCATIONS
 
 /*
-void querySystemInfo(
+void SysInfo.querySystemInfo(
     String platform, String cpuArch, String cpuType,
     String cpuName, Integer cpuCount, Integer cpuSpeed
 )

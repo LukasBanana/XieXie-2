@@ -17,14 +17,14 @@
 
 // INVOCATIONS
 
-// int openSocket(int family, int type, int protocol)
+// int Socket.open(int family, int type, int protocol)
 void Socket_open(XVM_Env env)
 {
     SOCKET sock = socket(XVM_ParamInt(env, 1), XVM_ParamInt(env, 2), XVM_ParamInt(env, 3));
     XVM_ReturnInt(env, 3, (int)sock);
 }
 
-// int closeSocket(int sock)
+// int Socket.close(int sock)
 void Socket_close(XVM_Env env)
 {
     int result = closesocket((SOCKET)XVM_ParamInt(env, 1));
