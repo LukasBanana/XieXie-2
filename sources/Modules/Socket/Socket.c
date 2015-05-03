@@ -36,8 +36,8 @@ void Socket_close(XVM_Env env)
 
 static XVM_Invocation procList[] =
 {
-    { "Socket.open", Socket_open },
-    { "Socket.close", Socket_close },
+    XVM_DECL_INVOCATION(Socket, open),
+    XVM_DECL_INVOCATION(Socket, close),
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);

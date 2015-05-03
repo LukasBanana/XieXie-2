@@ -40,6 +40,25 @@
         return (index < xx_module_proc_count() ? procList[index].ident : NULL); \
     }
 
+/**
+Declares a module invocation with of the form "<MODULE>_<PROC>",
+where <MODULE> is the name of the module, and <PROC> is the name of the procedure.
+\code
+// This abbreviation ...
+static XVM_Invocation procList[] =
+{
+    XVM_DECL_INVOCATION(MyModule, moduleProcedure),
+};
+
+// ... is equivalent to:
+static XVM_Invocation procList[] =
+{
+    { "MyModule.moduleProcedure", MyModule_moduleProcedure },
+};
+\endcode
+*/
+#define XVM_DECL_INVOCATION(module, proc) { #module "." #proc, module##_##proc }
+
 
 /* ----- Module Types ----- */
 
@@ -53,13 +72,13 @@ typedef char XVM_Boolean;
 typedef void* XVM_Object;
 //! XVM "String" class type.
 typedef void* XVM_String;
-//! XVM "Array" class type, e.g. 'Object[]'.
+//! XVM "Array" class type, i.e. 'Object[]'.
 typedef void* XVM_Array;
-//! XVM "IntArray" class type, e.g. 'int[]'.
+//! XVM "IntArray" class type, i.e. 'int[]'.
 typedef void* XVM_IntArray;
-//! XVM "FloatArray" class type, e.g. 'float[]'.
+//! XVM "FloatArray" class type, i.e. 'float[]'.
 typedef void* XVM_FloatArray;
-//! XVM "BoolArray" class type, e.g. 'bool[]'.
+//! XVM "BoolArray" class type, i.e. 'bool[]'.
 typedef void* XVM_BoolArray;
 //! XVM "Buffer" class type.
 typedef void* XVM_Buffer;
@@ -153,19 +172,34 @@ float XVM_ParamFloat(XVM_Env env, unsigned int paramIndex);
 //! Returns the argument as "Object" reference, specified by the parameter index (beginning with 1).
 XVM_Object XVM_ParamObject(XVM_Env env, unsigned int paramIndex);
 
-//! Returns the argument as "String" reference, specified by the parameter index (beginning with 1).
+/**
+Returns the argument as "String" reference, specified by the parameter index (beginning with 1),
+or null if the specified parameter does not refer to a "String" instance.
+*/
 XVM_String XVM_ParamString(XVM_Env env, unsigned int paramIndex);
 
-//! Returns the argument as "Array" reference, specified by the parameter index (beginning with 1).
+/**
+Returns the argument as "Array" reference, specified by the parameter index (beginning with 1),
+or null if the specified parameter does not refer to an "Array" instance.
+*/
 XVM_Array XVM_ParamArray(XVM_Env env, unsigned int paramIndex);
 
-//! Returns the argument as "IntArray" reference, specified by the parameter index (beginning with 1).
+/**
+Returns the argument as "IntArray" reference, specified by the parameter index (beginning with 1),
+or null if the specified parameter does not refer to an "IntArray" instance.
+*/
 XVM_IntArray XVM_ParamIntArray(XVM_Env env, unsigned int paramIndex);
 
-//! Returns the argument as "FloatArray" reference, specified by the parameter index (beginning with 1).
+/**
+Returns the argument as "FloatArray" reference, specified by the parameter index (beginning with 1),
+or null if the specified parameter does not refer to a "FloatArray" instance.
+*/
 XVM_FloatArray XVM_ParamFloatArray(XVM_Env env, unsigned int paramIndex);
 
-//! Returns the argument as "Buffer" reference, specified by the parameter index (beginning with 1).
+/**
+Returns the argument as "Buffer" reference, specified by the parameter index (beginning with 1),
+or null if the specified parameter does not refer to a "Buffer" instance.
+*/
 XVM_Buffer XVM_ParamBuffer(XVM_Env env, unsigned int paramIndex);
 
 

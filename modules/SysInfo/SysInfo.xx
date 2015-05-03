@@ -48,8 +48,8 @@ class SystemInfo {
 		)
 		
 		// Copy integers
-		info.cpuCount := cpuCount
-		info.cpuSpeed := cpuSpeed
+		info.cpuCount := cpuCount.value
+		info.cpuSpeed := cpuSpeed.value
 		
 		return info
 	}

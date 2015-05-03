@@ -135,8 +135,8 @@ static void SetupCPUName(char* dest, LPFN_QUERYFULLPROCESSIMAGENAME_PROC queryFu
 
 /*
 void querySystemInfo(
-    int platformStringPtr, int cpuArchStringPtr, int cpuTypeStringPtr,
-    int cpuNameStringPtr, int cpuCountIntegerPtr, int cpuSpeedIntegerPtr
+    String platform, String cpuArch, String cpuType,
+    String cpuName, Integer cpuCount, Integer cpuSpeed
 )
 */
 void SysInfo_querySystemInfo(XVM_Env env)
@@ -194,7 +194,7 @@ void SysInfo_querySystemInfo(XVM_Env env)
 
 static XVM_Invocation procList[] =
 {
-    { "SysInfo.querySystemInfo", SysInfo_querySystemInfo },
+    XVM_DECL_INVOCATION(SysInfo, querySystemInfo),
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);
