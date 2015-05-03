@@ -75,7 +75,7 @@ class BigInteger {
 	    return null // todo...
 	}
 	
-	BigInteger modPow(BigInteger exp, BitInteger m) {
+	BigInteger modPow(BigInteger exp, BigInteger m) {
 	    return null // todo...
 	}
 	
