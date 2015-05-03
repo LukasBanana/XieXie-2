@@ -73,7 +73,9 @@ class ClassDeclStmnt : public ScopedStmnt
             return subClassesRef_;
         }
 
+        //! Returns true if this class declaration is a super class of the specified class declaration.
         bool IsSuperClassOf(const ClassDeclStmnt& classDeclStmnt) const;
+        //! Returns true if this class declaration is a sub class of the specified class declaration.
         bool IsSubClassOf(const ClassDeclStmnt& classDeclStmnt) const;
 
         //! Appends the specified class as a friend to this class.

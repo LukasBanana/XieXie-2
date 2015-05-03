@@ -17,17 +17,26 @@ class Test {
 		
 		String d := (String)c*/
 		
-		var e := (Widget)a		// Error, "Widget" is not a sub-class of "String"!
+	//	var e := (Widget)a		// Error, "Widget" is not a sub-class of "String"!
 		var f := (Object)a		// Ok, "Object" is a super-class of "String".
 		
 		var g := new Widget()
 		var h := (SubWidget)g	// Ok, but cast will fail!
 		
-		var i := (int)g			// Error, pointer type can not be casted to a built-in type!
-		var j := (Widget)5		// Error, built-in type can not be casted to a pointer type!
+	//	var i := (int)g			// Error, pointer type can not be casted to a built-in type!
+	//	var j := (Widget)5		// Error, built-in type can not be casted to a pointer type!
 		
-		var k := (bool)5		// Error, booleans can not be casted!
-		var l := (bool)3.2		// Error, booleans can not be casted!
+	//	var k := (bool)5		// Error, booleans can not be casted!
+	//	var l := (bool)3.2		// Error, booleans can not be casted!
+	
+		var m := (Object[])b	// Ok, Object[] is a super array class of String[]
+	//	var n := (Widget[])b	// Error, Widget[] is not a sub array class of String[]
+	
+		var o := { new Widget() }
+		var p := (SubWidget[])o	// Ok, but cast will fail!
+		
+		var q := (float)3		// Ok, cast float to int
+		var r := (int)2.5		// Ok, cast int to float
 		
 		
 	}

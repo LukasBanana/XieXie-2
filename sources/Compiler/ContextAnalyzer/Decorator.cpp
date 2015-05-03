@@ -591,6 +591,13 @@ DEF_VISIT_PROC(Decorator, CastExpr)
 {
     Visit(ast->castTypeDenoter);
     Visit(ast->expr);
+
+    /* Decoreate cast expression with cast type */
+    auto destType = ast->castTypeDenoter.get();
+    auto srcType = ast->expr->GetTypeDenoter();
+
+    if (destType && srcType)
+        ast->castType = TypeChecker::DetermineCastType(*destType, *srcType);
 }
 
 DEF_VISIT_PROC(Decorator, ProcCallExpr)

@@ -40,7 +40,10 @@ bool VerifyTypeCastCompatibility(
     std::string* errorOut = nullptr
 );
 
-//! Determines which kind of cast is required for the specified type denoters.
+/**
+Determines which kind of cast is required for the specified type denoters.
+\remarks The type must have already been decorated correctly. Otherwise, the result will be incorrect!
+*/
 AbstractSyntaxTrees::CastExpr::CastTypes DetermineCastType(
     const AbstractSyntaxTrees::TypeDenoter& dstType,
     const AbstractSyntaxTrees::TypeDenoter& srcType

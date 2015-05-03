@@ -88,7 +88,7 @@ static bool VerifyPointerTypes(const PointerTypeDenoter& lhs, const PointerTypeD
 
             /* Check class dependency */
             if ( lhsClassDecl != rhsClassDecl && ( explicitTypeMatch || !rhsClassDecl->IsSubClassOf(*lhsClassDecl) ) )
-                throw std::string("\"" + rhsClassDecl->ident + "\" is not a sub class of \"" + lhsClassDecl->ident + "\"");
+                throw std::string(TypeName(rhs) + " is not a sub class of " + TypeName(lhs));
         }
         else
             throw std::string("pointers must refer to class declarations");
@@ -130,12 +130,46 @@ static bool VerifyPointerCastTypes(const PointerTypeDenoter& dstType, const Poin
 
             /* Check class dependency */
             if ( dstClassDecl != srcClassDecl && !srcClassDecl->IsSubClassOf(*dstClassDecl) && !dstClassDecl->IsSubClassOf(*srcClassDecl) )
-                throw std::string("\"" + srcClassDecl->ident + "\" is neither a sub class of \"" + dstClassDecl->ident + "\" nor vice versa");
+                throw std::string(TypeName(dstType) + " is neither a sub class nor a super class of " + TypeName(srcType));
         }
         else
             throw std::string("pointers must refer to class declarations");
     }
     return true;
+}
+
+/* --- Determination --- */
+
+static CastTypes DetermineBuiltinCastType(const BuiltinTypeDenoter& dstType, const BuiltinTypeDenoter& srcType)
+{
+    return (dstType.typeName == srcType.typeName ? CastTypes::None : CastTypes::Static);
+}
+
+static CastTypes DetermineArrayCastType(const ArrayTypeDenoter& dstType, const ArrayTypeDenoter& srcType)
+{
+    if (dstType.lowerTypeDenoter && srcType.lowerTypeDenoter)
+        return DetermineCastType(*dstType.lowerTypeDenoter, *srcType.lowerTypeDenoter);
+    return CastTypes::None;
+}
+
+static CastTypes DeterminePointerCastType(const PointerTypeDenoter& dstType, const PointerTypeDenoter& srcType)
+{
+    if ( dstType.declRef &&
+         srcType.declRef &&
+         dstType.declRef->Type() == AST::Types::ClassDeclStmnt &&
+         srcType.declRef->Type() == AST::Types::ClassDeclStmnt )
+    {
+        /* Get class declarations */
+        auto dstClassDecl = static_cast<const ClassDeclStmnt*>(dstType.declRef);
+        auto srcClassDecl = static_cast<const ClassDeclStmnt*>(srcType.declRef);
+
+        /* Check class dependency */
+        if (dstClassDecl == srcClassDecl || dstClassDecl->IsSuperClassOf(*srcClassDecl))
+            return CastTypes::None;
+        if (dstClassDecl->IsSubClassOf(*srcClassDecl))
+            return CastTypes::Dynamic;
+    }
+    return CastTypes::None;
 }
 
 
@@ -204,7 +238,7 @@ CastTypes DetermineCastType(const TypeDenoter& dstType, const TypeDenoter& srcTy
 
     if (dstType.Type() == srcType.Type())
     {
-        /*switch (dstType.Type())
+        switch (dstType.Type())
         {
             case AST::Types::BuiltinTypeDenoter:
                 return DetermineBuiltinCastType(BuiltinType(dstType), BuiltinType(srcType));
@@ -212,7 +246,7 @@ CastTypes DetermineCastType(const TypeDenoter& dstType, const TypeDenoter& srcTy
                 return DetermineArrayCastType(ArrayType(dstType), ArrayType(srcType));
             case AST::Types::PointerTypeDenoter:
                 return DeterminePointerCastType(PointerType(dstType), PointerType(srcType));
-        }*/
+        }
     }
 
     return CastTypes::None;
