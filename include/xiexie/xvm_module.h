@@ -9,6 +9,11 @@
 #define __XX_MODULE_H__
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -216,6 +221,11 @@ XVM_Boolean XVM_ReturnInt(XVM_Env env, unsigned int argSize, int value);
 
 // Pop 'argSize' words from the stack and return 'value'.
 XVM_Boolean XVM_ReturnFloat(XVM_Env env, unsigned int argSize, float value);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif
