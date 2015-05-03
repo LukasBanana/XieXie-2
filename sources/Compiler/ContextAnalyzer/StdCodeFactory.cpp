@@ -423,7 +423,7 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     GenInitProc(*ast);
     GenInitProc(*ast, GenParam(Int(), "size"));
     GenInitProc(*ast, ( GenParam(Int(), "char"), GenParam(Int(), "count") ));
-    GenInitProc(*ast, GenParam(String(), "src"));
+    GenInitProc(*ast, GenParam(String(), "source"));
 
     GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"), AttrOverride());
     GenMemberProc(*ast, String(), "toString", ParamList(), AttrOverride());
