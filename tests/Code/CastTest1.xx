@@ -1,0 +1,36 @@
+
+// Cast Test 1
+// 03/05/2015
+
+class Widget {}
+class SubWidget : Widget {}
+
+/// Test for dynamic casts
+class Test {
+	
+	static void main() {
+		
+		String a := new String()
+		String[] b := { "" }
+		
+		/*Object c := a
+		
+		String d := (String)c*/
+		
+		var e := (Widget)a		// Error, "Widget" is not a sub-class of "String"!
+		var f := (Object)a		// Ok, "Object" is a super-class of "String".
+		
+		var g := new Widget()
+		var h := (SubWidget)g	// Ok, but cast will fail!
+		
+		var i := (int)g			// Error, pointer type can not be casted to a built-in type!
+		var j := (Widget)5		// Error, built-in type can not be casted to a pointer type!
+		
+		var k := (bool)5		// Error, booleans can not be casted!
+		var l := (bool)3.2		// Error, booleans can not be casted!
+		
+		
+	}
+	
+}
+
