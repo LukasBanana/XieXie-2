@@ -30,9 +30,8 @@ bool VerifyTypeCompatibility(
     bool explicitTypeMatch = false
 );
 
-// \todo Not yet implemented!
 bool VerifyTypeCastCompatibility(
-    const AbstractSyntaxTrees::TypeDenoter& destType,
+    const AbstractSyntaxTrees::TypeDenoter& dstType,
     const AbstractSyntaxTrees::TypeDenoter& srcType,
     std::string* errorOut = nullptr
 );

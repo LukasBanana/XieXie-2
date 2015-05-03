@@ -200,7 +200,7 @@ void ExprTypeChecker::Error(const std::string& msg, const AST& ast, bool breakAn
     if (breakAnalysis)
         throw ContextError(ast.sourceArea, msg);
     else if (errorReporter_)
-        errorReporter_->Add(ContextError(ast.sourceArea, msg));
+        errorReporter_->Add<ContextError>(msg, &ast);
 }
 
 bool ExprTypeChecker::VerifyTypeCompatibility(const TypeDenoter& a, const TypeDenoter& b, const AST& ast)

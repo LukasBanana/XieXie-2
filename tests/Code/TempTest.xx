@@ -1,11 +1,13 @@
 
 // Temp XieXie Test
 
+import SysInfo
+
 class Test {
 	
 	static void main() {
 		
-		Intrinsics.printInt(10)
+		var sysInfo := SystemInfo.query()
 		
 	}
 	
