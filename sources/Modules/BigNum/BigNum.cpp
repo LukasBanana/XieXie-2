@@ -29,11 +29,17 @@ static int BigNumPtr(int_precision* bigNum)
     return reinterpret_cast<int>(bigNum);
 }
 
+// Shortcut for "BigNum(XVM_ParamInt(...))"
+static int_precision* BigNumParam(XVM_Env env, unsigned int paramIndex = 1)
+{
+    return BigNum(XVM_ParamInt(env, paramIndex));
+}
+
 
 // INVOCATIONS
 
 // int BigNum.allocBigInteger()
-void BigNum_allocBigInteger(XVM_Env env)
+XVM_DECL_PROC(BigNum, allocBigInteger)
 {
     // Allocate new "int_precision" instance
     auto bigNum = new int_precision();
@@ -41,12 +47,29 @@ void BigNum_allocBigInteger(XVM_Env env)
 }
 
 // void BigNum.freeBigInteger(int bigNumPtr)
-void BigNum_freeBigInteger(XVM_Env env)
+XVM_DECL_PROC(BigNum, freeBigInteger)
 {
     // Delete "int_precision" instance
-    int bigNumPtr = XVM_ParamInt(env, 1);
-    delete BigNum(bigNumPtr);
+    delete BigNumParam(env);
     XVM_ReturnVoid(env, 1);
+}
+
+// void setBigInteger(int bigNumPtr, String value)
+XVM_DECL_PROC(BigNum, setBigInteger)
+{
+    auto bigNum = BigNumParam(env);
+    auto value = XVM_ParamString(env, 2);
+
+    try
+    {
+        *bigNum = XVM_String_pointer(value);
+    }
+    catch (...)
+    {
+        *bigNum = 0;
+    }
+    
+    XVM_ReturnVoid(env, 2);
 }
 
 
@@ -56,6 +79,7 @@ static XVM_Invocation procList[] =
 {
     XVM_DECL_INVOCATION( BigNum, allocBigInteger ),
     XVM_DECL_INVOCATION( BigNum, freeBigInteger  ),
+    XVM_DECL_INVOCATION( BigNum, setBigInteger   ),
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);

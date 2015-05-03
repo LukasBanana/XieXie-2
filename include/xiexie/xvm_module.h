@@ -31,6 +31,24 @@ extern "C" {
 #   define _XVM_EXPORT
 #endif
 
+#ifdef __cplusplus
+
+#define XVM_IMPLEMENT_MODULE_INTERFACE(procList)                                \
+    extern "C" _XVM_EXPORT int xx_module_proc_count()                           \
+    {                                                                           \
+        return (sizeof(procList)/sizeof(XVM_Invocation));                       \
+    }                                                                           \
+    extern "C" _XVM_EXPORT XVM_INVOCATION_PROC xx_module_fetch_proc(int index)  \
+    {                                                                           \
+        return (index < xx_module_proc_count() ? procList[index].proc : NULL);  \
+    }                                                                           \
+    extern "C" _XVM_EXPORT const char* xx_module_fetch_ident(int index)         \
+    {                                                                           \
+        return (index < xx_module_proc_count() ? procList[index].ident : NULL); \
+    }
+
+#else
+
 #define XVM_IMPLEMENT_MODULE_INTERFACE(procList)                                \
     _XVM_EXPORT int xx_module_proc_count()                                      \
     {                                                                           \
@@ -44,6 +62,8 @@ extern "C" {
     {                                                                           \
         return (index < xx_module_proc_count() ? procList[index].ident : NULL); \
     }
+
+#endif
 
 /**
 Declares a module invocation with of the form "<MODULE>_<PROC>",
@@ -63,6 +83,19 @@ static XVM_Invocation procList[] =
 \endcode
 */
 #define XVM_DECL_INVOCATION(module, proc) { #module "." #proc, module##_##proc }
+
+/**
+Declarest the signature of a module procedure.
+\code
+// This ...
+XVM_DECL_PROC(MyModule, procName);
+
+// ... is equivalent to this:
+void MyModule_procName(XVM_Env env);
+
+\endcode
+*/
+#define XVM_DECL_PROC(module, proc) void module##_##proc(XVM_Env env)
 
 
 /* ----- Module Types ----- */
