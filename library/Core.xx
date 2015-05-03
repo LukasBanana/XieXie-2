@@ -33,6 +33,7 @@ extern class Object {
 }
 
 /// UTF-8 string class.
+[[final]]
 extern class String {
 	
 	/// String end position.
@@ -145,7 +146,7 @@ extern class String {
 	the first character in this null terminated string.
 	@remarks This pointer is compliant to a 32-bit ANSI-C and ISO-C++ application.
 	*/
-	[[override, final]]
+	[[override]]
 	int pointer()
 	
 }
@@ -180,7 +181,7 @@ extern class Array {
 	bool contains(Object entry)
 	
 	//! Returns the raw pointer (as integer) of this array.
-	[[override, final]]
+	[[override]]
 	int pointer()
 	
 }
@@ -239,7 +240,7 @@ extern class Buffer {
 	void readBuffer(int offset, int size, Buffer buffer)
 	
 	//! Returns the raw pointer (as integer) of this buffer.
-	[[override, final]]
+	[[override]]
 	int pointer()
 	
 }

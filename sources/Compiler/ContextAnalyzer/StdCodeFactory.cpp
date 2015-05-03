@@ -141,12 +141,6 @@ static AttribPrefixPtr AttrOverride()
     return GenAttribPrefix({ "override" });
 }
 
-// Generates the attribute prefix: [[override, final]]
-static AttribPrefixPtr AttrOverrideFinal()
-{
-    return GenAttribPrefix({ "override", "final" });
-}
-
 
 /*
  * Procedure and parameter generation functions
@@ -393,29 +387,39 @@ static std::unique_ptr<ClassDeclStmnt> GenObjectClass()
 }
 
 /*
+[[final]]
 extern class String {
+    static const end := -1
     init()
-    init(String src)
+    init(int size)
+    init(int char, int count)
+    init(String source)
     bool equals(Object rhs)
     String toString()
     String copy()
     int size()
     void resize(int size)
+    void adjust()
     bool empty()
-    String append(String rhs)
-    String append(Object rhs)
-    String append(bool rhs)
-    String append(int rhs)
-    String append(float rhs)
-    String subString(int pos, int len := -1)
+    String@ append(String rhs)
+    String@ append(Object rhs)
+    String@ append(bool rhs)
+    String@ append(int rhs)
+    String@ append(float rhs)
+    String subString(int pos, int length := String.end)
+    int find(String search, int from := 0)
     void setChar(int pos, int char)
     int getChar(int pos)
+    bool toBool()
+    int toInt()
+    float toFloat()
+    [[final]]
     int pointer()
 }
 */
 static std::unique_ptr<ClassDeclStmnt> GenStringClass()
 {
-    auto ast = GenClass("String");
+    auto ast = GenClass("String", AttrFinal());
 
     GenStaticConst(*ast, "end", GenIntExpr("-1"));
 
@@ -441,7 +445,7 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     GenMemberProc(*ast, Int(), "find", ( GenParam(String(), "search"), GenParam(Int(), "from", GenIntExpr("0")) ));
     GenMemberProc(*ast, Void(), "setChar", ( GenParam(Int(), "pos"), GenParam(Int(), "char") ));
     GenMemberProc(*ast, Int(), "getChar", GenParam(Int(), "pos"));
-    GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrOverrideFinal());
+    GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrOverride());
 
     return ast;
 }
@@ -465,7 +469,7 @@ static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& i
     GenMemberProc(*ast, Bool(), "remove", GenParam(Int(), "pos"));
     GenMemberProc(*ast, Int(), "find", ( GenParam(entryType, "entry"), GenParam(Int(), "from", GenIntExpr("0")) ));
     GenMemberProc(*ast, Bool(), "contains", GenParam(entryType, "entry"));
-    GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrOverrideFinal());
+    GenMemberProc(*ast, Int(), "pointer", ParamList(), AttrOverride());
 
     return ast;
 }
@@ -513,7 +517,7 @@ static std::unique_ptr<ClassDeclStmnt> GenBufferClass()
     GenMemberProc(*ast, Float(), "readFloat", GenParam(intType, "offset"));
     GenMemberProc(*ast, voidType, "writeBuffer", ( GenParam(intType, "offset"), GenParam(intType, "size"), GenParam(Buffer(), "buffer") ));
     GenMemberProc(*ast, voidType, "readBuffer", ( GenParam(intType, "offset"), GenParam(intType, "size"), GenParam(Buffer(), "buffer") ));
-    GenMemberProc(*ast, intType, "pointer", ParamList(), AttrOverrideFinal());
+    GenMemberProc(*ast, intType, "pointer", ParamList(), AttrOverride());
 
     return ast;
 }

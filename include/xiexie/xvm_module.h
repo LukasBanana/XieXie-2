@@ -55,11 +55,13 @@ typedef void* XVM_Object;
 typedef void* XVM_String;
 //! XVM "Array" class type, e.g. 'Object[]'.
 typedef void* XVM_Array;
-//! XVM "PrimArray" class type, e.g. 'int[]'.
-typedef void* XVM_PrimArray;
+//! XVM "IntArray" class type, e.g. 'int[]'.
+typedef void* XVM_IntArray;
+//! XVM "FloatArray" class type, e.g. 'float[]'.
+typedef void* XVM_FloatArray;
 //! XVM "BoolArray" class type, e.g. 'bool[]'.
 typedef void* XVM_BoolArray;
-//! XVM "Buffer" class type, e.g. 'bool[]'.
+//! XVM "Buffer" class type.
 typedef void* XVM_Buffer;
 
 /**
@@ -106,11 +108,35 @@ int XVM_String_size(XVM_String obj);
 void XVM_String_resize(XVM_String obj, int size);
 char* XVM_String_pointer(XVM_String obj);
 void XVM_String_set(XVM_String obj, const char* str);
+void XVM_String_append(XVM_String obj, const char* str);
 
 
 /* ----- Array Class ----- */
 
-XVM_Object* XVM_Array_pointer(XVM_Object obj);
+XVM_Object* XVM_Array_pointer(XVM_Array obj);
+int XVM_Array_size(XVM_Array obj);
+void XVM_Array_resize(XVM_Array obj, int size);
+
+
+/* ----- IntArray Class ----- */
+
+int* XVM_IntArray_pointer(XVM_IntArray obj);
+int XVM_IntArray_size(XVM_IntArray obj);
+void XVM_IntArray_resize(XVM_IntArray obj, int size);
+
+
+/* ----- FloatArray Class ----- */
+
+float* XVM_FloatArray_pointer(XVM_FloatArray obj);
+int XVM_FloatArray_size(XVM_IntArray obj);
+void XVM_FloatArray_resize(XVM_IntArray obj, int size);
+
+
+/* ----- Buffer Class ----- */
+
+void* XVM_Buffer_pointer(XVM_Buffer obj);
+int XVM_Buffer_size(XVM_Buffer obj);
+void XVM_Buffer_resize(XVM_Buffer obj, int size);
 
 
 /* ----- Parameter Fetch ----- */
@@ -124,14 +150,23 @@ int XVM_ParamInt(XVM_Env env, unsigned int paramIndex);
 //! Returns the argument as float, specified by the parameter index (beginning with 1).
 float XVM_ParamFloat(XVM_Env env, unsigned int paramIndex);
 
-//! Returns the argument as raw pointer, specified by the parameter index (beginning with 1).
-void* XVM_ParamPointer(XVM_Env env, unsigned int paramIndex);
-
 //! Returns the argument as "Object" reference, specified by the parameter index (beginning with 1).
 XVM_Object XVM_ParamObject(XVM_Env env, unsigned int paramIndex);
 
 //! Returns the argument as "String" reference, specified by the parameter index (beginning with 1).
 XVM_String XVM_ParamString(XVM_Env env, unsigned int paramIndex);
+
+//! Returns the argument as "Array" reference, specified by the parameter index (beginning with 1).
+XVM_Array XVM_ParamArray(XVM_Env env, unsigned int paramIndex);
+
+//! Returns the argument as "IntArray" reference, specified by the parameter index (beginning with 1).
+XVM_IntArray XVM_ParamIntArray(XVM_Env env, unsigned int paramIndex);
+
+//! Returns the argument as "FloatArray" reference, specified by the parameter index (beginning with 1).
+XVM_FloatArray XVM_ParamFloatArray(XVM_Env env, unsigned int paramIndex);
+
+//! Returns the argument as "Buffer" reference, specified by the parameter index (beginning with 1).
+XVM_Buffer XVM_ParamBuffer(XVM_Env env, unsigned int paramIndex);
 
 
 /* ----- Return Statements ----- */

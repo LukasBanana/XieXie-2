@@ -6,6 +6,7 @@
  */
 
 #include <xiexie/xvm_module.h>
+#include <limits.h>
 
 
 /* ----- Internals ----- */
@@ -71,6 +72,8 @@ _XVM_Env;
 #define ENV_REG(env, reg)   (ENV(env)->regRef[reg])
 #define ENV_STACK_PTR(env)  ((XVM_Word*)ENV_REG(env, REG_SP))
 
+#define ERROR_INVALID_ARG   _errorCallback("invalid argument for " __FUNCTION__)
+
 
 /* ----- Error Handling ----- */
 
@@ -90,7 +93,15 @@ void XVM_SetErrorCallback(XVM_ERROR_PROC callback)
 }
 
 
-/* ----- Object Class ----- */
+/* ----- Common ----- */
+
+#define TYPEID_OBJECT       0
+#define TYPEID_STRING       1
+#define TYPEID_ARRAY        2
+#define TYPEID_INTARRAY     3
+#define TYPEID_FLOATARRAY   4
+#define TYPEID_BOOLARRAY    5
+#define TYPEID_BUFFER       6
 
 typedef struct
 {
@@ -99,6 +110,58 @@ typedef struct
     void*       vtable;
 }
 _XVM_Object;
+
+typedef struct
+{
+    _XVM_Object super;
+    int         size;
+    int         bufSize;
+    char*       buffer;
+}
+_XVM_Buffer;
+
+static XVM_Boolean _resize_buffer(_XVM_Buffer* obj, int size)
+{
+    // Setup buffer size
+    static const int bufSizeMin = 64;
+
+    if (size < 0)
+        size = 0;
+    int bufSize = size;
+
+    if (obj == NULL || obj->buffer == NULL)
+        return XVM_False;
+
+    if (bufSize < bufSizeMin)
+        bufSize = bufSizeMin;
+
+    // Allocate new buffer
+    char* buffer = (char*)malloc(sizeof(char)*bufSize);
+
+    if (size > obj->size)
+    {
+        // Copy entire old buffer into new buffer and fill rest with zeros
+        memcpy(buffer, obj->buffer, sizeof(char)*(obj->size));
+        memset(&(buffer[obj->size]), 0, sizeof(char)*(size - obj->size));
+    }
+    else
+    {
+        // Copy partial old buffer into new buffer
+        memcpy(buffer, obj->buffer, sizeof(char)*size);
+    }
+
+    // Replace buffer
+    free(obj->buffer);
+    
+    obj->buffer     = buffer;
+    obj->size       = size;
+    obj->bufSize    = bufSize;
+
+    return XVM_True;
+}
+
+
+/* ----- Object Class ----- */
 
 static _XVM_Object* _XVM_AllocObject(size_t size, unsigned typeID, void* vtable)
 {
@@ -129,74 +192,40 @@ void* XVM_Object_pointer(XVM_Object obj)
 
 /* ----- String Class ----- */
 
-typedef struct
-{
-    _XVM_Object super;
-    unsigned    size;
-    unsigned    bufSize;
-    char*       buffer;
-}
-_XVM_String;
-
 int XVM_String_size(XVM_String obj)
 {
-    return ((_XVM_String*)obj)->size;
+    return ((_XVM_Buffer*)obj)->size - 1;
 }
 
 void XVM_String_resize(XVM_String obj, int size)
 {
-    _XVM_String* _obj;
-    unsigned _size;
-
+    // Setup string size
     if (size < 0)
         size = 0;
+    ++size;
 
-    _obj = (_XVM_String*)obj;
-    _size = (unsigned)size;
-
-    if (_obj == NULL || _obj->buffer == NULL)
-    {
-        _errorCallback("invalid argument in 'String.resize'");
-        return;
-    }
-
-    // Allocate new buffer for string
-    char* buffer = (char*)malloc(sizeof(char)*(_size + 1));
-    buffer[_size] = '\0';
-
-    if (_size > _obj->size)
-    {
-        // Copy entire old string into new buffer and fill rest with zeros
-        memcpy(buffer, _obj->buffer, sizeof(char)*(_obj->size));
-        memset(&(buffer[_obj->size]), 0, sizeof(char)*(_size - _obj->size));
-    }
+    // Resize string buffer
+    _XVM_Buffer* _obj = (_XVM_Buffer*)obj;
+    if (_resize_buffer(_obj, size) == XVM_True)
+        _obj->buffer[size - 1] = '\0';
     else
-    {
-        // Copy partial old string into new buffer
-        memcpy(buffer, _obj->buffer, sizeof(char)*_size);
-    }
-
-    // Replace string buffer
-    free(_obj->buffer);
-    _obj->buffer    = buffer;
-    _obj->size      = _size;
-    _obj->bufSize   = _size;
+        ERROR_INVALID_ARG;
 }
 
 char* XVM_String_pointer(XVM_String obj)
 {
-    return ((_XVM_String*)obj)->buffer;
+    return ((_XVM_Buffer*)obj)->buffer;
 }
 
 void XVM_String_set(XVM_String obj, const char* str)
 {
-    _XVM_String* _obj;
+    _XVM_Buffer* _obj;
 
     // Verify input parameters
     if (obj == NULL)
         return;
 
-    _obj = (_XVM_String*)obj;
+    _obj = (_XVM_Buffer*)obj;
 
     if (str == NULL)
     {
@@ -209,24 +238,107 @@ void XVM_String_set(XVM_String obj, const char* str)
     XVM_String_resize(obj, (int)size);
 
     // Copy string
-    memcpy(_obj->buffer, str, size + 1);
+    memcpy(_obj->buffer, str, size);
+}
+
+void XVM_String_append(XVM_String obj, const char* str)
+{
+    _XVM_Buffer* _obj;
+
+    // Verify input parameters
+    if (obj == NULL || str == NULL)
+        return;
+
+    _obj = (_XVM_Buffer*)obj;
+    
+    // Determine string size
+    int size = XVM_String_size(obj);
+    size_t appendSize = strlen(str);
+
+    if ((size_t)size + appendSize >= INT_MAX)
+    {
+        _errorCallback("string is too long to be appended to a 'String' object");
+        return;
+    }
+
+    // Resize string to new length
+    XVM_String_resize(obj, size + (int)appendSize);
+
+    // Copy string
+    memcpy(&(_obj->buffer[size]), str, appendSize);
 }
 
 
 /* ----- Array Class ----- */
 
-typedef struct
-{
-    _XVM_Object super;
-    unsigned    size;
-    unsigned    bufSize;
-    XVM_Object* buffer;
-}
-_XVM_Array;
-
 XVM_Object* XVM_Array_pointer(XVM_Object obj)
 {
-    return ((_XVM_Array*)obj)->buffer;
+    return (XVM_Object*)((_XVM_Buffer*)obj)->buffer;
+}
+
+int XVM_Array_size(XVM_Array obj)
+{
+    return ((_XVM_Buffer*)obj)->size / 4;
+}
+
+void XVM_Array_resize(XVM_Array obj, int size)
+{
+    _resize_buffer((_XVM_Buffer*)obj, size * 4);
+}
+
+
+/* ----- IntArray Class ----- */
+
+int* XVM_IntArray_pointer(XVM_IntArray obj)
+{
+    return (int*)((_XVM_Buffer*)obj)->buffer;
+}
+
+int XVM_IntArray_size(XVM_IntArray obj)
+{
+    return XVM_Array_size((XVM_Array)obj);
+}
+
+void XVM_IntArray_resize(XVM_IntArray obj, int size)
+{
+    XVM_Array_resize((XVM_Array)obj, size);
+}
+
+
+/* ----- FloatArray Class ----- */
+
+float* XVM_FloatArray_pointer(XVM_FloatArray obj)
+{
+    return (float*)((_XVM_Buffer*)obj)->buffer;
+}
+
+int XVM_FloatArray_size(XVM_FloatArray obj)
+{
+    return XVM_Array_size((XVM_Array)obj);
+}
+
+void XVM_FloatArray_resize(XVM_FloatArray obj, int size)
+{
+    XVM_Array_resize((XVM_Array)obj, size);
+}
+
+
+/* ----- Buffer Class ----- */
+
+void* XVM_Buffer_pointer(XVM_Buffer obj)
+{
+    return (void*)((_XVM_Buffer*)obj)->buffer;
+}
+
+int XVM_Buffer_size(XVM_Buffer obj)
+{
+    return ((_XVM_Buffer*)obj)->size;
+}
+
+void XVM_Buffer_resize(XVM_Buffer obj, int size)
+{
+    if (_resize_buffer((_XVM_Buffer*)obj, size) == XVM_False)
+        ERROR_INVALID_ARG;
 }
 
 
@@ -247,19 +359,42 @@ float XVM_ParamFloat(XVM_Env env, unsigned int paramIndex)
     return *(float*)(ENV_STACK_PTR(env) - paramIndex);
 }
 
-void* XVM_ParamPointer(XVM_Env env, unsigned int paramIndex)
+static XVM_Object _XVM_ParamObject(XVM_Env env, unsigned int paramIndex, int typeID)
 {
-    return (void*)*(ENV_STACK_PTR(env) - paramIndex);
+    _XVM_Object* _obj = (_XVM_Object*)*(ENV_STACK_PTR(env) - paramIndex);
+    if (_obj->typeID != typeID)
+        return NULL;
+    return (XVM_Object)_obj;
 }
 
 XVM_Object XVM_ParamObject(XVM_Env env, unsigned int paramIndex)
 {
-    return (XVM_Object)XVM_ParamPointer(env, paramIndex);
+    return (XVM_Object)*(ENV_STACK_PTR(env) - paramIndex);
 }
 
 XVM_String XVM_ParamString(XVM_Env env, unsigned int paramIndex)
 {
-    return (XVM_String)XVM_ParamPointer(env, paramIndex);
+    return (XVM_String)_XVM_ParamObject(env, paramIndex, TYPEID_STRING);
+}
+
+XVM_Array XVM_ParamArray(XVM_Env env, unsigned int paramIndex)
+{
+    return (XVM_Array)_XVM_ParamObject(env, paramIndex, TYPEID_ARRAY);
+}
+
+XVM_IntArray XVM_ParamIntArray(XVM_Env env, unsigned int paramIndex)
+{
+    return (XVM_IntArray)_XVM_ParamObject(env, paramIndex, TYPEID_INTARRAY);
+}
+
+XVM_FloatArray XVM_ParamFloatArray(XVM_Env env, unsigned int paramIndex)
+{
+    return (XVM_FloatArray)_XVM_ParamObject(env, paramIndex, TYPEID_FLOATARRAY);
+}
+
+XVM_Buffer XVM_ParamBuffer(XVM_Env env, unsigned int paramIndex)
+{
+    return (XVM_Buffer)_XVM_ParamObject(env, paramIndex, TYPEID_BUFFER);
 }
 
 
