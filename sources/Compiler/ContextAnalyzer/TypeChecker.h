@@ -9,6 +9,8 @@
 #define __XX_TYPE_CHECKER_H__
 
 
+#include "CastExpr.h"
+
 #include <string>
 
 
@@ -23,6 +25,7 @@ namespace TypeChecker
 {
 
 
+//! Returns true if the specified type denoters are compatible.
 bool VerifyTypeCompatibility(
     const AbstractSyntaxTrees::TypeDenoter& lhs,
     const AbstractSyntaxTrees::TypeDenoter& rhs,
@@ -30,10 +33,17 @@ bool VerifyTypeCompatibility(
     bool explicitTypeMatch = false
 );
 
+//! Returns true if the specified type denoters are valid for a cast expression.
 bool VerifyTypeCastCompatibility(
     const AbstractSyntaxTrees::TypeDenoter& dstType,
     const AbstractSyntaxTrees::TypeDenoter& srcType,
     std::string* errorOut = nullptr
+);
+
+//! Determines which kind of cast is required for the specified type denoters.
+AbstractSyntaxTrees::CastExpr::CastTypes DetermineCastType(
+    const AbstractSyntaxTrees::TypeDenoter& dstType,
+    const AbstractSyntaxTrees::TypeDenoter& srcType
 );
 
 

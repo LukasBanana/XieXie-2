@@ -27,6 +27,8 @@ using namespace AbstractSyntaxTrees;
  * Internal functions
  */
 
+using CastTypes = CastExpr::CastTypes;
+
 static std::string TypeName(const TypeDenoter& type)
 {
     return "(" + type.ToString() + ")";
@@ -43,40 +45,46 @@ static void AssertTypeEquality(const TypeDenoter& lhs, const TypeDenoter& rhs)
         throw std::string(TypeComparison(lhs, rhs) + " are incompatible types");
 }
 
+static const BuiltinTypeDenoter& BuiltinType(const TypeDenoter& typeDenoter)
+{
+    return static_cast<const BuiltinTypeDenoter&>(typeDenoter);
+}
+
+static const ArrayTypeDenoter& ArrayType(const TypeDenoter& typeDenoter)
+{
+    return static_cast<const ArrayTypeDenoter&>(typeDenoter);
+}
+
+static const PointerTypeDenoter& PointerType(const TypeDenoter& typeDenoter)
+{
+    return static_cast<const PointerTypeDenoter&>(typeDenoter);
+}
+
 /* --- Type Check --- */
 
-static void VerifyBuiltinTypes(const TypeDenoter& lhs, const TypeDenoter& rhs)
+static bool VerifyBuiltinTypes(const BuiltinTypeDenoter& lhs, const BuiltinTypeDenoter& rhs)
 {
-    auto& lhsSub = static_cast<const BuiltinTypeDenoter&>(lhs);
-    auto& rhsSub = static_cast<const BuiltinTypeDenoter&>(rhs);
-
-    if (lhsSub.typeName != rhsSub.typeName)
+    if (lhs.typeName != rhs.typeName)
         throw std::string("built-in types " + TypeComparison(lhs, rhs) + " must be explicitly casted");
+    return true;
 }
 
-static bool VerifyArrayTypes(const TypeDenoter& lhs, const TypeDenoter& rhs, std::string* errorOut, bool explicitTypeMatch)
+static bool VerifyArrayTypes(const ArrayTypeDenoter& lhs, const ArrayTypeDenoter& rhs, std::string* errorOut, bool explicitTypeMatch)
 {
-    auto& lhsSub = static_cast<const ArrayTypeDenoter&>(lhs);
-    auto& rhsSub = static_cast<const ArrayTypeDenoter&>(rhs);
-
-    if (!lhsSub.lowerTypeDenoter || !rhsSub.lowerTypeDenoter)
+    if (!lhs.lowerTypeDenoter || !rhs.lowerTypeDenoter)
         throw std::string("invalid lower type denoter in array type denoter");
-
-    return VerifyTypeCompatibility(*lhsSub.lowerTypeDenoter, *rhsSub.lowerTypeDenoter, errorOut, explicitTypeMatch);
+    return VerifyTypeCompatibility(*lhs.lowerTypeDenoter, *rhs.lowerTypeDenoter, errorOut, explicitTypeMatch);
 }
 
-static void VerifyPointerTypes(const TypeDenoter& lhs, const TypeDenoter& rhs, bool explicitTypeMatch)
+static bool VerifyPointerTypes(const PointerTypeDenoter& lhs, const PointerTypeDenoter& rhs, bool explicitTypeMatch)
 {
-    auto& lhsSub = static_cast<const PointerTypeDenoter&>(lhs);
-    auto& rhsSub = static_cast<const PointerTypeDenoter&>(rhs);
-
-    if (lhsSub.declRef && rhsSub.declRef)
+    if (lhs.declRef && rhs.declRef)
     {
         /* Get class declarations */
-        if (lhsSub.declRef->Type() == AST::Types::ClassDeclStmnt && rhsSub.declRef->Type() == AST::Types::ClassDeclStmnt)
+        if (lhs.declRef->Type() == AST::Types::ClassDeclStmnt && rhs.declRef->Type() == AST::Types::ClassDeclStmnt)
         {
-            auto lhsClassDecl = static_cast<const ClassDeclStmnt*>(lhsSub.declRef);
-            auto rhsClassDecl = static_cast<const ClassDeclStmnt*>(rhsSub.declRef);
+            auto lhsClassDecl = static_cast<const ClassDeclStmnt*>(lhs.declRef);
+            auto rhsClassDecl = static_cast<const ClassDeclStmnt*>(rhs.declRef);
 
             /* Check class dependency */
             if ( lhsClassDecl != rhsClassDecl && ( explicitTypeMatch || !rhsClassDecl->IsSubClassOf(*lhsClassDecl) ) )
@@ -85,48 +93,40 @@ static void VerifyPointerTypes(const TypeDenoter& lhs, const TypeDenoter& rhs, b
         else
             throw std::string("pointers must refer to class declarations");
     }
+    return true;
 }
 
 /* --- Casts --- */
 
-static void VerifyBuiltinCastTypes(const TypeDenoter& dstType, const TypeDenoter& srcType)
+static bool VerifyBuiltinCastTypes(const BuiltinTypeDenoter& dstType, const BuiltinTypeDenoter& srcType)
 {
-    auto& dstSub = static_cast<const BuiltinTypeDenoter&>(dstType);
-    auto& srcSub = static_cast<const BuiltinTypeDenoter&>(srcType);
-
-    if (dstSub.typeName != srcSub.typeName)
+    if (dstType.typeName != srcType.typeName)
     {
-        if ( dstSub.typeName == BuiltinTypeDenoter::TypeNames::Bool ||
-             srcSub.typeName == BuiltinTypeDenoter::TypeNames::Bool )
+        if ( dstType.typeName == BuiltinTypeDenoter::TypeNames::Bool ||
+             srcType.typeName == BuiltinTypeDenoter::TypeNames::Bool )
         {
             throw std::string("boolean types can not be casted");
         }
     }
+    return true;
 }
 
-static bool VerifyArrayCastTypes(const TypeDenoter& dstType, const TypeDenoter& srcType, std::string* errorOut)
+static bool VerifyArrayCastTypes(const ArrayTypeDenoter& dstType, const ArrayTypeDenoter& srcType, std::string* errorOut)
 {
-    auto& dstSub = static_cast<const ArrayTypeDenoter&>(dstType);
-    auto& srcSub = static_cast<const ArrayTypeDenoter&>(srcType);
-
-    if (!dstSub.lowerTypeDenoter || !srcSub.lowerTypeDenoter)
+    if (!dstType.lowerTypeDenoter || !srcType.lowerTypeDenoter)
         throw std::string("invalid lower type denoter in array type denoter");
-
-    return VerifyTypeCastCompatibility(*dstSub.lowerTypeDenoter, *srcSub.lowerTypeDenoter, errorOut);
+    return VerifyTypeCastCompatibility(*dstType.lowerTypeDenoter, *srcType.lowerTypeDenoter, errorOut);
 }
 
-static void VerifyPointerCastTypes(const TypeDenoter& dstType, const TypeDenoter& srcType)
+static bool VerifyPointerCastTypes(const PointerTypeDenoter& dstType, const PointerTypeDenoter& srcType)
 {
-    auto& dstSub = static_cast<const PointerTypeDenoter&>(dstType);
-    auto& srcSub = static_cast<const PointerTypeDenoter&>(srcType);
-
-    if (dstSub.declRef && srcSub.declRef)
+    if (dstType.declRef && srcType.declRef)
     {
         /* Get class declarations */
-        if (dstSub.declRef->Type() == AST::Types::ClassDeclStmnt && srcSub.declRef->Type() == AST::Types::ClassDeclStmnt)
+        if (dstType.declRef->Type() == AST::Types::ClassDeclStmnt && srcType.declRef->Type() == AST::Types::ClassDeclStmnt)
         {
-            auto dstClassDecl = static_cast<const ClassDeclStmnt*>(dstSub.declRef);
-            auto srcClassDecl = static_cast<const ClassDeclStmnt*>(srcSub.declRef);
+            auto dstClassDecl = static_cast<const ClassDeclStmnt*>(dstType.declRef);
+            auto srcClassDecl = static_cast<const ClassDeclStmnt*>(srcType.declRef);
 
             /* Check class dependency */
             if ( dstClassDecl != srcClassDecl && !srcClassDecl->IsSubClassOf(*dstClassDecl) && !dstClassDecl->IsSubClassOf(*srcClassDecl) )
@@ -135,6 +135,7 @@ static void VerifyPointerCastTypes(const TypeDenoter& dstType, const TypeDenoter
         else
             throw std::string("pointers must refer to class declarations");
     }
+    return true;
 }
 
 
@@ -154,13 +155,11 @@ bool VerifyTypeCompatibility(const TypeDenoter& lhs, const TypeDenoter& rhs, std
         switch (lhs.Type())
         {
             case AST::Types::BuiltinTypeDenoter:
-                VerifyBuiltinTypes(lhs, rhs);
-                return true;
+                return VerifyBuiltinTypes(BuiltinType(lhs), BuiltinType(rhs));
             case AST::Types::ArrayTypeDenoter:
-                return VerifyArrayTypes(lhs, rhs, errorOut, explicitTypeMatch);
+                return VerifyArrayTypes(ArrayType(lhs), ArrayType(rhs), errorOut, explicitTypeMatch);
             case AST::Types::PointerTypeDenoter:
-                VerifyPointerTypes(lhs, rhs, explicitTypeMatch);
-                return true;
+                return VerifyPointerTypes(PointerType(lhs), PointerType(rhs), explicitTypeMatch);
         }
     }
     catch (const std::string& err)
@@ -183,13 +182,11 @@ bool VerifyTypeCastCompatibility(const TypeDenoter& dstType, const TypeDenoter& 
         switch (dstType.Type())
         {
             case AST::Types::BuiltinTypeDenoter:
-                VerifyBuiltinCastTypes(dstType, srcType);
-                return true;
+                return VerifyBuiltinCastTypes(BuiltinType(dstType), BuiltinType(srcType));
             case AST::Types::ArrayTypeDenoter:
-                return VerifyArrayCastTypes(dstType, srcType, errorOut);
+                return VerifyArrayCastTypes(ArrayType(dstType), ArrayType(srcType), errorOut);
             case AST::Types::PointerTypeDenoter:
-                VerifyPointerCastTypes(dstType, srcType);
-                return true;
+                return VerifyPointerCastTypes(PointerType(dstType), PointerType(srcType));
         }
     }
     catch (const std::string& err)
@@ -198,6 +195,27 @@ bool VerifyTypeCastCompatibility(const TypeDenoter& dstType, const TypeDenoter& 
             *errorOut = err;
     }
     return false;
+}
+
+CastTypes DetermineCastType(const TypeDenoter& dstType, const TypeDenoter& srcType)
+{
+    if (dstType.IsNullable() && srcType.IsNull())
+        return CastTypes::None;
+
+    if (dstType.Type() == srcType.Type())
+    {
+        /*switch (dstType.Type())
+        {
+            case AST::Types::BuiltinTypeDenoter:
+                return DetermineBuiltinCastType(BuiltinType(dstType), BuiltinType(srcType));
+            case AST::Types::ArrayTypeDenoter:
+                return DetermineArrayCastType(ArrayType(dstType), ArrayType(srcType));
+            case AST::Types::PointerTypeDenoter:
+                return DeterminePointerCastType(PointerType(dstType), PointerType(srcType));
+        }*/
+    }
+
+    return CastTypes::None;
 }
 
 

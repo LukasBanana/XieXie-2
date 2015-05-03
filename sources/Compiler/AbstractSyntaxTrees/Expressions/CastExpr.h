@@ -21,12 +21,23 @@ class CastExpr : public Expr
     
     public:
         
+        //! Type of casts enumeration.
+        enum class CastTypes
+        {
+            None,       //!< No cast is required for the code generation.
+            Static,     //!< Static cast is required.
+            Dynamic,    //!< Dynamic cast is required.
+        };
+
         AST_INTERFACE_EXT(CastExpr, Expr);
 
         const TypeDenoter* GetTypeDenoter() const override;
 
         TypeDenoterPtr  castTypeDenoter;
         ExprPtr         expr;
+
+        // dast
+        CastTypes       castType = CastTypes::None;
 
 };
 
