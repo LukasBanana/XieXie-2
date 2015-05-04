@@ -66,19 +66,19 @@ static void AppendDefaultScript(std::stringstream& sstr)
 {
     sstr
         << "class S { " << std::endl
-        << "static void print(int val) { Intrinsics.printInt(val) }" << std::endl
-        << "static void print(float val) { Intrinsics.printFloat(val) }" << std::endl
-        << "static void print(String val) { Intrinsics.print(val.pointer()) }" << std::endl
-        << "static void printLn(int val) { Intrinsics.printInt(val) Intrinsics.printLn(0) }" << std::endl
-        << "static void printLn(float val) { Intrinsics.printFloat(val) Intrinsics.printLn(0) }" << std::endl
-        << "static void printLn(String val) { Intrinsics.printLn(val.pointer()) }" << std::endl
+        << "void print(int val) { Intrinsics.printInt(val) }" << std::endl
+        << "void print(float val) { Intrinsics.printFloat(val) }" << std::endl
+        << "void print(String val) { Intrinsics.print(val.pointer()) }" << std::endl
+        << "void printLn(int val) { Intrinsics.printInt(val) Intrinsics.printLn(0) }" << std::endl
+        << "void printLn(float val) { Intrinsics.printFloat(val) Intrinsics.printLn(0) }" << std::endl
+        << "void printLn(String val) { Intrinsics.printLn(val.pointer()) }" << std::endl
         //<< "void print(int[] val) { foreach v : val { print(v) } }" << std::endl
         //<< "void print(float[] val) { foreach v : val { print(v) } }" << std::endl
         //<< "void print(String[] val) { foreach v : val { print(v) } }" << std::endl
         << "static void main() {" << std::endl
-        /*<< "    var script := new S()" << std::endl
+        << "    var script := new S()" << std::endl
         << "}" << std::endl
-        << "init() {" << std::endl*/
+        << "init() {" << std::endl
     ;
 }
 
