@@ -37,6 +37,21 @@ std::string ProcCall::ToString() const
     return str;
 }
 
+bool ProcCall::IsProc(const std::string& procIdent) const
+{
+    return procName != nullptr ? (procName->GetLast().ident == procIdent) : false;
+}
+
+bool ProcCall::IsInitProc() const
+{
+    return IsProc("init");
+}
+
+bool ProcCall::IsReleaseProc() const
+{
+    return IsProc("release");
+}
+
 
 } // /namespace AbstractSyntaxTrees
 

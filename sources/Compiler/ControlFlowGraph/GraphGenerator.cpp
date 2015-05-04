@@ -216,9 +216,12 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     if (!isDirectCall)
     {
         /* Generate instructions for variable-name, to acquire 'this' pointer */
-        GenerateVarNameRValue(*ast->procName, reinterpret_cast<const TACVar*>(args));
-        auto objVar = PopVar();
+        if (ast->IsInitProc())
+            PushVar(ResultVar());
+        else
+            GenerateVarNameRValue(*ast->procName, reinterpret_cast<const TACVar*>(args));
 
+        auto objVar = PopVar();
         if (objVar != ThisPtr())
         {
             /* Replace current 'this' pointer */
@@ -1164,7 +1167,6 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
         /* Generate allocation code */
         const auto& classArray = BuiltinClasses::Array;
         GenerateClassAlloc(classArray.instanceSize, classArray.typeID, classArray.GetVtableAddr());
-        CopyAndPushResultVar(ThisPtr());
     }
     else if (ast->typeDenoter->IsPointer())
     {
@@ -1177,13 +1179,19 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 
         /* Generate allocation code */
         GenerateClassAlloc(*classDecl);
-        CopyAndPushResultVar(ThisPtr());
     }
     else
         Error("can not generate dynamic allocation for built-in types", ast);
 
+    /* Restore variable to allcoated object */
+    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, ResultVar());
+
     /* Call constructor */
     Visit(&(ast->procCall));
+
+    /* Restore variable to allocated object */
+    BB()->MakeInst<TACStackInst>(OpCodes::POP, ResultVar());
+    PushVar(ResultVar());
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)

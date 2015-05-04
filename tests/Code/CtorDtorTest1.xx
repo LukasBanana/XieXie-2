@@ -1,0 +1,33 @@
+
+// C'tor/D'tor Test 1
+// 04/05/2015
+
+import Integer
+import Console
+
+class Widget {
+	
+	init(int x) {
+		this.x := x
+		Console.writeLine("Widget.init")
+		Console.writeLine(x)
+	}
+	release {
+		Console.writeLine("Widget.release")
+		Console.writeLine(x)
+	}
+	
+	private int x
+	
+}
+
+/// Test for the constructor and destructor
+class Test {
+	
+	static void main() {
+		var w1 := new Widget(1)
+		var w2 := new Widget(2)
+	}
+	
+}
+

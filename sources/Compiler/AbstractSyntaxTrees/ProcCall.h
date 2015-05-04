@@ -28,6 +28,13 @@ class ProcCall : public AST
         //! Returns a string representation of this procedure call.
         std::string ToString() const;
 
+        //! Returns true if this procedure call refers to a procedure with identifier 'procIdent'.
+        bool IsProc(const std::string& procIdent) const;
+        //! Returns true if this procedure call refers to an "init" procedure.
+        bool IsInitProc() const;
+        //! Returns true if this procedure call refers to a "release" procedure.
+        bool IsReleaseProc() const;
+
         /* === Members === */
 
         VarNamePtr          procName;
