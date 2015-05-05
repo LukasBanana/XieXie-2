@@ -654,7 +654,10 @@ void GenerateSetter(const VarDecl& memberVar, const VarDecl::Vis visibility)
 
     /* Generate procedure signature */
     auto param = GenParam(memberVar.GetTypeDenoter()->CopyRef(), varIdent);
-    auto procDecl = GenProcDeclStmnt(classDecl, Void(), procIdent, param, AttrFinal());
+    auto procDecl = GenProcDeclStmnt(
+        classDecl, Void(), procIdent, param,
+        memberVar.IsStatic() ? nullptr : AttrFinal()
+    );
 
     procDecl->procSignature->isStatic = memberVar.IsStatic();
 
@@ -685,7 +688,10 @@ void GenerateGetter(const VarDecl& memberVar, const VarDecl::Vis visibility)
 
     /* Generate procedure signature */
     auto returnType = memberVar.GetTypeDenoter()->CopyRef();
-    auto procDecl = GenProcDeclStmnt(classDecl, returnType, procIdent, ParamList(), AttrFinal());
+    auto procDecl = GenProcDeclStmnt(
+        classDecl, returnType, procIdent, ParamList(),
+        memberVar.IsStatic() ? nullptr : AttrFinal()
+    );
 
     procDecl->procSignature->isStatic = memberVar.IsStatic();
     
