@@ -124,7 +124,7 @@ friend_decl_stmnt:	'friend' friend_list;
 friend_list:		IDENT (',' IDENT)*;
 
 // CLASSES
-class_decl_stmnt:			attrib_prefix? (intern_class_decl_stmnt | extern_class_decl_stmnt);
+class_decl_stmnt:			attrib_prefix? ('private')? (intern_class_decl_stmnt | extern_class_decl_stmnt);
 base_class_ident:			':' ident;
 class_visibility:			CLASS_VISIBILITY_TYPE (':')?;
 CLASS_VISIBILITY_TYPE:		'public' | 'protected' | 'private';
@@ -140,7 +140,7 @@ extern_class_body:			'{' extern_decl_stmnt_list '}';
 anonymous_class:			class_body;
 
 // MODULES
-module_decl_stmnt:			attrib_prefix? 'module' IDENT module_body;
+module_decl_stmnt:			attrib_prefix? ('private')? 'module' IDENT module_body;
 module_body:				'{' extern_proc_decl_stmnt_list '}';
 
 /*

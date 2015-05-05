@@ -7,7 +7,7 @@
 
 /// Message box module.
 [[bind]]
-module MsgBox {
+private module MsgBox {
 	
 /*	static const OK						:= 0x00000000
 	static const OK_CANCEL				:= 0x00000001

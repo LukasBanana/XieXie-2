@@ -136,10 +136,10 @@ class Parser
         WhileStmntPtr           ParseWhileStmnt();
         DoWhileStmntPtr         ParseDoWhileStmnt();
 
-        ClassDeclStmntPtr       ParseClassDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
-        ClassDeclStmntPtr       ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
-        ClassDeclStmntPtr       ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
-        ClassDeclStmntPtr       ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix = nullptr);
+        ClassDeclStmntPtr       ParseClassDeclStmnt(AttribPrefixPtr attribPrefix = nullptr, bool isPrivate = false);
+        ClassDeclStmntPtr       ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr, bool isPrivate = false);
+        ClassDeclStmntPtr       ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr, bool isPrivate = false);
+        ClassDeclStmntPtr       ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix = nullptr, bool isPrivate = false);
         ClassDeclStmntPtr       ParseAnonymousClass(const std::string& baseClassIdent);
         VarDeclStmntPtr         ParseVarDeclStmnt(
             const TokenPtr& identTkn = nullptr, bool hasArrayType = false,

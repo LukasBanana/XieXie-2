@@ -1,0 +1,23 @@
+
+// Class Test 3
+// 06/05/2015
+
+import MsgBox
+
+class MsgBox {
+	static void show(String a, String b) {
+		// do nothing
+	}
+}
+
+/// Test for private classes
+class Test {
+	
+	static void main() {
+		
+		MsgBox.show("Hello", "World!")
+		
+	}
+	
+}
+

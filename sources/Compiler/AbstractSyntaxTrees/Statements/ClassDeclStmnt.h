@@ -162,15 +162,16 @@ class ClassDeclStmnt : public ScopedStmnt
 
         /* === Members === */
 
-        bool                    isBuiltin       = false;    // is this a built-in class (e.g. "Object", "String", etc.)?
-        bool                    isExtern        = false;    // is this an extern class?
-        bool                    isModule        = false;    // is this a module class?
-        bool                    isAnonymous     = false;    // is this an anonymous class?
-
         AttribPrefixPtr         attribPrefix;               // may be null
         std::string             ident;
         std::string             baseClassIdent;             // may be empty
         std::vector<StmntPtr>   declStmnts;
+
+        bool                    isBuiltin       = false;    // is this a built-in class (e.g. "Object", "String", etc.)?
+        bool                    isExtern        = false;    // is this an extern class?
+        bool                    isModule        = false;    // is this a module class?
+        bool                    isAnonymous     = false;    // is this an anonymous class?
+        bool                    isPrivate       = false;    // is this a private class?
 
     private:
         

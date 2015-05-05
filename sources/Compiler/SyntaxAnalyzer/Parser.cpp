@@ -816,10 +816,22 @@ StmntPtr Parser::ParseClassDeclOrModuleDeclStmnt()
     if (Is(Tokens::LDParen))
         attribPrefix = ParseAttribPrefix();
 
-    if (Is(Tokens::Module))
-        return ParseModuleDeclStmnt(attribPrefix);
+    /* Parse optional "private" visibility */
+    bool isPrivate = false;
 
-    return ParseClassDeclStmnt(attribPrefix);
+    if (Is(Tokens::Visibility))
+    {
+        auto vis = AcceptIt()->Spell();
+        if (vis == "private")
+            isPrivate = true;
+        else
+            Error("only 'private' visibility is explicitly allowed for classes and modules", false);
+    }
+
+    if (Is(Tokens::Module))
+        return ParseModuleDeclStmnt(attribPrefix, isPrivate);
+
+    return ParseClassDeclStmnt(attribPrefix, isPrivate);
 }
 
 // ctrl_transfer_stmnt: break_stmnt | continue_stmnt | return_stmnt;
@@ -1102,8 +1114,8 @@ DoWhileStmntPtr Parser::ParseDoWhileStmnt()
     return ast;
 }
 
-// class_decl_stmnt: attrib_prefix? (intern_class_decl_stmnt | extern_class_decl_stmnt);
-ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
+// class_decl_stmnt: attrib_prefix? ('private')? (intern_class_decl_stmnt | extern_class_decl_stmnt);
+ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix, bool isPrivate)
 {
     if (!attribPrefix && Is(Tokens::LDParen))
         attribPrefix = ParseAttribPrefix();
@@ -1113,23 +1125,23 @@ ClassDeclStmntPtr Parser::ParseClassDeclStmnt(AttribPrefixPtr attribPrefix)
     if (Is(Tokens::Extern))
     {
         AcceptIt();
-        return ParseExternClassDeclStmnt(attribPrefix);
+        return ParseExternClassDeclStmnt(attribPrefix, isPrivate);
     }
 
-    return ParseInternClassDeclStmnt(attribPrefix);
+    return ParseInternClassDeclStmnt(attribPrefix, isPrivate);
 }
 
 // intern_class_decl_stmnt: 'class' IDENT base_class_ident? class_body;
-ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
+ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attribPrefix, bool isPrivate)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
 
-    state_.classDecl = ast.get();
-    state_.classVis = ProcDeclStmnt::Vis::Public;
+    state_.classDecl        = ast.get();
+    state_.classVis         = ProcDeclStmnt::Vis::Public;
 
-    /* Setup attribute prefix */
-    ast->attribPrefix = attribPrefix;
-    ast->sourceArea.start = Accept(Tokens::Class)->Area().start;
+    ast->attribPrefix       = attribPrefix;
+    ast->isPrivate          = isPrivate;
+    ast->sourceArea.start   = Accept(Tokens::Class)->Area().start;
 
     /* Parse class signature */
     auto identTkn = Accept(Tokens::Ident);
@@ -1153,15 +1165,17 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
 }
 
 // extern_class_decl_stmnt: 'extern' 'class' IDENT base_class_ident? extern_class_body;
-ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix)
+ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attribPrefix, bool isPrivate)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
 
-    state_.classDecl = ast.get();
-    state_.classVis = ProcDeclStmnt::Vis::Public;
+    state_.classDecl    = ast.get();
+    state_.classVis     = ProcDeclStmnt::Vis::Public;
 
-    ast->isExtern = true;
-    ast->attribPrefix = attribPrefix;
+    ast->isExtern       = true;
+    ast->isPrivate      = isPrivate;
+    ast->attribPrefix   = attribPrefix;
+
     Accept(Tokens::Class);
 
     ast->ident = AcceptIdent();
@@ -1180,7 +1194,7 @@ ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attri
 }
 
 // module_decl_stmnt: attrib_prefix? 'module' IDENT module_body;
-ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix)
+ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix, bool isPrivate)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
 
@@ -1190,8 +1204,10 @@ ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix)
     if (!attribPrefix && Is(Tokens::LDParen))
         attribPrefix = ParseAttribPrefix();
 
-    ast->isModule = true;
-    ast->attribPrefix = attribPrefix;
+    ast->attribPrefix   = attribPrefix;
+    ast->isModule       = true;
+    ast->isPrivate      = isPrivate;
+
     Accept(Tokens::Module);
 
     ast->ident = AcceptIdent();

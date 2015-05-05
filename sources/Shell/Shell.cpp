@@ -65,6 +65,7 @@ void Shell::Execute(StreamParser parser)
 static void AppendDefaultScript(std::stringstream& sstr)
 {
     sstr
+        << "import MsgBox" << std::endl
         << "class S { " << std::endl
         << "void print(int val) { Intrinsics.printInt(val) }" << std::endl
         << "void print(float val) { Intrinsics.printFloat(val) }" << std::endl
