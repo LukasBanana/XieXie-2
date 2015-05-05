@@ -15,7 +15,7 @@ stmnt_list:						stmnt*;
 decl_stmnt_list: 				decl_stmnt*;
 extern_decl_stmnt_list:			extern_decl_stmnt*;
 global_stmnt_list:				global_stmnt*;
-extern_proc_decl_stmnt_list:	extern_proc_decl_stmnt*;
+extern_member_decl_stmnt_list:	extern_member_decl_stmnt*;
 
 stmnt	: var_name_stmnt
 		| branch_stmnt
@@ -44,6 +44,9 @@ extern_decl_stmnt	: /*extern_class_decl_stmnt
 					| extern_init_decl_stmnt
 					/*| enum_decl_stmnt
 					| flags_decl_stmnt*/;
+
+extern_member_decl_stmnt	: extern_proc_decl_stmnt
+							| var_decl_stmnt;
 
 branch_stmnt	: if_stmnt
 				| switch_stmnt;
@@ -106,7 +109,7 @@ attrib_arg:			LITERAL;
 var_name:			(OBJECT_IDENT | var_name_sub) ('.' var_name_sub)?;
 var_name_sub:		IDENT array_access? ('.' var_name_sub)?;
 
-var_decl_stmnt:		attrib_prefix? (type_denoter | auto_type_denoter) var_decl_list;
+var_decl_stmnt:		attrib_prefix? storage_modifier? (type_denoter | auto_type_denoter) var_decl_list;
 var_decl_list:		var_decl (',' var_decl)*;
 var_decl:			IDENT var_init?
 var_init:			':=' expr;
@@ -141,7 +144,7 @@ anonymous_class:			class_body;
 
 // MODULES
 module_decl_stmnt:			attrib_prefix? ('private')? 'module' IDENT module_body;
-module_body:				'{' extern_proc_decl_stmnt_list '}';
+module_body:				'{' extern_member_decl_stmnt_list '}';
 
 /*
 // ENUMERATIONS

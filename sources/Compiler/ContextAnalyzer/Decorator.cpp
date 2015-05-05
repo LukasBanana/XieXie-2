@@ -1150,9 +1150,9 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
         {
             auto varDecl = static_cast<VarDecl*>(symbol);
 
-            if (!varDecl->parentRef->isStatic && requireStaticMembers)
+            if (!varDecl->IsStatic() && requireStaticMembers)
                 Error("variable \"" + varDecl->ident + "\" is not declared as 'static'", &ast);
-            else if (varDecl->parentRef->isStatic && !requireStaticMembers)
+            else if (varDecl->IsStatic() && !requireStaticMembers && !varDecl->IsLocal())
                 Error("variable \"" + varDecl->ident + "\" is declared as 'static'", &ast);
 
             /* Check procedure visibility */

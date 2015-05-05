@@ -4,16 +4,23 @@
 
 import MsgBox
 
-class MsgBox {
+/*class MsgBox {
 	static void show(String a, String b) {
 		// do nothing
 	}
-}
+}*/
 
 /// Test for private classes
 class Test {
 	
+	[[get]]
+	static int x := 5
+	
+	[[export]]
 	static void main() {
+		
+		static int y := 0
+		y++
 		
 		MsgBox.show("Hello", "World!")
 		

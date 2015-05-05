@@ -7,7 +7,7 @@
 
 /// Message box module.
 [[bind]]
-private module MsgBox {
+private/*<-- TEST!!!*/ module MsgBox {
 	
 /*	static const OK						:= 0x00000000
 	static const OK_CANCEL				:= 0x00000001
@@ -35,8 +35,8 @@ private module MsgBox {
 	static const ID_YES					:= 6
 	static const ID_NO					:= 7
 	static const ID_TRY					:= 10
-	static const ID_CONTINUE			:= 11*/
-	
+	static const ID_CONTINUE			:= 11
+	*/
 	/**
 	Shows a simple message box.
 	@title Specifies the box title.

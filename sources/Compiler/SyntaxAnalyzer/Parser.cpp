@@ -653,6 +653,7 @@ StmntPtr Parser::ParseStmnt()
             return ParseCtrlTransferStmnt();
         case Tokens::Var:
         case Tokens::Const:
+        case Tokens::Static:
             return ParseVarDeclStmnt();
         case Tokens::New:
         case Tokens::LBracket:
@@ -1257,7 +1258,7 @@ static void EvaluateVarDeclAttribs(const VarDecl& varDecl)
     }
 }
 
-// var_decl_stmnt: attrib_prefix? (type_denoter | auto_type_denoter) var_decl_list;
+// var_decl_stmnt: attrib_prefix? storage_modifier? (type_denoter | auto_type_denoter) var_decl_list;
 VarDeclStmntPtr Parser::ParseVarDeclStmnt(
     const TokenPtr& identTkn, bool hasArrayType, bool isStatic, const AttribPrefixPtr& attribPrefix)
 {
@@ -1267,6 +1268,12 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(
     ast->isStatic       = isStatic;
     ast->parentRef      = state_.classDecl;
     ast->scopeRef       = state_.procDecl;
+
+    if (!isStatic && Is(Tokens::Static))
+    {
+        AcceptIt();
+        ast->isStatic = true;
+    }
 
     if (Is(Tokens::Var))
     {
