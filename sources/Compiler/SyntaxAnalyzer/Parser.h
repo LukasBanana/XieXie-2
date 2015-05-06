@@ -81,12 +81,13 @@ class Parser
         
         std::string AcceptIdent();
         std::string AcceptBaseClassIdent();
-        std::string AcceptImport();
-        std::string ParseImport();
+        std::string AcceptImportIdent();
+        std::string ParseImportIdent();
 
         /* --- Common AST nodes --- */
 
         void                    ParseProgram(Program& ast);
+        void                    ParseImportStmnt(Program& ast);
         void                    ParseClassBodySegment(ClassDeclStmnt& ast, ClassDeclStmnt::Visibilities& vis);
 
         CodeBlockPtr            ParseCodeBlock();
@@ -246,6 +247,7 @@ class Parser
         std::vector<AttribPtr>              ParseAttribList();
         //std::vector<EnumEntryPtr>           ParseEnumEntryList();
         std::vector<std::string>            ParseIdentList(const Tokens separatorToken = Tokens::Comma);
+        std::vector<std::string>            ParseImportIdentList();
 
         /* --- Base functions --- */
 

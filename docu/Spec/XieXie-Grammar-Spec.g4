@@ -119,7 +119,8 @@ array_access:		'[' array_index ']' array_access?;
 array_index:		expr;
 
 // IMPORTS
-import_stmnt:		'import' (STRING_LITERAL | IDENT);
+import_stmnt:		'import' import_ident (',' import_ident)*;
+import_ident:		STRING_LITERAL | IDENT;
 import_expr:		'import' STRING_LITERAL;
 
 // FRIENDS

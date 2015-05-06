@@ -238,11 +238,9 @@ std::string Parser::AcceptBaseClassIdent()
     return AcceptIdent();
 }
 
-// import_stmnt: 'import' (STRING_LITERAL | IDENT);
-std::string Parser::AcceptImport()
+// import_ident: STRING_LITERAL | IDENT;
+std::string Parser::AcceptImportIdent()
 {
-    Accept(Tokens::Import);
-
     switch (TknType())
     {
         case Tokens::StringLiteral:
@@ -253,14 +251,13 @@ std::string Parser::AcceptImport()
             ErrorUnexpected("expected string literal or identifier for import statement");
             break;
     }
-
     return "";
 }
 
-std::string Parser::ParseImport()
+std::string Parser::ParseImportIdent()
 {
     auto tkn = tkn_;
-    auto import = AcceptImport();
+    auto import = AcceptImportIdent();
 
     if (!FindImport(import))
         Error("can not find import file \"" + import + "\"", tkn);
@@ -277,12 +274,20 @@ void Parser::ParseProgram(Program& ast)
     while (!Is(Tokens::EndOfFile))
     {
         if (Is(Tokens::Import))
-            ast.importFilenames.push_back(ParseImport());
+            ParseImportStmnt(ast);
         else
             ast.classDeclStmnts.push_back(ParseClassDeclOrModuleDeclStmnt());
     }
 
     program_ = nullptr;
+}
+
+// import_stmnt: 'import' import_ident (',' import_ident)*;
+// import_ident: STRING_LITERAL | IDENT;
+void Parser::ParseImportStmnt(Program& ast)
+{
+    Accept(Tokens::Import);
+    ast.importFilenames = ParseImportIdentList();
 }
 
 // code_block: '{' stmnt_list? '}';
@@ -2293,6 +2298,11 @@ std::vector<AttribPtr> Parser::ParseAttribList()
 std::vector<std::string> Parser::ParseIdentList(const Tokens separatorToken)
 {
     return ParseSeparatedList<std::string>(std::bind(&Parser::AcceptIdent, this), Tokens::Comma);
+}
+
+std::vector<std::string> Parser::ParseImportIdentList()
+{
+    return ParseSeparatedList<std::string>(std::bind(&Parser::ParseImportIdent, this), Tokens::Comma);
 }
 
 /* --- Base functions --- */

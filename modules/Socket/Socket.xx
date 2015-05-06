@@ -6,12 +6,70 @@
  */
 
 /// Socket API module.
-[[bind]]
-module Socket {
+[[bind("Socket/Socket")]]
+private module SocketAPI {
+	
+	static void startUp()
+	static void cleanUp()
 	
 	static int open(int domain, int type, int protocol)
 	static void close(int socket)
 	
 	//static int accept(int socket, )
+	
+}
+
+/// Network socket class.
+class Socket {
+	
+	static const AF_UNSPEC			:= 0
+	static const AF_INET			:= 2
+	static const AF_IPX				:= 6
+	static const AF_APPLETALK		:= 16
+	static const AF_NETBIOS			:= 17
+	static const AF_INET6			:= 23
+	static const AF_IRDA			:= 26
+	static const AF_BTH				:= 32
+	
+	static const SOCK_STREAM		:= 1
+	static const SOCK_DGRAM			:= 2
+	static const SOCK_RAW			:= 3
+	static const SOCK_RDM			:= 4
+	static const SOCK_SEQPACKET		:= 5
+	
+	static const IPPROTO_ICMP		:= 1
+	static const IPPROTO_IGMP		:= 2
+	static const BTHPROTO_RFCOMM	:= 3
+	static const IPPROTO_TCP		:= 6
+	static const IPPROTO_UDP		:= 17
+	static const IPPROTO_ICMPV6		:= 58
+	static const IPPROTO_RM			:= 113
+	
+	/// Starts the socket API.
+	static void startUp() {
+		SocketAPI.startUp()
+	}
+	
+	/// Cleans the socket API.
+	static void cleanUp() {
+		SocketAPI.cleanUp()
+	}
+	
+	init(int domain, int type, int protocol) {
+		this.domain		:= domain
+		this.type		:= type
+		this.protocol	:= protocol
+		socket			:= SocketAPI.open(domain, type, protocol)
+	}
+	release {
+		SocketAPI.close(socket)
+	}
+	
+private:
+	
+	[[get]]
+	int domain, type, protocol
+	
+	int socket
 	
 }

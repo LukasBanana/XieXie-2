@@ -2,8 +2,9 @@
 // Class Test 3
 // 06/05/2015
 
-import MsgBox
+import MsgBox, Socket
 
+// Private classes can hide (silently) the accessibility of global classes
 private class MsgBox {
 	static void show(String a, String b) {
 		// do nothing
@@ -22,7 +23,15 @@ class Test {
 		static int y := 0
 		y++
 		
-		MsgBox.show("Hello", "World!")
+		//MsgBox.show("Hello", "World!")
+		
+		var sock := new Socket(
+			domain:		Socket.AF_INET,
+			type:		Socket.SOCK_STREAM,
+			protocol:	Socket.IPPROTO_TCP
+		)
+		
+		var type := sock.getType()
 		
 	}
 	

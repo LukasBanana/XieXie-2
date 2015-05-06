@@ -102,7 +102,7 @@ std::string ExtractFilePath(const std::string& filename)
 std::string ExtractFileExtension(const std::string& filename)
 {
     /* Return file extension only */
-    for (size_t i = filename.size(); i + 1 >= 0; --i)
+    for (size_t i = filename.size(); i > 0; --i)
     {
         auto chr = filename[i - 1];
         if (chr == '/' || chr == '\\')
