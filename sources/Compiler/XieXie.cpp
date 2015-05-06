@@ -217,7 +217,7 @@ static bool GenerateCFG(CompileState& state)
 static bool GenerateCode(const CompileConfig& config, CompileState& state)
 {
     /* Generate code */
-    LogMessage(state, "generate code ...");
+    LogMessage(state, "code generate ...");
     CodeGenerator::XASMGenerator generator(*config.assembly);
     return generator.GenerateAsm(*state.cfgProgram, state.errorReporter);
 }

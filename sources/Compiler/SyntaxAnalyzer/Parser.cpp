@@ -372,6 +372,7 @@ VarDeclPtr Parser::ParseVarDecl(const TokenPtr& identTkn)
     {
         AcceptIt();
         ast->initExpr = ParseExpr();
+        ast->sourceArea.end = ast->initExpr->sourceArea.end;
     }
 
     return ast;
@@ -751,11 +752,11 @@ StmntPtr Parser::ParseVarNameStmnt(TokenPtr identTkn)
 }
 
 // (var_decl_stmnt | proc_decl_stmnt)
-StmntPtr Parser::ParseVarDeclOrProcDeclStmnt(const AttribPrefixPtr& attribPrefix)
+StmntPtr Parser::ParseVarDeclOrProcDeclStmnt(const AttribPrefixPtr& attribPrefix, bool isExtern)
 {
     /* Check for procedure modifier or return type denoter 'void' */
     if (Is(Tokens::Void))
-        return ParseProcDeclStmntPrimary(false, attribPrefix);
+        return ParseProcDeclStmntPrimary(isExtern, attribPrefix);
 
     /* Parse optional storage modifier */
     bool isStatic = false;
@@ -778,7 +779,7 @@ StmntPtr Parser::ParseVarDeclOrProcDeclStmnt(const AttribPrefixPtr& attribPrefix
         /* Parse type denoter and identifier */
         auto typeDenoter = ParseReturnTypeDenoter();
         auto identTkn = Accept(Tokens::Ident);
-        return ParseProcDeclStmnt(typeDenoter, identTkn, isStatic, attribPrefix);
+        return ParseProcDeclStmnt(typeDenoter, identTkn, attribPrefix, isStatic, isExtern);
     }
 
     /* Parse type denoter and identifier */
@@ -787,7 +788,7 @@ StmntPtr Parser::ParseVarDeclOrProcDeclStmnt(const AttribPrefixPtr& attribPrefix
 
     /* Check for procedure declaration */
     if (Is(Tokens::LBracket))
-        return ParseProcDeclStmnt(typeDenoter, identTkn, isStatic, attribPrefix);
+        return ParseProcDeclStmnt(typeDenoter, identTkn, attribPrefix, isStatic, isExtern);
 
     /* Parse variable declaration */
     return ParseVarDeclStmnt(typeDenoter, identTkn, isStatic, attribPrefix);
@@ -833,6 +834,18 @@ StmntPtr Parser::ParseClassDeclOrModuleDeclStmnt()
         return ParseModuleDeclStmnt(attribPrefix, isPrivate);
 
     return ParseClassDeclStmnt(attribPrefix, isPrivate);
+}
+
+// extern_member_decl_stmnt: extern_proc_decl_stmnt | var_decl_stmnt;
+StmntPtr Parser::ParseExternMemberDeclStmnt()
+{
+    /* Parse optional attribute prefix */
+    AttribPrefixPtr attribPrefix;
+    if (Is(Tokens::LDParen))
+        attribPrefix = ParseAttribPrefix();    
+
+    /* Parse variable- or procedure declaration statement */
+    return ParseVarDeclOrProcDeclStmnt(attribPrefix, true);
 }
 
 // ctrl_transfer_stmnt: break_stmnt | continue_stmnt | return_stmnt;
@@ -1215,7 +1228,7 @@ ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix, boo
 
     Accept(Tokens::LCurly);
     if (!Is(Tokens::RCurly))
-        ast->declStmnts = ParseExternProcDeclStmntList();
+        ast->declStmnts = ParseExternMemberDeclStmntList();
     Accept(Tokens::RCurly);
 
     return ast;
@@ -1292,6 +1305,10 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(
 
     ast->varDecls = ParseVarDeclList(Tokens::Comma);
 
+    /* Update source area */
+    ast->sourceArea.start = ast->typeDenoter->sourceArea.start;
+    ast->sourceArea.end = ast->varDecls.back()->sourceArea.end;
+
     /* Forward decoration */
     for (auto& decl : ast->varDecls)
     {
@@ -1323,6 +1340,10 @@ VarDeclStmntPtr Parser::ParseVarDeclStmnt(
         ast->varDecls = ParseVarDeclList(Tokens::Comma);
     }
     ast->varDecls.insert(ast->varDecls.begin(), varDecl);
+
+    /* Update source area */
+    ast->sourceArea.start = typeDenoter->sourceArea.start;
+    ast->sourceArea.end = ast->varDecls.back()->sourceArea.end;
 
     /* Forward decoration */
     for (auto& decl : ast->varDecls)
@@ -1398,16 +1419,13 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPt
 
     ast->procSignature = ParseProcSignature();
 
-    if (!isExtern)
+    if (!isExtern && Is(Tokens::LCurly))
     {
-        if (Is(Tokens::LCurly))
+        PushProcHasReturnType(!ast->procSignature->returnTypeDenoter->IsVoid());
         {
-            PushProcHasReturnType(!ast->procSignature->returnTypeDenoter->IsVoid());
-            {
-                ast->codeBlock = ParseCodeBlock();
-            }
-            PopProcHasReturnType();
+            ast->codeBlock = ParseCodeBlock();
         }
+        PopProcHasReturnType();
     }
     
     state_.procDecl = nullptr;
@@ -1418,7 +1436,8 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPt
 // proc_decl_stmnt: attrib_prefix? proc_signature code_block;
 // --> alternative for abstract parsing
 ProcDeclStmntPtr Parser::ParseProcDeclStmnt(
-    const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic, const AttribPrefixPtr& attribPrefix)
+    const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn,
+    const AttribPrefixPtr& attribPrefix, bool isStatic, bool isExtern)
 {
     auto ast = Make<ProcDeclStmnt>();
 
@@ -1430,7 +1449,7 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(
 
     ast->procSignature = ParseProcSignature(typeDenoter, identTkn, isStatic);
 
-    if (Is(Tokens::LCurly))
+    if (!isExtern && Is(Tokens::LCurly))
     {
         PushProcHasReturnType(!ast->procSignature->returnTypeDenoter->IsVoid());
         {
@@ -2212,9 +2231,9 @@ std::vector<StmntPtr> Parser::ParseExternDeclStmntList(const Tokens terminatorTo
     return ParseList<StmntPtr>(std::bind(&Parser::ParseExternDeclStmnt, this), terminatorToken);
 }
 
-std::vector<StmntPtr> Parser::ParseExternProcDeclStmntList(const Tokens terminatorToken)
+std::vector<StmntPtr> Parser::ParseExternMemberDeclStmntList(const Tokens terminatorToken)
 {
-    return ParseList<StmntPtr>(std::bind(&Parser::ParseProcDeclStmntPrimary, this, true, nullptr), terminatorToken);
+    return ParseList<StmntPtr>(std::bind(&Parser::ParseExternMemberDeclStmnt, this), terminatorToken);
 }
 
 std::vector<SwitchCasePtr> Parser::ParseSwitchCaseList()

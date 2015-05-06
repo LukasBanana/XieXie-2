@@ -456,6 +456,9 @@ DEF_VISIT_PROC(Decorator, VarDeclStmnt)
                 break;
         }
 
+        if (ast->parentRef->isModule && !ast->isStatic)
+            Error("module variables must be static", ast);
+
         /* Decorate variable type */
         if (ast->typeDenoter->IsAutoType())
         {

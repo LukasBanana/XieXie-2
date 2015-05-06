@@ -9,7 +9,7 @@
 [[bind]]
 private/*<-- TEST!!!*/ module MsgBox {
 	
-/*	static const OK						:= 0x00000000
+	static const OK						:= 0x00000000
 	static const OK_CANCEL				:= 0x00000001
 	static const ABORT_RETRY_IGNORE		:= 0x00000002
 	static const YES_NO_CANCEL			:= 0x00000003
@@ -36,7 +36,7 @@ private/*<-- TEST!!!*/ module MsgBox {
 	static const ID_NO					:= 7
 	static const ID_TRY					:= 10
 	static const ID_CONTINUE			:= 11
-	*/
+	
 	/**
 	Shows a simple message box.
 	@title Specifies the box title.
@@ -44,6 +44,6 @@ private/*<-- TEST!!!*/ module MsgBox {
 	@bitFlags Specifies the flags bitmask.
 	@return ID of the clicked button.
 	*/
-	static int show(String title, String text, int bitFlags := 0)
+	static int show(String title, String text, int bitFlags := MsgBox.OK)
 	
 }

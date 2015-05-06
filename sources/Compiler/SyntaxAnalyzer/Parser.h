@@ -114,9 +114,10 @@ class Parser
         StmntPtr                ParseDeclStmnt();
         StmntPtr                ParseExternDeclStmnt();
         StmntPtr                ParseVarNameStmnt(TokenPtr identTkn = nullptr);
-        StmntPtr                ParseVarDeclOrProcDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr);
+        StmntPtr                ParseVarDeclOrProcDeclStmnt(const AttribPrefixPtr& attribPrefix = nullptr, bool isExtern = false);
         StmntPtr                ParseClassDeclOrProcDeclOrVarDeclStmnt();
         StmntPtr                ParseClassDeclOrModuleDeclStmnt();
+        StmntPtr                ParseExternMemberDeclStmnt();
 
         StmntPtr                ParseCtrlTransferStmnt();
         CtrlTransferStmntPtr    ParseBreakStmnt();
@@ -154,7 +155,7 @@ class Parser
         ProcDeclStmntPtr        ParseProcDeclStmntPrimary(bool isExtern = false, AttribPrefixPtr attribPrefix = nullptr);
         ProcDeclStmntPtr        ParseProcDeclStmnt(
             const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn,
-            bool isStatic = false, const AttribPrefixPtr& attribPrefix = nullptr
+            const AttribPrefixPtr& attribPrefix = nullptr, bool isStatic = false, bool isExtern = false
         );
         ProcDeclStmntPtr        ParseInitDeclStmnt(bool isExtern = false);
         ProcDeclStmntPtr        ParseReleaseDeclStmnt();
@@ -233,7 +234,7 @@ class Parser
         std::vector<StmntPtr>               ParseStmntList(const Tokens terminatorToken = Tokens::RCurly);
         std::vector<StmntPtr>               ParseDeclStmntList();
         std::vector<StmntPtr>               ParseExternDeclStmntList(const Tokens terminatorToken = Tokens::RCurly);
-        std::vector<StmntPtr>               ParseExternProcDeclStmntList(const Tokens terminatorToken = Tokens::RCurly);
+        std::vector<StmntPtr>               ParseExternMemberDeclStmntList(const Tokens terminatorToken = Tokens::RCurly);
         std::vector<SwitchCasePtr>          ParseSwitchCaseList();
         std::vector<StmntPtr>               ParseSwitchCaseStmntList();
         std::vector<ExprPtr>                ParseSwitchCaseItemExprList(const Tokens separatorToken = Tokens::Comma);
