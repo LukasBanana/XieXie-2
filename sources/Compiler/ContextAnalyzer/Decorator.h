@@ -76,6 +76,7 @@ class Decorator final : private Visitor
         void RegisterVarDecl(VarDecl& ast);
         void DecorateVarDeclMember(VarDecl& ast);
         void DecorateVarDeclLocal(VarDecl& ast);
+        void AssignStaticVariableLocation(VarDecl& ast);
         void VerifyVarDeclInitExpr(VarDecl& ast);
         void VerifyAssignStmntExprTypes(const VarName& varName, const Expr& expr);
         void VerifyReturnStmntExprType(const TypeDenoter& returnType, const Expr& expr);

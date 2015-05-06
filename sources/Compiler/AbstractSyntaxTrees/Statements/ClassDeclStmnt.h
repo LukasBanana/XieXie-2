@@ -111,16 +111,6 @@ class ClassDeclStmnt : public ScopedStmnt
         {
             return instanceSize_;
         }
-        //! Returns the start offset (in bytes) of the global (or rather 'static') members of this class and all sub classes.
-        unsigned int GetGlobalStartOffset() const
-        {
-            return globalStartOffset_;
-        }
-        //! Returns the end offset (in bytes) of the global (or rather 'static') members of this class and all sub classes.
-        unsigned int GetGlobalEndOffset() const
-        {
-            return globalEndOffset_;
-        }
 
         //! Returns the list of all class procedures, including the procedures from its base classes.
         const Vtable& GetVtable() const
@@ -184,16 +174,12 @@ class ClassDeclStmnt : public ScopedStmnt
             unsigned int& typeID,
             unsigned int& numSubClasses,
             unsigned int superInstanceSize,
-            unsigned int& globalOffset,
             const Vtable& setupVtable,
             ErrorReporter* errorReporter
         );
         
         void AssignAllMemberVariableLocations();
         void AssignMemberVariableLocation(VarDecl& varDecl);
-
-        void AssignAllStaticVariableLocations();
-        void AssignStaticVariableLocation(VarDecl& varDecl);
 
         void GenerateVtable(const Vtable* setupVtable, ErrorReporter* errorReporter);
         void AssignAllProceduresToVtable(ErrorReporter* errorReporter);
@@ -219,8 +205,6 @@ class ClassDeclStmnt : public ScopedStmnt
         unsigned int                                    typeID_             = 0;        // type ID of this class.
         unsigned int                                    numSubClasses_      = 0;        // total number of sub classes in the inheritance hierarchy.
         unsigned int                                    instanceSize_       = 0;        // size (in bytes) of an instance of this class.
-        unsigned int                                    globalStartOffset_  = 0;        // start offset (in bytes) of all global (or rather 'static') members of this class and all sub classes.
-        unsigned int                                    globalEndOffset_    = 0;        // end offset
 
 };
 

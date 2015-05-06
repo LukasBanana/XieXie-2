@@ -143,8 +143,6 @@ void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
     typeID_             = 0;
     numSubClasses_      = 0;
     instanceSize_       = 12; // 3 * (4 bytes): refCount, typeID, vtableAddr
-    globalStartOffset_  = 0;
-    globalEndOffset_    = 0;
 
     /* Generate vtable */
     errorReporter->source = GetSource();
@@ -156,8 +154,7 @@ void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
     for (auto subClass : subClassesRef_)
     {
         subClass->GenerateRTTI(
-            typeID, numSubClasses_, instanceSize_,
-            globalEndOffset_, vtable_, errorReporter
+            typeID, numSubClasses_, instanceSize_, vtable_, errorReporter
         );
     }
 }
@@ -201,21 +198,16 @@ std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const 
 
 void ClassDeclStmnt::GenerateRTTI(
     unsigned int& typeID, unsigned int& numSubClasses, unsigned int superInstanceSize,
-    unsigned int& globalOffset, const Vtable& setupVtable, ErrorReporter* errorReporter)
+    const Vtable& setupVtable, ErrorReporter* errorReporter)
 {
     /* Initialize RTTI for this class */
     typeID_             = ++typeID;
     numSubClasses_      = 0;
     instanceSize_       = superInstanceSize;
-    globalStartOffset_  = globalOffset;
-    globalEndOffset_    = globalOffset;
 
     /* Increase instance size by (non-static) member variables */
     AssignAllMemberVariableLocations();
     
-    /* Incease static size by static variables */
-    AssignAllStaticVariableLocations();
-
     /* Generate vtable */
     errorReporter->source = GetSource();
     GenerateVtable(&setupVtable, errorReporter);
@@ -224,13 +216,10 @@ void ClassDeclStmnt::GenerateRTTI(
     ProcessClassAttributes(errorReporter);
 
     /* Generate RTTI for sub classes */
-    globalOffset = globalEndOffset_;
-
     for (auto subClass : subClassesRef_)
     {
         subClass->GenerateRTTI(
-            typeID, numSubClasses_, instanceSize_,
-            globalOffset, vtable_, errorReporter
+            typeID, numSubClasses_, instanceSize_, vtable_, errorReporter
         );
     }
 
@@ -265,28 +254,6 @@ void ClassDeclStmnt::AssignMemberVariableLocation(VarDecl& varDecl)
     varDecl.memoryOffset = instanceSize_;
     instanceSize_ += varDecl.MemorySize();
     memberVars_.push_back(&varDecl);
-}
-
-void ClassDeclStmnt::AssignAllStaticVariableLocations()
-{
-    for (auto& stmnt : declStmnts)
-    {
-        if (stmnt->Type() == AST::Types::VarDeclStmnt)
-        {
-            auto& varDeclStmnt = static_cast<VarDeclStmnt&>(*stmnt);
-            if (varDeclStmnt.isStatic)
-            {
-                for (auto& varDecl : varDeclStmnt.varDecls)
-                    AssignStaticVariableLocation(*varDecl);
-            }
-        }
-    }
-}
-
-void ClassDeclStmnt::AssignStaticVariableLocation(VarDecl& varDecl)
-{
-    varDecl.memoryOffset = globalEndOffset_;
-    globalEndOffset_ += varDecl.MemorySize();
 }
 
 /*

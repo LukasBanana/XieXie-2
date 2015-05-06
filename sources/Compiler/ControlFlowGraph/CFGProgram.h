@@ -51,6 +51,8 @@ class CFGProgram
 
         ProcDictionary                  procedures;
 
+        unsigned int                    globalsSize = 0; //!< Size (in bytes) of all global variables.
+
 };
 
 //! Unique pointer to CFGProgram.

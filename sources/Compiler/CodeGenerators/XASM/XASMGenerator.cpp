@@ -55,7 +55,7 @@ bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorR
         GenerateModuleImports(program);
         GenerateCoreAssembly();
         GenerateAdjustmentCode(program);
-        GenerateStartUpCodeForRootClass(program);
+        GenerateStartUpCode(program.globalsSize);
 
         /* Generate assembler code for each class tree */
         for (const auto& ct : program.classTrees)
@@ -343,21 +343,19 @@ void XASMGenerator::GenerateAdjustmentCode(const CFGProgram& program)
     Blanks(2);
 }
 
-void XASMGenerator::GenerateStartUpCode(const ClassDeclStmnt& rootClass)
+void XASMGenerator::GenerateStartUpCode(unsigned int globalsSize)
 {
-    auto globalSize = rootClass.GetGlobalEndOffset();
-
     CommentHeadline("PROGRAM START-UP");
 
-    if (globalSize > 0)
+    if (globalsSize > 0)
     {
         /* Allocate space for global variables */
         Line("mov $gp, $sp");
-        Line("add $sp, $sp, " + std::to_string(globalSize));
+        Line("add $sp, $sp, " + std::to_string(globalsSize));
 
         /* Initialize global variables with zeros */
         Line("push 0");
-        Line("push " + std::to_string(globalSize));
+        Line("push " + std::to_string(globalsSize));
         Line("push $gp");
         Line("insc FillMem");
     }
@@ -377,24 +375,6 @@ void XASMGenerator::GenerateStartUpCode(const ClassDeclStmnt& rootClass)
     Line("stop");
 
     Blanks(2);
-}
-
-void XASMGenerator::GenerateStartUpCodeForRootClass(const CFGProgram& program)
-{
-    bool hasRootClass = false;
-
-    for (const auto& ct : program.classTrees)
-    {
-        if (ct->GetClassDeclAST()->isBuiltin && ct->GetClassDeclAST()->ident == "Object")
-        {
-            GenerateStartUpCode(*ct->GetClassDeclAST());
-            hasRootClass = true;
-            break;
-        }
-    }
-
-    if (!hasRootClass)
-        ErrorIntern("missing root class \"Object\"");
 }
 
 void XASMGenerator::GenerateClassTree(const ClassTree& classTree)

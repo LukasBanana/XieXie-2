@@ -27,6 +27,9 @@ class Program : public ScopedStmnt
         std::vector<std::string>    importFilenames;
         std::vector<StmntPtr>       classDeclStmnts;
 
+        // dast
+        unsigned int                globalsSize = 0; //!< Size (in bytes) of all global variables.
+
 };
 
 

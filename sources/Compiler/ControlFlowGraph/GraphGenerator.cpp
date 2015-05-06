@@ -57,8 +57,13 @@ static TACVar LabelVar(const std::string& label)
 
 CFGProgramPtr GraphGenerator::GenerateCFG(Program& program, ErrorReporter& errorReporter)
 {
+    /* Create new CFG program instance */
     program_ = MakeUnique<CFGProgram>();
 
+    /* Copy meta-data from AST root node */
+    program_->globalsSize = program.globalsSize;
+
+    /* Visit AST */
     try
     {
         errorReporter_ = &errorReporter;

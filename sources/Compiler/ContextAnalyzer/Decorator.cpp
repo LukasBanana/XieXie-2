@@ -818,6 +818,8 @@ void Decorator::RegisterVarDecl(VarDecl& ast)
 
 void Decorator::DecorateVarDeclMember(VarDecl& ast)
 {
+    AssignStaticVariableLocation(ast);
+
     if (ast.initExpr)
     {
         DecorateExpr(*ast.initExpr);
@@ -827,6 +829,8 @@ void Decorator::DecorateVarDeclMember(VarDecl& ast)
 
 void Decorator::DecorateVarDeclLocal(VarDecl& ast)
 {
+    AssignStaticVariableLocation(ast);
+
     /* Check if variable hides accessibility of member procedure */
     auto symbol = class_->symTab.Fetch(ast.ident);
     if (symbol && symbol->Type() == AST::Types::ProcOverloadSwitch)
@@ -835,6 +839,16 @@ void Decorator::DecorateVarDeclLocal(VarDecl& ast)
     /* Decoreate initializer expression */
     if (ast.initExpr)
         DecorateExpr(*ast.initExpr);
+}
+
+void Decorator::AssignStaticVariableLocation(VarDecl& ast)
+{
+    if (ast.parentRef->isStatic && !ast.GetTypeDenoter()->IsConst())
+    {
+        /* Store memory offset and increase globals size */
+        ast.memoryOffset = program_->globalsSize;
+        program_->globalsSize += ast.MemorySize();
+    }
 }
 
 void Decorator::VerifyVarDeclInitExpr(VarDecl& ast)

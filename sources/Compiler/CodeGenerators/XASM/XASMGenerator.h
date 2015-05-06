@@ -137,8 +137,7 @@ class XASMGenerator final : public AsmGenerator, private RegisterAllocator::Call
         void GenerateModuleImports(const CFGProgram& program);
         void GenerateCoreAssembly();
         void GenerateAdjustmentCode(const CFGProgram& program);
-        void GenerateStartUpCode(const ClassDeclStmnt& rootClass);
-        void GenerateStartUpCodeForRootClass(const CFGProgram& program);
+        void GenerateStartUpCode(unsigned int globalsSize);
 
         void GenerateClassTree(const ClassTree& classTree);
         void GenerateClassStorageCommentary(const ClassDeclStmnt& classDecl);
