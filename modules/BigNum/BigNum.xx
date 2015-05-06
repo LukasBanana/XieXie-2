@@ -7,7 +7,7 @@
 
 /// Big number module.
 [[bind]]
-/*private*/ module BigNum {
+private module BigNum {
 	
 	/* --- BigInteger --- */
 	

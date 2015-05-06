@@ -31,7 +31,7 @@ void MsgBox_show(XVM_Env env)
 
 static XVM_Invocation procList[] =
 {
-    XVM_DECL_INVOCATION(MsgBox, show),
+    XVM_DECL_INVOCATION( MsgBox, show ),
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);

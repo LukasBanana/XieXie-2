@@ -402,11 +402,13 @@ XVM_Buffer XVM_ParamBuffer(XVM_Env env, unsigned int paramIndex)
 
 XVM_Boolean XVM_ReturnVoid(XVM_Env env, unsigned int argSize)
 {
-    // Pop arguments from stack
-    ENV_STACK_PTR(env) -= argSize;
-    if (ENV_STACK_PTR(env) < ENV(env)->stackBegin)
-        return XVM_False;
-
+    if (argSize > 0)
+    {
+        // Pop arguments from stack
+        ENV_STACK_PTR(env) -= argSize;
+        if (ENV_STACK_PTR(env) < ENV(env)->stackBegin)
+            return XVM_False;
+    }
     return XVM_True;
 }
 

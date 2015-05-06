@@ -9,8 +9,8 @@
 [[bind("Socket/Socket")]]
 private module SocketAPI {
 	
-	static void startUp()
-	static void cleanUp()
+	static bool startUp()
+	static bool cleanUp()
 	
 	static int open(int domain, int type, int protocol)
 	static void close(int socket)
@@ -46,13 +46,13 @@ class Socket {
 	static const IPPROTO_RM			:= 113
 	
 	/// Starts the socket API.
-	static void startUp() {
-		SocketAPI.startUp()
+	static bool startUp() {
+		return SocketAPI.startUp()
 	}
 	
 	/// Cleans the socket API.
-	static void cleanUp() {
-		SocketAPI.cleanUp()
+	static bool cleanUp() {
+		return SocketAPI.cleanUp()
 	}
 	
 	init(int domain, int type, int protocol) {

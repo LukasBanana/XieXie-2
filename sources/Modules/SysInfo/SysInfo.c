@@ -194,7 +194,7 @@ void SysInfo_querySystemInfo(XVM_Env env)
 
 static XVM_Invocation procList[] =
 {
-    XVM_DECL_INVOCATION(SysInfo, querySystemInfo),
+    XVM_DECL_INVOCATION( SysInfo, querySystemInfo ),
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);

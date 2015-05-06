@@ -17,6 +17,36 @@
 
 // INVOCATIONS
 
+// bool SocketAPI.startUp()
+void SocketAPI_startUp(XVM_Env env)
+{
+    int err = 0;
+
+    #ifdef _WIN32
+    
+    WSADATA wsaData;
+    err = WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+    if (err != 0 || LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2)
+        err = 1;
+
+    #endif
+
+    XVM_ReturnBool(env, 0, (err == 0 ? XVM_True : XVM_False));
+}
+
+// bool SocketAPI.cleanUp()
+void SocketAPI_cleanUp(XVM_Env env)
+{
+    int err = 0;
+    
+    #ifdef _WIN32
+    err = WSACleanup();
+    #endif
+
+    XVM_ReturnBool(env, 0, (err == 0 ? XVM_True : XVM_False));
+}
+
 // int SocketAPI.open(int domain, int type, int protocol)
 void SocketAPI_open(XVM_Env env)
 {
@@ -36,8 +66,10 @@ void SocketAPI_close(XVM_Env env)
 
 static XVM_Invocation procList[] =
 {
-    XVM_DECL_INVOCATION(SocketAPI, open),
-    XVM_DECL_INVOCATION(SocketAPI, close),
+    XVM_DECL_INVOCATION( SocketAPI, startUp ),
+    XVM_DECL_INVOCATION( SocketAPI, cleanUp ),
+    XVM_DECL_INVOCATION( SocketAPI, open    ),
+    XVM_DECL_INVOCATION( SocketAPI, close   ),
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);

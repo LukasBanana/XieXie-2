@@ -9,7 +9,7 @@ import Integer
 
 /// System information module.
 [[bind]]
-module SysInfo {
+private module SysInfo {
 	
 	static void querySystemInfo(
 		String platform,
