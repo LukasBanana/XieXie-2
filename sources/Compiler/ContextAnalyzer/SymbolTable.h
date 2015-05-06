@@ -11,6 +11,7 @@
 
 #include <map>
 #include <string>
+#include <sstream>
 #include <stack>
 #include <vector>
 #include <functional>
@@ -21,16 +22,19 @@ namespace ContextAnalyzer
 
 
 //! Common symbol table class with a single scope.
-template <typename Owner, typename Sym> class SymbolTable
+template <typename Owner, typename Sym, typename PrivScope> class SymbolTable
 {
     
     public:
         
-        using OwnerType = Owner;
-        using SymbolType = Sym;
+        using OwnerType     = Owner;
+        using SymbolType    = Sym;
+        using PrivateScope  = PrivScope;
 
         //! Override symbol callback procedure. Must return true to allow a symbol override.
         using OnOverrideProc = std::function<bool (SymbolType* symbol)>;
+
+        /* === Functiosn === */
 
         SymbolTable(OwnerType& owner) :
             // bracket initializer required for GCC (due to bug 56032)
@@ -75,13 +79,19 @@ template <typename Owner, typename Sym> class SymbolTable
         At least one scope must be open before symbols can be registered!
         \throws std::runtime_error If an error occured.
         */
-        void Register(const std::string& ident, SymbolType* symbol, const OnOverrideProc& overrideProc = nullptr)
+        void Register(
+            std::string ident, SymbolType* symbol,
+            const PrivateScope* privateScope = nullptr, const OnOverrideProc& overrideProc = nullptr)
         {
             /* Validate input parameters */
             if (scopeStack_.empty())
                 throw std::runtime_error("no active scope to register symbol");
             if (ident.empty())
                 throw std::runtime_error("can not register unnamed symbol");
+
+            /* Append unique string from private scope */
+            if (privateScope)
+                ident += UniqueString(privateScope);
 
             /* Check if identifier was already registered in the current scope */
             auto it = symTable_.find(ident);
@@ -110,18 +120,27 @@ template <typename Owner, typename Sym> class SymbolTable
         Returns the symbol with the specified identifer which is in
         the deepest scope, or null if there is no such symbol.
         \param[in] ident Specifies the symbol's identifier.
+        \param[in] privateScope Optional pointer to the current private scope. By default null.
         \param[in] allowFallbackSymTab Specifies whether the fallback symbol table can be used or not. By default true.
         */
-        SymbolType* Fetch(const std::string& ident, bool allowFallbackSymTab = true) const
+        SymbolType* Fetch(const std::string& ident, const PrivateScope* privateScope = nullptr, bool allowFallbackSymTab = true) const
         {
+            /* Search identifier in private scope */
+            if (privateScope)
+            {
+                auto symbol = FetchSymbol(ident + UniqueString(privateScope));
+                if (symbol)
+                    return symbol;
+            }
+
             /* Search identifier in this symbol table */
-            auto it = symTable_.find(ident);
-            if (it != symTable_.end() && !it->second.empty())
-                return it->second.top().symbol;
+            auto symbol = FetchSymbol(ident);
+            if (symbol)
+                return symbol;
 
             /* Search identifier in the fallback symbol table */
             if (allowFallbackSymTab && fallbackSymTab)
-                return fallbackSymTab->Fetch(ident);
+                return fallbackSymTab->Fetch(ident, privateScope);
 
             /* No symbol found */
             return nullptr;
@@ -139,27 +158,50 @@ template <typename Owner, typename Sym> class SymbolTable
             return owner_;
         }
 
+        /* === Members === */
+
         //! Fallback symbol table when an identifier was not found in this symbol table.
         SymbolTable* fallbackSymTab = nullptr;
 
     private:
         
+        /* === Structures === */
+
         struct Symbol
         {
             SymbolType* symbol;
             size_t      scopeLevel;
         };
 
+        /* === Functions === */
+
+        SymbolType* FetchSymbol(const std::string& ident) const
+        {
+            auto it = symTable_.find(ident);
+            if (it != symTable_.end() && !it->second.empty())
+                return it->second.top().symbol;
+            return nullptr;
+        }
+
+        std::string UniqueString(const void* ptr) const
+        {
+            std::stringstream stream;
+            stream << ptr;
+            return stream.str();
+        }
+
+        /* === Members === */
+
         //! Stores the scope stack for all identifiers.
-        std::map<std::string, std::stack<Symbol>> symTable_;
+        std::map<std::string, std::stack<Symbol>>   symTable_;
 
         /**
         Stores all identifiers for the current stack.
         All these identifiers will be removed from "symTable_" when a scope will be closed.
         */
-        std::stack<std::vector<std::string>> scopeStack_;
+        std::stack<std::vector<std::string>>        scopeStack_;
 
-        OwnerType& owner_;
+        OwnerType&                                  owner_;
 
 };
 

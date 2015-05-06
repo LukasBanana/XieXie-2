@@ -403,7 +403,7 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
     {
         case States::RegisterClassSymbols:
             class_ = ast;
-            RegisterSymbol(ast->ident, ast);
+            RegisterSymbol(ast->ident, ast, (ast->isPrivate ? ast->GetSource() : nullptr));
             Visit(ast->attribPrefix);
             break;
 
@@ -832,7 +832,7 @@ void Decorator::DecorateVarDeclLocal(VarDecl& ast)
     AssignStaticVariableLocation(ast);
 
     /* Check if variable hides accessibility of member procedure */
-    auto symbol = class_->symTab.Fetch(ast.ident);
+    auto symbol = class_->symTab.Fetch(ast.ident, GetSource());
     if (symbol && symbol->Type() == AST::Types::ProcOverloadSwitch)
         Warning("identifier \"" + ast.ident + "\" hides procedure accessibility", &ast);
 
@@ -979,7 +979,7 @@ bool Decorator::VerifyExprIsArray(const Expr& expr, const std::string& usageDesc
 StmntSymbolTable::SymbolType* Decorator::FetchSymbolFromScope(
     const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast)
 {
-    auto symbol = symTab.Fetch(ident);
+    auto symbol = symTab.Fetch(ident, GetSource());
     if (!symbol)
     {
         if (ident != fullName)
@@ -1017,9 +1017,9 @@ Search identifier in global namespace.
 StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
     const std::string& ident, const std::string& fullName, const AST* ast)
 {
-    /* (1) Check for "this" identifier */
     try
     {
+        /* (1) Check for "this" identifier */
         if (ident == "this")
         {
             /* Search only in class namespace */
@@ -1059,14 +1059,14 @@ StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
     }
 
     /* (3) Search in scope */
-    auto symbol = symTab_->Fetch(ident);
+    auto symbol = symTab_->Fetch(ident, GetSource());
     if (symbol)
         return symbol;
     
     /* (4) Search in class namespace (if current procedure is not static) */
     if (class_ && !IsProcStatic())
     {
-        symbol = class_->symTab.Fetch(ident);
+        symbol = class_->symTab.Fetch(ident, GetSource());
         if (symbol)
             return symbol;
     }
@@ -1262,7 +1262,7 @@ void Decorator::VerifyVarNameMutable(VarName& ast)
     /* Check if variable is constant */
     auto varType = ast.GetTypeDenoter();
     if (varType && varType->IsConst())
-        Error("variable \"" + ast.FullName() + "\" is not mutable");
+        Error("constant \"" + ast.FullName() + "\" can not be modified", &ast);
 }
 
 /*
@@ -1316,7 +1316,7 @@ void Decorator::RegisterProcSymbol(ProcDeclStmnt& ast)
 
     /* Check if procedure identifier is already registerd in current (and only in current) class scope */
     const auto& ident = ast.procSignature->ident;
-    auto symbol = symTab_->Fetch(ident, false);
+    auto symbol = symTab_->Fetch(ident, GetSource(), false);
 
     if (symbol)
     {
@@ -1822,11 +1822,12 @@ void Decorator::CloseScope()
     symTab_->CloseScope();
 }
 
-void Decorator::RegisterSymbol(const std::string& ident, StmntSymbolTable::SymbolType* symbol)
+void Decorator::RegisterSymbol(
+    const std::string& ident, StmntSymbolTable::SymbolType* symbol, const SourceCode* privateScope)
 {
     try
     {
-        symTab_->Register(ident, symbol);
+        symTab_->Register(ident, symbol, privateScope);
     }
     catch (const std::runtime_error& err)
     {

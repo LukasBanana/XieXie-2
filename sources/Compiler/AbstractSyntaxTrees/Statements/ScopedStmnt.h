@@ -12,6 +12,7 @@
 #include "Stmnt.h"
 #include "VarName.h"
 #include "SymbolTable.h"
+#include "SourceCode.h"
 
 
 namespace AbstractSyntaxTrees
@@ -22,7 +23,7 @@ namespace AbstractSyntaxTrees
 class ScopedStmnt;
 
 //! Default type for the symbol table for scoped statements.
-using StmntSymbolTable = ContextAnalyzer::SymbolTable<ScopedStmnt, AST>;
+using StmntSymbolTable = ContextAnalyzer::SymbolTable<ScopedStmnt, AST, SyntaxAnalyzer::SourceCode>;
 
 /**
 Abstract statement which has a scope (or rather namespace),

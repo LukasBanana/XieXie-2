@@ -138,7 +138,16 @@ class Decorator final : private Visitor
         void OpenScope();
         void CloseScope();
 
-        void RegisterSymbol(const std::string& ident, StmntSymbolTable::SymbolType* symbol);
+        /**
+        Registers the specified symbol with the identifier 'ident'.
+        \param[in] ident Specifies the identifier for the symbol.
+        \param[in] symbol Specifies the symbol which is to be registered.
+        \param[in] privateScope Optional pointer to the private scope. If this is non-null,
+        the symbol is only visible inside its declaration scope. By default null.
+        */
+        void RegisterSymbol(
+            const std::string& ident, StmntSymbolTable::SymbolType* symbol, const SourceCode* privateScope = nullptr
+        );
 
         /* --- States --- */
 
@@ -160,6 +169,12 @@ class Decorator final : private Visitor
         bool IsAnalyzeCode() const
         {
             return state_ == States::AnalyzeCode;
+        }
+
+        //! Returns the source code of the current class declaration.
+        const SourceCode* GetSource() const
+        {
+            return class_->GetSource();
         }
 
         /* === Members === */

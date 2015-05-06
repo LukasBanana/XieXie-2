@@ -4,11 +4,11 @@
 
 import MsgBox
 
-/*class MsgBox {
+private class MsgBox {
 	static void show(String a, String b) {
 		// do nothing
 	}
-}*/
+}
 
 /// Test for private classes
 class Test {
