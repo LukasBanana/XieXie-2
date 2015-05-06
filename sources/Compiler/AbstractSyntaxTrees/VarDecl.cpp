@@ -15,7 +15,7 @@ namespace AbstractSyntaxTrees
 
 const TypeDenoter* VarDecl::GetTypeDenoter() const
 {
-    return parentRef != nullptr ? parentRef->GetTypeDenoter() : nullptr;
+    return parentRef->GetTypeDenoter();
 }
 
 unsigned int VarDecl::MemorySize() const
