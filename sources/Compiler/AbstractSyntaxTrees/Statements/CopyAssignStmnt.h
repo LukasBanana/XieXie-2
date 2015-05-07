@@ -23,8 +23,19 @@ class CopyAssignStmnt : public Stmnt
         
         AST_INTERFACE_EXT(CopyAssignStmnt, Stmnt);
 
+        //! Returns true if only a single expression is used for all variables.
+        bool HasUniversalExpr() const
+        {
+            return exprs.size() == 1;
+        }
+        //! Returns true if each variables has its individual expression.
+        bool HasIndividualExpr() const
+        {
+            return exprs.size() == varNames.size();
+        }
+
         std::vector<VarNamePtr> varNames;
-        ExprPtr                 expr;
+        std::vector<ExprPtr>    exprs;
 
 };
 

@@ -260,7 +260,7 @@ DEF_VISIT_PROC(ASTViewer, CopyAssignStmnt)
 {
     AST_INFO_COLOR("CopyAssignStmnt", colorStmnt);
     Visit(ast->varNames);
-    Visit(ast->expr);
+    Visit(ast->exprs);
 }
 
 DEF_VISIT_PROC(ASTViewer, ModifyAssignStmnt)

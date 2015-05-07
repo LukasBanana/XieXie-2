@@ -911,11 +911,14 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
 
     PushBB(bb);
     {
-        /* Visit expression */
-        Visit(ast->expr);
+        /* Visit expressions */
+        Visit(ast->exprs);
 
-        auto src = Var();
-        PopVar();
+        std::vector<TACVar> srcVars(ast->exprs.size());
+        for (auto it = srcVars.rbegin(); it != srcVars.rend(); ++it)
+            *it = PopVar();
+
+        auto srcIt = srcVars.begin();
 
         for (auto& varName : ast->varNames)
         {
@@ -928,7 +931,10 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
             auto inst = bb->MakeInst<TACCopyInst>();
 
             inst->dest  = var;
-            inst->src   = src;
+            inst->src   = *srcIt;
+
+            if (ast->HasIndividualExpr())
+                ++srcIt;
         }
     }
     PopBB();

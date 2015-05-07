@@ -668,7 +668,7 @@ void GenerateSetter(const VarDecl& memberVar, const VarDecl::Vis visibility)
     auto destVarName = GenVarNameList({ destVarBase, varIdent });
 
     assignStmnt->varNames.push_back(destVarName);
-    assignStmnt->expr = GenVarAccessExpr(GenVarName(varIdent));
+    assignStmnt->exprs.push_back(GenVarAccessExpr(GenVarName(varIdent)));
 
     /* Generate single statement and append to class declaration */
     GenSingleStmntAndAppendToClass(classDecl, procDecl, assignStmnt);

@@ -1591,7 +1591,7 @@ StmntPtr Parser::ParseAssignStmnt(VarNamePtr varName)
     return ParseCopyAssignStmnt(varName);
 }
 
-// copy_assign_stmnt: var_name (',' var_name)* ':=' expr;
+// copy_assign_stmnt: var_name (',' var_name)* ':=' expr (',' expr)*;
 CopyAssignStmntPtr Parser::ParseCopyAssignStmnt(const VarNamePtr& varName)
 {
     auto ast = Make<CopyAssignStmnt>();
@@ -1609,7 +1609,8 @@ CopyAssignStmntPtr Parser::ParseCopyAssignStmnt(const VarNamePtr& varName)
         ast->varNames = ParseVarNameList();
 
     Accept(Tokens::CopyAssignOp);
-    ast->expr = ParseExpr();
+
+    ast->exprs = ParseExprList();
 
     return ast;
 }

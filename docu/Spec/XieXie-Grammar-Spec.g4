@@ -69,7 +69,7 @@ assign_stmnt	: copy_assign_stmnt
 expr_stmnt: value_expr;
 
 // ASSIGN STATEMENTS
-copy_assign_stmnt:		var_name (',' var_name)* ':=' expr;
+copy_assign_stmnt:		var_name (',' var_name)* ':=' expr (',' expr)*;
 modify_assign_stmnt:	var_name ('+=' | '-=' | '*=' | '/=' | '%=' | '<<=' | '>>=' | '|=' | '&=' | '^=') expr;
 post_operator_stmnt:	var_name ('++' | '--');
 

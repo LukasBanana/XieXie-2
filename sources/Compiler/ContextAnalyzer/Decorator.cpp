@@ -538,13 +538,30 @@ DEF_VISIT_PROC(Decorator, FriendDeclStmnt)
 DEF_VISIT_PROC(Decorator, CopyAssignStmnt)
 {
     Visit(ast->varNames);
-    DecorateExpr(*ast->expr);
 
-    for (auto& varName : ast->varNames)
+    for (auto& expr : ast->exprs)
+        DecorateExpr(*expr);
+
+    if (ast->HasUniversalExpr())
     {
-        VerifyAssignStmntExprTypes(*varName, *ast->expr);
-        VerifyVarNameMutable(*varName);
+        for (auto& varName : ast->varNames)
+        {
+            VerifyAssignStmntExprTypes(*varName, *ast->exprs.front());
+            VerifyVarNameMutable(*varName);
+        }
     }
+    else if (ast->HasIndividualExpr())
+    {
+        for (size_t i = 0, n = ast->varNames.size(); i < n; ++i)
+        {
+            auto& varName = ast->varNames[i];
+            auto& expr = ast->exprs[i];
+            VerifyAssignStmntExprTypes(*varName, *expr);
+            VerifyVarNameMutable(*varName);
+        }
+    }
+    else
+        Error("number of expressions in copy-assignment must be 1 or " + std::to_string(ast->varNames.size()), ast);
 }
 
 DEF_VISIT_PROC(Decorator, ModifyAssignStmnt)
