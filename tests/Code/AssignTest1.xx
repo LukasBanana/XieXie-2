@@ -1,0 +1,24 @@
+
+// Assign Test 1
+// 07/05/2015
+
+import Console
+
+/// Test for assign statements
+class Test {
+	
+	// print fibonacci numbers
+	static void main() {
+		
+		int a, b := 1
+		
+		while a < 1000 {
+			Console.write(a)
+			Console.write(", ")
+			a, b := b, a + b
+		}
+		
+	}
+	
+}
+
