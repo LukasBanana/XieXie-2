@@ -15,49 +15,57 @@
 #endif
 
 
-// INVOCATIONS
+// INTERNALS
 
-// bool SocketAPI.startUp()
-void SocketAPI_startUp(XVM_Env env)
+static size_t sockCount = 0;
+
+static void startUp()
 {
-    int err = 0;
-
     #ifdef _WIN32
     
     WSADATA wsaData;
-    err = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
     if (err != 0 || LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2)
         err = 1;
 
     #endif
-
-    XVM_ReturnBool(env, 0, (err == 0 ? XVM_True : XVM_False));
 }
 
-// bool SocketAPI.cleanUp()
-void SocketAPI_cleanUp(XVM_Env env)
+static void cleanUp()
 {
-    int err = 0;
-    
     #ifdef _WIN32
-    err = WSACleanup();
+    int err = WSACleanup();
     #endif
-
-    XVM_ReturnBool(env, 0, (err == 0 ? XVM_True : XVM_False));
 }
+
+
+// INVOCATIONS
 
 // int SocketAPI.open(int domain, int type, int protocol)
 void SocketAPI_open(XVM_Env env)
 {
-    SOCKET sock = socket(XVM_ParamInt(env, 1), XVM_ParamInt(env, 2), XVM_ParamInt(env, 3));
+    SOCKET sock;
+
+    // Check if socket API must be started
+    if (sockCount++ == 0)
+        startUp();
+
+    // Open socket
+    sock = socket(XVM_ParamInt(env, 1), XVM_ParamInt(env, 2), XVM_ParamInt(env, 3));
     XVM_ReturnInt(env, 3, (int)sock);
 }
 
 // int SocketAPI.close(int sock)
 void SocketAPI_close(XVM_Env env)
 {
+    // Close socket
     int result = closesocket((SOCKET)XVM_ParamInt(env, 1));
+
+    // Check if socket API must be started
+    if (--sockCount == 0)
+        cleanUp();
+
     XVM_ReturnInt(env, 1, result);
 }
 
@@ -66,10 +74,8 @@ void SocketAPI_close(XVM_Env env)
 
 static XVM_Invocation procList[] =
 {
-    XVM_DECL_INVOCATION( SocketAPI, startUp ),
-    XVM_DECL_INVOCATION( SocketAPI, cleanUp ),
-    XVM_DECL_INVOCATION( SocketAPI, open    ),
-    XVM_DECL_INVOCATION( SocketAPI, close   ),
+    XVM_DECL_INVOCATION( SocketAPI, open  ),
+    XVM_DECL_INVOCATION( SocketAPI, close ),
 };
 
 XVM_IMPLEMENT_MODULE_INTERFACE(procList);
