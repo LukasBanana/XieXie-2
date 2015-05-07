@@ -43,12 +43,10 @@ And this computes the fibonacci series:
 import System
 class Fibonacci {
 	static void fib(int n) {
-		int a := 0, b := 1, prev
+		int a, b := 1
 		while a < n {
 			System.out.writeLine(a)
-			prev := a
-			a := b
-			b += prev
+			a, b := b, a + b
 		}
 	}
 	static void main() {
