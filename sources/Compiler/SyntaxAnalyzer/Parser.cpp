@@ -1612,6 +1612,10 @@ CopyAssignStmntPtr Parser::ParseCopyAssignStmnt(const VarNamePtr& varName)
 
     ast->exprs = ParseExprList();
 
+    /* Update source area */
+    ast->sourceArea.start   = ast->varNames.front()->sourceArea.start;
+    ast->sourceArea.end     = ast->exprs.back()->sourceArea.end;
+
     return ast;
 }
 
