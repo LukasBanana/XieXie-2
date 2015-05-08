@@ -2,20 +2,28 @@
 // Expression Test 3
 // 08/05/2015
 
+import Console
+
 /// Test for the 'instance of' expression
 class Test {
 	
 	static void main() {
 		
-		var a := "test"
-		var b := { 1, 2, 3 }
+		Object a := "test"
+		var b := { 1 }
 		
-		if a is String {
-			int x
-		} else if a is int[] {
-			int y
+		if a is Console {
+			Console.writeLine("'a' is a Console")
+		} else if a is String {
+			Console.writeLine("'a' is a String")
 		} else if a is Test {
-			int z
+			Console.writeLine("'a' is a Test")
+		}
+		
+		if b is int[] {
+			Console.writeLine("'b' is a int[]")
+		} else if b is float[] {
+			Console.writeLine("'b' is a float[]")
 		}
 		
 	}

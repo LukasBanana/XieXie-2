@@ -146,6 +146,20 @@ DEF_VISIT_PROC(ExprTypeChecker, PostfixValueExpr)
 DEF_VISIT_PROC(ExprTypeChecker, InstanceOfExpr)
 {
     Visit(ast->primaryValueExpr);
+
+    /* Check if sub expression has a valid type */
+    auto destType = ast->primaryValueExpr->GetTypeDenoter();
+    auto srcType = ast->typeDenoter.get();
+
+    if (destType)
+    {
+        /* Check if expression cast is allowed */
+        std::string errorOut;
+        if (!TypeChecker::VerifyTypeCastCompatibility(*destType, *srcType, &errorOut))
+            Error(errorOut, *ast, false);
+    }
+    else
+        Error("invalid sub expression type in 'instance of' expression", *ast);
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, AllocExpr)
