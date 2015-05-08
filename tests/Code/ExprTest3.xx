@@ -12,6 +12,10 @@ class Test {
 		Object a := "test"
 		var b := { 1 }
 		
+		if { 1, 2 }.toString() is String {
+			Console.writeLine("'{ ... }.toString()' is a String")
+		}
+		
 		if a is Console {
 			Console.writeLine("'a' is a Console")
 		} else if a is String {
