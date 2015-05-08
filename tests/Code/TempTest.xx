@@ -1,13 +1,21 @@
 
 // Temp XieXie Test
 
-import SysInfo
+class A {
+	
+	A getA() { return null }
+	
+	A parent
+	A[] children
+	
+}
 
 class Test {
 	
 	static void main() {
 		
-		var sysInfo := SystemInfo.query()
+		A a
+		a.getA().children[0].parent.getA().children[1].getA()
 		
 	}
 	
