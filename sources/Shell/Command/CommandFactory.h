@@ -79,6 +79,7 @@ DECL_COMMAND_IMPL( Verbose  );
 DECL_COMMAND_IMPL( Color    );
 DECL_COMMAND_IMPL( Run      );
 DECL_COMMAND_IMPL( Verify   );
+DECL_COMMAND_IMPL( Man      );
 
 #undef DECL_COMMAND_IMPL
 

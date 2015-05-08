@@ -13,7 +13,7 @@ void HelpCommand::Execute(StreamParser& input, Log& output)
 {
     output.Messages(
         {
-            "----- man page: -----",
+            "----- help page: -----",
             "usage:",
             "  xxc COMMAND+",
             "",
@@ -31,7 +31,7 @@ void HelpCommand::Execute(StreamParser& input, Log& output)
 
 void HelpCommand::Help(HelpPrinter& printer) const
 {
-    printer.Command("help", "prints this man page");
+    printer.Command("help", "prints this help page");
 }
 
 
