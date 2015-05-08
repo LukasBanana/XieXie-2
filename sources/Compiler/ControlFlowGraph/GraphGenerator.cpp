@@ -915,8 +915,22 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
         Visit(ast->exprs);
 
         std::vector<TACVar> srcVars(ast->exprs.size());
+
         for (auto it = srcVars.rbegin(); it != srcVars.rend(); ++it)
+        {
             *it = PopVar();
+
+            /*
+            If the variable is not a temporary, a new temporary must be created.
+            Otherwise, a too early override may occur, e.g. "a, b := b, a".
+            */
+            if (!it->IsTemp())
+            {
+                auto var = TempVar();
+                bb->MakeInst<TACCopyInst>(var, *it);
+                *it = var;
+            }
+        }
 
         auto srcIt = srcVars.begin();
 
