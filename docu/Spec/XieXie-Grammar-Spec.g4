@@ -212,9 +212,12 @@ primary_value_expr	: literal_expr
 					| call_expr
 					| unary_expr
 					| init_list_expr
-					| postfix_value_expr;
+					| postfix_value_expr
+					| instanceof_expr;
 
 postfix_value_expr:	primary_value_expr array_access? ('.' (proc_call | var_name))?;
+
+instanceof_expr: 	primary_value_expr 'is' (array_type_denoter | pointer_type_denoter);
 
 var_access_expr		: var_name;
 
