@@ -1,0 +1,21 @@
+
+// Expression Test 3
+// 08/05/2015
+
+/// Test for the 'instance of' expression
+class Test {
+	
+	static void main() {
+		
+		var a := "test"
+		var b := { 1, 2, 3 }
+		
+		if a is String {
+			/* ... */
+		}
+		
+		
+	}
+	
+}
+

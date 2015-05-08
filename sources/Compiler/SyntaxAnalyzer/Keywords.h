@@ -19,7 +19,8 @@ namespace SyntaxAnalyzer
 {
 
 
-typedef std::map<std::string, Token::Types> KeywordMapType;
+//! Keywords map type definition.
+using KeywordMapType = std::map<std::string, Token::Types>;
 
 //! Returns the keywords map (which is an exception for identifiers).
 const KeywordMapType& Keywords();

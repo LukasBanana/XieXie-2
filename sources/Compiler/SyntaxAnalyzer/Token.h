@@ -127,6 +127,8 @@ class Token
 
             Import,         //!< import
 
+            Is,             //!< is
+
             // Macros
             Macro,          //!< __FILE__, __CLASS__, __PROC__, __LINE__, __DATE__
 

@@ -56,12 +56,12 @@ class ScopedColor
     public:
     
         ScopedColor(std::ostream& stream, const Color::ValueType& front) :
-            stream_(stream)
+            stream_( stream )
         {
             PushColor(stream_, front);
         }
         ScopedColor(std::ostream& stream, const Color::ValueType& front, const Color::ValueType& back) :
-            stream_(stream)
+            stream_( stream )
         {
             PushColor(stream_, front, back);
         }

@@ -70,6 +70,8 @@ static KeywordMapType GenerateKeywordMap()
 
         { "import",      Ty::Import         },
 
+        { "is",          Ty::Is             },
+
         { "__FILE__",    Ty::Macro          },
         { "__CLASS__",   Ty::Macro          },
         { "__PROC__",    Ty::Macro          },
@@ -92,8 +94,6 @@ static KeywordMapType GenerateKeywordMap()
         { "ulong",       Ty::Reserved       },
         { "double",      Ty::Reserved       },
         { "readonly",    Ty::Reserved       },
-        { "is",          Ty::Reserved       },
-        { "instanceof",  Ty::Reserved       },
         { "try",         Ty::Reserved       },
         { "catch",       Ty::Reserved       },
         { "except",      Ty::Reserved       },
