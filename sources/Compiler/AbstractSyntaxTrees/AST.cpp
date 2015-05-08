@@ -59,7 +59,7 @@ const TypeDenoter* PostfixValueExpr::GetTypeDenoter() const
 
 const TypeDenoter* InstanceOfExpr::GetTypeDenoter() const
 {
-    return typeDenoter.get();
+    return &CommonTypeBool;
 }
 
 

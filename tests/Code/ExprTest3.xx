@@ -11,9 +11,12 @@ class Test {
 		var b := { 1, 2, 3 }
 		
 		if a is String {
-			/* ... */
+			int x
+		} else if a is int[] {
+			int y
+		} else if a is Test {
+			int z
 		}
-		
 		
 	}
 	

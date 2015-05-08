@@ -1750,15 +1750,23 @@ ExprPtr Parser::ParseDivExpr(const TokenPtr& identTkn)
 // value_expr: primary_value_expr;
 ExprPtr Parser::ParseValueExpr(const TokenPtr& identTkn, const VarNamePtr& varName)
 {
+    /* Parse primary value expression */
     auto expr = ParsePrimaryValueExpr(identTkn, varName);
 
+    /* Parse post-fix value expressions */
     while (Is(Tokens::LParen) || Is(Tokens::Dot))
         expr = ParsePostfixValueExpr(expr);
+
+    /* Parse instance-of expression */
+    if (Is(Tokens::Is))
+        expr = ParseInstanceOfExpr(expr);
 
     return expr;
 }
 
-// primary_value_expr : literal_expr | var_access_expr | alloc_expr | import_expr | bracket_expr | cast_expr | call_expr | unary_expr | init_list_expr | postfix_value_expr;
+// primary_value_expr:
+//     literal_expr | var_access_expr | alloc_expr | import_expr | bracket_expr |
+//     cast_expr | call_expr | unary_expr | init_list_expr | postfix_value_expr | instanceof_expr;
 ExprPtr Parser::ParsePrimaryValueExpr(const TokenPtr& identTkn, const VarNamePtr& varName)
 {
     if (!identTkn && !varName)
@@ -2057,6 +2065,25 @@ PostfixValueExprPtr Parser::ParsePostfixValueExpr(const ExprPtr& primaryValueExp
     return ast;
 }
 
+// instanceof_expr: primary_value_expr 'is' (array_type_denoter | pointer_type_denoter);
+InstanceOfExprPtr Parser::ParseInstanceOfExpr(const ExprPtr& primaryValueExpr)
+{
+    auto ast = Make<InstanceOfExpr>();
+
+    /* Parse primary value expression and type denoter */
+    ast->primaryValueExpr = primaryValueExpr;
+
+    Accept(Tokens::Is);
+
+    ast->typeDenoter = ParseNullableTypeDenoter();
+
+    /* Update source area */
+    ast->sourceArea.start   = ast->primaryValueExpr->sourceArea.start;
+    ast->sourceArea.end     = ast->typeDenoter->sourceArea.end;
+
+    return ast;
+}
+
 // var_access_expr: var_name;
 VarAccessExprPtr Parser::ParseVarAccessExpr(const VarNamePtr& varName)
 {
@@ -2103,7 +2130,7 @@ ExprPtr Parser::ParseSwitchCaseItemExpr()
 
 /* --- Type denoters --- */
 
-// type_denoter : builtin_type_denoter | array_type_denoter | pointer_type_denoter;
+// type_denoter : builtin_type_denoter | nullable_type_denoter;
 TypeDenoterPtr Parser::ParseTypeDenoter(const TokenPtr& identTkn, bool hasArrayType)
 {
     TypeDenoterPtr ast;
@@ -2135,6 +2162,22 @@ TypeDenoterPtr Parser::ParseReturnTypeDenoter(const TokenPtr& identTkn)
         return Make<BuiltinTypeDenoter>();
     }
     return ParseTypeDenoter(identTkn);
+}
+
+// nullable_type_denoter: array_type_denoter | pointer_type_denoter;
+TypeDenoterPtr Parser::ParseNullableTypeDenoter()
+{
+    TypeDenoterPtr ast = ParseTypeDenoter();
+
+    if (Is(Tokens::LRParen))
+    {
+        while (Is(Tokens::LRParen))
+            ast = ParseArrayTypeDenoter(ast);
+    }
+    else if (ast->Type() == AST::Types::BuiltinTypeDenoter)
+        Error("built-in type denoter is not allowed in 'instance-of' expression", false);
+
+    return ast;
 }
 
 // builtin_type_denoter: 'bool' | 'int' | 'float'

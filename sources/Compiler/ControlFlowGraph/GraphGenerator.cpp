@@ -1187,8 +1187,42 @@ DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)
 
 DEF_VISIT_PROC(GraphGenerator, InstanceOfExpr)
 {
-    Visit(ast->primaryValueExpr);
-    //TODO...
+    auto bb = MakeBlock("InstanceOf");
+
+    PushBB(bb);
+    {
+        /* Generate code for sub-expression */
+        Visit(ast->primaryValueExpr);
+
+        /* Get type denoter meta-data */
+        auto instanceType = ast->typeDenoter.get();
+
+        /* Generate code for instance-of expression */
+        if (instanceType->Type() == AST::Types::ArrayTypeDenoter)
+        {
+            auto arrayType = static_cast<const ArrayTypeDenoter*>(instanceType);
+            
+            bb->MakeInst<TACStackInst>(OpCodes::PUSH, "0");
+            bb->MakeInst<TACStackInst>(OpCodes::PUSH, std::to_string(arrayType->GetClassRTTI().typeID));
+        }
+        else if (instanceType->Type() == AST::Types::PointerTypeDenoter)
+        {
+            auto pointerType = static_cast<const PointerTypeDenoter*>(instanceType);
+            auto classRef = pointerType->declRef;
+
+            bb->MakeInst<TACStackInst>(OpCodes::PUSH, std::to_string(classRef->GetNumSubClasses()));
+            bb->MakeInst<TACStackInst>(OpCodes::PUSH, std::to_string(classRef->GetTypeID()));
+        }
+        else
+            ErrorIntern("invalid type denoter in 'instance-of' expression", ast);
+
+        bb->MakeInst<TACStackInst>(OpCodes::PUSH, PopVar());
+        bb->MakeInst<TACDirectCallInst>("dynamic_cast");
+        bb->MakeInst<TACRelationInst>(OpCodes::CMPNE, ResultVar(), "0");
+    }
+    PopBB();
+    
+    RETURN_BLOCK_REF(bb);
 }
 
 DEF_VISIT_PROC(GraphGenerator, AllocExpr)
@@ -1317,11 +1351,11 @@ GraphGenerator::VisitIO GraphGenerator::GenerateBooleanExpr(Expr& ast)
         auto bb = MakeBlock();
 
         /* Make instruction */
-        auto inst = bb->MakeInst<TACRelationInst>();
-
-        inst->opcode = OpCodes::CMPNE;
-        inst->srcLhs = TACVar(literalExpr.value == "false" || literalExpr.value == "0" ? "0" : "1");
-        inst->srcRhs = TACVar("0");
+        auto inst = bb->MakeInst<TACRelationInst>(
+            OpCodes::CMPNE,
+            ( TACVar(literalExpr.value == "false" || literalExpr.value == "0" ? "0" : "1") ),
+            "0"
+        );
 
         return bb;
     }
@@ -1343,13 +1377,7 @@ GraphGenerator::VisitIO GraphGenerator::GenerateBooleanExprCondition(Expr& ast)
     PopBB();
 
     /* Make instruction */
-    auto inst = out->MakeInst<TACRelationInst>();
-
-    inst->opcode = OpCodes::CMPNE;
-    inst->srcLhs = Var();
-    inst->srcRhs = TACVar("0");
-
-    PopVar();
+    auto inst = out->MakeInst<TACRelationInst>(OpCodes::CMPNE, PopVar(), "0");
 
     return VisitIO(in, out);
 }

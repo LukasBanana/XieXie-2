@@ -204,6 +204,7 @@ class Parser
         CastExprPtr             ParseCastExpr(bool parseComplete = true, const TokenPtr& identTkn = nullptr);
         ProcCallExprPtr         ParseProcCallExpr(const VarNamePtr& varName = nullptr);
         PostfixValueExprPtr     ParsePostfixValueExpr(const ExprPtr& primaryValueExpr);
+        InstanceOfExprPtr       ParseInstanceOfExpr(const ExprPtr& primaryValueExpr);
         VarAccessExprPtr        ParseVarAccessExpr(const VarNamePtr& varName = nullptr);
         RangeExprPtr            ParseRangeExpr(const ExprPtr& lhsExpr = nullptr);
         ExprPtr                 ParseSwitchCaseItemExpr();
@@ -212,6 +213,7 @@ class Parser
 
         TypeDenoterPtr          ParseTypeDenoter(const TokenPtr& identTkn = nullptr, bool hasArrayType = false);
         TypeDenoterPtr          ParseReturnTypeDenoter(const TokenPtr& identTkn = nullptr);
+        TypeDenoterPtr          ParseNullableTypeDenoter();
 
         BuiltinTypeDenoterPtr   ParseBuiltinTypeDenoter();
         PointerTypeDenoterPtr   ParsePointerTypeDenoter(const TokenPtr& identTkn = nullptr);

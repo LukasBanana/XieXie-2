@@ -10,6 +10,7 @@
 
 
 #include "TypeDenoter.h"
+#include "BuiltinClasses.h"
 
 
 namespace AbstractSyntaxTrees
@@ -23,42 +24,21 @@ class ArrayTypeDenoter : public TypeDenoter
         
         AST_INTERFACE_EXT(ArrayTypeDenoter, TypeDenoter);
 
-        bool IsArray() const override
-        {
-            return true;
-        }
-        bool IsStrongRef() const override
-        {
-            return true;
-        }
+        bool IsArray() const override;
+        bool IsStrongRef() const override;
 
-        std::string ToString() const override
-        {
-            return (lowerTypeDenoter != nullptr ? lowerTypeDenoter->ToString() : "???") + "[]";
-        }
+        std::string ToString() const override;
 
         //! Arrays always require a size of 4 bytes.
-        unsigned int MemorySize() const override
-        {
-            return 4;
-        }
+        unsigned int MemorySize() const override;
 
-        const TypeDenoter* GetLast() const override
-        {
-            return lowerTypeDenoter != nullptr ? lowerTypeDenoter->GetLast() : nullptr;
-        }
-        const TypeDenoter* GetLast(const ArrayAccess* arrayAccess) const override
-        {
-            return (!arrayAccess || !lowerTypeDenoter) ? this : lowerTypeDenoter->GetLast(arrayAccess->next.get());
-        }
+        const TypeDenoter* GetLast() const override;
+        const TypeDenoter* GetLast(const ArrayAccess* arrayAccess) const override;
 
-        TypeDenoterPtr CopyRef() const override
-        {
-            auto copy = std::make_shared<ArrayTypeDenoter>();
-            copy->lowerTypeDenoter  = lowerTypeDenoter;
-            copy->declRef           = declRef;
-            return copy;
-        }
+        TypeDenoterPtr CopyRef() const override;
+
+        //! Returns a constant reference to the class run-time type information (RTTI) of this array type denoter.
+        const BuiltinClasses::ClassRTTI& GetClassRTTI() const;
 
         TypeDenoterPtr  lowerTypeDenoter;   // may be null (for initializer list expressions with undeduced type)
 

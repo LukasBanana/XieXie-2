@@ -217,7 +217,7 @@ primary_value_expr	: literal_expr
 
 postfix_value_expr:	primary_value_expr array_access? ('.' (proc_call | var_name))?;
 
-instanceof_expr: 	primary_value_expr 'is' (array_type_denoter | pointer_type_denoter);
+instanceof_expr: 	primary_value_expr 'is' nullable_type_denoter;
 
 var_access_expr		: var_name;
 
@@ -238,7 +238,9 @@ proc_call:			var_name '(' arg_list? ')';
 
 // TYPE DENOTERS
 type_denoter			: builtin_type_denoter
-						| array_type_denoter
+						| nullable_type_denoter;
+
+nullable_type_denoter	: array_type_denoter
 						| pointer_type_denoter;
 
 builtin_type_denoter	: BOOL_TYPE_DENOTER
