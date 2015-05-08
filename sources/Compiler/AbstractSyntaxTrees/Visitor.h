@@ -77,6 +77,7 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( CastExpr             );    \
     DECL_VISIT_PROC( ProcCallExpr         );    \
     DECL_VISIT_PROC( PostfixValueExpr     );    \
+    DECL_VISIT_PROC( InstanceOfExpr       );    \
     DECL_VISIT_PROC( AllocExpr            );    \
     DECL_VISIT_PROC( VarAccessExpr        );    \
     DECL_VISIT_PROC( InitListExpr         );    \
@@ -152,6 +153,7 @@ class Visitor
         DEF_ABSTRACT_VISIT_PROC( CastExpr             );
         DEF_ABSTRACT_VISIT_PROC( ProcCallExpr         );
         DEF_ABSTRACT_VISIT_PROC( PostfixValueExpr     );
+        DEF_ABSTRACT_VISIT_PROC( InstanceOfExpr       );
         DEF_ABSTRACT_VISIT_PROC( AllocExpr            );
         DEF_ABSTRACT_VISIT_PROC( VarAccessExpr        );
         DEF_ABSTRACT_VISIT_PROC( InitListExpr         );

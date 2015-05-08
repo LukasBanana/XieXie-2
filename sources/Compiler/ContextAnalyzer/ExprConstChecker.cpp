@@ -67,6 +67,11 @@ DEF_VISIT_PROC(ExprConstChecker, PostfixValueExpr)
     throw ast;
 }
 
+DEF_VISIT_PROC(ExprConstChecker, InstanceOfExpr)
+{
+    throw ast;
+}
+
 DEF_VISIT_PROC(ExprConstChecker, AllocExpr)
 {
     // dummy

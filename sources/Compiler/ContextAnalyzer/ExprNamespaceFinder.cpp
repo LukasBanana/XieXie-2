@@ -90,6 +90,11 @@ DEF_VISIT_PROC(ExprNamespaceFinder, PostfixValueExpr)
     }
 }
 
+DEF_VISIT_PROC(ExprNamespaceFinder, InstanceOfExpr)
+{
+    // do nothing -> 'instance of' expression is a boolean expression, and thus has no namespace
+}
+
 DEF_VISIT_PROC(ExprNamespaceFinder, AllocExpr)
 {
     Visit(ast->typeDenoter);

@@ -59,6 +59,7 @@
 #include "CastExpr.h"
 #include "ProcCallExpr.h"
 #include "PostfixValueExpr.h"
+#include "InstanceOfExpr.h"
 #include "AllocExpr.h"
 #include "VarAccessExpr.h"
 #include "InitListExpr.h"

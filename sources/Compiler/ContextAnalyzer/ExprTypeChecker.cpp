@@ -143,6 +143,11 @@ DEF_VISIT_PROC(ExprTypeChecker, PostfixValueExpr)
         Visit(ast->procCall);
 }
 
+DEF_VISIT_PROC(ExprTypeChecker, InstanceOfExpr)
+{
+    Visit(ast->primaryValueExpr);
+}
+
 DEF_VISIT_PROC(ExprTypeChecker, AllocExpr)
 {
     // dummy

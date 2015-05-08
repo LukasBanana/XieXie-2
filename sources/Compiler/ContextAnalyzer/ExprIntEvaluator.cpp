@@ -137,6 +137,11 @@ DEF_VISIT_PROC(ExprIntEvaluator, PostfixValueExpr)
     throw ast;
 }
 
+DEF_VISIT_PROC(ExprIntEvaluator, InstanceOfExpr)
+{
+    throw ast;
+}
+
 DEF_VISIT_PROC(ExprIntEvaluator, AllocExpr)
 {
     throw ast;

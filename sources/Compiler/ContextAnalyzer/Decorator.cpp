@@ -649,6 +649,13 @@ DEF_VISIT_PROC(Decorator, PostfixValueExpr)
     }
 }
 
+DEF_VISIT_PROC(Decorator, InstanceOfExpr)
+{
+    Visit(ast->primaryValueExpr);
+    Visit(ast->typeDenoter);
+    //TODO...
+}
+
 DEF_VISIT_PROC(Decorator, AllocExpr)
 {
     Visit(ast->typeDenoter);

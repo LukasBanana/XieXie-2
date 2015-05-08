@@ -55,6 +55,14 @@ const TypeDenoter* PostfixValueExpr::GetTypeDenoter() const
 }
 
 
+/* --- InstanceOfExpr --- */
+
+const TypeDenoter* InstanceOfExpr::GetTypeDenoter() const
+{
+    return typeDenoter.get();
+}
+
+
 /* --- CastExpr --- */
 
 const TypeDenoter* CastExpr::GetTypeDenoter() const

@@ -108,6 +108,7 @@ class AST
             CastExpr,
             ProcCallExpr,
             PostfixValueExpr,
+            InstanceOfExpr,
             AllocExpr,
             VarAccessExpr,
             InitListExpr,

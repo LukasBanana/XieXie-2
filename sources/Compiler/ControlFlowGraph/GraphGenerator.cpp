@@ -1185,6 +1185,12 @@ DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)
         GenerateVarNameRValue(*ast->varName);
 }
 
+DEF_VISIT_PROC(GraphGenerator, InstanceOfExpr)
+{
+    Visit(ast->primaryValueExpr);
+    //TODO...
+}
+
 DEF_VISIT_PROC(GraphGenerator, AllocExpr)
 {
     if (ast->typeDenoter->IsArray())

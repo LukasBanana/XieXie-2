@@ -323,6 +323,13 @@ DEF_VISIT_PROC(ASTViewer, PostfixValueExpr)
     Visit(ast->varName);
 }
 
+DEF_VISIT_PROC(ASTViewer, InstanceOfExpr)
+{
+    AST_INFO_COLOR("InstanceOfExpr", colorExpr);
+    Visit(ast->primaryValueExpr);
+    Visit(ast->typeDenoter);
+}
+
 DEF_VISIT_PROC(ASTViewer, AllocExpr)
 {
     AST_INFO_COLOR("AllocExpr", colorExpr);
