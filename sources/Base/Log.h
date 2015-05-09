@@ -54,6 +54,12 @@ class Log
         void FatalError(const std::string& message, bool appendPrefix = true);
         void Success(const std::string& message);
 
+        /**
+        Prints a headline with two "Message" function calls to underline the headline.
+        \see Message
+        */
+        void Headline(const std::string& headline, char underlineChar = '-');
+
         void Blank();
 
         void IncIndent();

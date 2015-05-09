@@ -65,8 +65,7 @@ static void PrintKeywords(Log& output)
         maxLen = std::max(maxLen, key.first.size());
 
     /* Print keywords */
-    output.Message("keywords:");
-    output.Message("---------");
+    output.Headline("keywords:");
 
     for (const auto& key : SyntaxAnalyzer::Keywords())
         PrintKeywordInfo(output, key, maxLen);

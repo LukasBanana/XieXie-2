@@ -172,6 +172,12 @@ void Log::Success(const std::string& message)
     PopColor(stream);
 }
 
+void Log::Headline(const std::string& headline, char underlineChar)
+{
+    Message(headline);
+    Message(std::string(headline.size(), underlineChar));
+}
+
 void Log::Blank()
 {
     StartLn();
