@@ -90,12 +90,16 @@ class BuiltinTypeDenoter : public TypeDenoter
 };
 
 
-static const BuiltinTypeDenoter CommonTypeVoid(BuiltinTypeDenoter::TypeNames::Void);
-static const BuiltinTypeDenoter CommonTypeBool(BuiltinTypeDenoter::TypeNames::Bool);
-static const BuiltinTypeDenoter CommonTypeInt(BuiltinTypeDenoter::TypeNames::Int);
-static const BuiltinTypeDenoter CommonTypeConstInt(BuiltinTypeDenoter::TypeNames::Int, true);
-static const BuiltinTypeDenoter CommonTypeFloat(BuiltinTypeDenoter::TypeNames::Float);
+namespace CommonTypes
+{
 
+static const BuiltinTypeDenoter Void    ( BuiltinTypeDenoter::TypeNames::Void      );
+static const BuiltinTypeDenoter Bool    ( BuiltinTypeDenoter::TypeNames::Bool      );
+static const BuiltinTypeDenoter Int     ( BuiltinTypeDenoter::TypeNames::Int       );
+static const BuiltinTypeDenoter ConstInt( BuiltinTypeDenoter::TypeNames::Int, true );
+static const BuiltinTypeDenoter Float   ( BuiltinTypeDenoter::TypeNames::Float     );
+
+} // /namepsace CommonTypes
 
 } // /namespace AbstractSyntaxTrees
 

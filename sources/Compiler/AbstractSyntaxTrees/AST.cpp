@@ -16,7 +16,7 @@ namespace AbstractSyntaxTrees
 
 const TypeDenoter* ForRangeStmnt::GetTypeDenoter() const
 {
-    return &CommonTypeConstInt;
+    return &CommonTypes::ConstInt;
 }
 
 
@@ -59,7 +59,7 @@ const TypeDenoter* PostfixValueExpr::GetTypeDenoter() const
 
 const TypeDenoter* InstanceOfExpr::GetTypeDenoter() const
 {
-    return &CommonTypeBool;
+    return &CommonTypes::Bool;
 }
 
 

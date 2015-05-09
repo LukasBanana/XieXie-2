@@ -56,7 +56,7 @@ std::string BinaryExpr::GetOperatorSpell(const Operators op)
 
 const TypeDenoter* BinaryExpr::GetTypeDenoter() const
 {
-    return HasBooleanOperator() ? (&CommonTypeBool) : lhsExpr->GetTypeDenoter();
+    return HasBooleanOperator() ? (&CommonTypes::Bool) : lhsExpr->GetTypeDenoter();
 }
 
 bool BinaryExpr::HasBooleanOperator() const
