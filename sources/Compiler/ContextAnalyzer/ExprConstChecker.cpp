@@ -36,6 +36,13 @@ bool ExprConstChecker::Verify(const Expr& expr, ErrorReporter* errorReporter)
  * ======= Private: =======
  */
 
+DEF_VISIT_PROC(ExprConstChecker, TernaryExpr)
+{
+    Visit(ast->condExpr);
+    Visit(ast->thenExpr);
+    Visit(ast->elseExpr);
+}
+
 DEF_VISIT_PROC(ExprConstChecker, BinaryExpr)
 {
     Visit(ast->lhsExpr);

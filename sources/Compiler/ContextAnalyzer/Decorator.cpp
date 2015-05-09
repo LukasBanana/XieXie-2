@@ -591,6 +591,13 @@ DEF_VISIT_PROC(Decorator, PostOperatorStmnt)
 
 /* --- Expressions --- */
 
+DEF_VISIT_PROC(Decorator, TernaryExpr)
+{
+    Visit(ast->condExpr);
+    Visit(ast->thenExpr);
+    Visit(ast->elseExpr);
+}
+
 DEF_VISIT_PROC(Decorator, BinaryExpr)
 {
     Visit(ast->lhsExpr);

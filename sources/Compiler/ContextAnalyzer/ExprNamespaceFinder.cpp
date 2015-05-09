@@ -36,6 +36,11 @@ StmntSymbolTable* ExprNamespaceFinder::FindNamespace(Expr& expr, const ArrayAcce
 
 /* --- Expressions --- */
 
+DEF_VISIT_PROC(ExprNamespaceFinder, TernaryExpr)
+{
+    //TODO...
+}
+
 DEF_VISIT_PROC(ExprNamespaceFinder, BinaryExpr)
 {
     /*

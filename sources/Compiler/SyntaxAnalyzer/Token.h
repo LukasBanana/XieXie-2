@@ -74,6 +74,7 @@ class Token
             Comma,          //!< ,
             RangeSep,       //!< .. (Range separator, e.g. "1 .. 10")
             Arrow,          //!< ->
+            QuestionMark,   //!< ?
 
             // Brackets
             LBracket,       //!< (

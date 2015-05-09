@@ -102,6 +102,7 @@ class AST
             PostOperatorStmnt,
 
             /* --- Expressions --- */
+            TernaryExpr,
             BinaryExpr,
             UnaryExpr,
             LiteralExpr,

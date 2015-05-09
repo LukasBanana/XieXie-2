@@ -53,6 +53,7 @@
 
 /* --- Expressions --- */
 
+#include "TernaryExpr.h"
 #include "BinaryExpr.h"
 #include "UnaryExpr.h"
 #include "LiteralExpr.h"

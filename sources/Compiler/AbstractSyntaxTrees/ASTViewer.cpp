@@ -280,6 +280,14 @@ DEF_VISIT_PROC(ASTViewer, PostOperatorStmnt)
 
 /* --- Expressions --- */
 
+DEF_VISIT_PROC(ASTViewer, TernaryExpr)
+{
+    AST_INFO_COLOR("TernaryExpr", colorExpr);
+    Visit(ast->condExpr);
+    Visit(ast->thenExpr);
+    Visit(ast->elseExpr);
+}
+
 DEF_VISIT_PROC(ASTViewer, BinaryExpr)
 {
     AST_INFO_COLOR("BinaryExpr", colorExpr);

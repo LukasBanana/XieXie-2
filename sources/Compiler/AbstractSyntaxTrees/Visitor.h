@@ -71,6 +71,7 @@ namespace AbstractSyntaxTrees
     DECL_VISIT_PROC( PostOperatorStmnt    );
 
 #define DECL_VISITOR_INTERFACE_EXPRS            \
+    DECL_VISIT_PROC( TernaryExpr          );    \
     DECL_VISIT_PROC( BinaryExpr           );    \
     DECL_VISIT_PROC( UnaryExpr            );    \
     DECL_VISIT_PROC( LiteralExpr          );    \
@@ -147,6 +148,7 @@ class Visitor
 
         /* --- Expressions --- */
 
+        DEF_ABSTRACT_VISIT_PROC( TernaryExpr          );
         DEF_ABSTRACT_VISIT_PROC( BinaryExpr           );
         DEF_ABSTRACT_VISIT_PROC( UnaryExpr            );
         DEF_ABSTRACT_VISIT_PROC( LiteralExpr          );

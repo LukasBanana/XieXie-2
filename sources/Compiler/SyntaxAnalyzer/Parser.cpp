@@ -1644,10 +1644,36 @@ PostOperatorStmntPtr Parser::ParsePostOperatorStmnt(const VarNamePtr& varName)
 
 /* --- Expressions --- */
 
-// expr: logic_or_expr;
+// expr: logic_or_expr | ternary_expr;
 ExprPtr Parser::ParseExpr(const TokenPtr& identTkn)
 {
-    return ParseLogicOrExpr(identTkn);
+    auto ast = ParseLogicOrExpr(identTkn);
+
+    /* Parse optional ternary expression */
+    if (Is(Tokens::QuestionMark))
+        return ParseTernaryExpr(ast);
+
+    return ast;
+}
+
+// ternary_expr: expr '?' expr ':' expr;
+TernaryExprPtr Parser::ParseTernaryExpr(const ExprPtr& condExpr)
+{
+    auto ast = Make<TernaryExpr>();
+
+    ast->condExpr = condExpr;
+
+    /* Parse expressions for 'then' and 'else' branches */
+    Accept(Tokens::QuestionMark);
+    ast->thenExpr = ParseExpr();
+    Accept(Tokens::Colon);
+    ast->elseExpr = ParseExpr();
+
+    /* Update source area */
+    ast->sourceArea.start   = condExpr->sourceArea.start;
+    ast->sourceArea.end     = ast->elseExpr->sourceArea.end;
+
+    return ast;
 }
 
 ExprPtr Parser::ParseAbstractBinaryExpr(

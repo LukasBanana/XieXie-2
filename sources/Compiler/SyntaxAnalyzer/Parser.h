@@ -170,6 +170,7 @@ class Parser
         /* --- Expressions --- */
 
         ExprPtr                 ParseExpr(const TokenPtr& identTkn = nullptr);
+        TernaryExprPtr          ParseTernaryExpr(const ExprPtr& condExpr);
 
         ExprPtr                 ParseAbstractBinaryExpr(
             const std::function<ExprPtr(const TokenPtr&)>& parseFunc,

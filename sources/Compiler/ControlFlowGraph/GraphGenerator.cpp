@@ -1044,6 +1044,11 @@ DEF_VISIT_PROC(GraphGenerator, PostOperatorStmnt)
 
 /* --- Expressions --- */
 
+DEF_VISIT_PROC(GraphGenerator, TernaryExpr)
+{
+    //TODO...
+}
+
 DEF_VISIT_PROC(GraphGenerator, BinaryExpr)
 {
     using Ty = BinaryExpr::Operators;
@@ -1384,8 +1389,8 @@ GraphGenerator::VisitIO GraphGenerator::GenerateBooleanExprCondition(Expr& ast)
 
 /*
     Boolean
-true /  \ false
-   Then Else
+true /  \ false  / for boolean \
+   Then Else     \ expressions /
      \  /
    EndBoolean
 */

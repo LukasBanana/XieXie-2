@@ -66,6 +66,7 @@ DECL_SHR_PTR( PostOperatorStmnt  );
 
 /* --- Expressions --- */
 
+DECL_SHR_PTR( TernaryExpr        );
 DECL_SHR_PTR( BinaryExpr         );
 DECL_SHR_PTR( UnaryExpr          );
 DECL_SHR_PTR( LiteralExpr        );

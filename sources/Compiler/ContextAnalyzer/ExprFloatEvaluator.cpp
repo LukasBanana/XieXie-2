@@ -43,6 +43,11 @@ bool ExprFloatEvaluator::Evaluate(const Expr& expr, float& result, ErrorReporter
  * ======= Private: =======
  */
 
+DEF_VISIT_PROC(ExprFloatEvaluator, TernaryExpr)
+{
+    throw ast;
+}
+
 DEF_VISIT_PROC(ExprFloatEvaluator, BinaryExpr)
 {
     Visit(ast->lhsExpr);

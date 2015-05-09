@@ -126,6 +126,8 @@ std::string Token::TypeToString(const Types type)
             return "..";
         case Types::Arrow:
             return "->";
+        case Types::QuestionMark:
+            return "?";
 
         case Types::LBracket:
             return "(";

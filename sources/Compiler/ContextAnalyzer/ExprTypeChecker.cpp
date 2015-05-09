@@ -41,6 +41,17 @@ bool ExprTypeChecker::Verify(const Expr& expr, ErrorReporter* errorReporter)
  * ======= Private: =======
  */
 
+DEF_VISIT_PROC(ExprTypeChecker, TernaryExpr)
+{
+    /* Visit sub expressions */
+    Visit(ast->condExpr);
+    Visit(ast->thenExpr);
+    Visit(ast->elseExpr);
+
+    /* Check if sub expressions have a valid type */
+    //TODO...
+}
+
 DEF_VISIT_PROC(ExprTypeChecker, BinaryExpr)
 {
     /* Visit sub expressions */

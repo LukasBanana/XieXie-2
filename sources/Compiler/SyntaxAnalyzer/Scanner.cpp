@@ -450,10 +450,11 @@ TokenPtr Scanner::ScanToken()
 
     switch (chr_)
     {
-        case ';': return Make(Tokens::Semicolon, true); break;
-        case ',': return Make(Tokens::Comma,     true); break;
-        case '{': return Make(Tokens::LCurly,    true); break;
-        case '}': return Make(Tokens::RCurly,    true); break;
+        case ';': return Make(Tokens::Semicolon,    true);
+        case ',': return Make(Tokens::Comma,        true);
+        case '{': return Make(Tokens::LCurly,       true);
+        case '}': return Make(Tokens::RCurly,       true);
+        case '?': return Make(Tokens::QuestionMark, true);
     }
 
     ErrorUnexpected();
