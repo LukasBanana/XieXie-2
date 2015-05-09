@@ -1,0 +1,25 @@
+
+// Expression Test 4
+// 09/05/2015
+
+class Widget {
+	int x, y
+}
+
+/// Test for the ternary expression
+class Test {
+	
+	static void main() {
+		
+		int a := 5, b := -7, c := 3
+		
+		var		d := a > 2 ? b : c
+		const	e := a = b ? 5 : 2.0
+		var		f := a != b ? new Object() : "test"
+		
+		(a > b ? new Object() : "test").toString()
+		
+	}
+	
+}
+
