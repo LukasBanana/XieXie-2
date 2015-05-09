@@ -187,7 +187,11 @@ arg:		(IDENT ':')? expr;
 // EXPRESSIONS
 expr_list:	expr (',' expr)*;
 
-expr:				logic_or_expr;
+expr				: logic_or_expr
+					| ternary_expr;
+
+ternary_expr:		expr '?' expr ':' expr;
+
 logic_or_expr:		logic_and_expr ('or' logic_and_expr)*;
 logic_and_expr:		bitwise_or_expr ('and' bitwise_or_expr)*;
 bitwise_or_expr:	bitwise_xor_expr ('|' bitwise_xor_expr)*;
