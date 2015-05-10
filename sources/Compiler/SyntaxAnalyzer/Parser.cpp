@@ -1966,6 +1966,9 @@ UnaryExprPtr Parser::ParseUnaryExpr()
 
     ast->expr = ParseValueExpr();
 
+    /* Update source area */
+    ast->sourceArea.end = ast->expr->sourceArea.end;
+
     return ast;
 }
 

@@ -1044,9 +1044,55 @@ DEF_VISIT_PROC(GraphGenerator, PostOperatorStmnt)
 
 /* --- Expressions --- */
 
+/*
+    Ternary
+true /  \ false
+   Then Else
+     \  /
+   EndTernary
+*/
 DEF_VISIT_PROC(GraphGenerator, TernaryExpr)
 {
-    //TODO...
+    auto var = TempVar();
+
+    /* Generate boolean expression */
+    auto condCFG = GenerateBooleanExpr(*ast->condExpr);
+    auto out = MakeBlock("EndTernary");
+
+    /* Build CFG */
+    auto thenBranch = MakeBlock("Then");
+    auto elseBranch = MakeBlock("Else");
+
+    BB()->AddSucc(*condCFG.in);
+    condCFG.out->AddSucc(*thenBranch, "true");
+    condCFG.outAlt->AddSucc(*elseBranch, "false");
+
+    /* Generate 'then' branch */
+    PushBB(thenBranch);
+    {
+        GenerateArithmeticExpr(*ast->thenExpr);
+        thenBranch = BB();
+        thenBranch->MakeInst<TACCopyInst>(var, PopVar());
+    }
+    PopBB();
+
+    /* Generate 'else' branches */
+    PushBB(elseBranch);
+    {
+        GenerateArithmeticExpr(*ast->elseExpr);
+        elseBranch = BB();
+        elseBranch->MakeInst<TACCopyInst>(var, PopVar());
+    }
+    PopBB();
+
+    /* Link CFG */
+    thenBranch->AddSucc(*out);
+    elseBranch->AddSucc(*out);
+
+    /* Return final CFG for boolean expression */
+    PushVar(var);
+
+    ReplaceBB(out);
 }
 
 DEF_VISIT_PROC(GraphGenerator, BinaryExpr)
@@ -1342,6 +1388,20 @@ GraphGenerator::VisitIO GraphGenerator::GenerateBooleanExpr(Expr& ast)
         if (exprType && exprType->IsBoolean())
         {
             /* Build condition 'proc() != false' */
+            return GenerateBooleanExprCondition(ast);
+        }
+        else
+            ErrorIntern("boolean type expected for procedure call", &ast);
+    }
+
+    /* Check if this is a ternary expression */
+    if (ast.Type() == AST::Types::TernaryExpr)
+    {
+        auto& ternaryExpr = *AST::Cast<TernaryExpr>(&ast);
+        auto exprType = ternaryExpr.GetTypeDenoter();
+        if (exprType && exprType->IsBoolean())
+        {
+            /* Build condition 'expr != false' */
             return GenerateBooleanExprCondition(ast);
         }
         else

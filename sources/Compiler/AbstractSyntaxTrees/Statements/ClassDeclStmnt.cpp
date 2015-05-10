@@ -187,6 +187,8 @@ ClassDeclStmnt& ClassDeclStmnt::FindCommonDenominator(ClassDeclStmnt& a, ClassDe
             /* Search in next base class */
             classDecl = classDecl->baseClassRef_;
         }
+        else
+            break;
     }
 
     return *classDecl;

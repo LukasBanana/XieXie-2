@@ -43,6 +43,11 @@ const TypeDenoter* ArrayTypeDenoter::GetLast(const ArrayAccess* arrayAccess) con
     return (!arrayAccess || !lowerTypeDenoter) ? this : lowerTypeDenoter->GetLast(arrayAccess->next.get());
 }
 
+ClassDeclStmnt* ArrayTypeDenoter::GetDeclRef() const
+{
+    return declRef;
+}
+
 TypeDenoterPtr ArrayTypeDenoter::CopyRef() const
 {
     auto copy = std::make_shared<ArrayTypeDenoter>();

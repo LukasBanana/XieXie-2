@@ -12,9 +12,10 @@ class Test {
 	static void main() {
 		
 		int a := 5, b := -7, c := 3
+		float h := 2.5
 		
-		var		d := a > 2 ? b : c
-		const	e := a = b ? 5 : 2.0
+		/*var		d := a > 2 ? b : c
+		//const	e := a = b ? 5 : 2.0 // Error, can not mix integer and floating-point
 		var		f := a != b ? new Object() : "test"
 		
 		var		s1 := (a > b ? new Object() : "test").toString()
@@ -25,7 +26,11 @@ class Test {
 			a = 2 ? "2nd case" :
 			a > 3 ? new Widget() :
 					"default case"
-		)
+		)*/
+		
+		if a != 0 ? true : not (a = 2) {
+			h += 1.0
+		}
 		
 	}
 	

@@ -56,6 +56,11 @@ class PointerTypeDenoter : public TypeDenoter
             return 4;
         }
 
+        ClassDeclStmnt* GetDeclRef() const override
+        {
+            return declRef;
+        }
+
         TypeDenoterPtr CopyRef() const override
         {
             auto copy = std::make_shared<PointerTypeDenoter>();

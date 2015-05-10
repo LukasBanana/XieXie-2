@@ -35,6 +35,8 @@ class ArrayTypeDenoter : public TypeDenoter
         const TypeDenoter* GetLast() const override;
         const TypeDenoter* GetLast(const ArrayAccess* arrayAccess) const override;
 
+        ClassDeclStmnt* GetDeclRef() const override;
+
         TypeDenoterPtr CopyRef() const override;
 
         //! Returns a constant reference to the class run-time type information (RTTI) of this array type denoter.

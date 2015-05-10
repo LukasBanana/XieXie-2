@@ -124,6 +124,12 @@ class TypeDenoter : public AST
             return arrayAccess == nullptr ? this : nullptr;
         }
 
+        //! Returns the class declaration reference or null, if this type has no such reference.
+        virtual ClassDeclStmnt* GetDeclRef() const
+        {
+            return nullptr;
+        }
+
         //! Creates a 'reference copy' of this type denoter. This is not a copy of the entire AST sub tree.
         virtual TypeDenoterPtr CopyRef() const = 0;
 
