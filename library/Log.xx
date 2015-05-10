@@ -9,37 +9,64 @@ import Integer
 import Stack
 import IOStream
 
+/// Common log interface.
 class Log {
+	
+	/// Commits an information.
+	void info(String@ message)
+	/// Commits a warning.
+	void warning(String@ message)
+	/// Commits an error.
+	void error(String@ message)
+	
+	/// Increments the message indentation.
+	void incIndent()
+	/// Decrements the message indentation.
+	void decIndent()
+	
+}
+
+/// Stream log implementation.
+class StreamLog : Log {
 	
 public:
 	
+	/**
+	Initializes the log with the specified stream.
+	@param stream Specifies the stream to which the log messages will be written.
+	This must not be null!
+	*/
 	init(OutputStream stream) {
 		this.stream := stream
 	}
 	
-	void message(String s) {
-		if s != null {
+	[[override]]
+	void info(String@ message) {
+		if message != null {
 			stream.write(indentState)
-			stream.writeLine(s)
+			stream.writeLine(message)
 		}
 	}
 	
-	void error(String s) {
-		if s != null {
-			stream.write(indentState)
-			stream.write("error: ")
-			stream.writeLine(s)
-		}
-	}
-	
-	void warning(String s) {
-		if s != null {
+	[[override]]
+	void warning(String@ message) {
+		if message != null {
 			stream.write(indentState)
 			stream.write("warning: ")
-			stream.writeLine(s)
+			stream.writeLine(message)
 		}
 	}
 	
+	[[override]]
+	void error(String@ message) {
+		if message != null {
+			stream.write(indentState)
+			stream.write("error: ")
+			stream.writeLine(message)
+		}
+	}
+	
+	[[override]]
 	void incIndent() {
 		if indent != null {
 			indentStack.push(new Integer(indent.size()))
@@ -47,6 +74,7 @@ public:
 		}
 	}
 	
+	[[override]]
 	void decIndent() {
 		if not indentStack.empty() {
 			Integer len := (Integer)indentStack.top()

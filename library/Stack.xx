@@ -5,33 +5,35 @@
  * See "LICENSE.txt" for license information.
  */
 
+/// Simple stack class.
 class Stack {
 
-	//! Pushes object 'o' onto the stack.
+	/// Pushes object 'o' onto the stack.
 	void push(Object o) {
 		container.resize(container.size() + 1)
 		container[container.size() - 1] := o
 	}
 	
-	//! Returns the top most object on the stack.
+	/// Returns the top most object on the stack.
 	Object top() {
-		if container.empty() {
-			return null
-		} else {
-			return container[container.size() - 1]
-		}
+		return container.empty() ? null : container[container.size() - 1]
 	}
 	
-	//! Pops the top most object from the stack.
+	/// Pops the top most object from the stack.
 	void pop() {
 		if not container.empty() {
 			container.resize(container.size() - 1)
 		}
 	}
 	
-	//! Returns true if the stack is empty.
+	/// Returns true if the stack is empty.
 	bool empty() {
 		return container.empty()
+	}
+	
+	/// Returns the current size (number of elements) of this stack.
+	int size() {
+		return container.size()
 	}
 	
 	private Object[] container

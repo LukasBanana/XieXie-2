@@ -18,7 +18,7 @@ class Vector3 {
 		this.y := y
 		this.z := z
 	}
-	init(Vector3 rhs) {
+	init(Vector3@ rhs) {
 		if rhs != null {
 			x := rhs.x
 			y := rhs.y
@@ -26,7 +26,7 @@ class Vector3 {
 		}
 	}
 	
-	Vector3 add(Vector3 rhs) {
+	Vector3 add(Vector3@ rhs) {
 		if rhs != null {
 			return new Vector3(x + rhs.x, y + rhs.y, z + rhs.z)
 		} else {
@@ -34,7 +34,7 @@ class Vector3 {
 		}
 	}
 	
-	Vector3 sub(Vector3 rhs) {
+	Vector3 sub(Vector3@ rhs) {
 		if rhs != null {
 			return new Vector3(x - rhs.x, y - rhs.y, z - rhs.z)
 		} else {
@@ -64,7 +64,7 @@ class Vector3 {
 	}
 	
 	/// Computes the scalar product for lhs and rhs.
-	static float dot(Vector3 lhs, Vector3 rhs) {
+	static float dot(Vector3@ lhs, Vector3@ rhs) {
 		if lhs != null and rhs != null {
 			return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z
 		} else {
@@ -73,7 +73,7 @@ class Vector3 {
 	}
 	
 	/// Computes the cross product for lhs and rhs.
-	static Vector3 cross(Vector3 lhs, Vector3 rhs) {
+	static Vector3 cross(Vector3@ lhs, Vector3@ rhs) {
 		if lhs != null and rhs != null {
 			return new Vector3(
 				lhs.y*rhs.z - rhs.y*lhs.z,

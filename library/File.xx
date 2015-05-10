@@ -31,7 +31,7 @@ class File {
 	By default the flags reading, writing, and append are enabled.
 	@return New "File" instance or null, if the file could not be opened.
 	*/
-	static File open(String filename, int openFlags := (File.reading | File.writing | File.append)) {
+	static File open(String@ filename, int openFlags := (File.reading | File.writing | File.append)) {
 		if filename != null {
 			// Open file and store handle pointer
 			var handlePtr := Intrinsics.openFile(
@@ -51,7 +51,7 @@ class File {
 	@param filename Specifies the file which is to be created.
 	@return True on sucucess.
 	*/
-	static bool create(String filename) {
+	static bool create(String@ filename) {
 		if filename != null {
 			return Intrinsics.createFile(filename.pointer()) != 0
 		}
@@ -63,7 +63,7 @@ class File {
 	@param filename Specifies the file which is to be deleted.
 	@return True on sucucess.
 	*/
-	static bool delete(String filename) {
+	static bool delete(String@ filename) {
 		if filename != null {
 			return Intrinsics.deleteFile(filename.pointer()) != 0
 		}
