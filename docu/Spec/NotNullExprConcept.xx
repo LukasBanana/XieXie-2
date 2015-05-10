@@ -1,0 +1,26 @@
+
+// Not-Null Expression Concept
+// 10/05/2015
+
+class Widget {
+	Widget@ parent
+	Widget[] children
+}
+
+/// Concept for the not-null expression
+class Concept {
+	
+	static void main() {
+		
+		String s1, s2
+		Widget w1, w2
+		
+	//	if s1 != null and s2 != null and w1 != null and w1.parent != null and w1.parent.children[2] != null {
+		if not null { s1, s2, w1, w1.parent, w1.parent.children[2] } {
+			//...
+		}
+		
+	}
+	
+}
+
