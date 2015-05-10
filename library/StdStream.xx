@@ -5,8 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-import IOStream
-import Console
+import IOStream, Console
 
 /// Standard input stream implementation.
 class StdInputStream : InputStream {

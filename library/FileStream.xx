@@ -26,6 +26,8 @@ class FileInputStream : InputStream {
 		//todo...
 	}
 	
+	private int filePtr
+	
 }
 
 /// File output stream.
@@ -50,6 +52,8 @@ class FileOutputStream : OutputStream {
 	void writeLine(String s) {
 		//todo...
 	}
+	
+	private int filePtr
 	
 }
 

@@ -33,7 +33,7 @@ private module BigNum {
 class BigInteger {
 	
 	init() {
-		bigNumPtr = BigNum.allocBigInteger()
+		bigNumPtr := BigNum.allocBigInteger()
 	}
 	init(String value) : this() {
 		BigNum.setBigInteger(bigNumPtr, value)
@@ -42,7 +42,31 @@ class BigInteger {
 		BigNum.freeBigInteger(bigNumPtr)
 	}
 	
-	//...
+	//todo...
+	BigInteger@ bitAnd(BigInteger@ rhs)
+	BigInteger@ bitOr(BigInteger@ rhs)
+	BigInteger@ bitXOr(BigInteger@ rhs)
+	BigInteger@ bitNot()
+	
+	BigInteger@ shiftLeft(int n)
+	BigInteger@ shiftRight(int n)
+	
+	BigInteger@ add(BigInteger@ rhs)
+	BigInteger@ sub(BigInteger@ rhs)
+	BigInteger@ mul(BigInteger@ rhs)
+	BigInteger@ div(BigInteger@ rhs)
+	BigInteger@ mod(BigInteger@ rhs)
+	
+	BigInteger@ pow(int exp)
+	BigInteger@ modPow(BigInteger@ exp, BigInteger@ modulus)
+	BigInteger@ negate()
+	
+	int compare(BigInteger@ rhs)
+	
+	BigInteger parseFrom(String@ s)
+	
+	[[override]]
+	String toString()
 	
 	private int bigNumPtr
 	
@@ -52,7 +76,7 @@ class BigInteger {
 class BigFloat {
 	
 	init() {
-		bigNumPtr = BigNum.allocBigFloat()
+		bigNumPtr := BigNum.allocBigFloat()
 	}
 	init(String value) : this() {
 		BigNum.setBigFloat(bigNumPtr, value)

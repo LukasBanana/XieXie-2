@@ -6,6 +6,7 @@
  */
 
 import ASCII
+import ExceptionHandler
 
 /**
 Integer class.
@@ -21,8 +22,9 @@ class Integer {
 	init(int value) {
 		this.value := value
 	}
-	init(String s) {
-		value := Integer.parseFrom(s)
+	/// @see Integer.parseFrom
+	init(String s, ExceptionHandler@ e := null) {
+		value := Integer.parseFrom(s, e)
 	}
 	
 	[[override]]
@@ -62,10 +64,15 @@ class Integer {
 		return s
 	}
 	
-	/// Parses an integer from the specified string
-	static int parseFrom(String s) {
+	/**
+	Parses an integer from the specified string
+	@param s Specifies the string from which the integer value is to be parsed.
+	@param e Optional exception handler.
+	*/
+	static int parseFrom(String@ s, ExceptionHandler@ e := null) {
 		if s = null {
 			// Invalid argument
+			ExceptionHandler.notifySafe(e, "\(__CLASS__).\(__PROC__): invalid argument")
 			return 0
 		}
 		
@@ -84,6 +91,9 @@ class Integer {
 			
 			if digit < ASCII.digit0 or digit > ASCII.digit9 {
 				// Error while parsing
+				ExceptionHandler.notifySafe(
+					e, "\(__CLASS__).\(__PROC__): invalid character '\(new String(char: digit, count: 1))'"
+				)
 				return 0
 			}
 			

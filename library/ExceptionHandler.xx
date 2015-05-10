@@ -1,0 +1,26 @@
+/*
+ * ExceptionHandler.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/**
+Main exception class.
+@remarks This is a work-around, because the language currently does not support exception handling.
+So this class can be used to emulate exceptions.
+@since 2.00
+@author Lukas Hermanns
+*/
+class ExceptionHandler {
+	
+	void notify(String message)
+	
+	static void notifySafe(ExceptionHandler@ handler, String@ message) {
+		if handler != null {
+			handler.notify(message)
+		}
+	}
+	
+}
+
