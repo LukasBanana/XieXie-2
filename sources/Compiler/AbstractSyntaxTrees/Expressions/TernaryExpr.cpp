@@ -43,6 +43,10 @@ const TypeDenoter* TernaryExpr::GetTypeDenoter() const
                         *declRefThenBranch, *declRefElseBranch
                     ).GetTypeDenoter();
                 }
+                else if (declRefThenBranch)
+                    return typeThenBranch;
+                else
+                    return typeElseBranch;
             }
         }
     }
