@@ -286,8 +286,12 @@ void Parser::ParseProgram(Program& ast)
 // import_ident: STRING_LITERAL | IDENT;
 void Parser::ParseImportStmnt(Program& ast)
 {
+    /* Parse import filenames */
     Accept(Tokens::Import);
-    ast.importFilenames = ParseImportIdentList();
+    auto filenames = ParseImportIdentList();
+
+    /* Insert import filenames to AST program */
+    ast.importFilenames.insert(ast.importFilenames.end(), filenames.begin(), filenames.end());
 }
 
 // code_block: '{' stmnt_list? '}';
