@@ -758,7 +758,7 @@ DEF_VISIT_PROC(Decorator, ArrayTypeDenoter)
     Visit(ast->lowerTypeDenoter);
 
     /* Decorate type denoter with "Array" class */
-    auto symbol = FetchSymbol(arrayClassIdent, ast);
+    auto symbol = AST::Cast<ClassDeclStmnt>(FetchSymbol(arrayClassIdent, ast));
     if (symbol)
         ast->declRef = symbol;
 }

@@ -43,7 +43,7 @@ class ArrayTypeDenoter : public TypeDenoter
         TypeDenoterPtr  lowerTypeDenoter;   // may be null (for initializer list expressions with undeduced type)
 
         // dast
-        AST*            declRef = nullptr;  // reference to the "Array" class declaration statement
+        ClassDeclStmnt* declRef = nullptr;  // reference to the "Array" class declaration statement
 
 };
 
