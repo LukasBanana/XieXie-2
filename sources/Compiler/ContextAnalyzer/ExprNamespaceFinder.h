@@ -34,7 +34,15 @@ class ExprNamespaceFinder final : private Visitor
         DECL_VISIT_PROC( ArrayTypeDenoter   );
         DECL_VISIT_PROC( PointerTypeDenoter );
 
-        const ArrayAccess* arrayAccess_ = nullptr;
+        ClassDeclStmnt* PopDeclRef();
+        void StoreSymbolTable(ClassDeclStmnt* declRef);
+
+        /* === Members === */
+
+        const ArrayAccess*  arrayAccess_    = nullptr;
+
+        ClassDeclStmnt*     declRef_        = nullptr;
+        StmntSymbolTable*   symTab_         = nullptr;
 
 };
 

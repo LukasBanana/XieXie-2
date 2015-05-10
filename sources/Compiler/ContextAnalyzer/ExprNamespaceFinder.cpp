@@ -15,18 +15,19 @@ namespace ContextAnalyzer
 
 StmntSymbolTable* ExprNamespaceFinder::FindNamespace(Expr& expr, const ArrayAccess* arrayAccess)
 {
+    /* Initialize array access */
     auto hasArray = (arrayAccess != nullptr);
-    arrayAccess_ = arrayAccess;
+    arrayAccess_    = arrayAccess;
 
-    try
-    {
-        Visit(&expr);
-    }
-    catch (StmntSymbolTable* symTab)
-    {
-        return (hasArray && arrayAccess_ != nullptr) ? nullptr : symTab;
-    }
-    return nullptr;
+    /* Reset temporary variables */
+    declRef_        = nullptr;
+    symTab_         = nullptr;
+
+    /* Find namespace in expression */
+    Visit(&expr);
+
+    /* Return result */
+    return (hasArray && arrayAccess_ != nullptr) ? nullptr : symTab_;
 }
 
 
@@ -38,7 +39,26 @@ StmntSymbolTable* ExprNamespaceFinder::FindNamespace(Expr& expr, const ArrayAcce
 
 DEF_VISIT_PROC(ExprNamespaceFinder, TernaryExpr)
 {
-    //TODO...
+    /* Visit expression for 'then' branch */
+    Visit(ast->thenExpr);
+    auto typeThenBranch = PopDeclRef();
+
+    if (typeThenBranch)
+    {
+        /* Visit expression for 'else' branch */
+        Visit(ast->elseExpr);
+        auto typeElseBranch = PopDeclRef();
+
+        if (typeElseBranch)
+        {
+            /* Find common denominator of namespaces */
+            auto& denom = ClassDeclStmnt::FindCommonDenominator(*typeThenBranch, *typeElseBranch);
+            StoreSymbolTable(&denom);
+            return;
+        }
+    }
+
+    StoreSymbolTable(nullptr);
 }
 
 DEF_VISIT_PROC(ExprNamespaceFinder, BinaryExpr)
@@ -124,13 +144,6 @@ DEF_VISIT_PROC(ExprNamespaceFinder, RangeExpr)
 
 /* --- Type denoters --- */
 
-static void ThrowSymbolTable(AST* declRef)
-{
-    auto declStmntRef = dynamic_cast<ScopedStmnt*>(declRef);
-    if (declStmntRef)
-        throw &(declStmntRef->symTab);
-}
-
 DEF_VISIT_PROC(ExprNamespaceFinder, ArrayTypeDenoter)
 {
     if (arrayAccess_)
@@ -139,12 +152,33 @@ DEF_VISIT_PROC(ExprNamespaceFinder, ArrayTypeDenoter)
         Visit(ast->lowerTypeDenoter);
     }
     else
-        ThrowSymbolTable(ast->declRef);
+        StoreSymbolTable(ast->declRef);
 }
 
 DEF_VISIT_PROC(ExprNamespaceFinder, PointerTypeDenoter)
 {
-    ThrowSymbolTable(ast->declRef);
+    StoreSymbolTable(ast->declRef);
+}
+
+ClassDeclStmnt* ExprNamespaceFinder::PopDeclRef()
+{
+    auto declRef = declRef_;
+    declRef_ = nullptr;
+    return declRef;
+}
+
+void ExprNamespaceFinder::StoreSymbolTable(ClassDeclStmnt* declRef)
+{
+    if (declRef)
+    {
+        declRef_    = declRef;
+        symTab_     = &(declRef->symTab);
+    }
+    else
+    {
+        declRef_    = nullptr;
+        symTab_     = nullptr;
+    }
 }
 
 

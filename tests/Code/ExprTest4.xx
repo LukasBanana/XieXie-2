@@ -17,7 +17,15 @@ class Test {
 		const	e := a = b ? 5 : 2.0
 		var		f := a != b ? new Object() : "test"
 		
-		(a > b ? new Object() : "test").toString()
+		var		s1 := (a > b ? new Object() : "test").toString()
+		var		s2 := (a > b ? {1} : "test").toString()
+		
+		var	g := (
+			a = 1 ? "1st case" :
+			a = 2 ? "2nd case" :
+			a > 3 ? new Widget() :
+					"default case"
+		)
 		
 	}
 	

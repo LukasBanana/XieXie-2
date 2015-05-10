@@ -82,7 +82,8 @@ class ClassDeclStmnt : public ScopedStmnt
         void AppendFriend(const ClassDeclStmnt& classDeclStmnt, const Visibilities vis);
         //! Returns the friendship visibility of the specified class for this class.
         Visibilities Friendship(const ClassDeclStmnt& classDeclStmnt) const;
-
+        
+        //! Returns a string representation of the inheritance hierarchy with the specified separator.
         std::string HierarchyString(const std::string& separator = " -> ") const;
 
         /**
@@ -149,6 +150,12 @@ class ClassDeclStmnt : public ScopedStmnt
         {
             return isAbstract_;
         }
+
+        /**
+        Finds the common denominator class for the two class declaration statements,
+        e.g. if 'a' is from type "Buffer" and 'b' is from type "String", the common denominator is "Object".
+        */
+        static ClassDeclStmnt& FindCommonDenominator(ClassDeclStmnt& a, ClassDeclStmnt& b);
 
         /* === Members === */
 

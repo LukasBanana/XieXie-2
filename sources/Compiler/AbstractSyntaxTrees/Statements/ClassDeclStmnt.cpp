@@ -174,6 +174,24 @@ bool ClassDeclStmnt::HasAttribBind(std::string* name) const
     return HasAttrib(Attrib::idBind, name);
 }
 
+ClassDeclStmnt& ClassDeclStmnt::FindCommonDenominator(ClassDeclStmnt& a, ClassDeclStmnt& b)
+{
+    /* Traverse inheritance hierarchy of class 'a' to find the common denominator */
+    auto classDecl = &a;
+
+    while (classDecl->baseClassRef_)
+    {
+        /* Check if the current class is equal to 'b' or a super class of 'b' */
+        if (classDecl != &b && !classDecl->IsSuperClassOf(b))
+        {
+            /* Search in next base class */
+            classDecl = classDecl->baseClassRef_;
+        }
+    }
+
+    return *classDecl;
+}
+
 
 /*
  * ======= Private: =======
