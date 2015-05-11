@@ -33,7 +33,7 @@ class Hello {
 class EnglishHello : Hello {
 	init() {}
 	
-//	[[override, final, deprecated("deprecated! LOL :-)")]]
+//	[[final, deprecated("deprecated! LOL :-)")]]
 	[[final]]
 	String hello() { return "Hello" }
 	
@@ -44,7 +44,7 @@ class EnglishHello : Hello {
 class Test : EnglishHello {
 	
 	static void say(Hello sentence) {
-		IO.writeLine(sentence.hello())
+		sentence.print()
 	}
 	
 	static void main() {

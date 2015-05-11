@@ -215,10 +215,11 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     auto procClass = procDecl->parentRef;
 
     /* Preliminaries for call instruction */
-    bool isDirectCall = procSig->isStatic;
-    bool keepThisPtr = true;
+    bool isMemberCall = !procSig->isStatic;
+    bool isDirectCall = (!isMemberCall || ast->IsBaseCall() || procDecl->HasAttribFinal());
+    bool replaceThisPtr = false;
 
-    if (!isDirectCall)
+    if (isMemberCall)
     {
         /* Generate instructions for variable-name, to acquire 'this' pointer */
         if (ast->IsInitProc())
@@ -233,7 +234,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
             if (procedure_ && !procedure_->procSignature->isStatic)
             {
                 BB()->MakeInst<TACStackInst>(OpCodes::PUSH, ThisPtr());
-                keepThisPtr = false;
+                replaceThisPtr = true;
             }
 
             BB()->MakeInst<TACCopyInst>(ThisPtr(), objVar);
@@ -255,11 +256,11 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
         /* Make indirect call instruction */
         auto procIdent = UniqueLabel(*procDecl, false);
         BB()->MakeInst<TACIndirectCallInst>(procIdent, procDecl->vtableOffset);
-
-        /* Restore previous 'this' pointer */
-        if (!keepThisPtr)
-            BB()->MakeInst<TACStackInst>(OpCodes::POP, ThisPtr());
     }
+
+    /* Restore previous 'this' pointer */
+    if (replaceThisPtr)
+        BB()->MakeInst<TACStackInst>(OpCodes::POP, ThisPtr());
 
     /* Store procedure result in temporary variable */
     if (procSig->returnTypeDenoter && !procSig->returnTypeDenoter->IsVoid())
