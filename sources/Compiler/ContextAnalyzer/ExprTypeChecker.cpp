@@ -47,9 +47,6 @@ DEF_VISIT_PROC(ExprTypeChecker, TernaryExpr)
     Visit(ast->condExpr);
     Visit(ast->thenExpr);
     Visit(ast->elseExpr);
-
-    /* Check if sub expressions have a valid type */
-    //TODO...
 }
 
 DEF_VISIT_PROC(ExprTypeChecker, BinaryExpr)
