@@ -2203,8 +2203,9 @@ TypeDenoterPtr Parser::ParseReturnTypeDenoter(const TokenPtr& identTkn)
 {
     if (Is(Tokens::Void))
     {
+        auto ast = Make<BuiltinTypeDenoter>();
         AcceptIt();
-        return Make<BuiltinTypeDenoter>();
+        return ast;
     }
     return ParseTypeDenoter(identTkn);
 }
