@@ -594,6 +594,8 @@ DEF_VISIT_PROC(Decorator, PostOperatorStmnt)
 DEF_VISIT_PROC(Decorator, TernaryExpr)
 {
     Visit(ast->condExpr);
+    VerifyExprIsBoolean(*ast->condExpr, "ternary-operator");
+
     Visit(ast->thenExpr);
     Visit(ast->elseExpr);
 }
