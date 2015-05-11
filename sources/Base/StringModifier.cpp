@@ -218,6 +218,18 @@ std::string NumberOffset(
         (base > 10 ? NumToHex(numOrig, false) : ToStr(numOrig));
 }
 
+char GetLower(char chr)
+{
+    ToLower(chr);
+    return chr;
+}
+
+char GetUpper(char chr)
+{
+    ToUpper(chr);
+    return chr;
+}
+
 void ToLower(char& chr)
 {
     if (chr >= 'A' && chr <= 'Z')
@@ -242,6 +254,39 @@ std::string ToUpper(std::string str)
     for (char& chr : str)
         ToUpper(chr);
     return str;
+}
+
+size_t StringSimilarities(const std::string& lhs, const std::string& rhs)
+{
+    /* Check if sizes don't diverge too much */
+    auto lhsSize = lhs.size();
+    auto rhsSize = rhs.size();
+
+    auto maxSizeDiff = std::max(1u, lhsSize/3);
+
+    if (lhsSize > rhsSize + maxSizeDiff || lhsSize + maxSizeDiff < rhsSize)
+        return 0;
+
+    /* Check if characters don't diverge too much */
+    auto n = std::min(lhsSize, rhsSize);
+    auto m = n;
+
+    auto dec = [&m, &n]() -> bool
+    {
+        return (--m <= n*2/3);
+    };
+
+    for (size_t i = 0; i < n; ++i)
+    {
+        /* Compare the current characters */
+        if (lhs[i] != rhs[i])
+        {
+            if (GetLower(lhs[i]) != GetLower(rhs[i]) && dec())
+                return 0;
+        }
+    }
+
+    return m;
 }
 
 

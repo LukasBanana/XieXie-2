@@ -60,11 +60,17 @@ std::string NumberOffset(
     size_t num, size_t maxNum, const char fillChar = ' ', const size_t base = 10
 );
 
+char GetLower(char chr);
+char GetUpper(char chr);
+
 void ToLower(char& chr);
 void ToUpper(char& chr);
 
 std::string ToLower(std::string str);
 std::string ToUpper(std::string str);
+
+//! Returns a rough measurement for the similarities of the two strings.
+size_t StringSimilarities(const std::string& lhs, const std::string& rhs);
 
 /* === Templates === */
 

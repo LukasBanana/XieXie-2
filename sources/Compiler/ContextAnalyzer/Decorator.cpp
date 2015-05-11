@@ -88,9 +88,9 @@ void Decorator::Warning(const std::string& msg, const AST* ast)
     errorReporter_->Add<CompilerWarning>(msg, ast);
 }
 
-void Decorator::Message(const std::string& msg)
+void Decorator::Suggestion(const std::string& msg)
 {
-    errorReporter_->Add(CompilerMessage(SourceArea::ignore, msg));
+    errorReporter_->Add(CompilerMessage(SourceArea::ignore, ">> " + msg));
 }
 
 const SyntaxAnalyzer::SourceCode* Decorator::GetCurrentSource() const
@@ -685,12 +685,12 @@ DEF_VISIT_PROC(Decorator, AllocExpr)
                 Error("can not instantiate abstract class \"" + classDecl->ident + "\"", ast);
 
                 /* List all abstract procedures */
-                Message(">> abstract procedures are: ");
+                Suggestion("abstract procedures are: ");
 
                 for (const auto procDecl : classDecl->GetVtable().procs)
                 {
                     if (procDecl->IsAbstract())
-                        Message(">>   " + procDecl->procSignature->ToString());
+                        Suggestion("  " + procDecl->procSignature->ToString());
                 }
             }
             /* Check if class is marked as deprecated */
@@ -1011,14 +1011,23 @@ bool Decorator::VerifyExprIsArray(const Expr& expr, const std::string& usageDesc
 StmntSymbolTable::SymbolType* Decorator::FetchSymbolFromScope(
     const std::string& ident, StmntSymbolTable& symTab, const std::string& fullName, const AST* ast)
 {
+    /* Fetch symbol from specified symbol table */
     auto symbol = symTab.Fetch(ident, GetSource());
+
     if (!symbol)
     {
+        /* Print error message */
         if (ident != fullName)
             Error("undeclared identifier \"" + ident + "\" (in \"" + fullName + "\")", ast);
         else
             Error("undeclared identifier \"" + ident + "\"", ast);
+
+        /* Try to find a symbol with a similar identifier */
+        auto symbolIdent = symTab.FindSimilarity(ident, GetSource());
+        if (symbolIdent)
+            Suggestion("did you mean: \"" + *symbolIdent + "\"?");
     }
+
     return symbol;
 }
 
@@ -1445,23 +1454,23 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
     {
         Error("no suitable signature found for procedure call", &ast);
 
-        Message(">> specified is: ");
-        Message(">>   " + ast.ToString());
-        Message(">> but candidates are: ");
+        Suggestion("specified is: ");
+        Suggestion("  " + ast.ToString());
+        Suggestion("but candidates are: ");
 
         for (const auto procDecl : procDeclRefs)
-            Message(">>   " + procDecl->procSignature->ToString());
+            Suggestion("  " + procDecl->procSignature->ToString());
     }
     else if (procDecls.size() > 1)
     {
         Error("procedure call is ambiguous", &ast);
 
-        Message(">> specified is: ");
-        Message(">>   " + ast.ToString());
-        Message(">> but deduced procedures are: ");
+        Suggestion("specified is: ");
+        Suggestion("  " + ast.ToString());
+        Suggestion("but deduced procedures are: ");
 
         for (const auto procDecl : procDecls)
-            Message(">>   " + procDecl->procSignature->ToString());
+            Suggestion("  " + procDecl->procSignature->ToString());
     }
     else
         DecoreateProcCall(ast, *procDecls.front());

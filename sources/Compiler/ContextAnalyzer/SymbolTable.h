@@ -9,6 +9,8 @@
 #define __XX_SYMBOL_TABLE_H__
 
 
+#include "StringModifier.h"
+
 #include <map>
 #include <string>
 #include <sstream>
@@ -146,6 +148,34 @@ template <typename Owner, typename Sym, typename PrivScope> class SymbolTable
             return nullptr;
         }
 
+        /**
+        Tries to find a symbol with the most similar identifier.
+        \return Pointer to the symbol identifier or null, if no similar symbol has been found.
+        \see Fetch
+        */
+        const std::string* FindSimilarity(const std::string& ident, const PrivateScope* privateScope = nullptr, bool allowFallbackSymTab = true) const
+        {
+            /* Search identifier in private scope */
+            if (privateScope)
+            {
+                auto symbolIdent = FindSimilarSymbol(ident + UniqueString(privateScope));
+                if (symbolIdent)
+                    return symbolIdent;
+            }
+
+            /* Search identifier in this symbol table */
+            auto symbolIdent = FindSimilarSymbol(ident);
+            if (symbolIdent)
+                return symbolIdent;
+
+            /* Search identifier in the fallback symbol table */
+            if (allowFallbackSymTab && fallbackSymTab)
+                return fallbackSymTab->FindSimilarity(ident, privateScope);
+
+            /* No symbol found */
+            return nullptr;
+        }
+
         //! Returns current scope level.
         size_t ScopeLevel() const
         {
@@ -181,6 +211,25 @@ template <typename Owner, typename Sym, typename PrivScope> class SymbolTable
             if (it != symTable_.end() && !it->second.empty())
                 return it->second.top().symbol;
             return nullptr;
+        }
+
+        //! Returns true if the specified identifier is similar to any symbol in this symbol table.
+        const std::string* FindSimilarSymbol(const std::string& ident) const
+        {
+            size_t maxSim = 0;
+            const std::string* symbolIdent = nullptr;
+
+            for (auto it = symTable_.begin(); it != symTable_.end(); ++it)
+            {
+                auto sim = StringSimilarities(ident, it->first);
+                if (sim > maxSim)
+                {
+                    symbolIdent = &(it->first);
+                    maxSim = sim;
+                }
+            }
+
+            return symbolIdent;
         }
 
         std::string UniqueString(const void* ptr) const

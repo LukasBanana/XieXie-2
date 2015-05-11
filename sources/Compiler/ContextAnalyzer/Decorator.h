@@ -60,7 +60,7 @@ class Decorator final : private Visitor
 
         void Error(const std::string& msg, const AST* ast = nullptr);
         void Warning(const std::string& msg, const AST* ast = nullptr);
-        void Message(const std::string& msg);
+        void Suggestion(const std::string& msg);
 
         //! Returns the source code wherein the current class was declared.
         const SyntaxAnalyzer::SourceCode* GetCurrentSource() const;
