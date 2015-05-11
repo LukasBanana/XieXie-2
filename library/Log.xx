@@ -5,9 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-import Integer
-import Stack
-import IOStream
+import Integer, Stack, IOStream
 
 /// Common log interface.
 class Log {
@@ -40,7 +38,6 @@ public:
 		this.stream := stream
 	}
 	
-	[[override]]
 	void info(String@ message) {
 		if message != null {
 			stream.write(indentState)
@@ -48,7 +45,6 @@ public:
 		}
 	}
 	
-	[[override]]
 	void warning(String@ message) {
 		if message != null {
 			stream.write(indentState)
@@ -57,7 +53,6 @@ public:
 		}
 	}
 	
-	[[override]]
 	void error(String@ message) {
 		if message != null {
 			stream.write(indentState)
@@ -66,7 +61,6 @@ public:
 		}
 	}
 	
-	[[override]]
 	void incIndent() {
 		if indent != null {
 			indentStack.push(new Integer(indent.size()))
@@ -74,7 +68,6 @@ public:
 		}
 	}
 	
-	[[override]]
 	void decIndent() {
 		if not indentStack.empty() {
 			Integer len := (Integer)indentStack.top()
