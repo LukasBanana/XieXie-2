@@ -1,3 +1,5 @@
+"exit:\n"
+"stop\n"
 "new:\n"
 "ldw $ar, ($lb) -4\n"
 "push $ar\n"

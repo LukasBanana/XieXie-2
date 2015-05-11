@@ -10,6 +10,10 @@
 
 ; ------- Common -------
 
+; void exit(void)
+exit:
+	stop
+
 ; Object new(int size, int typeID, int vtableAddr)
 new:
 	ldw $ar, ($lb) -4	; load argument 'size' (must include 12 bytes for reference counter, type-id, and vtable)
