@@ -855,7 +855,12 @@ void XASMGenerator::GenerateVtable(const ClassDeclStmnt& classDecl)
     IncIndent();
     {
         for (const auto procDecl : vtable.procs)
-            WORDAddress(NameMangling::UniqueLabel(*procDecl));
+        {
+            if (procDecl->IsAbstract())
+                WORDAddress("exit");
+            else
+                WORDAddress(NameMangling::UniqueLabel(*procDecl));
+        }
     }
     DecIndent();
     Blank();
