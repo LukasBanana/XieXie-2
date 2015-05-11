@@ -23,7 +23,7 @@ class B : A {
 		return this
 	}
 	A getA1() {
-		return super
+		return base
 	}
 	void print() { /* do something here ... */ }
 }
@@ -107,10 +107,10 @@ class ProcTest : Base {
 		float[]	b := f(2.0)
 		float[]	c := this.f(2.5)
 		String	d := ProcTest.g(1, 2)
-		int[] 	e := super.f(0, 1, 2)
-		float[] h := super.g(0.0) // note: variable f overrides the procedure f -> this.f is required now
+		int[] 	e := base.f(0, 1, 2)
+		float[] h := base.g(0.0) // note: variable f overrides the procedure f -> this.f is required now
 		
-		a := x + super.x
+		a := x + base.x
 		
 		int		i := this.f(p*2) + this.f(p+3)
 		float	j := this.f((float)p*4.0)[0]
