@@ -216,7 +216,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
 
     /* Preliminaries for call instruction */
     bool isMemberCall = !procSig->isStatic;
-    bool isDirectCall = (!isMemberCall || ast->IsBaseCall() || procDecl->HasAttribFinal());
+    bool isDirectCall = (!isMemberCall || ast->IsBaseCall() || procDecl->IsFinal());
     bool replaceThisPtr = false;
 
     if (isMemberCall)

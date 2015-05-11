@@ -43,6 +43,8 @@ class ProcDeclStmnt : public ScopedStmnt
 
         //! Returns true if this procedure is abstract, i.e. 'codeBlock' is null and its parent class is not an extern class.
         bool IsAbstract() const;
+        //! Returns true if this procedure has the attribute "final" or its parent class has the attribute "final".
+        bool IsFinal() const;
 
         /* === Members === */
 

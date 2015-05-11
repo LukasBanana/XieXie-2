@@ -46,6 +46,16 @@ bool ProcDeclStmnt::IsAbstract() const
     return codeBlock == nullptr && parentRef != nullptr && !parentRef->isExtern;
 }
 
+bool ProcDeclStmnt::IsFinal() const
+{
+    return HasAttribFinal() || parentRef->HasAttribFinal();
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
 bool ProcDeclStmnt::HasAttrib(const std::string& attribIdent) const
 {
     return attribPrefix != nullptr ? attribPrefix->HasAttrib(attribIdent) : false;
