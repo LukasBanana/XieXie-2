@@ -2403,7 +2403,10 @@ std::vector<std::string> Parser::ParseImportIdentList()
 
 template <typename T, typename... Args> std::shared_ptr<T> Parser::Make(Args&&... args)
 {
-    return std::make_shared<T>(tkn_->Area(), std::forward<Args>(args)...);
+    return std::make_shared<T>(
+        SourceArea(tkn_->Area(), source_),
+        std::forward<Args>(args)...
+    );
 }
 
 ExprPtr Parser::BuildBinaryExprTree(std::vector<ExprPtr>& exprs, std::vector<BinaryExpr::Operators>& ops)

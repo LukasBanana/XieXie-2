@@ -49,19 +49,22 @@ class SourceCode
             const SourceArea& area, std::string& line, std::string& marker, char markerChar = '~'
         ) const = 0;
 
+        //! Returns the name of this source code (commonly the filename).
+        virtual const std::string& Name() const = 0;
+
         //! Ignores the current character.
-        inline void Ignore()
+        void Ignore()
         {
             Next();
         }
 
         //! Returns the current source position.
-        inline const SourcePosition& Pos() const
+        const SourcePosition& Pos() const
         {
             return pos_;
         }
         //! Returns the current source line.
-        inline const std::string& Line() const
+        const std::string& Line() const
         {
             return line_;
         }

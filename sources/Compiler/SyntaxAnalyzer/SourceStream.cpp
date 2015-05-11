@@ -14,8 +14,9 @@ namespace SyntaxAnalyzer
 {
 
 
-SourceStream::SourceStream(const std::shared_ptr<std::istream>& stream) :
-    stream_{ stream }
+SourceStream::SourceStream(const std::shared_ptr<std::istream>& stream, const std::string& name) :
+    stream_ { stream },
+    name_   { name   }
 {
 }
 SourceStream::SourceStream(const std::string& filename)
@@ -26,7 +27,7 @@ SourceStream::SourceStream(const std::string& filename)
 bool SourceStream::ReadFile(const std::string& filename)
 {
     /* Open file and store filename */
-    filename_ = filename;
+    name_ = filename;
     stream_ = std::make_shared<std::ifstream>(filename, std::ios_base::in);
     return stream_->good();
 }
@@ -103,6 +104,11 @@ bool SourceStream::FetchLineMarker(const SourceArea& area, std::string& line, st
         return FinalizeMarker(area, FetchLine(static_cast<size_t>(row - 1)), line, marker, markerChar);
 
     return false;
+}
+
+const std::string& SourceStream::Name() const
+{
+    return name_;
 }
 
 

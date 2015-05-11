@@ -27,7 +27,7 @@ class SourceStream : public SourceCode
     public:
         
         SourceStream() = default;
-        SourceStream(const std::shared_ptr<std::istream>& stream);
+        SourceStream(const std::shared_ptr<std::istream>& stream, const std::string& name = "");
         SourceStream(const std::string& filename);
 
         bool ReadFile(const std::string& filename);
@@ -41,15 +41,12 @@ class SourceStream : public SourceCode
             const SourceArea& area, std::string& line, std::string& marker, char markerChar = '~'
         ) const override;
 
-        inline const std::string& Filename() const
-        {
-            return filename_;
-        }
+        const std::string& Name() const override;
 
     private:
         
         std::shared_ptr<std::istream>   stream_;
-        std::string                     filename_;
+        std::string                     name_;
         std::vector<std::string>        content_;
 
 };

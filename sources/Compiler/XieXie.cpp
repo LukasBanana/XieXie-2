@@ -137,7 +137,7 @@ static bool ParseProgram(const CompileConfig& config, CompileState& state)
             LogMessage(state, "parse stream (" + std::to_string(++numStreams) + ") ...");
 
         /* Parse source stream */
-        if (!parser.ParseSource(state.astProgram, std::make_shared<SourceStream>(source.stream), state.errorReporter))
+        if (!parser.ParseSource(state.astProgram, std::make_shared<SourceStream>(source.stream, source.filename), state.errorReporter))
             hasError = true;
     }
 

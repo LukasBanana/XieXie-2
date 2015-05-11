@@ -7,28 +7,47 @@
 
 #include "SourceArea.h"
 #include "StringModifier.h"
+#include "SourceCode.h"
 
 
 namespace SyntaxAnalyzer
 {
 
 
-const SourceArea SourceArea::ignore { { 1, 0 }, { 0, 0 } };
+const SourceArea SourceArea::ignore { SourcePosition{ 1, 0 }, SourcePosition{ 0, 0 } };
 
-SourceArea::SourceArea(const SourcePosition& pos) :
-    start{ pos                                         },
-    end  { SourcePosition(pos.Row(), pos.Column() + 1) }
+SourceArea::SourceArea(const SourcePosition& pos, const std::shared_ptr<const SourceCode>& source) :
+    start   { pos                                         },
+    end     { SourcePosition(pos.Row(), pos.Column() + 1) },
+    source_ { source                                      }
 {
 }
-SourceArea::SourceArea(const SourcePosition& startPos, const SourcePosition& endPos) :
-    start{ startPos },
-    end  { endPos   }
+SourceArea::SourceArea(const SourcePosition& startPos, const SourcePosition& endPos, const std::shared_ptr<const SourceCode>& source) :
+    start   { startPos },
+    end     { endPos   },
+    source_ { source   }
+{
+}
+SourceArea::SourceArea(const SourceArea& rhs, const std::shared_ptr<const SourceCode>& source) :
+    start   { rhs.start                                },
+    end     { rhs.end                                  },
+    source_ { source != nullptr ? source : rhs.source_ }
 {
 }
 
 std::string SourceArea::ToString() const
 {
-    return start == end ? start.ToString() : start.ToString() + " - " + end.ToString();
+    std::string str;
+
+    if (source_ && !source_->Name().empty())
+        str += source_->Name() + ": ";
+
+    if (start == end)
+        str += start.ToString();
+    else
+        str += start.ToString() + " - " + end.ToString();
+
+    return str;
 }
 
 void SourceArea::IncRow()

@@ -11,10 +11,14 @@
 
 #include "SourcePosition.h"
 
+#include <memory>
+
 
 namespace SyntaxAnalyzer
 {
 
+
+class SourceCode;
 
 /**
 This class stores a start- and an end source position.
@@ -25,9 +29,12 @@ class SourceArea
     
     public:
         
+        /* === Functions === */
+
         SourceArea() = default;
-        explicit SourceArea(const SourcePosition& pos);
-        SourceArea(const SourcePosition& startPos, const SourcePosition& endPos);
+        explicit SourceArea(const SourcePosition& pos, const std::shared_ptr<const SourceCode>& source = nullptr);
+        SourceArea(const SourcePosition& startPos, const SourcePosition& endPos, const std::shared_ptr<const SourceCode>& source = nullptr);
+        SourceArea(const SourceArea& rhs, const std::shared_ptr<const SourceCode>& source = nullptr);
 
         /**
         Returns the source area as string in the format "StartRow:StartColumn - EndRow:EndColumn",
@@ -49,11 +56,17 @@ class SourceArea
         //! Returns true if this area spreads over multiple lines.
         bool IsMultiLine() const;
 
+        /* === Members === */
+
         //! Start- and end source positions.
         SourcePosition start, end;
 
         //! Invalid source area.
         static const SourceArea ignore;
+
+    private:
+        
+        std::shared_ptr<const SourceCode> source_ = nullptr;
 
 };
 
