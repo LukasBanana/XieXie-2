@@ -34,7 +34,7 @@ class EnglishHello : Hello {
 	init() {}
 	
 //	[[override, final, deprecated("deprecated! LOL :-)")]]
-	[[override, final]]
+	[[final]]
 	String hello() { return "Hello" }
 	
 	//void print() {} // error, "Hello.print" is 'final'
@@ -56,7 +56,6 @@ class Test : EnglishHello {
 		Test.say(
 			new Hello(5) {
 				init(int x) : super("x") {}
-				[[override]]
 				String hello() { return "Hallo" }
 			}
 		)

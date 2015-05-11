@@ -361,7 +361,7 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
                 auto baseProc = vtable_.procs[i];
                 if (ProcSignature::AreSimilar(*(procDecl->procSignature), *(baseProc->procSignature)))
                 {
-                    /* Omit attribute check for contrstructors and destructors */
+                    /* Omit attribute check for constructors and destructors */
                     if (!procDecl->procSignature->isCtor && !procDecl->procSignature->isDtor)
                     {
                         /* Check if procedure can be overridden */
@@ -374,11 +374,20 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
                             );
                         }
                         /* Check if procedure should be overridden */
-                        else if (!procDecl->HasAttribOverride())
+                        else if (!baseProc->IsAbstract() && !procDecl->HasAttribOverride())
                         {
                             Warning(
                                 errorReporter,
                                 "hidden procedure override from its base class at (" +
+                                baseProc->sourceArea.ToString() + ")", procDecl
+                            );
+                        }
+                        /* Check if procedure does not need to be overridden */
+                        else if (baseProc->IsAbstract() && procDecl->HasAttribOverride())
+                        {
+                            Warning(
+                                errorReporter,
+                                "unnecessary override of abstract procedure from its base class at (" +
                                 baseProc->sourceArea.ToString() + ")", procDecl
                             );
                         }

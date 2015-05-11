@@ -437,10 +437,11 @@ ArgPtr Parser::ParseArg()
 
 // proc_signature:      storage_modifier? return_type_denoter IDENT '(' param_list? ')';
 // storage_modifier:    'static';
-ProcSignaturePtr Parser::ParseProcSignature(const TypeDenoterPtr& typeDenoter, const TokenPtr& identTkn, bool isStatic)
+ProcSignaturePtr Parser::ParseProcSignature(const TypeDenoterPtr& typeDenoter, TokenPtr identTkn, bool isStatic)
 {
     auto ast = Make<ProcSignature>();
 
+    /* Parse procedure return type */
     if (Is(Tokens::Static))
     {
         AcceptIt();
@@ -450,8 +451,17 @@ ProcSignaturePtr Parser::ParseProcSignature(const TypeDenoterPtr& typeDenoter, c
         ast->isStatic = isStatic;
 
     ast->returnTypeDenoter = (typeDenoter != nullptr ? typeDenoter : ParseReturnTypeDenoter());
-    ast->ident = (identTkn != nullptr ? identTkn->Spell() : AcceptIdent());
 
+    /* Parse procedure identifier */
+    if (!identTkn)
+        identTkn = Accept(Tokens::Ident);
+    ast->ident = identTkn->Spell();
+
+    /* Update source area */
+    ast->sourceArea.start   = ast->returnTypeDenoter->sourceArea.start;
+    ast->sourceArea.end     = identTkn->PosEnd();
+
+    /* Parse parameter list */
     Accept(Tokens::LBracket);
     if (!Is(Tokens::RBracket))
         ast->params = ParseParamList();
@@ -1427,6 +1437,7 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmntPrimary(bool isExtern, AttribPrefixPt
         ast->attribPrefix = ParseAttribPrefix();
 
     ast->procSignature = ParseProcSignature();
+    ast->sourceArea = ast->procSignature->sourceArea;
 
     if (!isExtern && Is(Tokens::LCurly))
     {
@@ -1457,6 +1468,7 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(
     ast->visibility     = state_.classVis;
 
     ast->procSignature = ParseProcSignature(typeDenoter, identTkn, isStatic);
+    ast->sourceArea = ast->procSignature->sourceArea;
 
     if (!isExtern && Is(Tokens::LCurly))
     {

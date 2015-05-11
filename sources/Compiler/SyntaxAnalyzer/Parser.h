@@ -96,7 +96,7 @@ class Parser
         VarDeclPtr              ParseVarDecl(const TokenPtr& identTkn = nullptr);
         ParamPtr                ParseParam();
         ArgPtr                  ParseArg();
-        ProcSignaturePtr        ParseProcSignature(const TypeDenoterPtr& typeDenoter = nullptr, const TokenPtr& identTkn = nullptr, bool isStatic = false);
+        ProcSignaturePtr        ParseProcSignature(const TypeDenoterPtr& typeDenoter = nullptr, TokenPtr identTkn = nullptr, bool isStatic = false);
         AttribPrefixPtr         ParseAttribPrefix();
         AttribPtr               ParseAttrib();
         //EnumEntryPtr            ParseEnumEntry();
