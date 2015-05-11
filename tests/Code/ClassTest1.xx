@@ -55,8 +55,11 @@ class Test : EnglishHello {
 		// Anonymous class
 		Test.say(
 			new Hello(5) {
-				init(int x) : super("x") {}
-				String hello() { return "Hallo" }
+				init(int x) : base("x") {}
+				String hello() {
+					//return "Hallo"
+					return base.hello()
+				}
 			}
 		)
 		

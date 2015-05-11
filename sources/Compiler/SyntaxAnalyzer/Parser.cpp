@@ -320,7 +320,7 @@ VarNamePtr Parser::ParseVarName(TokenPtr identTkn, bool hasArrayAccess)
         if (Is(Tokens::Ident) || Is(Tokens::ObjectIdent))
             identTkn = AcceptIt();
         else
-            ErrorUnexpected("expected identifier, 'this', or 'super'");
+            ErrorUnexpected("expected identifier, 'this', or 'base'");
     }
     else
         ast->sourceArea = identTkn->Area();
@@ -1486,8 +1486,8 @@ ProcDeclStmntPtr Parser::ParseProcDeclStmnt(
 
 // init_decl_stmnt:         attrib_prefix? init_head code_block;
 // extern_init_decl_stmnt:  attrib_prefix? init_head;
-// init_head:               'init' '(' param_list? ')' super_init?;
-// super_init:              ':' OBJECT_IDENT '(' param_list? ')';
+// init_head:               'init' '(' param_list? ')' base_init?;
+// base_init:               ':' OBJECT_IDENT '(' param_list? ')';
 ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 {
     auto ast = Make<ProcDeclStmnt>();
@@ -1517,7 +1517,7 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
 
     if (!isExtern)
     {
-        /* Parse optional super constructor call */
+        /* Parse optional base constructor call */
         ExprStmntPtr callStmnt;
 
         if (Is(Tokens::Colon))
@@ -1526,7 +1526,7 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
             auto baseIdentSpecifier = Accept(Tokens::ObjectIdent)->Spell();
 
             /* Make procedure call */
-            auto baseIdent = (baseIdentSpecifier == "super" ? state_.classDecl->baseClassIdent : state_.classDecl->ident);
+            auto baseIdent = (baseIdentSpecifier == "base" ? state_.classDecl->baseClassIdent : state_.classDecl->ident);
 
             auto callExpr = Make<ProcCallExpr>();
             callExpr->procCall = ParseProcCall(Make<VarName>(std::vector<std::string>{ baseIdent, "init" }));

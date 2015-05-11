@@ -35,7 +35,7 @@ class Token
 
             // Identifiers
             Ident,          //!< (letter | '_') (letter | '_' | digit)*
-            ObjectIdent,    //!< this | super
+            ObjectIdent,    //!< this | base
 
             // Literals,
             BoolLiteral,    //!< true | false

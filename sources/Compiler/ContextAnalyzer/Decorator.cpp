@@ -1032,7 +1032,7 @@ Check for "this" identifier
 (only allowed inside non-static member procedure declaration).
 
 (Phase 2)
-Check for "super" identifier
+Check for "base" identifier
 (only allowed inside non-static member procedure declaration).
 
 (Phase 3)
@@ -1063,8 +1063,8 @@ StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
                 throw std::string("can not use 'this' outside class namespace");
         }
 
-        /* (2) Check for "super" identifier */
-        if (ident == "super")
+        /* (2) Check for "base" identifier */
+        if (ident == "base")
         {
             /* Search only in upper class namespace */
             if (class_)
@@ -1072,14 +1072,14 @@ StmntSymbolTable::SymbolType* Decorator::FetchSymbol(
                 if (class_->GetBaseClassRef())
                 {
                     if (IsProcStatic())
-                        throw std::string("can not use 'super' in static procedure declaration");
+                        throw std::string("can not use 'base' in static procedure declaration");
                     return class_->GetBaseClassRef();
                 }
                 else
-                    throw std::string("can not use 'super' without base class");
+                    throw std::string("can not use 'base' without base class");
             }
             else
-                throw std::string("can not use 'super' outside class namespace");
+                throw std::string("can not use 'base' outside class namespace");
         }
     }
     catch (const std::string& err)
@@ -1224,7 +1224,7 @@ void Decorator::DecorateVarName(VarName& ast, StmntSymbolTable::SymbolType* symb
     {
         /* Check if symbol refers to a class declaration */
         bool ownerIsClass = false;
-        auto isObjectIdent = (ast.ident == "this" || ast.ident == "super");
+        auto isObjectIdent = (ast.ident == "this" || ast.ident == "base");
 
         /* Check if symbol refers to a variable */
         switch (symbol->Type())
@@ -1403,7 +1403,7 @@ void Decorator::RegisterProcSymbol(ProcDeclStmnt& ast)
 /*
 Decorates the procedure call with the reference to the procedure declaration, which is suitable for the call arguments.
 If the same procedure identifier is used in a base class and a sub class, the sub class procedure must overload the base class procedure.
-Otherwise the procedure of the base class can only identified with 'super.' inside a sub class procedure body.
+Otherwise the procedure of the base class can only identified with 'base.' inside a sub class procedure body.
 */
 void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwitch& overloadSwitch)
 {

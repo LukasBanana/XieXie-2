@@ -22,7 +22,7 @@ static KeywordMapType GenerateKeywordMap()
         { "false",       Ty::BoolLiteral    },
         { "null",        Ty::PointerLiteral },
         { "this",        Ty::ObjectIdent    },
-        { "super",       Ty::ObjectIdent    },
+        { "base",        Ty::ObjectIdent    },
 
         { "bool",        Ty::BuiltinType    },
         { "int",         Ty::BuiltinType    },

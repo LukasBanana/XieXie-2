@@ -320,7 +320,7 @@ ESCAPE_CHAR	: '\\' [0\\tnr"']
 			| '\\U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;
 
 IDENT:			(LETTER | '_') (LETTER | '_' | DEC_DIGIT)*;			// Identifier
-OBJECT_IDENT:	'this' | 'super';
+OBJECT_IDENT:	'this' | 'base';
 
 NEGATION:	'-'
 
