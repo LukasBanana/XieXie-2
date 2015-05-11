@@ -52,6 +52,11 @@ bool ProcCall::IsReleaseProc() const
     return IsProc("release");
 }
 
+bool ProcCall::IsBaseCall() const
+{
+    return procName != nullptr ? (procName->ident == "base") : false;
+}
+
 
 } // /namespace AbstractSyntaxTrees
 

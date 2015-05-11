@@ -35,6 +35,9 @@ class ProcCall : public AST
         //! Returns true if this procedure call refers to a "release" procedure.
         bool IsReleaseProc() const;
 
+        //! Returns true if this procedure call refers to a procedure to a base class, i.e. "base.<PROCEDURE>".
+        bool IsBaseCall() const;
+
         /* === Members === */
 
         VarNamePtr          procName;

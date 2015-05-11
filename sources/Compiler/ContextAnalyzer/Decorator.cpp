@@ -1470,6 +1470,10 @@ void Decorator::DecoreateProcCall(ProcCall& ast, ProcDeclStmnt& procDecl)
     /* Decorate procedure call with reference to final procedure delcaration statement */
     ast.declStmntRef = &procDecl;
 
+    /* Check if this is a base call to an abstract procedure */
+    if (ast.IsBaseCall() && procDecl.IsAbstract())
+        Error("can not make direct call to abstract procedure", &ast);
+
     /* Assign final arguments to parameters */
     const auto& procSig = *procDecl.procSignature;
     const auto numArgs = procSig.params.size();

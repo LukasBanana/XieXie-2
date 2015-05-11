@@ -56,10 +56,7 @@ class Test : EnglishHello {
 		Test.say(
 			new Hello(5) {
 				init(int x) : base("x") {}
-				String hello() {
-					//return "Hallo"
-					return base.hello()
-				}
+				String hello() { return "Hallo" }
 			}
 		)
 		
