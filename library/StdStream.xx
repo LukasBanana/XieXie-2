@@ -10,17 +10,14 @@ import IOStream, Console
 /// Standard input stream implementation.
 class StdInputStream : InputStream {
 	
-	[[override]]
 	int readInt() {
 		return Console.readInt()
 	}
 	
-	[[override]]
 	float readFloat() {
 		return Console.readFloat()
 	}
 	
-	[[override]]
 	String read() {
 		return Console.readString()
 	}
@@ -30,22 +27,18 @@ class StdInputStream : InputStream {
 /// Standard output stream implementation.
 class StdOutputStream : OutputStream {
 	
-	[[override]]
 	void write(int value) {
 		Console.write(value)
 	}
 	
-	[[override]]
 	void write(float value) {
 		Console.write(value)
 	}
 	
-	[[override]]
 	void write(String s) {
 		Console.write(s)
 	}
 	
-	[[override]]
 	void writeLine(String s) {
 		Console.write(s)
 	}
