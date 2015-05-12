@@ -9,11 +9,25 @@ class Test {
 		return a > b ? a : b
 	}
 	
+	static bool f(int x, bool b) {
+		return
+			x = 1 ? b :
+			x = 2 ? not b :
+			x > 3 ? true :
+					false
+	}
+	
+	static void test1() {
+		bool b
+		repeat 100 {
+			b := not b
+			Intrinsics.printInt(b ? 1 : 2)
+		}
+	}
+	
 	static void main() {
-		
 		bool b := true
 		b := not b
-		
 	}
 	
 }

@@ -84,6 +84,11 @@ class GraphGenerator final : private Visitor
 
         VisitIO GenerateBooleanExpr(Expr& ast);
         VisitIO GenerateBooleanExprCondition(Expr& ast);
+        
+        /**
+        Generates a sub CFG for the specified expressions.
+        \remarks This may replace the current top-level basic block on the stack.
+        */
         void GenerateArithmeticExpr(Expr& ast);
 
         void GenerateLogicAndBinaryExpr(BinaryExpr* ast, void* args);

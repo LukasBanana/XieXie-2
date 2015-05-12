@@ -158,7 +158,7 @@ DEF_VISIT_PROC(GraphGenerator, VarDecl)
     }
     else
     {
-        auto bb = MakeBlock();
+        auto bb = MakeBlock("VarDecl");
 
         /* Make instruction */
         auto inst = bb->MakeInst<TACCopyInst>();
