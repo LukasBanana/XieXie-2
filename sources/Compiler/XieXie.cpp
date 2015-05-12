@@ -62,13 +62,13 @@ static void FlushErrors(ErrorReporter& errorReporter, const std::unique_ptr<Log>
 
 struct CompileOptions
 {
-    bool verbose        = false;
-    bool optimize       = false;
-    bool warnings       = false;
-    bool showAST        = false;
-    bool showTokens     = false;
-    bool showCFG        = false;
-    bool showAsm        = false;
+    bool verbose    = false;
+    bool optimize   = false;
+    bool warnings   = false;
+    bool showAST    = false;
+    bool showTokens = false;
+    bool showCFG    = false;
+    bool showAsm    = false;
 };
 
 struct CompileState
