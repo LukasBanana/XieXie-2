@@ -282,28 +282,32 @@ DEF_VISIT_PROC(GraphGenerator, SwitchCase)
 
 DEF_VISIT_PROC(GraphGenerator, ReturnStmnt)
 {
-    auto bb = MakeBlock("Return");
+    auto in = MakeBlock("Return");
+    auto out = in;
 
     if (ast->expr)
     {
-        PushBB(bb);
+        PushBB(out);
         {
             GenerateArithmeticExpr(*ast->expr);
+
             auto var = Var();
 
             /* Make instruction */
-            auto inst = bb->MakeInst<TACReturnInst>(var, numProcParams_);
+            auto inst = BB()->MakeInst<TACReturnInst>(var, numProcParams_);
 
             PopVar();
+
+            out = BB();
         }
         PopBB();
     }
     else
-        bb->MakeInst<TACReturnInst>(numProcParams_);
+        out->MakeInst<TACReturnInst>(numProcParams_);
 
-    bb->flags << BasicBlock::Flags::HasReturnStmnt;
+    out->flags << BasicBlock::Flags::HasReturnStmnt;
 
-    RETURN_BLOCK_REF(bb);
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 DEF_VISIT_PROC(GraphGenerator, CtrlTransferStmnt)
@@ -908,12 +912,14 @@ DEF_VISIT_PROC(GraphGenerator, FriendDeclStmnt)
 DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
 {
     /* Make basic block */
-    auto bb = MakeBlock();
+    auto in = MakeBlock();
+    auto out = in;
 
-    PushBB(bb);
+    PushBB(out);
     {
         /* Visit expressions */
-        Visit(ast->exprs);
+        for (auto& expr : ast->exprs)
+            GenerateArithmeticExpr(*expr);
 
         std::vector<TACVar> srcVars(ast->exprs.size());
 
@@ -928,7 +934,7 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
             if (!it->IsTemp())
             {
                 auto var = TempVar();
-                bb->MakeInst<TACCopyInst>(var, *it);
+                BB()->MakeInst<TACCopyInst>(var, *it);
                 *it = var;
             }
         }
@@ -943,7 +949,7 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
             auto isFloat = IsASTFloat(lastName);
 
             /* Make basic block and instruction */
-            auto inst = bb->MakeInst<TACCopyInst>();
+            auto inst = BB()->MakeInst<TACCopyInst>();
 
             inst->dest  = var;
             inst->src   = *srcIt;
@@ -951,10 +957,12 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
             if (ast->HasIndividualExpr())
                 ++srcIt;
         }
+
+        out = BB();
     }
     PopBB();
 
-    RETURN_BLOCK_REF(bb);
+    RETURN_BLOCK_REF(VisitIO(in, out));
 }
 
 static OpCodes OperatorToOpCode(const ModifyAssignStmnt::Operators op, bool isFloat)
