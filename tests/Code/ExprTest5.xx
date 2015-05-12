@@ -1,0 +1,20 @@
+
+// Expression Test 5
+// 12/05/2015
+
+/// Further test for boolean expressions
+class Test {
+	
+	static int min(int a, int b) {
+		return a > b ? a : b
+	}
+	
+	static void main() {
+		
+		bool b := true
+		b := not b
+		
+	}
+	
+}
+
