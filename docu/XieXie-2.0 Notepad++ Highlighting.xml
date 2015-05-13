@@ -25,7 +25,7 @@
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
             <Keywords name="Keywords1">true false null this base or and not do while for foreach repeat if else switch case default break continue return class extern public protected private static init release new import module friend is</Keywords>
-            <Keywords name="Keywords2">package alias pattern sync synchronize byte ubyte short ushort uint long ulong double enum flags lambda readonly try catch except finally throw</Keywords>
+            <Keywords name="Keywords2">package alias pattern sync synchronize byte ubyte short ushort uint long ulong double enum flags lambda readonly try catch except finally throw throws</Keywords>
             <Keywords name="Keywords3">void bool int float const var</Keywords>
             <Keywords name="Keywords4"></Keywords>
             <Keywords name="Keywords5"></Keywords>

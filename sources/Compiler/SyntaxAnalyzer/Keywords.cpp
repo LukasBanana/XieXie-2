@@ -98,6 +98,7 @@ static KeywordMapType GenerateKeywordMap()
         { "catch",       Ty::Reserved       },
         { "except",      Ty::Reserved       },
         { "throw",       Ty::Reserved       },
+        { "throws",      Ty::Reserved       },
         { "finally",     Ty::Reserved       },
     };
 }
