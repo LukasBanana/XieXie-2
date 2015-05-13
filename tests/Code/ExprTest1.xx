@@ -9,7 +9,7 @@ class Vector2 {
 class Vector3 : Vector2 {
 	
 	init(float xx, float yy, float zz) {
-		super.x := xx
+		base.x := xx
 		y := yy
 		this.z := this.x
 	}
@@ -41,7 +41,7 @@ class ExprTest1 {
 		if (a > m_b[0]) = true {
 			int n
 			for int i := 0 ; i < 10 ; i++ {
-				n += i + test1((int)(a > b))
+				n += i + test1(a > b ? 1 : 0)
 			}
 		} else if (m_c[1][2] - m_b[-3]) > 0 {
 			Foo f
