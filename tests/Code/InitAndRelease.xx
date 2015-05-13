@@ -16,10 +16,10 @@ class Base {
 
 class Test : Base {
 	
-	init() : super() {
+	init() : base() {
 		x, y := 0
 	}
-	init(int x) : super(x*2) {
+	init(int x) : base(x*2) {
 		this.x := x
 	}
 	/*init(int x) { // error, already defined

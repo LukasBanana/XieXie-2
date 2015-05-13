@@ -3,14 +3,12 @@
 // 05/09/2014
 
 [[deprecated("This is a test deprecation hint")]]
-extern class Math {
+class MathExt {
 	
-	static float sqrt(float x)
-	
-	static float sq(float x)
+	static float sq(float x) { return x*x }
 	
 	[[deprecated("\"distanceSq\" is also deprecated")]]
-	static float distanceSq(Vector3 a, Vector3 b)
+	static float distanceSq(Vector3 a, Vector3 b) { return 0.0 }
 	
 }
 
@@ -43,6 +41,7 @@ class Vector3 {
 		}
 	}
 	
+	[[override]]
 	String toString() {
 		String s// := Test.fibonacci(10).toString()
 		//for int i := 0 ; i < { x, y, z }.size() ; i++ {
@@ -85,13 +84,13 @@ class Test {
 		
 		String str1 := "Hello"
 		String str2 := new String("World")
-		Log.writeLine(str1.add(", ").add(str2))
+		Log.writeLine(str1.append(", ").append(str2))
 		
 		//int len := "Test".size()
 		
 		int n := 10
 		Log.writeLine(
-			new String("Fibonacci(").add(n).add(") = ").add(Test.fibonacci(n))
+			new String("Fibonacci(").append(n).append(") = ").append(Test.fibonacci(n))
 		)
 		
 		return 0

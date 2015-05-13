@@ -8,16 +8,16 @@ class Test {
 	
 	static void main() {
 		
-		int answer := MsgBox.messageBox("Info", "Hello, World!", 0x6)
+		int answer := MsgBox.show("Info", "Hello, World!", MsgBox.CANCEL_TRY_CONTINUE)
 		
-		if answer = 1 {
-			MsgBox.messageBox("Info", "Pressed OK")
-		} else if answer = 2 {
-			MsgBox.messageBox("Info", "Pressed CANCEL")
-		} else if answer = 10 {
-			MsgBox.messageBox("Info", "Pressed TRY")
-		} else if answer = 11 {
-			MsgBox.messageBox("Info", "Pressed CONTINUE")
+		if answer = MsgBox.ID_OK {
+			MsgBox.show("Info", "Pressed OK")
+		} else if answer = MsgBox.ID_CANCEL {
+			MsgBox.show("Info", "Pressed CANCEL")
+		} else if answer = MsgBox.ID_TRY {
+			MsgBox.show("Info", "Pressed TRY")
+		} else if answer = MsgBox.ID_CONTINUE {
+			MsgBox.show("Info", "Pressed CONTINUE")
 		}
 		
 	}

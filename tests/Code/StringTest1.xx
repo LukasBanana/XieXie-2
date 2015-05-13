@@ -2,8 +2,6 @@
 // String Test 1
 // 22/04/2015
 
-class WString : String {}
-
 /// Test for string literals
 class Test {
 	
@@ -17,9 +15,6 @@ class Test {
 		
 		int x := 5, y := -3
 		//var s2 := "x = \(x)"
-		
-		//var s := new WString()
-		//Test.f(s)
 		
 		//Test.f(s: "x = \(x) \("y = \(y*2)") ")
 		Test.f(s: "x = \(x), y = \(y)")

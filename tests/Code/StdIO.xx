@@ -74,7 +74,7 @@ class Main {
 		}
 		
 		int num := { 5, { "bar" }.toString().size() }.size()
-		num := ((Array){ "test" }).size()
+		num := ((Object[]){ "test" }).size()
 		
 		num := sl[0].size()	// sl[0] = String	-> String.size()
 		num := sl.size()	// sl = String[]	-> Array.size()

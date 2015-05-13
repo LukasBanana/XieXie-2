@@ -9,13 +9,13 @@ class A {
 class B : A {
 	protected
 	[[override]]
-	void f() { super.f() }
+	void f() { base.f() }
 }
 
 class C : B {
 	protected
 	[[override]]
-	void f() { super.f() }
+	void f() { base.f() }
 	
 	private friend Test
 	
