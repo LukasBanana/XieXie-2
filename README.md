@@ -12,7 +12,7 @@ Features
 License
 -------
 
-3-Clause BSD License
+[3-Clause BSD License](https://github.com/LukasBanana/XieXie-2/blob/master/LICENSE.txt)
 
 Status
 ------
@@ -25,8 +25,8 @@ Programming Guide
 There is also a programming guide, which will be available for free,
 as soon as the first compiler version is released.
 
-Examples
---------
+Code Examples
+-------------
 
 This is a small *Hello World* example:
 ```java
@@ -54,4 +54,68 @@ class Fibonacci {
 	}
 }
 ```
+
+Integration Examples
+--------------------
+Very high-level interface:
+```cpp
+#include <xiexie/xiexie.h>
+int main()
+{
+	XieXie::RunFromString(
+		"import MsgBox\n"
+		"class MiniExample {\n"
+		"    static void main() {\n"
+		"        MsgBox.show(\"Info\", \"This is a mini Example!\")\n"
+		"    }\n"
+		"}\n"
+	);
+}
+```
+
+Offline compilation:
+```cpp
+#include <xiexie/xiexie.h>
+int main()
+{
+	XieXie::CompileConfig config;
+	{
+		std::string filename = "ExampleFile.xx";
+		config.sources.push_back({ filename, std::make_shared<std::ifstream>(filename) });
+	}
+	XieXie::Compile(config, &(std::cout));
+}
+```
+
+Running compile code:
+```cpp
+#include <xiexie/xiexie.h>
+
+void triggerGameEvent(XVM_Env env)
+{
+	// Read parameter from XVM environment
+	int eventID = XVM_ParamInt(env, 1);
+	
+	/* do something ... */
+	
+	// Return void and pop 1 argument (eventID)
+	XVM_ReturnVoid(env, 1);
+}
+
+int main()
+{
+	XieXie::VirtualMachine::ByteCode bc;
+	XieXie::VirtualMachine::Stack st;
+	
+	// Read XieXie byte code (*.xbc) file
+	bc.ReadFromFile("MyGameScript.xbc");
+	
+	// Bind external invocation "triggerGameEvent"
+	bc.BindInvocation("GameInterface.triggerGameEvent", triggerGameEvent);
+	
+	// Execute byte code in virtual machine
+	XieXie::VirtualMachine::ExecuteProgram(bc, st, "GameScript.entryPoint");
+}
+```
+
 
