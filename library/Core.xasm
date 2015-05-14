@@ -1336,6 +1336,8 @@ CMath.Patan,F?x:
 
 ; float Math.pow(float b, float e)
 CMath.Ppow,F?b,F?e:
+	ldw $tr, ($lb) -8
+	push $tr
 	ldw $tr, ($lb) -4
 	push $tr
 	insc Pow
