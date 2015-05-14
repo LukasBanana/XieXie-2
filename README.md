@@ -87,7 +87,7 @@ int main()
 }
 ```
 
-Running compile code:
+Running compiled code:
 ```cpp
 #include <xiexie/xiexie.h>
 
