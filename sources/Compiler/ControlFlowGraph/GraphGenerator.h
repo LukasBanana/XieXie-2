@@ -120,7 +120,7 @@ class GraphGenerator final : private Visitor
         void GenerateVarNameRValue(VarName& ast, const TACVar* baseVar = nullptr);
         void GenerateVarNameRValueDynamic(VarName* ast, const TACVar* baseVar);
         void GenerateVarNameRValueStatic(VarDecl* ast);
-        void GenerateArrayAccess(ArrayAccess* ast, const TACVar& baseVar);
+        void GenerateArrayAccess(ArrayAccess* ast, TACVar baseVar, const TACVar& resultVar);
 
         //void GenerateVarNameLValue(VarName& ast);
 

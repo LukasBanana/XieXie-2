@@ -5,21 +5,37 @@ import Console
 
 class Test {
 	
-	static int sum(int[] val) {
+	static int sum(int[] list) {
 		int s
-		foreach x : val {
+		foreach x : list {
 			s += x
 		}
 		return s
+	}
+	
+	static void printInfo(int[] list) {
+		
+		Console.write("elements: { ")
+		
+		for int i ; i < list.size() ; i++ {
+			Console.write(list[i])
+			if i < list.size() - 1 {
+				Console.write(", ")
+			} else {
+				Console.writeLine(" }")
+			}
+		}
+		
+		Console.write("sum = ")
+		Console.writeLine(Test.sum(list))
+		
 	}
 	
 	static void main() {
 		
 		//Console.writeLine(Test.sum({ 1, 2, 3 }))
 		
-		foreach x : { 1, 2, 3 } {
-			Console.writeLine(x)
-		}
+		Test.printInfo({ 3, -12, 42, 8, 39 })
 		
 	}
 	
