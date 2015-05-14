@@ -1,21 +1,13 @@
 
 // Temp XieXie Test
 
-class A {
-	
-	A getA() { return null }
-	
-	A parent
-	A[] children
-	
-}
+import Log
 
-class Test {
+class Test : StreamLog {
 	
-	static void main() {
+	void main() {
 		
-		A a
-		a.getA().children[0].parent.getA().children[1].getA()
+		int x := (int)base.warning("test")
 		
 	}
 	
