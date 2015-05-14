@@ -23,12 +23,12 @@ std::string Arg::ToString() const
 {
     std::string str;
 
-    if (!paramIdent.empty())
-        str += paramIdent + ": ";
-    
     auto exprType = GetTypeDenoter();
     if (exprType)
         str += exprType->ToString();
+
+    if (!paramIdent.empty())
+        str += ' ' + paramIdent;
 
     return str;
 }
