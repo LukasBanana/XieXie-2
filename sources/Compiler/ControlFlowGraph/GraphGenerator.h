@@ -124,8 +124,11 @@ class GraphGenerator final : private Visitor
 
         //void GenerateVarNameLValue(VarName& ast);
 
-        void StoreLocalVars();
-        void RestoreLocalVars();
+        void StoreLocalVars(BasicBlock& bb);
+        void RestoreLocalVars(BasicBlock& bb);
+
+        void StoreThisPtr(BasicBlock& bb);
+        void RestoreThisPtr(BasicBlock& bb);
 
         /* --- CFG Generation --- */
 
@@ -211,6 +214,7 @@ class GraphGenerator final : private Visitor
         \see StoreLocalVars
         */
         std::vector<LocalVar>       localVars_;
+        bool                        replaceThisPtr_ = false;
 
         TACVarManager               varMngr_;
 

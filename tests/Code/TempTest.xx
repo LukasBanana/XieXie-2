@@ -21,7 +21,7 @@ class Test {
 		bool b
 		repeat 10 {
 			b := not b
-			printLn(b ? 1 : 2)
+			printLn(b ? "foo" : "bar")
 		}
 		
 	}

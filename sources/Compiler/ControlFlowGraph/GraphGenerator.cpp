@@ -216,13 +216,9 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     auto procSig = procDecl->procSignature.get();
     auto procClass = procDecl->parentRef;
 
-    /* Store local variables */
-    StoreLocalVars();
-
     /* Preliminaries for call instruction */
     bool isMemberCall = !procSig->isStatic;
     bool isDirectCall = (!isMemberCall || ast->IsBaseCall() || procDecl->IsFinal());
-    bool replaceThisPtr = false;
 
     if (isMemberCall)
     {
@@ -236,36 +232,35 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
         if (objVar != ThisPtr())
         {
             /* Replace current 'this' pointer */
-            if (procedure_ && !procedure_->procSignature->isStatic)
-            {
-                BB()->MakeInst<TACStackInst>(OpCodes::PUSH, ThisPtr());
-                replaceThisPtr = true;
-            }
-
+            StoreThisPtr(*BB());
             BB()->MakeInst<TACCopyInst>(ThisPtr(), objVar);
         }
     }
-
+    
     /* Make instructions to push arguments */
     for (auto it = ast->argExprs.rbegin(); it != ast->argExprs.rend(); ++it)
         GenerateArgumentExpr(**it);
 
-    if (isDirectCall)
+    /* Store- and restore local variables around call instruction */
+    StoreLocalVars(*BB());
     {
-        /* Make direct call instruction */
-        auto procIdent = UniqueLabel(*procDecl);
-        BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
+        if (isDirectCall)
+        {
+            /* Make direct call instruction */
+            auto procIdent = UniqueLabel(*procDecl);
+            BB()->MakeInst<TACDirectCallInst>(procIdent, procClass->isModule);
+        }
+        else
+        {
+            /* Make indirect call instruction */
+            auto procIdent = UniqueLabel(*procDecl, false);
+            BB()->MakeInst<TACIndirectCallInst>(procIdent, procDecl->vtableOffset);
+        }
     }
-    else
-    {
-        /* Make indirect call instruction */
-        auto procIdent = UniqueLabel(*procDecl, false);
-        BB()->MakeInst<TACIndirectCallInst>(procIdent, procDecl->vtableOffset);
-    }
+    RestoreLocalVars(*BB());
 
     /* Restore previous 'this' pointer */
-    if (replaceThisPtr)
-        BB()->MakeInst<TACStackInst>(OpCodes::POP, ThisPtr());
+    RestoreThisPtr(*BB());
 
     /* Store procedure result in temporary variable */
     if (procSig->returnTypeDenoter && !procSig->returnTypeDenoter->IsVoid())
@@ -274,9 +269,6 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
         BB()->MakeInst<TACCopyInst>(var, ResultVar());
         PushVar(var);
     }
-
-    /* Restore local variables */
-    RestoreLocalVars();
 }
 
 DEF_VISIT_PROC(GraphGenerator, SwitchCase)
@@ -1175,11 +1167,18 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
         /* Append literal to program string literals */
         auto literalIdent = AppendStringLiteral(ast->value);
         
-        /* Make instruction */
-        auto var = TempVar();
-        BB()->MakeInst<TACCopyInst>(OpCodes::LDADDR, var, LabelVar(literalIdent));
-        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, var);
-        BB()->MakeInst<TACDirectCallInst>("String.copy_literal");
+        /* Store- and restore local variables around call instruction */
+        StoreThisPtr(*BB());
+        StoreLocalVars(*BB());
+        {
+            /* Generate call instruction */
+            auto var = TempVar();
+            BB()->MakeInst<TACCopyInst>(OpCodes::LDADDR, var, LabelVar(literalIdent));
+            BB()->MakeInst<TACStackInst>(OpCodes::PUSH, var);
+            BB()->MakeInst<TACDirectCallInst>("String.copy_literal");
+        }
+        RestoreLocalVars(*BB());
+        RestoreThisPtr(*BB());
 
         PushVar(ResultVar());
     }
@@ -1285,7 +1284,13 @@ DEF_VISIT_PROC(GraphGenerator, InstanceOfExpr)
             ErrorIntern("invalid type denoter in 'instance-of' expression", ast);
 
         bb->MakeInst<TACStackInst>(OpCodes::PUSH, PopVar());
-        bb->MakeInst<TACDirectCallInst>("dynamic_cast");
+
+        StoreLocalVars(*bb);
+        {
+            bb->MakeInst<TACDirectCallInst>("dynamic_cast");
+        }
+        RestoreLocalVars(*bb);
+
         bb->MakeInst<TACRelationInst>(OpCodes::CMPNE, ResultVar(), "0");
     }
     PopBB();
@@ -1760,12 +1765,16 @@ void GraphGenerator::GenerateArgumentExpr(Expr& ast)
 
 void GraphGenerator::GenerateClassAlloc(unsigned int instanceSize, unsigned int typeID, const std::string& vtableAddr)
 {
-    auto addrVar = TempVar();
-    BB()->MakeInst<TACCopyInst>(OpCodes::LDADDR, addrVar, LabelVar(vtableAddr));
-    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, addrVar);
-    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(typeID));
-    BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(instanceSize));
-    BB()->MakeInst<TACDirectCallInst>("new");
+    StoreLocalVars(*BB());
+    {
+        auto addrVar = TempVar();
+        BB()->MakeInst<TACCopyInst>(OpCodes::LDADDR, addrVar, LabelVar(vtableAddr));
+        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, addrVar);
+        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(typeID));
+        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(instanceSize));
+        BB()->MakeInst<TACDirectCallInst>("new");
+    }
+    RestoreLocalVars(*BB());
 }
 
 void GraphGenerator::GenerateClassAlloc(const ClassDeclStmnt& classDecl)
@@ -1909,7 +1918,7 @@ void GraphGenerator::GenerateArrayAccess(ArrayAccess* ast, const TACVar& baseVar
     }
 }
 
-void GraphGenerator::StoreLocalVars()
+void GraphGenerator::StoreLocalVars(BasicBlock& bb)
 {
     varMngr_.IterateLocalVars();
     while (auto var = varMngr_.NextLocalVar())
@@ -1923,18 +1932,36 @@ void GraphGenerator::StoreLocalVars()
         localVars_.push_back(localVar);
 
         /* Generate instruction to store local variable in the local stack */
-        BB()->MakeInst<TACHeapInst>(OpCodes::STW, *var, FramePtr(), localVar.offset);
+        bb.MakeInst<TACHeapInst>(OpCodes::STW, *var, FramePtr(), localVar.offset);
     }
 }
 
-void GraphGenerator::RestoreLocalVars()
+void GraphGenerator::RestoreLocalVars(BasicBlock& bb)
 {
     for (auto& localVar : localVars_)
     {
         /* Generate instruction to restore local variable from the local stack */
-        BB()->MakeInst<TACHeapInst>(OpCodes::LDW, localVar.var, FramePtr(), localVar.offset);
+        bb.MakeInst<TACHeapInst>(OpCodes::LDW, localVar.var, FramePtr(), localVar.offset);
     }
     localVars_.clear();
+}
+
+void GraphGenerator::StoreThisPtr(BasicBlock& bb)
+{
+    if (procedure_ && !procedure_->procSignature->isStatic)
+    {
+        bb.MakeInst<TACStackInst>(OpCodes::PUSH, ThisPtr());
+        replaceThisPtr_ = true;
+    }
+}
+
+void GraphGenerator::RestoreThisPtr(BasicBlock& bb)
+{
+    if (replaceThisPtr_)
+    {
+        bb.MakeInst<TACStackInst>(OpCodes::POP, ThisPtr());
+        replaceThisPtr_ = false;
+    }
 }
 
 #undef RETURN_BLOCK_REF
@@ -2096,22 +2123,27 @@ void GraphGenerator::PopRefScope(BasicBlock& bb)
     const auto& refs = scope.strongRefs;
     if (!refs.empty())
     {
-        auto numRefs = refs.size();
-
-        /* Push references onto stack (expect the last one) */
-        for (size_t i = 0; i + 1 < numRefs; ++i)
-            bb.MakeInst<TACStackInst>(OpCodes::PUSH, refs[i]);
-
-        /* Decrement last ref directly */
-        bb.MakeInst<TACCopyInst>(ThisPtr(), refs[numRefs - 1]);
-        bb.MakeInst<TACDirectCallInst>("dec_ref");
-
-        /* Decrement ref-counts of strong references in reverse order */
-        for (size_t i = 0; i + 1 < numRefs; ++i)
+        //!TODO! -> don't store local variables, inside the current basic block 'bb'!!!
+        StoreLocalVars(bb);
         {
-            bb.MakeInst<TACStackInst>(OpCodes::POP, ThisPtr());
+            auto numRefs = refs.size();
+
+            /* Push references onto stack (expect the last one) */
+            for (size_t i = 0; i + 1 < numRefs; ++i)
+                bb.MakeInst<TACStackInst>(OpCodes::PUSH, refs[i]);
+
+            /* Decrement last ref directly */
+            bb.MakeInst<TACCopyInst>(ThisPtr(), refs[numRefs - 1]);
             bb.MakeInst<TACDirectCallInst>("dec_ref");
+
+            /* Decrement ref-counts of strong references in reverse order */
+            for (size_t i = 0; i + 1 < numRefs; ++i)
+            {
+                bb.MakeInst<TACStackInst>(OpCodes::POP, ThisPtr());
+                bb.MakeInst<TACDirectCallInst>("dec_ref");
+            }
         }
+        RestoreLocalVars(bb);
     }
 
     refScopeStack_.Pop();
