@@ -102,6 +102,8 @@ void triggerGameEvent(XVM_Env env)
 	XVM_ReturnVoid(env, 1);
 }
 
+/* further functions ... */
+
 int main()
 {
 	XieXie::VirtualMachine::ByteCode bc;
