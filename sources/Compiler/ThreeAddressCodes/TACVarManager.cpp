@@ -111,11 +111,22 @@ TACVar TACVarManager::Var()
 void TACVarManager::IterateLocalVars()
 {
     localVars_.varIt = localVars_.vars.begin();
+    tempVarIt_ = tempVarIDs_.begin();
 }
 
-TACVar* TACVarManager::NextLocalVar()
+bool TACVarManager::NextLocalVar(TACVar& var)
 {
-    return localVars_.varIt != localVars_.vars.end() ? &((localVars_.varIt++)->second) : nullptr;
+    if (localVars_.varIt != localVars_.vars.end())
+    {
+        var = (localVars_.varIt++)->second;
+        return true;
+    }
+    if (tempVarIt_ != tempVarIDs_.end())
+    {
+        var = TACVar(*(tempVarIt_++));
+        return true;
+    }
+    return false;
 }
 
 int TACVarManager::LocalVarStackOffset(const TACVar& var)

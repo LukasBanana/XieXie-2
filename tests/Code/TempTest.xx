@@ -1,27 +1,24 @@
 
 // Temp XieXie Test
 
-import MsgBox
+import Console
 
 class Test {
-
-	void print(int val) { Intrinsics.printInt(val) }
-	void print(float val) { Intrinsics.printFloat(val) }
-	void print(String val) { Intrinsics.print(val.pointer()) }
-	void printLn(int val) { Intrinsics.printInt(val) Intrinsics.printLn(0) }
-	void printLn(float val) { Intrinsics.printFloat(val) Intrinsics.printLn(0) }
-	void printLn(String val) { Intrinsics.printLn(val.pointer()) }
 	
-	static void main() {
-		var script := new Test()
+	static int sum(int[] val) {
+		int s
+		foreach x : val {
+			s += x
+		}
+		return s
 	}
 	
-	init() {
+	static void main() {
 		
-		bool b
-		repeat 10 {
-			b := not b
-			printLn(b ? "foo" : "bar")
+		//Console.writeLine(Test.sum({ 1, 2, 3 }))
+		
+		foreach x : { 1, 2, 3 } {
+			Console.writeLine(x)
 		}
 		
 	}

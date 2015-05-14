@@ -61,8 +61,11 @@ class TACVarManager
 
         //! Starts to iterate over all local variables.
         void IterateLocalVars();
-        //! Returns the next local variable or null, if there are no further local variables.
-        TACVar* NextLocalVar();
+        /**
+        Returns the next local variable or null, if there are no further local variables.
+        This may also contain temporary variables.
+        */
+        bool NextLocalVar(TACVar& var);
 
         //! Returns the offest (in number of entries) of the local stack for the specified variable.
         int LocalVarStackOffset(const TACVar& var);
@@ -108,6 +111,7 @@ class TACVarManager
         VarMap< VarDecl, TACVar::Types::Member, false > memberVars_;
 
         std::vector<IDType>                             tempVarIDs_;
+        std::vector<IDType>::iterator                   tempVarIt_;
 
         std::map<TACVar, int>                           varStackOffsetMap_;
         int                                             stackOffset_ = 0;

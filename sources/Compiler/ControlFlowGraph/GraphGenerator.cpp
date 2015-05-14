@@ -731,7 +731,7 @@ DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
     PushBB(in);
     {
         Visit(ast->listExpr);
-        arrayVar = PopVar();
+        arrayVar = Var();
     }
     PopBB();
 
@@ -744,6 +744,8 @@ DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
     auto ptrEndVar = TempVar();
     in->MakeInst<TACHeapInst>(OpCodes::LDW, ptrEndVar, arrayVar, 12);
     in->MakeInst<TACModifyInst>(OpCodes::ADD, ptrEndVar, ptrEndVar, ptrVar);
+
+    PopVar(); // pop 'arrayVar'
 
     /* Loop condition */
     cond->MakeInst<TACRelationInst>(OpCodes::CMPL, ptrVar, ptrEndVar);
@@ -778,6 +780,9 @@ DEF_VISIT_PROC(GraphGenerator, ForEachStmnt)
     PopBreakBB();
 
     cond->AddSucc(*out, "false");
+
+    ReleaseVar(ptrVar);
+    ReleaseVar(ptrEndVar);
 
     RETURN_BLOCK_REF(VisitIO(in, out));
 }
@@ -855,7 +860,7 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     /* Create procedure CFG */
     auto root = CT()->CreateRootBasicBlock(*ast, procDisplay);
 
-    #if 1//!!!DEBUGGING!!!
+    #if 0//!!!DEBUGGING!!!
     root->MakeInst<TACModifyInst>(OpCodes::ADD, TACVar::varStackPtr, TACVar::varStackPtr, "100");
     #endif
 
@@ -894,6 +899,15 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
             Error("not all execution paths in \"" + procSig.ident + "\" end with a valid procedure return", ast);
     }
     
+    /* Add instruction to allocate enough space on local stack */
+    auto localStackSize = varMngr_.LocalStackSize();
+    if (localStackSize > 0)
+    {
+        root->InsertInst<TACModifyInst>(
+            0, OpCodes::ADD, TACVar::varStackPtr, TACVar::varStackPtr, std::to_string(localStackSize*4)
+        );
+    }
+
     /* Clean local CFG of this procedure */
     Optimization::Optimizer::OptimizeGraph(*root);
 
@@ -1175,6 +1189,7 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
             auto var = TempVar();
             BB()->MakeInst<TACCopyInst>(OpCodes::LDADDR, var, LabelVar(literalIdent));
             BB()->MakeInst<TACStackInst>(OpCodes::PUSH, var);
+            ReleaseVar(var);
             BB()->MakeInst<TACDirectCallInst>("String.copy_literal");
         }
         RestoreLocalVars(*BB());
@@ -1190,8 +1205,12 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
         switch (ast->GetType())
         {
             case LiteralExpr::Literals::Bool:
-                var = (ast->value == "false" ? "0" : "1");
-                break;
+            {
+                bool result = false;
+                ast->GetBooleanValue(result);
+                var = (result ? "1" : "0");
+            }
+            break;
 
             case LiteralExpr::Literals::Pointer:
                 var = "0";
@@ -1356,10 +1375,38 @@ DEF_VISIT_PROC(GraphGenerator, InitListExpr)
     /* Append literal to program string literals */
     GenerateClassAlloc(classRTTI->instanceSize, classRTTI->typeID, classRTTI->GetVtableAddr());
 
-    CopyAndPushResultVar(TempVar());
+    auto arrayRefVar = TempVar();
+    CopyAndPushResultVar(arrayRefVar);
 
-    //!TODO! -> initialize array !!!
+    /* Call constructor */
+    StoreThisPtr(*BB());
+    BB()->MakeInst<TACCopyInst>(ThisPtr(), arrayRefVar);
 
+    StoreLocalVars(*BB());
+    {
+        BB()->MakeInst<TACStackInst>(OpCodes::PUSH, std::to_string(ast->exprs.size()));
+        BB()->MakeInst<TACDirectCallInst>("CArray.Pinit,I?size");
+    }
+    RestoreLocalVars(*BB());
+
+    RestoreThisPtr(*BB());
+
+    /* Initialize array */
+    auto arrayBufferVar = TempVar();
+
+    BB()->MakeInst<TACHeapInst>(OpCodes::LDW, arrayBufferVar, arrayRefVar, BuiltinClasses::Array_Offset_buffer);
+
+    for (size_t i = 0, n = ast->exprs.size(); i < n; ++i)
+    {
+        /* Generate initialization expressions */
+        auto& expr = ast->exprs[i];
+        GenerateArithmeticExpr(*expr);
+
+        /* Generate instruction to store value inside array */
+        BB()->MakeInst<TACHeapInst>(OpCodes::STW, PopVar(), arrayBufferVar, static_cast<int>(i)*4);
+    }
+
+    ReleaseVar(arrayBufferVar);
 }
 
 DEF_VISIT_PROC(GraphGenerator, RangeExpr)
@@ -1770,6 +1817,7 @@ void GraphGenerator::GenerateClassAlloc(unsigned int instanceSize, unsigned int 
         auto addrVar = TempVar();
         BB()->MakeInst<TACCopyInst>(OpCodes::LDADDR, addrVar, LabelVar(vtableAddr));
         BB()->MakeInst<TACStackInst>(OpCodes::PUSH, addrVar);
+        ReleaseVar(addrVar);
         BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(typeID));
         BB()->MakeInst<TACStackInst>(OpCodes::PUSH, TACVar::Int(instanceSize));
         BB()->MakeInst<TACDirectCallInst>("new");
@@ -1920,19 +1968,20 @@ void GraphGenerator::GenerateArrayAccess(ArrayAccess* ast, const TACVar& baseVar
 
 void GraphGenerator::StoreLocalVars(BasicBlock& bb)
 {
+    TACVar var;
     varMngr_.IterateLocalVars();
-    while (auto var = varMngr_.NextLocalVar())
+    while (varMngr_.NextLocalVar(var))
     {
         /* Setup local variable */
         LocalVar localVar;
         {
-            localVar.var    = *var;
-            localVar.offset = 8 + varMngr_.LocalVarStackOffset(*var) * 4;
+            localVar.var    = var;
+            localVar.offset = 8 + varMngr_.LocalVarStackOffset(var) * 4;
         }
         localVars_.push_back(localVar);
 
         /* Generate instruction to store local variable in the local stack */
-        bb.MakeInst<TACHeapInst>(OpCodes::STW, *var, FramePtr(), localVar.offset);
+        bb.MakeInst<TACHeapInst>(OpCodes::STW, var, FramePtr(), localVar.offset);
     }
 }
 
