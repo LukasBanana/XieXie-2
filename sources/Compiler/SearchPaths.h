@@ -27,11 +27,21 @@ and the modules path will be "XieXie/modules/".
 */
 void Setup(const std::string& appFilename);
 
+//! Returns the full application path.
+const std::string& AppPath();
+
 //! Returns a reference to the "library/" path.
 std::string& LibraryPath();
 
 //! Returns a reference to the "modules/" path.
 std::string& ModulesPath();
+
+/**
+Makes the specified path relative to the application path (see AppPath).
+\param[in,out] path Specifies the path which is to be modified. This can also be a filename.
+\see AppPath
+*/
+void MakePathRelative(std::string& path);
 
 
 } // /namespace SearchPaths

@@ -45,6 +45,8 @@ class SourceStream : public SourceCode
 
     private:
         
+        void StoreName(const std::string& name);
+
         std::shared_ptr<std::istream>   stream_;
         std::string                     name_;
         std::vector<std::string>        content_;

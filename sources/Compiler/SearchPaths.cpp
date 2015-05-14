@@ -13,9 +13,9 @@ namespace SearchPaths
 {
 
 
-static std::string libraryPath, modulesPath;
+static std::string appPath, libraryPath, modulesPath;
 
-void Setup(const std::string& appPath)
+void Setup(const std::string& appFilename)
 {
     #ifndef XIEXIE_RELEASE_VERSION
     static const std::string libBasePath = "/../repository/";
@@ -23,10 +23,15 @@ void Setup(const std::string& appPath)
     static const std::string libBasePath = "/../";
     #endif
     
-    auto path = ExtractFilePath(appPath) + libBasePath;
+    appPath = ExtractFilePath(appFilename) + libBasePath;
 
-    libraryPath = path + "library/";
-    modulesPath = path + "modules/";
+    libraryPath = appPath + "library/";
+    modulesPath = appPath + "modules/";
+}
+
+const std::string& AppPath()
+{
+    return appPath;
 }
 
 std::string& LibraryPath()
@@ -37,6 +42,12 @@ std::string& LibraryPath()
 std::string& ModulesPath()
 {
     return modulesPath;
+}
+
+void MakePathRelative(std::string& path)
+{
+    if (path.size() >= appPath.size() && appPath.compare(0u, appPath.size(), path, 0u, appPath.size()) == 0)
+        path.erase(0, appPath.size());
 }
 
 

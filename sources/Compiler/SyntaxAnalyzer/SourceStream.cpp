@@ -6,6 +6,7 @@
  */
 
 #include "SourceStream.h"
+#include "SearchPaths.h"
 
 #include <fstream>
 
@@ -15,9 +16,9 @@ namespace SyntaxAnalyzer
 
 
 SourceStream::SourceStream(const std::shared_ptr<std::istream>& stream, const std::string& name) :
-    stream_ { stream },
-    name_   { name   }
+    stream_{ stream }
 {
+    StoreName(name);
 }
 SourceStream::SourceStream(const std::string& filename)
 {
@@ -27,7 +28,7 @@ SourceStream::SourceStream(const std::string& filename)
 bool SourceStream::ReadFile(const std::string& filename)
 {
     /* Open file and store filename */
-    name_ = filename;
+    StoreName(filename);
     stream_ = std::make_shared<std::ifstream>(filename, std::ios_base::in);
     return stream_->good();
 }
@@ -109,6 +110,17 @@ bool SourceStream::FetchLineMarker(const SourceArea& area, std::string& line, st
 const std::string& SourceStream::Name() const
 {
     return name_;
+}
+
+
+/*
+ * ======= Private: ========
+ */
+
+void SourceStream::StoreName(const std::string& name)
+{
+    name_ = name;
+    SearchPaths::MakePathRelative(name_);
 }
 
 
