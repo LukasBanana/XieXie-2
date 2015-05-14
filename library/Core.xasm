@@ -661,7 +661,29 @@ CBuffer.Pinit:
 CArray.Pinit,I?size:
 CIntArray.Pinit,I?size:
 CFloatArray.Pinit,I?size:
-	; ...
+	; this.size := size
+	ldw $r0, ($lb) -4	; load size
+	sll $r0, $r0, 2		; set this.size := size * 4
+	stw $r0, ($xr) 12	; store this.size
+	
+	; initialize buffer with at least 64 bytes
+	cmp $r0, 64			; compare size >= 64
+	jge .false
+		mov $r0, 64		; clamp this.bufSize to 64
+	.false:
+	stw $r0, ($xr) 16	; store this.bufSize
+	
+	; allocate buffer
+	push $r0
+	insc AllocMem		; allocate 64 bytes
+	stw $ar, ($xr) 20	; store pointer to buffer in array instance
+	
+	; initialize buffer
+	push 0				; push fill
+	push $r0			; push bufSize
+	push $ar			; push buffer
+	insc FillMem		; call FillMem(buffer, bufSize, 0)
+	
 	ret 1
 
 ; bool Array.equals(Object rhs)
