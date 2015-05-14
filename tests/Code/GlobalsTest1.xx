@@ -8,6 +8,9 @@ class Widget {
 	static const b := 2
 	static const c := Widget.a + Widget.b
 	
+	static const d := false
+	static const e := not Widget.d
+	
 	static int g_a := 16
 	static int g_b
 	
@@ -22,6 +25,8 @@ class Test {
 	static int test1() {
 		
 		var x := Widget.c + Widget.g_a
+		
+		var e := Widget.e
 		
 		Widget.g_b++
 		

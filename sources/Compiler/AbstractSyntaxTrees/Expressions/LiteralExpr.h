@@ -38,6 +38,16 @@ class LiteralExpr : public Expr
 
         void SetType(const Literals type);
 
+        /**
+        Writes the the boolean value into 'result'.
+        \param[in,out] result Specifies the resulting value.
+        This will be true, if 'value' is "true", it will be false, if 'value' is "false".
+        If this literal expression is not a boolean expression, the value will not be written!
+        \return True if this is a boolean type.
+        \see GetType
+        */
+        bool GetBooleanValue(bool& result) const;
+
         inline Literals GetType() const
         {
             return type_;

@@ -11,8 +11,10 @@
 #include "CompilerMessage.h"
 #include "BuiltinClasses.h"
 #include "Optimizer.h"
+
 #include "ExprIntEvaluator.h"
 #include "ExprFloatEvaluator.h"
+#include "ExprBoolEvaluator.h"
 
 #include "TACModifyInst.h"
 #include "TACCopyInst.h"
@@ -2141,20 +2143,42 @@ TACVar GraphGenerator::LValueVarFromVarName(const VarName& ast)
 
 bool GraphGenerator::EvaluateExpr(const Expr& ast, TACVar& var)
 {
-    /* Try to evaluate the expression to an integer */
-    int resultInt = 0;
-    if (ContextAnalyzer::ExprIntEvaluator().Evaluate(ast, resultInt))
+    auto exprType = ast.GetTypeDenoter();
+
+    if (exprType)
     {
-        var = TACVar(ToStr(resultInt));
-        return true;
-    }
-    
-    /* Try to evaluate the expression to a floating-point */
-    float resultFloat = 0;
-    if (ContextAnalyzer::ExprFloatEvaluator().Evaluate(ast, resultFloat))
-    {
-        var = TACVar(ToStr(resultFloat, 8));
-        return true;
+        if (exprType->IsIntegral())
+        {
+            /* Evaluate integer expression */
+            int resultInt = 0;
+            if (ContextAnalyzer::ExprIntEvaluator().Evaluate(ast, resultInt))
+            {
+                var = TACVar(ToStr(resultInt));
+                return true;
+            }
+        }
+
+        if (exprType->IsFloat())
+        {
+            /* Evaluate floating-point expression */
+            float resultFloat = 0;
+            if (ContextAnalyzer::ExprFloatEvaluator().Evaluate(ast, resultFloat))
+            {
+                var = TACVar(ToStr(resultFloat, 8));
+                return true;
+            }
+        }
+
+        if (exprType->IsBoolean())
+        {
+            /* Evaluate boolean expression */
+            bool resultBool = false;
+            if (ContextAnalyzer::ExprBoolEvaluator().Evaluate(ast, resultBool))
+            {
+                var = TACVar(resultBool ? "1" : "0");
+                return true;
+            }
+        }
     }
 
     return false;

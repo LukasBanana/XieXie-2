@@ -67,6 +67,21 @@ void LiteralExpr::SetType(const Literals type)
     type_ = type;
 }
 
+bool LiteralExpr::GetBooleanValue(bool& result) const
+{
+    if (type_ == Literals::Bool)
+    {
+        if (value == "true")
+            result = true;
+        else if (value == "false")
+            result = false;
+        else
+            return false;
+        return true;
+    }
+    return false;
+}
+
 
 } // /namespace AbstractSyntaxTrees
 

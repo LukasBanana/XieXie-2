@@ -21,7 +21,6 @@ namespace ContextAnalyzer
 
 using namespace AbstractSyntaxTrees;
 
-//! This class checks if an expression is a constant expression.
 class ExprFloatEvaluator final : private Visitor
 {
     
