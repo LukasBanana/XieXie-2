@@ -98,6 +98,11 @@ static bool VerifyPointerTypes(const PointerTypeDenoter& lhs, const PointerTypeD
 
 /* --- Casts --- */
 
+static void ThrowInvalidCastType(const std::string& typeName)
+{
+    throw std::string(typeName + " type can not be casted");
+}
+
 static bool VerifyBuiltinCastTypes(const BuiltinTypeDenoter& dstType, const BuiltinTypeDenoter& srcType)
 {
     if (dstType.typeName != srcType.typeName)
@@ -105,7 +110,11 @@ static bool VerifyBuiltinCastTypes(const BuiltinTypeDenoter& dstType, const Buil
         if ( dstType.typeName == BuiltinTypeDenoter::TypeNames::Bool ||
              srcType.typeName == BuiltinTypeDenoter::TypeNames::Bool )
         {
-            throw std::string("boolean types can not be casted");
+            ThrowInvalidCastType("boolean");
+        }
+        if (srcType.typeName == BuiltinTypeDenoter::TypeNames::Void)
+        {
+            ThrowInvalidCastType("void");
         }
     }
     return true;
