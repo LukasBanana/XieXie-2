@@ -809,6 +809,13 @@ void XASMGenerator::GenerateStackInst(const TACStackInst& inst)
 void XASMGenerator::GenerateHeapInst(const TACHeapInst& inst)
 {
     auto reg0 = Reg(inst.var);
+
+    if (inst.var.IsConst())
+    {
+        Line("mov " + tempReg + ", " + reg0);
+        reg0 = tempReg;
+    }
+
     auto reg1 = Reg(inst.baseVar);
 
     StartLn();
