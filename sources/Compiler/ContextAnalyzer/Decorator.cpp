@@ -1895,6 +1895,26 @@ bool Decorator::IsProcStatic() const
     return procDeclStmnt_ != nullptr && procDeclStmnt_->procSignature->isStatic;
 }
 
+bool Decorator::IsRegisterMemberProcs() const
+{
+    return state_ == States::RegisterMemberProcs;
+}
+
+bool Decorator::IsRegisterMemberVars() const
+{
+    return state_ == States::RegisterMemberVars;
+}
+
+bool Decorator::IsAnalyzeCode() const
+{
+    return state_ == States::AnalyzeCode;
+}
+
+const SourceCode* Decorator::GetSource() const
+{
+    return class_->GetSource();
+}
+
 
 } // /namespace ContextAnalyzer
 

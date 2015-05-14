@@ -197,7 +197,6 @@ class ClassDeclStmnt : public ScopedStmnt
 
         SourceCodePtr                                   source_;                        // Reference to the source where this class is declared.
 
-        // dast
         PointerTypeDenoter                              thisTypeDenoter_;               // type denoter for this class declaration
         
         ClassDeclStmnt*                                 baseClassRef_       = nullptr;  // reference to base class (or null if the base class is "Object").

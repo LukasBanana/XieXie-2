@@ -155,24 +155,12 @@ class Decorator final : private Visitor
         //! Returns true if the current procedure declaration statement is static.
         bool IsProcStatic() const;
 
-        bool IsRegisterMemberProcs() const
-        {
-            return state_ == States::RegisterMemberProcs;
-        }
-        bool IsRegisterMemberVars() const
-        {
-            return state_ == States::RegisterMemberVars;
-        }
-        bool IsAnalyzeCode() const
-        {
-            return state_ == States::AnalyzeCode;
-        }
+        bool IsRegisterMemberProcs() const;
+        bool IsRegisterMemberVars() const;
+        bool IsAnalyzeCode() const;
 
         //! Returns the source code of the current class declaration.
-        const SourceCode* GetSource() const
-        {
-            return class_->GetSource();
-        }
+        const SourceCode* GetSource() const;
 
         /* === Members === */
 
