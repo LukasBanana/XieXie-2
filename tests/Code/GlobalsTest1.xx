@@ -6,7 +6,7 @@ class Widget {
 	
 	static const a := 1
 	static const b := 2
-	static const c := Widget.b >= 2 ? Widget.a + Widget.b : 0
+	static const c := Widget.b >= 2 ? Widget.a + Widget.b : 5
 	
 	static const d := false
 	static const e := not Widget.d

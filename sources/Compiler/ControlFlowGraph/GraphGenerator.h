@@ -71,6 +71,13 @@ class GraphGenerator final : private Visitor
             std::vector<TACVar> strongRefs;
         };
 
+        //! Structure for local variables.
+        struct LocalVar
+        {
+            TACVar  var;    //!< TAC variable.
+            int     offset; //!< Offset in the local stack.
+        };
+
         /* === Functions === */
 
         void ErrorIntern(const std::string& msg, const AST* ast = nullptr);
@@ -116,6 +123,9 @@ class GraphGenerator final : private Visitor
         void GenerateArrayAccess(ArrayAccess* ast, const TACVar& baseVar);
 
         //void GenerateVarNameLValue(VarName& ast);
+
+        void StoreLocalVars();
+        void RestoreLocalVars();
 
         /* --- CFG Generation --- */
 
@@ -195,6 +205,12 @@ class GraphGenerator final : private Visitor
         SafeStack<BasicBlock*>      iterStackBB_;
 
         SafeStack<RefScope>         refScopeStack_;
+
+        /**
+        Variables which are currently stored between a call instruction.
+        \see StoreLocalVars
+        */
+        std::vector<LocalVar>       localVars_;
 
         TACVarManager               varMngr_;
 

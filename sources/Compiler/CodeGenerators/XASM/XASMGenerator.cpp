@@ -334,13 +334,16 @@ void XASMGenerator::GenerateCoreAssembly()
 
 void XASMGenerator::GenerateAdjustmentCode(const CFGProgram& program)
 {
-    CommentHeadline("LITERAL ADJUSTMENTS");
+    if (!program.stringLiterals.empty())
+    {
+        CommentHeadline("LITERAL ADJUSTMENTS");
 
-    /* Generate literal adjustments */
-    for (const auto& sl : program.stringLiterals)
-        GenerateStringLiteralAdjustment(sl);
+        /* Generate literal adjustments */
+        for (const auto& sl : program.stringLiterals)
+            GenerateStringLiteralAdjustment(sl);
 
-    Blanks(2);
+        Blanks(2);
+    }
 }
 
 void XASMGenerator::GenerateStartUpCode(unsigned int globalsSize)
@@ -782,14 +785,14 @@ void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
         Line("invk " + inst.procIdent);
     else
     {
-        regAlloc_.SpillAllVars();
+        //regAlloc_.SpillAllVars();
         Line("call " + inst.procIdent);
     }
 }
 
 void XASMGenerator::GenerateIndirectCallInst(const TACIndirectCallInst& inst)
 {
-    regAlloc_.SpillAllVars();
+    //regAlloc_.SpillAllVars();
     Line("ldw " + tempReg + ", ($xr) 8"); // load vtable address
     Line("ldw " + tempReg + ", (" + tempReg + ") " + std::to_string(inst.vtableOffset * 4)); // load virtual procedure address
     Line("call " + tempReg); // call virtual procedure

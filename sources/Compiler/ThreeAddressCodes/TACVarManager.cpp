@@ -16,10 +16,15 @@ namespace ThreeAddressCodes
 
 void TACVarManager::Reset()
 {
+    /* Reset veriable maps */
     localVars_.Reset();
     globalVars_.Reset();
     memberVars_.Reset();
     tempVarIDs_.clear();
+
+    /* Reset local stack offsets */
+    varStackOffsetMap_.clear();
+    stackOffset_ = 0;
 }
 
 TACVar TACVarManager::TempVar()
@@ -101,6 +106,31 @@ void TACVarManager::ReleaseVar(const TACVar& var)
 TACVar TACVarManager::Var()
 {
     return varStack_.Top();
+}
+
+void TACVarManager::IterateLocalVars()
+{
+    localVars_.varIt = localVars_.vars.begin();
+}
+
+TACVar* TACVarManager::NextLocalVar()
+{
+    return localVars_.varIt != localVars_.vars.end() ? &((localVars_.varIt++)->second) : nullptr;
+}
+
+int TACVarManager::LocalVarStackOffset(const TACVar& var)
+{
+    if (varStackOffsetMap_.find(var) == varStackOffsetMap_.end())
+    {
+        varStackOffsetMap_[var] = stackOffset_;
+        return stackOffset_++;
+    }
+    return varStackOffsetMap_[var];
+}
+
+int TACVarManager::LocalStackSize() const
+{
+    return stackOffset_;
 }
 
 

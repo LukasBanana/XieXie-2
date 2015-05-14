@@ -1,13 +1,28 @@
 
 // Temp XieXie Test
 
-import Log
+import MsgBox
 
-class Test : StreamLog {
+class Test {
+
+	void print(int val) { Intrinsics.printInt(val) }
+	void print(float val) { Intrinsics.printFloat(val) }
+	void print(String val) { Intrinsics.print(val.pointer()) }
+	void printLn(int val) { Intrinsics.printInt(val) Intrinsics.printLn(0) }
+	void printLn(float val) { Intrinsics.printFloat(val) Intrinsics.printLn(0) }
+	void printLn(String val) { Intrinsics.printLn(val.pointer()) }
 	
-	void main() {
+	static void main() {
+		var script := new Test()
+	}
+	
+	init() {
 		
-		int x := (int)base.warning("test")
+		bool b
+		repeat 10 {
+			b := not b
+			printLn(b ? 1 : 2)
+		}
 		
 	}
 	

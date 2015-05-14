@@ -59,16 +59,29 @@ class TACVarManager
         //! Returns the current TAC variable at the top of the stack.
         TACVar Var();
 
+        //! Starts to iterate over all local variables.
+        void IterateLocalVars();
+        //! Returns the next local variable or null, if there are no further local variables.
+        TACVar* NextLocalVar();
+
+        //! Returns the offest (in number of entries) of the local stack for the specified variable.
+        int LocalVarStackOffset(const TACVar& var);
+        //! Returns the current local stack size (in number of entries).
+        int LocalStackSize() const;
+
     private:
         
         /* === Structures === */
 
         template <typename T, TACVar::Types varType, bool useCounter> struct VarMap
         {
+            using MapType = std::map<const T*, TACVar>;
+
             void Reset()
             {
                 varCounter = 0;
                 vars.clear();
+                varIt = vars.end();
             }
 
             TACVar& FetchVar(
@@ -77,7 +90,8 @@ class TACVarManager
             );
 
             IDType                      varCounter = 0;
-            std::map<const T*, TACVar>  vars;
+            MapType                     vars;
+            typename MapType::iterator  varIt;
         };
 
         /* === Functions === */
@@ -94,6 +108,9 @@ class TACVarManager
         VarMap< VarDecl, TACVar::Types::Member, false > memberVars_;
 
         std::vector<IDType>                             tempVarIDs_;
+
+        std::map<TACVar, int>                           varStackOffsetMap_;
+        int                                             stackOffset_ = 0;
 
 };
 

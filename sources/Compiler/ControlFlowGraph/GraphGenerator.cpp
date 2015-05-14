@@ -216,6 +216,9 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     auto procSig = procDecl->procSignature.get();
     auto procClass = procDecl->parentRef;
 
+    /* Store local variables */
+    StoreLocalVars();
+
     /* Preliminaries for call instruction */
     bool isMemberCall = !procSig->isStatic;
     bool isDirectCall = (!isMemberCall || ast->IsBaseCall() || procDecl->IsFinal());
@@ -271,6 +274,9 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
         BB()->MakeInst<TACCopyInst>(var, ResultVar());
         PushVar(var);
     }
+
+    /* Restore local variables */
+    RestoreLocalVars();
 }
 
 DEF_VISIT_PROC(GraphGenerator, SwitchCase)
@@ -1901,6 +1907,34 @@ void GraphGenerator::GenerateArrayAccess(ArrayAccess* ast, const TACVar& baseVar
         /* Get next array access */
         ast = ast->next.get();
     }
+}
+
+void GraphGenerator::StoreLocalVars()
+{
+    varMngr_.IterateLocalVars();
+    while (auto var = varMngr_.NextLocalVar())
+    {
+        /* Setup local variable */
+        LocalVar localVar;
+        {
+            localVar.var    = *var;
+            localVar.offset = 8 + varMngr_.LocalVarStackOffset(*var) * 4;
+        }
+        localVars_.push_back(localVar);
+
+        /* Generate instruction to store local variable in the local stack */
+        BB()->MakeInst<TACHeapInst>(OpCodes::STW, *var, FramePtr(), localVar.offset);
+    }
+}
+
+void GraphGenerator::RestoreLocalVars()
+{
+    for (auto& localVar : localVars_)
+    {
+        /* Generate instruction to restore local variable from the local stack */
+        BB()->MakeInst<TACHeapInst>(OpCodes::LDW, localVar.var, FramePtr(), localVar.offset);
+    }
+    localVars_.clear();
 }
 
 #undef RETURN_BLOCK_REF
