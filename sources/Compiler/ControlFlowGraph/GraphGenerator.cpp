@@ -1792,10 +1792,8 @@ void GraphGenerator::GenerateVarNameRValue(VarName& ast, const TACVar* baseVar)
         {
             /* Try to evaluate the expression at compile-time */
             TACVar var;
-            if (EvaluateExpr(*varDecl->initExpr, var))
+            if (EvaluateExpr(*varDecl->initExpr, var, true))
                 PushVar(var);
-            else
-                GenerateVarNameRValueStatic(varDecl);
         }
         else
             GenerateVarNameRValueStatic(varDecl);
@@ -2141,9 +2139,11 @@ TACVar GraphGenerator::LValueVarFromVarName(const VarName& ast)
     //return PopVar();
 }
 
-bool GraphGenerator::EvaluateExpr(const Expr& ast, TACVar& var)
+bool GraphGenerator::EvaluateExpr(const Expr& ast, TACVar& var, bool requireConst)
 {
     auto exprType = ast.GetTypeDenoter();
+
+    auto errorReporter = (requireConst ? errorReporter_ : nullptr);
 
     if (exprType)
     {
@@ -2151,7 +2151,7 @@ bool GraphGenerator::EvaluateExpr(const Expr& ast, TACVar& var)
         {
             /* Evaluate integer expression */
             int resultInt = 0;
-            if (ContextAnalyzer::ExprIntEvaluator().Evaluate(ast, resultInt))
+            if (ContextAnalyzer::ExprIntEvaluator().Evaluate(ast, resultInt, errorReporter))
             {
                 var = TACVar(ToStr(resultInt));
                 return true;
@@ -2162,7 +2162,7 @@ bool GraphGenerator::EvaluateExpr(const Expr& ast, TACVar& var)
         {
             /* Evaluate floating-point expression */
             float resultFloat = 0;
-            if (ContextAnalyzer::ExprFloatEvaluator().Evaluate(ast, resultFloat))
+            if (ContextAnalyzer::ExprFloatEvaluator().Evaluate(ast, resultFloat, errorReporter))
             {
                 var = TACVar(ToStr(resultFloat, 8));
                 return true;
@@ -2173,7 +2173,7 @@ bool GraphGenerator::EvaluateExpr(const Expr& ast, TACVar& var)
         {
             /* Evaluate boolean expression */
             bool resultBool = false;
-            if (ContextAnalyzer::ExprBoolEvaluator().Evaluate(ast, resultBool))
+            if (ContextAnalyzer::ExprBoolEvaluator().Evaluate(ast, resultBool, errorReporter))
             {
                 var = TACVar(resultBool ? "1" : "0");
                 return true;

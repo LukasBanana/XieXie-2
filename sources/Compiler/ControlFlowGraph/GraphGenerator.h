@@ -174,7 +174,7 @@ class GraphGenerator final : private Visitor
         TACVar LValueVarFromVarName(const VarName& ast);
 
         //! Tries to evaluates the specified expression into a literal.
-        bool EvaluateExpr(const Expr& ast, TACVar& var);
+        bool EvaluateExpr(const Expr& ast, TACVar& var, bool requireConst = false);
 
         const TACVar& ResultVar();
         const TACVar& ThisPtr();
