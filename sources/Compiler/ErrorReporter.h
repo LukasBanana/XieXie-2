@@ -37,6 +37,7 @@ class ErrorReporter
         {
             if (ast)
             {
+                auto source = ast->sourceArea.GetSource();
                 if (source)
                 {
                     std::string line, marker;
@@ -85,14 +86,11 @@ class ErrorReporter
 
         /* === Members === */
 
-        //! Optional source code reference. This can be used for better error outputs.
-        const SyntaxAnalyzer::SourceCode*   source          = nullptr;
-
         //! Specifies the limit for error messages. Zero specifies infinite error messages. By default 100.
-        size_t                              numErrorLimit   = 100u;
+        size_t      numErrorLimit   = 100u;
 
         //! Show warnings configuration. By default false.
-        static bool                         showWarnings;
+        static bool showWarnings;
 
     private:
 

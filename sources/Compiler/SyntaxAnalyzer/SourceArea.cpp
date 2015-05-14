@@ -78,6 +78,11 @@ bool SourceArea::IsMultiLine() const
     return start.Row() != end.Row();
 }
 
+const SourceCode* SourceArea::GetSource() const
+{
+    return source_.get();
+}
+
 
 } // /namespace SyntaxAnalyzer
 

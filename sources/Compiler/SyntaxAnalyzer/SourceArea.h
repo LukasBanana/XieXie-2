@@ -56,6 +56,9 @@ class SourceArea
         //! Returns true if this area spreads over multiple lines.
         bool IsMultiLine() const;
 
+        //! Returns a constant pointer to the source code.
+        const SourceCode* GetSource() const;
+
         /* === Members === */
 
         //! Start- and end source positions.

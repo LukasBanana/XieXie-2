@@ -77,25 +77,18 @@ void Decorator::Error(const std::string& msg, const AST* ast)
         throw std::runtime_error("too many errors: break compilation");
 
     /* Add error message to the report */
-    errorReporter_->source = GetCurrentSource();
     errorReporter_->Add<ContextError>(msg, ast);
 }
 
 void Decorator::Warning(const std::string& msg, const AST* ast)
 {
     /* Add warning message to the report */
-    errorReporter_->source = GetCurrentSource();
     errorReporter_->Add<CompilerWarning>(msg, ast);
 }
 
 void Decorator::Suggestion(const std::string& msg)
 {
     errorReporter_->Add(CompilerMessage(SourceArea::ignore, ">> " + msg));
-}
-
-const SyntaxAnalyzer::SourceCode* Decorator::GetCurrentSource() const
-{
-    return class_ != nullptr ? class_->GetSource() : nullptr;
 }
 
 /* --- Common AST nodes --- */

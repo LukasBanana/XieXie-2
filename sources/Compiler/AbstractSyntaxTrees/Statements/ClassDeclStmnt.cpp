@@ -145,7 +145,6 @@ void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
     instanceSize_       = 12; // 3 * (4 bytes): refCount, typeID, vtableAddr
 
     /* Generate vtable */
-    errorReporter->source = GetSource();
     GenerateVtable(nullptr, errorReporter);
 
     /* Generate RTTI for sub classes */
@@ -229,7 +228,6 @@ void ClassDeclStmnt::GenerateRTTI(
     AssignAllMemberVariableLocations();
     
     /* Generate vtable */
-    errorReporter->source = GetSource();
     GenerateVtable(&setupVtable, errorReporter);
 
     /* Process attributes of this class */
