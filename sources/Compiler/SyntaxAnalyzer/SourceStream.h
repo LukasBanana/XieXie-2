@@ -28,8 +28,14 @@ class SourceStream : public SourceCode
         
         SourceStream() = default;
         SourceStream(const std::shared_ptr<std::istream>& stream, const std::string& name = "");
+        //! \see ReadFile
         SourceStream(const std::string& filename);
 
+        /**
+        Opens the specified file for reading and stores the relative path of the filename as the name for this stream.
+        \see SearchPath::MakeRelativePath
+        \see Name
+        */
         bool ReadFile(const std::string& filename);
         void Close();
 
