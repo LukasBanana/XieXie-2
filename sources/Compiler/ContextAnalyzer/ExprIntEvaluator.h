@@ -9,7 +9,7 @@
 #define __XX_EXPR_INT_EVALUATOR_H__
 
 
-#include "Visitor.h"
+#include "ExprEvaluator.h"
 #include "SafeStack.h"
 
 
@@ -19,9 +19,7 @@ namespace ContextAnalyzer
 {
 
 
-using namespace AbstractSyntaxTrees;
-
-class ExprIntEvaluator final : private Visitor
+class ExprIntEvaluator final : private ExprEvaluator
 {
     
     public:
@@ -30,7 +28,10 @@ class ExprIntEvaluator final : private Visitor
 
     private:
         
-        DECL_VISITOR_INTERFACE_EXPRS;
+        DECL_VISIT_PROC( TernaryExpr );
+        DECL_VISIT_PROC( BinaryExpr  );
+        DECL_VISIT_PROC( UnaryExpr   );
+        DECL_VISIT_PROC( LiteralExpr );
 
         void Push(int value);
         int Pop();

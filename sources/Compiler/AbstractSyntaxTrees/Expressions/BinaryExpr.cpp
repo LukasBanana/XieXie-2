@@ -10,6 +10,7 @@
 #include "BuiltinTypeDenoter.h"
 
 #include <map>
+#include <cmath>
 
 
 namespace AbstractSyntaxTrees
@@ -74,6 +75,97 @@ bool BinaryExpr::HasBoolCompatibleOperator() const
         binaryOperator == Operators::LogicAnd ||
         binaryOperator == Operators::Equal    ||
         binaryOperator == Operators::Inequal;
+}
+
+bool BinaryExpr::EvaluateBooleanToBoolean(bool lhs, bool rhs, bool& result) const
+{
+    switch (binaryOperator)
+    {
+        case Operators::LogicAnd:
+            result = (lhs && rhs);
+            break;
+        case Operators::LogicOr:
+            result = (lhs || rhs);
+            break;
+        case Operators::Equal:
+            result = (lhs == rhs);
+            break;
+        case Operators::Inequal:
+            result = (lhs != rhs);
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
+bool BinaryExpr::EvaluateArithmeticToIntegral(int lhs, int rhs, int& result) const
+{
+    switch (binaryOperator)
+    {
+        case Operators::BitwiseOr:
+            result = (lhs | rhs);
+            break;
+        case Operators::BitwiseXOr:
+            result = (lhs ^ rhs);
+            break;
+        case Operators::BitwiseAnd:
+            result = (lhs & rhs);
+            break;
+        case Operators::Add:
+            result = (lhs + rhs);
+            break;
+        case Operators::Sub:
+            result = (lhs - rhs);
+            break;
+        case Operators::Mul:
+            result = (lhs * rhs);
+            break;
+        case Operators::Div:
+            if (rhs == 0)
+                return false;
+            result = (lhs / rhs);
+            break;
+        case Operators::Mod:
+            if (rhs == 0)
+                return false;
+            result = (lhs % rhs);
+            break;
+        case Operators::LShift:
+            result = (lhs << rhs);
+            break;
+        case Operators::RShift:
+            result = (lhs >> rhs);
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
+bool BinaryExpr::EvaluateArithmeticToFloat(float lhs, float rhs, float& result) const
+{
+    switch (binaryOperator)
+    {
+        case Operators::Add:
+            result = (lhs + rhs);
+            break;
+        case Operators::Sub:
+            result = (lhs - rhs);
+            break;
+        case Operators::Mul:
+            result = (lhs * rhs);
+            break;
+        case Operators::Div:
+            result = (lhs / rhs);
+            break;
+        case Operators::Mod:
+            result = (std::fmod(lhs, rhs));
+            break;
+        default:
+            return false;
+    }
+    return true;
 }
 
 

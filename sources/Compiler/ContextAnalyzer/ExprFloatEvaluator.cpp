@@ -6,6 +6,7 @@
  */
 
 #include "ExprFloatEvaluator.h"
+#include "ExprBoolEvaluator.h"
 #include "ErrorReporter.h"
 #include "CompilerMessage.h"
 #include "ASTImport.h"
@@ -19,6 +20,8 @@ bool ExprFloatEvaluator::Evaluate(const Expr& expr, float& result, ErrorReporter
 {
     try
     {
+        errorReporter_ = errorReporter;
+
         /* Cast to non-const expression (this class makes no modifications and is declared as final) */
         Visit(const_cast<Expr*>(&expr));
         if (values_.Empty())
@@ -45,39 +48,36 @@ bool ExprFloatEvaluator::Evaluate(const Expr& expr, float& result, ErrorReporter
 
 DEF_VISIT_PROC(ExprFloatEvaluator, TernaryExpr)
 {
-    throw ast;
+    /* First, evaluate conditional expression with the boolean-expression-evaluator */
+    bool condVal = false;
+    if (!ExprBoolEvaluator().Evaluate(*ast->condExpr, condVal, errorReporter_))
+        throw ast;
+
+    /* Then, evaluate the 'then' and 'else' branches */
+    Visit(ast->thenExpr);
+    auto thenVal = Pop();
+
+    Visit(ast->elseExpr);
+    auto elseVal = Pop();
+
+    Push(condVal ? thenVal : elseVal);
 }
 
 DEF_VISIT_PROC(ExprFloatEvaluator, BinaryExpr)
 {
+    /* Evaluate sub expressions */
     Visit(ast->lhsExpr);
     auto lhs = Pop();
 
     Visit(ast->rhsExpr);
     auto rhs = Pop();
 
-    using Ty = BinaryExpr::Operators;
-
-    switch (ast->binaryOperator)
-    {
-        case Ty::Add:
-            Push(lhs + rhs);
-            break;
-        case Ty::Sub:
-            Push(lhs - rhs);
-            break;
-        case Ty::Mul:
-            Push(lhs * rhs);
-            break;
-        case Ty::Div:
-            Push(lhs / rhs);
-            break;
-        case Ty::Mod:
-            Push(std::fmod(lhs, rhs));
-            break;
-        default:
-            throw ast;
-    }
+    /* Evaluate binary expression */
+    float result = 0;
+    if (ast->EvaluateArithmeticToFloat(lhs, rhs, result))
+        Push(result);
+    else
+        throw ast;
 }
 
 DEF_VISIT_PROC(ExprFloatEvaluator, UnaryExpr)
@@ -97,57 +97,6 @@ DEF_VISIT_PROC(ExprFloatEvaluator, LiteralExpr)
         Push(StrToNum<float>(ast->value));
     else
         throw ast;
-}
-
-DEF_VISIT_PROC(ExprFloatEvaluator, CastExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprFloatEvaluator, ProcCallExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprFloatEvaluator, PostfixValueExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprFloatEvaluator, InstanceOfExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprFloatEvaluator, AllocExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprFloatEvaluator, VarAccessExpr)
-{
-    auto declRef = ast->varName->GetLast().declRef;
-    if (declRef && declRef->Type() == AST::Types::VarDecl)
-    {
-        const auto& varDecl = static_cast<const VarDecl&>(*declRef);
-        auto varType = varDecl.GetTypeDenoter();
-        if (varDecl.initExpr && varType && varType->IsConst())
-            Visit(varDecl.initExpr);
-        else
-            throw ast;
-    }
-    else
-        throw ast;
-}
-
-DEF_VISIT_PROC(ExprFloatEvaluator, InitListExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprFloatEvaluator, RangeExpr)
-{
-    throw ast;
 }
 
 void ExprFloatEvaluator::Push(float value)

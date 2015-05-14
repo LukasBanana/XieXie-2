@@ -6,6 +6,8 @@
  */
 
 #include "ExprBoolEvaluator.h"
+#include "ExprIntEvaluator.h"
+#include "ExprFloatEvaluator.h"
 #include "ErrorReporter.h"
 #include "CompilerMessage.h"
 #include "ASTImport.h"
@@ -59,25 +61,64 @@ DEF_VISIT_PROC(ExprBoolEvaluator, TernaryExpr)
 
 DEF_VISIT_PROC(ExprBoolEvaluator, BinaryExpr)
 {
-    Visit(ast->lhsExpr);
-    auto lhs = Pop();
+    auto subExprType = ast->lhsExpr->GetTypeDenoter();
+    if (!subExprType)
+        throw ast;
 
-    Visit(ast->rhsExpr);
-    auto rhs = Pop();
-
-    using Ty = BinaryExpr::Operators;
-
-    switch (ast->binaryOperator)
+    if (subExprType->IsBoolean())
     {
-        case Ty::LogicAnd:
-            Push(lhs && rhs);
-            break;
-        case Ty::LogicOr:
-            Push(lhs || rhs);
-            break;
-        default:
+        /* Evaluate sub expressions */
+        Visit(ast->lhsExpr);
+        auto lhs = Pop();
+
+        Visit(ast->rhsExpr);
+        auto rhs = Pop();
+
+        /* Evaluate binary expression */
+        bool result = false;
+        if (ast->EvaluateBooleanToBoolean(lhs, rhs, result))
+            Push(result);
+        else
             throw ast;
     }
+    else if (subExprType->IsIntegral())
+    {
+        /* Evaluate sub expressions */
+        int lhs = 0;
+        if (!ExprIntEvaluator().Evaluate(*ast->lhsExpr, lhs, errorReporter_))
+            throw ast;
+
+        int rhs = 0;
+        if (!ExprIntEvaluator().Evaluate(*ast->rhsExpr, rhs, errorReporter_))
+            throw ast;
+
+        /* Evaluate binary expression */
+        bool result = false;
+        if (ast->EvaluateArithmeticToBoolean(lhs, rhs, result))
+            Push(result);
+        else
+            throw ast;
+    }
+    else if (subExprType->IsFloat())
+    {
+        /* Evaluate sub expressions */
+        float lhs = 0.0f;
+        if (!ExprFloatEvaluator().Evaluate(*ast->lhsExpr, lhs, errorReporter_))
+            throw ast;
+
+        float rhs = 0.0f;
+        if (!ExprFloatEvaluator().Evaluate(*ast->rhsExpr, rhs, errorReporter_))
+            throw ast;
+
+        /* Evaluate binary expression */
+        bool result = false;
+        if (ast->EvaluateArithmeticToBoolean(lhs, rhs, result))
+            Push(result);
+        else
+            throw ast;
+    }
+    else
+        throw ast;
 }
 
 DEF_VISIT_PROC(ExprBoolEvaluator, UnaryExpr)
@@ -98,57 +139,6 @@ DEF_VISIT_PROC(ExprBoolEvaluator, LiteralExpr)
         Push(result);
     else
         throw ast;
-}
-
-DEF_VISIT_PROC(ExprBoolEvaluator, CastExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprBoolEvaluator, ProcCallExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprBoolEvaluator, PostfixValueExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprBoolEvaluator, InstanceOfExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprBoolEvaluator, AllocExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprBoolEvaluator, VarAccessExpr)
-{
-    auto declRef = ast->varName->GetLast().declRef;
-    if (declRef && declRef->Type() == AST::Types::VarDecl)
-    {
-        const auto& varDecl = static_cast<const VarDecl&>(*declRef);
-        auto varType = varDecl.GetTypeDenoter();
-        if (varDecl.initExpr && varType && varType->IsConst())
-            Visit(varDecl.initExpr);
-        else
-            throw ast;
-    }
-    else
-        throw ast;
-}
-
-DEF_VISIT_PROC(ExprBoolEvaluator, InitListExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprBoolEvaluator, RangeExpr)
-{
-    throw ast;
 }
 
 void ExprBoolEvaluator::Push(bool value)

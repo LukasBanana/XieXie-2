@@ -6,6 +6,7 @@
  */
 
 #include "ExprIntEvaluator.h"
+#include "ExprBoolEvaluator.h"
 #include "ErrorReporter.h"
 #include "CompilerMessage.h"
 #include "ASTImport.h"
@@ -19,6 +20,8 @@ bool ExprIntEvaluator::Evaluate(const Expr& expr, int& result, ErrorReporter* er
 {
     try
     {
+        errorReporter_ = errorReporter;
+
         /* Cast to non-const expression (this class makes no modifications and is declared as final) */
         Visit(const_cast<Expr*>(&expr));
         if (values_.Empty())
@@ -45,58 +48,36 @@ bool ExprIntEvaluator::Evaluate(const Expr& expr, int& result, ErrorReporter* er
 
 DEF_VISIT_PROC(ExprIntEvaluator, TernaryExpr)
 {
-    throw ast;
+    /* First, evaluate conditional expression with the boolean-expression-evaluator */
+    bool condVal = false;
+    if (!ExprBoolEvaluator().Evaluate(*ast->condExpr, condVal, errorReporter_))
+        throw ast;
+
+    /* Then, evaluate the 'then' and 'else' branches */
+    Visit(ast->thenExpr);
+    auto thenVal = Pop();
+
+    Visit(ast->elseExpr);
+    auto elseVal = Pop();
+
+    Push(condVal ? thenVal : elseVal);
 }
 
 DEF_VISIT_PROC(ExprIntEvaluator, BinaryExpr)
 {
+    /* Evaluate sub expressions */
     Visit(ast->lhsExpr);
     auto lhs = Pop();
 
     Visit(ast->rhsExpr);
     auto rhs = Pop();
 
-    using Ty = BinaryExpr::Operators;
-
-    switch (ast->binaryOperator)
-    {
-        case Ty::BitwiseOr:
-            Push(lhs | rhs);
-            break;
-        case Ty::BitwiseXOr:
-            Push(lhs ^ rhs);
-            break;
-        case Ty::BitwiseAnd:
-            Push(lhs & rhs);
-            break;
-        case Ty::Add:
-            Push(lhs + rhs);
-            break;
-        case Ty::Sub:
-            Push(lhs - rhs);
-            break;
-        case Ty::Mul:
-            Push(lhs * rhs);
-            break;
-        case Ty::Div:
-            if (rhs == 0)
-                throw ast;
-            Push(lhs / rhs);
-            break;
-        case Ty::Mod:
-            if (rhs == 0)
-                throw ast;
-            Push(lhs % rhs);
-            break;
-        case Ty::LShift:
-            Push(lhs << rhs);
-            break;
-        case Ty::RShift:
-            Push(lhs >> rhs);
-            break;
-        default:
-            throw ast;
-    }
+    /* Evaluate binary expression */
+    int result = 0;
+    if (ast->EvaluateArithmeticToIntegral(lhs, rhs, result))
+        Push(result);
+    else
+        throw ast;
 }
 
 DEF_VISIT_PROC(ExprIntEvaluator, UnaryExpr)
@@ -125,57 +106,6 @@ DEF_VISIT_PROC(ExprIntEvaluator, LiteralExpr)
         Push(StrToNum<int>(ast->value));
     else
         throw ast;
-}
-
-DEF_VISIT_PROC(ExprIntEvaluator, CastExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprIntEvaluator, ProcCallExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprIntEvaluator, PostfixValueExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprIntEvaluator, InstanceOfExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprIntEvaluator, AllocExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprIntEvaluator, VarAccessExpr)
-{
-    auto declRef = ast->varName->GetLast().declRef;
-    if (declRef && declRef->Type() == AST::Types::VarDecl)
-    {
-        const auto& varDecl = static_cast<const VarDecl&>(*declRef);
-        auto varType = varDecl.GetTypeDenoter();
-        if (varDecl.initExpr && varType && varType->IsConst())
-            Visit(varDecl.initExpr);
-        else
-            throw ast;
-    }
-    else
-        throw ast;
-}
-
-DEF_VISIT_PROC(ExprIntEvaluator, InitListExpr)
-{
-    throw ast;
-}
-
-DEF_VISIT_PROC(ExprIntEvaluator, RangeExpr)
-{
-    throw ast;
 }
 
 void ExprIntEvaluator::Push(int value)
