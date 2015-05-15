@@ -129,7 +129,7 @@ friend_list:		IDENT (',' IDENT)*;
 
 // CLASSES
 class_decl_stmnt:			attrib_prefix? ('private')? (intern_class_decl_stmnt | extern_class_decl_stmnt);
-base_class_ident:			':' ident;
+base_class_ident:			':' IDENT;
 class_visibility:			CLASS_VISIBILITY_TYPE (':')?;
 CLASS_VISIBILITY_TYPE:		'public' | 'protected' | 'private';
 
