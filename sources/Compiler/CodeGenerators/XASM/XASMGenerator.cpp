@@ -16,6 +16,7 @@
 #include "ProcSignature.h"
 #include "VarDecl.h"
 
+#include <xiexie/xvm_wrapper.h>
 #include <algorithm>
 
 
@@ -24,6 +25,7 @@ namespace CodeGenerator
 
 
 using namespace std::placeholders;
+using namespace XieXie::VirtualMachine;
 
 static const std::string mainProcIdent = "__xx__main";
 static const std::string tempReg = "$tr";
@@ -178,22 +180,23 @@ std::string XASMGenerator::ResolveStringLiteral(const std::string& str) const
 
 std::string XASMGenerator::Reg(const TACVar& var)
 {
-    /* Check for literal */
-    if (var.IsConst())
-    {
-        if (var.value.find('.') != std::string::npos)
-        {
-            Line("mov " + tempReg + ", " + var.value);
-            return tempReg;
-        }
-        return var.value;
-    }
-    if (var.IsLabel())
-        return var.value;
-
-    /* Check for special register */
     switch (var.type)
     {
+        /* Constant literal */
+        case TACVar::Types::Literal:
+            if (var.value.find('.') != std::string::npos || !Instruction::InRange<26>(var.Int())) // <-- !TODO! don't check only for InRange<26> !!!
+            {
+                /* Store float- or large integer literal in temporary register */
+                Line("mov " + tempReg + ", " + var.value);
+                return tempReg;
+            }
+            return var.value;
+
+        /* Label */
+        case TACVar::Types::Label:
+            return var.value;
+
+        /* Special registers */
         case TACVar::Types::Result:
             return "$ar";
         case TACVar::Types::ThisPtr:

@@ -21,7 +21,7 @@ namespace XieXie
 using namespace VirtualMachine;
 
 Assembler::Assembler() :
-    intrinsics_ { MakeUnique< Intrinsics >() }
+    intrinsics_{ MakeUnique<Intrinsics>() }
 {
     EstablishMnemonicTable();
 }
