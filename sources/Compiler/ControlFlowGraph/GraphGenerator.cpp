@@ -932,15 +932,17 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
     PushBB(out);
     {
         /* Visit expressions */
-        for (auto& expr : ast->exprs)
-            GenerateArithmeticExpr(*expr);
+        const auto numExpr = ast->exprs.size();
+        std::vector<TACVar> srcVars(numExpr);
 
-        std::vector<TACVar> srcVars(ast->exprs.size());
+        for (size_t i = 0, n = numExpr; i < n; ++i)
+        {
+            GenerateArithmeticExpr(*ast->exprs[i]);
+            srcVars[i] = Var();
+        }
 
         for (auto it = srcVars.rbegin(); it != srcVars.rend(); ++it)
         {
-            *it = PopVar();
-
             /*
             If the variable is not a temporary, a new temporary must be created.
             Otherwise, a too early override may occur, e.g. "a, b := b, a".
@@ -971,6 +973,8 @@ DEF_VISIT_PROC(GraphGenerator, CopyAssignStmnt)
             if (ast->HasIndividualExpr())
                 ++srcIt;
         }
+
+        PopVar(numExpr);
 
         out = BB();
     }
