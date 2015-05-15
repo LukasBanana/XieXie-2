@@ -1,93 +1,25 @@
 
 // Temp XieXie Test
 
-import Console
+import Console, MsgBox
 
-// "Calculation" interface (or rather abstract class)
-class Calc {
-	
-	String name()
-	
-	int apply(int lhs, int rhs)
-	
-}
-
-// Test main class
 class Test {
 	
-	// Folds all elements from 'list' and start with 'neutral'
-	static int fold(int[] list, int neutral, Calc calc) {
-		
-		Console.write("method: ")
-		Console.writeLine(calc.name())
-		
-		int s := neutral
-		foreach x : list {
-			s := calc.apply(s, x)
-		}
-		
-		Console.write("elements: { ")
-		
-		for int i ; i < list.size() ; i++ {
-			Console.write(list[i])
-			if i < list.size() - 1 {
+	static void fib(int n) {
+		int a, b := 1
+		while a < n {
+			Console.write(a)
+			a, b := b, a+b
+			if a < n {
 				Console.write(", ")
-			} else {
-				Console.writeLine(" }")
 			}
-		}
-		
-		Console.write("result = ")
-		Console.writeLine(s)
-		
-		return s
-	}
-	
-	// Prints the underline for the specified string
-	static void underline(String s, int extent := 0) {
-		for int i := -extent ; i < s.size() ; i++ {
-			Console.write("-")
 		}
 		Console.writeLine("")
 	}
 	
-	// Prints an headline for the specified string
-	static void headline(String s) {
-		Test.underline(s, 4)
-		Console.write("| ")
-		Console.write(s)
-		Console.writeLine(" |")
-		Test.underline(s, 4)
-	}
-	
-	// Main entry point
 	static void main() {
 		
-		Test.headline("folding test")
-		
-		var list := { 3, -12, 42, 8, 39 }
-		
-		Test.fold(
-			list,
-			0,
-			new Calc() {
-				String name() { return "sum" }
-				int apply(int lhs, int rhs) {
-					return lhs + rhs
-				}
-			}
-		)
-		
-		Test.fold(
-			list,
-			1,
-			new Calc() {
-				String name() { return "multiplication" }
-				int apply(int lhs, int rhs) {
-					return lhs * rhs
-				}
-			}
-		)
+		Test.fib(1000)
 		
 	}
 	
