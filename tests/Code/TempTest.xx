@@ -1,11 +1,11 @@
 
 // Temp XieXie Test
 
-import Console, MsgBox
+import Console
 
 class Test {
 	
-	static void fib(int n) {
+	/*static void fib(int n) {
 		int a, b := 1
 		while a < n {
 			Console.write(a)
@@ -15,11 +15,12 @@ class Test {
 			}
 		}
 		Console.writeLine("")
-	}
+	}*/
 	
 	static void main() {
 		
-		Test.fib(1000)
+		//Test.fib(1000)
+		Console.writeLine(Math.pi*90.0/180.0)
 		
 	}
 	
