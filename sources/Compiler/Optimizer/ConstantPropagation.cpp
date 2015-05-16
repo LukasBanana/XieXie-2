@@ -7,7 +7,10 @@
 
 #include "ConstantPropagation.h"
 #include "StringModifier.h"
+#include "ConstantFolding.h"
 
+#include "TACModifyInst.h"
+#include "TACCopyInst.h"
 #include "TACRelationInst.h"
 #include "TACReturnInst.h"
 #include "TACSwitchInst.h"
@@ -47,7 +50,7 @@ void ConstantPropagation::TransformModifyInst(TACInstPtr& inst)
     if (modifyInst->srcLhs.IsConst() && modifyInst->srcRhs.IsConst())
     {
         /* Constant folding */
-        auto newInst = ConstantFolding(*modifyInst);
+        auto newInst = ConstantFolding::FoldConstants(*modifyInst);
         if (newInst)
         {
             /* Propagate constant */
@@ -56,7 +59,7 @@ void ConstantPropagation::TransformModifyInst(TACInstPtr& inst)
             Changed();
         }
     }
-    else if (IsNOP(*modifyInst))
+    else if (ConstantFolding::IsNOP(*modifyInst))
     {
         /* Constant folding */
         auto var = (modifyInst->srcLhs.IsConst() ? modifyInst->srcRhs : modifyInst->srcLhs);
@@ -132,144 +135,6 @@ void ConstantPropagation::TransformIndirectCallInst(TACInstPtr& inst)
 {
     /* Call instruction kills all constants */
     vars_.clear();
-}
-
-bool ConstantPropagation::IsNOP(const TACModifyInst& inst) const
-{
-    /* Get single constant */
-    const auto& lhs = inst.srcLhs;
-    const auto& rhs = inst.srcRhs;
-
-    TACVar constVar;
-    if (lhs.IsConst())
-        constVar = lhs;
-    else if (rhs.IsConst())
-        constVar = rhs;
-    else
-        return false;
-
-    /* Check if this is a no-operation instruction */
-    switch (inst.opcode)
-    {
-        case OpCodes::AND:
-            return constVar.Int() == ~0;
-
-        case OpCodes::OR:
-        case OpCodes::ADD:
-            return constVar.Int() == 0;
-
-        case OpCodes::SUB:
-            return rhs.IsConst() && rhs.Int() == 0;
-
-        case OpCodes::MUL:
-            return constVar.Int() == 1;
-
-        case OpCodes::DIV:
-        case OpCodes::MOD:
-            return rhs.IsConst() && rhs.Int() == 1;
-
-        case OpCodes::FADD:
-            return constVar.Float() == 0.0f;
-
-        case OpCodes::FSUB:
-            return rhs.IsConst() && rhs.Float() == 0.0f;
-
-        case OpCodes::FMUL:
-            return constVar.Float() == 1.0f;
-
-        case OpCodes::FDIV:
-        case OpCodes::FMOD:
-            return rhs.IsConst() && rhs.Float() == 1.0f;
-
-        default:
-            break;
-    }
-
-    return false;
-}
-
-std::unique_ptr<TACCopyInst> ConstantPropagation::ConstantFolding(const TACModifyInst& inst)
-{
-    auto MakeInt = [&inst](int value)
-    {
-        return MakeUnique<TACCopyInst>(inst.dest, TACVar(ToStr(value)));
-    };
-    auto MakeFloat = [&inst](float value)
-    {
-        return MakeUnique<TACCopyInst>(inst.dest, TACVar(ToStr(value)));
-    };
-
-    const auto& lhs = inst.srcLhs;
-    const auto& rhs = inst.srcRhs;
-
-    switch (inst.opcode)
-    {
-        case OpCodes::AND:
-            return MakeInt(lhs.Int() & rhs.Int());
-        case OpCodes::OR:
-            return MakeInt(lhs.Int() | rhs.Int());
-        case OpCodes::XOR:
-            return MakeInt(lhs.Int() ^ rhs.Int());
-
-        case OpCodes::ADD:
-            return MakeInt(lhs.Int() + rhs.Int());
-        case OpCodes::FADD:
-            return MakeFloat(lhs.Float() + rhs.Float());
-
-        case OpCodes::SUB:
-            return MakeInt(lhs.Int() - rhs.Int());
-        case OpCodes::FSUB:
-            return MakeFloat(lhs.Float() - rhs.Float());
-
-        case OpCodes::MUL:
-            return MakeInt(lhs.Int() * rhs.Int());
-        case OpCodes::FMUL:
-            return MakeFloat(lhs.Float() * rhs.Float());
-
-        case OpCodes::DIV:
-            return rhs.Int() != 0 ? MakeInt(lhs.Int() / rhs.Int()) : nullptr;
-        case OpCodes::FDIV:
-            return MakeFloat(lhs.Float() / rhs.Float());
-
-        case OpCodes::MOD:
-            return rhs.Int() != 0 ? MakeInt(lhs.Int() % rhs.Int()) : nullptr;
-        case OpCodes::SLL:
-            return MakeInt(lhs.Int() << rhs.Int());
-        case OpCodes::SLR:
-            return MakeInt(lhs.Int() >> rhs.Int());
-
-        /*case OpCodes::CMPE:
-            return MakeInt(lhs.Int() == rhs.Int() ? 1 : 0);
-        case OpCodes::FCMPE:
-            return MakeInt(lhs.Float() == rhs.Float() ? 1 : 0);
-
-        case OpCodes::CMPNE:
-            return MakeInt(lhs.Int() != rhs.Int() ? 1 : 0);
-        case OpCodes::FCMPNE:
-            return MakeInt(lhs.Float() != rhs.Float() ? 1 : 0);
-
-        case OpCodes::CMPL:
-            return MakeInt(lhs.Int() < rhs.Int() ? 1 : 0);
-        case OpCodes::FCMPL:
-            return MakeInt(lhs.Float() < rhs.Float() ? 1 : 0);
-
-        case OpCodes::CMPLE:
-            return MakeInt(lhs.Int() <= rhs.Int() ? 1 : 0);
-        case OpCodes::FCMPLE:
-            return MakeInt(lhs.Float() <= rhs.Float() ? 1 : 0);
-
-        case OpCodes::CMPG:
-            return MakeInt(lhs.Int() > rhs.Int() ? 1 : 0);
-        case OpCodes::FCMPG:
-            return MakeInt(lhs.Float() > rhs.Float() ? 1 : 0);
-
-        case OpCodes::CMPGE:
-            return MakeInt(lhs.Int() >= rhs.Int() ? 1 : 0);
-        case OpCodes::FCMPGE:
-            return MakeInt(lhs.Float() >= rhs.Float() ? 1 : 0);*/
-    }
-
-    return nullptr;
 }
 
 void ConstantPropagation::FetchConst(TACVar& var)

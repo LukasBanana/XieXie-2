@@ -10,8 +10,6 @@
 
 
 #include "TACOptimizer.h"
-#include "TACModifyInst.h"
-#include "TACCopyInst.h"
 
 #include <map>
 #include <string>
@@ -38,10 +36,6 @@ class ConstantPropagation : public TACOptimizer
         void TransformHeapInst(TACInstPtr& inst) override;
         void TransformDirectCallInst(TACInstPtr& inst) override;
         void TransformIndirectCallInst(TACInstPtr& inst) override;
-
-        //! Returns true if this is equivalent to a no-operation instruction, e.g. "a + 0", or "a * 1".
-        bool IsNOP(const TACModifyInst& inst) const;
-        std::unique_ptr<TACCopyInst> ConstantFolding(const TACModifyInst& inst);
 
         void FetchConst(TACVar& var);
         void PropagateConst(const TACVar& dest, const TACVar& src);
