@@ -82,18 +82,18 @@ template <typename T> T StrToNum(const std::string& str)
     return val;
 }
 
-template <typename T> std::string NumToHex(T number, const size_t Size, const bool Prefix = true)
+template <typename T> std::string NumToHex(T number, const size_t size, const bool prefix = true)
 {
     static const char* hexAlphabet = "0123456789abcdef";
 
     std::string str;
     
-    if (Prefix)
+    if (prefix)
     {
-        for (int i = 2*Size - 1; i >= 0; --i)
+        for (int i = 2*size - 1; i >= 0; --i)
         {
             str += ToStr(
-                hexAlphabet[(number >> i*4) & 0xF]
+                hexAlphabet[(number >> i*4) & 0xf]
             );
         }
     }
@@ -101,7 +101,7 @@ template <typename T> std::string NumToHex(T number, const size_t Size, const bo
     {
         do
         {
-            str = ToStr(hexAlphabet[number & 0xF]) + str;
+            str = ToStr(hexAlphabet[number & 0xf]) + str;
             number >>= 4;
         }
         while (number > 0);

@@ -27,8 +27,9 @@ namespace CodeGenerator
 using namespace std::placeholders;
 using namespace XieXie::VirtualMachine;
 
-static const std::string mainProcIdent = "__xx__main";
-static const std::string tempReg = "$tr";
+static const std::string mainProcIdent          = "main_entry";
+static const std::string placeHolderProcIdent   = "place_holder";
+static const std::string tempReg                = "$tr";
 
 static RegisterAllocator::RegList XASMRegList()
 {
@@ -174,6 +175,111 @@ std::string XASMGenerator::ResolveStringLiteral(const std::string& str) const
     }
 
     return result;
+}
+
+std::string XASMGenerator::Mnemonic(const OpCodes opcode, bool negateRelation) const
+{
+    switch (opcode)
+    {
+        /* Copy */
+        case OpCodes::MOV:
+            return "mov";
+        case OpCodes::NOT:
+            return "not";
+        case OpCodes::FTI:
+            return "fti";
+        case OpCodes::ITF:
+            return "itf";
+        case OpCodes::LDADDR:
+            return "lda";
+
+        /* Modify */
+        case OpCodes::AND:
+            return "and";
+        case OpCodes::OR:
+            return "or";
+        case OpCodes::XOR:
+            return "xor";
+
+        case OpCodes::ADD:
+            return "add";
+        case OpCodes::SUB:
+            return "sub";
+        case OpCodes::MUL:
+            return "mul";
+        case OpCodes::DIV:
+            return "div";
+        case OpCodes::MOD:
+            return "mod";
+        case OpCodes::SLL:
+            return "sll";
+        case OpCodes::SLR:
+            return "slr";
+
+        case OpCodes::FADD:
+            return "addf";
+        case OpCodes::FSUB:
+            return "subf";
+        case OpCodes::FMUL:
+            return "mulf";
+        case OpCodes::FDIV:
+            return "divf";
+        case OpCodes::FMOD:
+            return "modf";
+
+        /* Relation */
+        case OpCodes::CMPE:
+        case OpCodes::FCMPE:
+            return negateRelation ? "jne" : "je";
+        case OpCodes::CMPNE:
+        case OpCodes::FCMPNE:
+            return negateRelation ? "je" : "jne";
+        case OpCodes::CMPL:
+        case OpCodes::FCMPL:
+            return negateRelation ? "jge" : "jl";
+        case OpCodes::CMPLE:
+        case OpCodes::FCMPLE:
+            return negateRelation ? "jg" : "jle";
+        case OpCodes::CMPG:
+        case OpCodes::FCMPG:
+            return negateRelation ? "jle" : "jg";
+        case OpCodes::CMPGE:
+        case OpCodes::FCMPGE:
+            return negateRelation ? "jl" : "jge";
+
+        /* Return */
+        case OpCodes::RETURN:
+            return "ret";
+
+        /* DirectCall */
+        case OpCodes::DIRCALL:
+        case OpCodes::INDCALL:
+            return "call";
+
+        /* Stack */
+        case OpCodes::PUSH:
+            return "push";
+        case OpCodes::POP:
+            return "pop";
+
+        /* Heap */
+        case OpCodes::LDB:
+            return "ldb";
+        case OpCodes::STB:
+            return "stb";
+        case OpCodes::LDH:
+            return "ldh";
+        case OpCodes::STH:
+            return "sth";
+        case OpCodes::LDW:
+            return "ldw";
+        case OpCodes::STW:
+            return "stw";
+
+        default:
+            break;
+    }
+    return "nop";
 }
 
 /* --- Register Allocation --- */
@@ -574,35 +680,13 @@ void XASMGenerator::GenerateCopyInst(const TACCopyInst& inst)
         auto reg0 = Reg(inst.dest);
         auto reg1 = Reg(inst.src);
 
-        StartLn();
-        {
-            switch (inst.opcode)
-            {
-                case OpCodes::MOV:
-                    Ln("mov");
-                    break;
-                case OpCodes::NOT:
-                    Ln("not");
-                    break;
-                case OpCodes::FTI:
-                    Ln("fti");
-                    break;
-                case OpCodes::ITF:
-                    Ln("itf");
-                    break;
-                case OpCodes::LDADDR:
-                    Ln("lda");
-                    break;
-            }
-
-            Ln(" " + reg0 + ", " + reg1);
-        }
-        EndLn();
+        Line(Mnemonic(inst.opcode) + ' ' + reg0 + ", " + reg1);
     }
 }
 
 void XASMGenerator::GenerateModifyInst(const TACModifyInst& inst)
 {
+    /* Check if single increment/decrement instruction can be used */
     if (inst.dest == inst.srcLhs && inst.srcRhs.IsConst() && std::abs(inst.srcRhs.Int()) == 1)
     {
         if (inst.opcode == OpCodes::ADD)
@@ -625,72 +709,20 @@ void XASMGenerator::GenerateModifyInst(const TACModifyInst& inst)
         }
     }
 
+    /* Allocate registers */
     auto reg0 = Reg(inst.dest);
     auto reg1 = Reg(inst.srcLhs);
     auto reg2 = Reg(inst.srcRhs);
 
+    /* Check if left sub-expression must be stored in a temporary register */
     if (inst.srcLhs.IsConst())
     {
         Line("mov " + reg0 + ", " + reg1);
         reg1 = reg0;
     }
 
-    StartLn();
-    {
-        switch (inst.opcode)
-        {
-            case OpCodes::AND:
-                Ln("and");
-                break;
-            case OpCodes::OR:
-                Ln("or");
-                break;
-            case OpCodes::XOR:
-                Ln("xor");
-                break;
-
-            case OpCodes::ADD:
-                Ln("add");
-                break;
-            case OpCodes::SUB:
-                Ln("sub");
-                break;
-            case OpCodes::MUL:
-                Ln("mul");
-                break;
-            case OpCodes::DIV:
-                Ln("div");
-                break;
-            case OpCodes::MOD:
-                Ln("mod");
-                break;
-            case OpCodes::SLL:
-                Ln("sll");
-                break;
-            case OpCodes::SLR:
-                Ln("slr");
-                break;
-
-            case OpCodes::FADD:
-                Ln("addf");
-                break;
-            case OpCodes::FSUB:
-                Ln("subf");
-                break;
-            case OpCodes::FMUL:
-                Ln("mulf");
-                break;
-            case OpCodes::FDIV:
-                Ln("divf");
-                break;
-            case OpCodes::FMOD:
-                Ln("modf");
-                break;
-        }
-
-        Ln(" " + reg0 + ", " + reg1 + ", " + reg2);
-    }
-    EndLn();
+    /* Generate assembly for modify instruction */
+    Line(Mnemonic(inst.opcode) + ' ' + reg0 + ", " + reg1 + ", " + reg2);
 }
 
 void XASMGenerator::GenerateRelationInst(const TACRelationInst& inst)
@@ -726,40 +758,8 @@ void XASMGenerator::GenerateRelationInst(const TACRelationInst& inst)
         EndLn();
     }
 
-    StartLn();
-    {
-        /* Negate condition to jump only on false-branch */
-        switch (inst.opcode)
-        {
-            case OpCodes::CMPE:
-            case OpCodes::FCMPE:
-                Ln("jne");
-                break;
-            case OpCodes::CMPNE:
-            case OpCodes::FCMPNE:
-                Ln("je");
-                break;
-            case OpCodes::CMPL:
-            case OpCodes::FCMPL:
-                Ln("jge");
-                break;
-            case OpCodes::CMPLE:
-            case OpCodes::FCMPLE:
-                Ln("jg");
-                break;
-            case OpCodes::CMPG:
-            case OpCodes::FCMPG:
-                Ln("jle");
-                break;
-            case OpCodes::CMPGE:
-            case OpCodes::FCMPGE:
-                Ln("jl");
-                break;
-        }
-
-        Ln(' ' + Label(Succ(1)));
-    }
-    EndLn();
+    /* Negate condition to jump only on false-branch */
+    Line(Mnemonic(inst.opcode, true) + ' ' + Label(Succ(1)));
 
     PushIndentBlock(Succ(1));
 
@@ -803,57 +803,29 @@ void XASMGenerator::GenerateIndirectCallInst(const TACIndirectCallInst& inst)
 
 void XASMGenerator::GenerateStackInst(const TACStackInst& inst)
 {
-    if (inst.opcode == OpCodes::PUSH)
-        Line("push " + Reg(inst.var));
-    else if (inst.opcode == OpCodes::POP)
-        Line("pop " + Reg(inst.var));
+    Line(Mnemonic(inst.opcode) + ' ' + Reg(inst.var));
 }
 
 void XASMGenerator::GenerateHeapInst(const TACHeapInst& inst)
 {
+    /* Allocate registers */
     auto reg0 = Reg(inst.var);
+    auto reg1 = Reg(inst.baseVar);
 
+    /* Check if base must be stored in a temporary register */
     if (inst.var.IsConst())
     {
         Line("mov " + tempReg + ", " + reg0);
         reg0 = tempReg;
     }
 
-    auto reg1 = Reg(inst.baseVar);
-
-    StartLn();
-    {
-        switch (inst.opcode)
-        {
-            case OpCodes::LDB:
-                Ln("ldb");
-                break;
-            case OpCodes::STB:
-                Ln("stb");
-                break;
-
-            case OpCodes::LDH:
-                Ln("ldh");
-                break;
-            case OpCodes::STH:
-                Ln("sth");
-                break;
-
-            case OpCodes::LDW:
-                Ln("ldw");
-                break;
-            case OpCodes::STW:
-                Ln("stw");
-                break;
-        }
-
-        Ln(' ' + reg0 + ", (" + reg1 + ") " + std::to_string(inst.offset));
-    }
-    EndLn();
+    /* Generate assembly for heap instruction */
+    Line(Mnemonic(inst.opcode) + ' ' + reg0 + ", (" + reg1 + ") " + std::to_string(inst.offset));
 }
 
 void XASMGenerator::GenerateDirectJump(const BasicBlock& bb)
 {
+    /* Only generate jump instruction, if necessary */
     if (!IsNextBlock(bb))
         Line("jmp " + Label(bb));
 }
@@ -870,7 +842,7 @@ void XASMGenerator::GenerateVtable(const ClassDeclStmnt& classDecl)
         for (const auto procDecl : vtable.procs)
         {
             if (procDecl->IsAbstract())
-                WORDAddress("exit");
+                WORDAddress(placeHolderProcIdent);
             else
                 WORDAddress(NameMangling::UniqueLabel(*procDecl));
         }

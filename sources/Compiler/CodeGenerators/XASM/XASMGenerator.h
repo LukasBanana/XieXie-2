@@ -84,6 +84,9 @@ class XASMGenerator final : public AsmGenerator, private RegisterAllocator::Call
 
         std::string ResolveStringLiteral(const std::string& str) const;
 
+        //! Returns the XASM mnemonic for the specified opcode.
+        std::string Mnemonic(const OpCodes opcode, bool negateRelation = false) const;
+
         /* --- Register Allocation --- */
 
         std::string Reg(const TACVar& var);

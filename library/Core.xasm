@@ -12,6 +12,7 @@
 
 ; void exit(void)
 exit:
+place_holder:
 	stop
 
 ; Object new(int size, int typeID, int vtableAddr)

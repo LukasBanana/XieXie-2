@@ -1,4 +1,5 @@
 "exit:\n"
+"place_holder:\n"
 "stop\n"
 "new:\n"
 "ldw $ar, ($lb) -4\n"
