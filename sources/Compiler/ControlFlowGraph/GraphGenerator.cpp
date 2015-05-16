@@ -11,6 +11,7 @@
 #include "CompilerMessage.h"
 #include "BuiltinClasses.h"
 #include "Optimizer.h"
+#include "ConstantFolding.h"
 
 #include "ExprIntEvaluator.h"
 #include "ExprFloatEvaluator.h"
@@ -1687,6 +1688,7 @@ void GraphGenerator::GenerateConditionalBinaryExpr(BinaryExpr* ast, void* args)
 
 void GraphGenerator::GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args)
 {
+    /* Generate instructions for sub expressions */
     Visit(ast->lhsExpr);
     auto srcLhs = Var();
 
@@ -1702,8 +1704,12 @@ void GraphGenerator::GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args)
     inst->srcLhs    = srcLhs;
     inst->srcRhs    = srcRhs;
 
+    /* Release temporary variables and push destination variable */
     PopVar(2);
     PushVar(inst->dest);
+
+    /* Apply constant folding */
+    BB()->ReplaceLastInst( Optimization::ConstantFolding::FoldConstants(*inst) );
 }
 
 static OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isFloat)
