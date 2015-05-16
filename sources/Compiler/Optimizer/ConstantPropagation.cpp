@@ -47,24 +47,10 @@ void ConstantPropagation::TransformModifyInst(TACInstPtr& inst)
     FetchConst(modifyInst->srcLhs);
     FetchConst(modifyInst->srcRhs);
 
-    if (modifyInst->srcLhs.IsConst() && modifyInst->srcRhs.IsConst())
+    /* Constant folding */
+    auto newInst = ConstantFolding::FoldConstants(*modifyInst);
+    if (newInst)
     {
-        /* Constant folding */
-        auto newInst = ConstantFolding::FoldConstants(*modifyInst);
-        if (newInst)
-        {
-            /* Propagate constant */
-            PropagateConst(newInst->dest, newInst->src);
-            inst = std::move(newInst);
-            Changed();
-        }
-    }
-    else if (ConstantFolding::IsNOP(*modifyInst))
-    {
-        /* Constant folding */
-        auto var = (modifyInst->srcLhs.IsConst() ? modifyInst->srcRhs : modifyInst->srcLhs);
-        auto newInst = MakeUnique<TACCopyInst>(modifyInst->dest, var);
-
         /* Propagate constant */
         PropagateConst(newInst->dest, newInst->src);
         inst = std::move(newInst);

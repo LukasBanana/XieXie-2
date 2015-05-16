@@ -7,6 +7,7 @@
 
 #include "ConstantFolding.h"
 #include "MakeUnique.h"
+#include "StringModifier.h"
 
 
 namespace Optimization
@@ -20,13 +21,9 @@ namespace ConstantFolding
 
 using OpCodes = TACInst::OpCodes;
 
-bool IsNOP(const TACModifyInst& inst)
+static bool IsNOP(const OpCodes opcode, const TACVar& lhs, const TACVar& rhs, TACVar& constVar)
 {
     /* Get single constant */
-    const auto& lhs = inst.srcLhs;
-    const auto& rhs = inst.srcRhs;
-
-    TACVar constVar;
     if (lhs.IsConst())
         constVar = lhs;
     else if (rhs.IsConst())
@@ -35,7 +32,7 @@ bool IsNOP(const TACModifyInst& inst)
         return false;
 
     /* Check if this is a no-operation instruction */
-    switch (inst.opcode)
+    switch (opcode)
     {
         case OpCodes::AND:
             return constVar.Int() == ~0;
@@ -88,6 +85,16 @@ std::unique_ptr<TACCopyInst> FoldConstants(const TACModifyInst& inst)
     const auto& lhs = inst.srcLhs;
     const auto& rhs = inst.srcRhs;
 
+    if (!lhs.IsConst() || !rhs.IsConst())
+    {
+        /* Try to simplify no-operation */
+        TACVar constVar;
+        if (IsNOP(inst.opcode, lhs, rhs, constVar))
+            return MakeUnique<TACCopyInst>(inst.dest, constVar);
+        return nullptr;
+    }
+
+    /* Try to fold constants */
     switch (inst.opcode)
     {
         case OpCodes::AND:

@@ -20,9 +20,6 @@ namespace ConstantFolding
 {
 
 
-//! Returns true if this is equivalent to a no-operation instruction, e.g. "a + 0", or "a * 1".
-bool IsNOP(const ThreeAddressCodes::TACModifyInst& inst);
-
 /**
 Returns a unique pointer to a new and optimized instruction, which folds the constants in the specified instruction.
 If this optimization is not possible, the return value is null.
