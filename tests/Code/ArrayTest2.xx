@@ -7,13 +7,17 @@ import Console
 /// Test for 'generic' array context analysis
 class Test {
 	
+	static void printString(String s) {
+		Console.writeLine(s)
+	}
+	
 	static void fillList(int[] list, int n) {
 		for int i := 1 ; i <= n ; i++ {
 			list.append(i)
 		}
 	}
 	
-	static void main() {
+	static void test1() {
 		
 		// List A
 		int[] l := { 0 }
@@ -23,6 +27,25 @@ class Test {
 		foreach x : l {
 			Console.writeLine(x)
 		}
+		
+	}
+	
+	static void test2() {
+		
+		String[] l := new String[]()
+		
+		l.append("Foo")
+		l.append("Bar")
+		l.append(new Test())	// Error, "Test" can not be casted to "String"
+		
+		Test.printString(l[1])
+		
+	}
+	
+	static void main() {
+		
+		//Test.test1()
+		Test.test2()
 		
 	}
 	
