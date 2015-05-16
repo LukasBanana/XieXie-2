@@ -101,6 +101,8 @@ dynamic_cast:
 	ret 3
 
 ; void resize_buffer({Object this} int size)
+;   after return:
+;    - $r0 will contain the argument of 'size'
 resize_buffer:
 	ldw $r0, ($lb) -4		; load size
 	ldw $r1, ($xr) 16		; load this.bufSize
@@ -742,7 +744,22 @@ CFloatArray.Pempty:
 
 ; void Array.append(Object entry)
 CArray.Pappend,R@Object?entry:
-	; ...
+CIntArray.Pappend,I?entry:
+CFloatArray.Pappend,F?entry:
+	; resize array by one entry
+	ldw $r0, ($xr) 12	; load this.size
+	push $r0			; store previous size
+	add $r0, $r0, 4		; increment size += 4
+	push $r0
+	call resize_buffer	; call resize_buffer(this, size)
+	
+	; store new entry at the end of the buffer
+	pop $r0				; restore previous size
+	ldw $r1, ($xr) 20	; load this.buffer
+	add $r1, $r1, $r0	; get buffer end pointer
+	ldw $r0, ($lb) -4	; load entry
+	stw $r0, ($r1) 0	; store buffer[size] := entry
+	
 	ret 1
 
 ; void Array.insert(Object entry, int pos)
@@ -817,11 +834,6 @@ CIntArray.PtoString:
 	; ...
 	ret
 
-; void IntArray.append(int entry)
-CIntArray.Pappend,I?entry:
-	; ...
-	ret 1
-
 ; void IntArray.insert(int entry, int pos)
 CIntArray.Pinsert,I?entry,I?pos:
 	; ...
@@ -875,11 +887,6 @@ CFloatArray.Pequals,R@Object?rhs:
 CFloatArray.PtoString:
 	; ...
 	ret
-
-; void FloatArray.append(float entry)
-CFloatArray.Pappend,F?entry:
-	; ...
-	ret 1
 
 ; void FloatArray.insert(float entry, int pos)
 CFloatArray.Pinsert,F?entry,I?pos:
