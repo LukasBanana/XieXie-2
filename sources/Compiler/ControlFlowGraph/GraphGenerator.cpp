@@ -1349,7 +1349,7 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
     else
         Error("can not generate dynamic allocation for built-in types", ast);
 
-    /* Restore variable to allcoated object */
+    /* Store variable to allcoated object */
     BB()->MakeInst<TACStackInst>(OpCodes::PUSH, ResultVar());
 
     /* Call constructor */

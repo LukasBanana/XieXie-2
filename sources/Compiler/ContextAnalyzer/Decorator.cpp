@@ -10,6 +10,7 @@
 #include "ASTImport.h"
 #include "StringModifier.h"
 #include "TypeChecker.h"
+#include "BuiltinClasses.h"
 
 #include <algorithm>
 #include <set>
@@ -19,16 +20,6 @@ using namespace std::placeholders;
 
 namespace ContextAnalyzer
 {
-
-
-/*
- * Internal members
- */
-
-static const std::string rootBaseClassIdent = "Object";
-static const std::string stringClassIdent   = "String";
-static const std::string arrayClassIdent    = "Array";
-
 
 /*
  * Internal functions
@@ -753,7 +744,9 @@ DEF_VISIT_PROC(Decorator, ArrayTypeDenoter)
     Visit(ast->lowerTypeDenoter);
 
     /* Decorate type denoter with "Array" class */
-    auto symbol = AST::Cast<ClassDeclStmnt>(FetchSymbol(arrayClassIdent, ast));
+    auto& classRTTI = ast->GetClassRTTI();
+
+    auto symbol = AST::Cast<ClassDeclStmnt>(FetchSymbol(classRTTI.name, ast));
     if (symbol)
         ast->declRef = symbol;
 }
@@ -783,7 +776,7 @@ DEF_VISIT_PROC(Decorator, PointerTypeDenoter)
 void Decorator::DecorateClassBaseClass(ClassDeclStmnt& ast)
 {
     /* The root base class is always the "Object" class */
-    if (ast.ident == rootBaseClassIdent)
+    if (ast.ident == BuiltinClasses::Object.name)
     {
         if (!ast.baseClassIdent.empty())
         {
@@ -792,7 +785,7 @@ void Decorator::DecorateClassBaseClass(ClassDeclStmnt& ast)
         }
     }
     else if (ast.baseClassIdent.empty())
-        ast.baseClassIdent = rootBaseClassIdent;
+        ast.baseClassIdent = BuiltinClasses::Object.name;
 
     /* Check if inheritance typename is a valid (intern) class identifier */
     if (!ast.baseClassIdent.empty())

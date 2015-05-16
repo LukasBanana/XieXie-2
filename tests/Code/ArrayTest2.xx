@@ -1,0 +1,30 @@
+
+// Array Test 2
+// 16/05/2015
+
+import Console
+
+/// Test for 'generic' array context analysis
+class Test {
+	
+	static void fillList(int[] list, int n) {
+		for int i := 1 ; i <= n ; i++ {
+			list.append(i)
+		}
+	}
+	
+	static void main() {
+		
+		// List A
+		int[] l := { 0 }
+		Test.fillList(l, 10)
+		
+		Console.writeLine("generated list:")
+		foreach x : l {
+			Console.writeLine(x)
+		}
+		
+	}
+	
+}
+
