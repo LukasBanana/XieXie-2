@@ -111,6 +111,21 @@ class BasicBlock
             return instRef;
         }
 
+        /**
+        Replaces the last instruction with the specified instruction and returns the new raw pointer.
+        The the instruction list is empty, the return value is null.
+        */
+        template <typename T> T* ReplaceLastInst(std::unique_ptr<T>& inst)
+        {
+            if (!insts.empty() && inst)
+            {
+                auto instRef = inst.get();
+                insts.back() = std::move(inst);
+                return instRef;
+            }
+            return nullptr;
+        }
+
         //! Makes a copy of 'inst' and inserts it at the specified position in this basic block.
         TACInst* InsertInstCopy(const TACInst& inst, size_t position, const TACVar::IDType varIDOffset = 0);
 
