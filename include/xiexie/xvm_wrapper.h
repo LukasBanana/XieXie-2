@@ -261,31 +261,32 @@ class Instruction
         /**
         Makes a 2-register instruction (mov, not, and, or, xor, add, sub, mul, div, mod, sll, slr, cmp, fti, itf).
         \throws std::invalid_argument If 'opcode' is invalid.
+        \throws std::out_of_range If 'value' is out of SgnValue16 range.
         */
         static Instruction MakeReg2(xvm_opcode opcode, const Register& reg0, const Register& reg1, int value);
 
         /**
         Makes a 1-register instruction (mov, and, or, xor, add, sub, mul, div, mod, sll, slr, push, pop, inc, dec).
-        \param[in] value 22-bit signed value.
+        \param[in] value 21-bit signed value.
         \throws std::invalid_argument If 'opcode' is invalid.
-        \throws std::out_of_range If 'value' is out of SgnValue22 range.
+        \throws std::out_of_range If 'value' is out of SgnValue21 range.
         */
         static Instruction MakeReg1(xvm_opcode opcode, const Register& reg, int value);
 
         /**
         Makes a jump instruction (jmp, je, jne, jg, jl, jge, jle, call).
-        \param[in] offset 22-bit signed jump offset. A jump offset is WORD aligned,
+        \param[in] offset 21-bit signed jump offset. A jump offset is WORD aligned,
         i.e. to jump to the next instruction, use 1 and to jump to the previous instruction use -1.
         \throws std::invalid_argument If 'opcode' is invalid.
-        \throws std::out_of_range If 'offset' is out of SgnValue22 range.
+        \throws std::out_of_range If 'offset' is out of SgnValue21 range.
         */
         static Instruction MakeJump(xvm_opcode opcode, const Register& reg, int offset);
 
         /**
-        Makes a memory-offset instruction (ldb, stb, ldw, stw).
-        \param[in] offset 18-bit signed offset. This offset is BYTE aligned.
+        Makes a memory-offset instruction (ldb, stb, ldh, sth, ldw, stw).
+        \param[in] offset 16-bit signed offset. This offset is BYTE aligned.
         \throws std::invalid_argument If 'opcode' is invalid.
-        \throws std::out_of_range If 'offset' is out of SgnValue18 range.
+        \throws std::out_of_range If 'offset' is out of SgnValue16 range.
         */
         static Instruction MakeLoadStore(xvm_opcode opcode, const Register& reg0, const Register& reg1, int offset);
 
@@ -307,10 +308,10 @@ class Instruction
 
         /**
         Makes a specular instruction (ret).
-        \param[in] argSize 18-bit unsigned value.
+        \param[in] argSize 16-bit unsigned value.
         Specifies the number of procedure argument WORDs which will be poped from the stack.
         \throws std::invalid_argument If 'opcode' is invalid.
-        \throws std::out_of_range If 'argSize' is out of Value18 range.
+        \throws std::out_of_range If 'argSize' is out of Value16 range.
         */
         static Instruction MakeSpecial(xvm_opcode opcode, unsigned int resultSize, unsigned int argSize);
 
