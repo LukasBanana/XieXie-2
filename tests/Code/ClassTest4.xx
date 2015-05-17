@@ -1,0 +1,24 @@
+
+// Class Test 4
+// 17/05/2015
+
+import Console
+
+/// Test for anonymous classes
+class Test {
+	
+	static void main() {
+		
+		new Object() {
+			init() {
+				Console.writeLine("Anonymous.init")
+			}
+			release {
+				Console.writeLine("Anonymous.release")
+			}
+		}
+		
+	}
+	
+}
+
