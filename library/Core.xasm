@@ -16,19 +16,22 @@ place_holder:
 	stop
 
 ; Object new(int size, int typeID, int vtableAddr)
+;   after return:
+;    - $r0 is invalidated
+;    - $ar contains the new allocated object
 new:
-	ldw $ar, ($lb) -4	; load argument 'size' (must include 12 bytes for reference counter, type-id, and vtable)
-	push $ar
+	ldw $r0, ($lb) -4	; load argument 'size' (must include 12 bytes for reference counter, type-id, and vtable)
+	push $r0
 	insc AllocMem		; allocate memory for object and get object reference (ar)
 	
-	mov $r1, 1			; initialize reference counter to 1
-	stw $r1, ($ar) 0	; write reference counter to object
+	mov $r0, 1			; initialize reference counter to 1
+	stw $r0, ($ar) 0	; write reference counter to object
 	
-	ldw $r1, ($lb) -8	; load argument 'typeID'
-	stw $r1, ($ar) 4	; write type-id to object
+	ldw $r0, ($lb) -8	; load argument 'typeID'
+	stw $r0, ($ar) 4	; write type-id to object
 	
-	ldw $r1, ($lb) -12	; load argument 'vtableAddr' (address to vtable for the object)
-	stw $r1, ($ar) 8	; write vtable address to object
+	ldw $r0, ($lb) -12	; load argument 'vtableAddr' (address to vtable for the object)
+	stw $r0, ($ar) 8	; write vtable address to object
 	
 	ret 3				; return object reference (ar)
 
@@ -341,13 +344,18 @@ CString.Pequals,R@Object?rhs:
 ; void String.init(int size)
 CString.Pinit,I?size:
 	call CString.Pinit
+	ldw $r0, ($lb) -4
+	push $r0
 	call CString.Presize,I?size
-	ret
+	ret 1
 
 ; void String.init(int char, int count)
 CString.Pinit,I?char,I?count:
-	; clamp char to [0 .. 127]
+	; load arguments
 	ldw $r0, ($lb) -4		; load char
+	ldw $r1, ($lb) -8		; load count
+	
+	; clamp char to [0 .. 127]
 	mov $cf, $r0
 	jge .char_gz			; compare char >= 0
 		mov $r0, 0			; set: char := 0
@@ -359,7 +367,6 @@ CString.Pinit,I?char,I?count:
 	.clamped_char:
 	
 	; clamp count to 0+
-	ldw $r1, ($lb) -8		; load count
 	mov $cf, $r1
 	jge .clamped_count
 		mov $r1, 0

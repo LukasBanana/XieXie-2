@@ -2,14 +2,13 @@
 // Temp XieXie Test
 
 import Console
+import ASCII
 
 class Test {
 	
 	static void main() {
 		
-		for i : 1 .. 100000 {
-			Console.writeLine(i)
-		}
+		Console.writeLine(new String(char: ASCII.a, count: 5))
 		
 	}
 	
