@@ -355,7 +355,7 @@ const char* xvm_intrinsic_get_ident(const xvm_intrinsic_id addr);
 
 #define XVM_SGN_VALUE26_MAX (0x01ffffff)
 #define XVM_SGN_VALUE21_MAX (0x000fffff)
-#define XVM_SGN_VALUE16_MAX (0x0007ffff)
+#define XVM_SGN_VALUE16_MAX (0x00007fff)
 
 #define XVM_SGN_VALUE26_MIN (-0x02000000)
 #define XVM_SGN_VALUE21_MIN (-0x00100000)
