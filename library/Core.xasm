@@ -346,7 +346,54 @@ CString.Pinit,I?size:
 
 ; void String.init(int char, int count)
 CString.Pinit,I?char,I?count:
-	; ...
+	; clamp char to [0 .. 127]
+	ldw $r0, ($lb) -4		; load char
+	mov $cf, $r0
+	jge .char_gz			; compare char >= 0
+		mov $r0, 0			; set: char := 0
+		jmp .clamped_char
+	.char_gz:
+	cmp $r0, 127
+	jle .clamped_char		; compare char <= 127
+		mov $r0, 0			; set: char := 0 (out of range always to zero!)
+	.clamped_char:
+	
+	; clamp count to 0+
+	ldw $r1, ($lb) -8		; load count
+	mov $cf, $r1
+	jge .clamped_count
+		mov $r1, 0
+	.clamped_count:
+	
+	; setup string buffer size
+	add $r2, $r1, 1			; set this.size := count + 1
+	cmp $r2, 16
+	jge .size_g64			; compare this.size >= 16
+		mov $r2, 16
+	.size_g64:
+	stw $r2, ($xr) 12		; store this.size
+	stw $r2, ($xr) 16		; store this.bufSize
+	
+	; allocate string buffer
+	push $r2
+	insc AllocMem			; allocate 16 bytes
+	mov $r3, $ar			; store buffer
+	stw $r3, ($xr) 20		; store this.buffer
+	
+	; initialize string buffer with characters
+	.loop:
+		mov $cf, $r1
+		jge .end			; compare count >= 0
+		stb $r0, ($r3) 0	; store *buffer := char
+		inc $r3				; buffer++
+		dec $r1				; count--
+		jmp .loop
+	.end:
+	
+	; store null terminator
+	mov $tr, 0				; tmp := 0
+	stw $tr, ($r3) 0		; this.buffer[this.size] := tmp
+	
 	ret 2
 
 ; void String.init(String source)
