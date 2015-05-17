@@ -26,6 +26,7 @@
 #include "TACHeapInst.h"
 
 #include <stack>
+#include <functional>
 
 
 namespace CodeGenerator
@@ -49,6 +50,8 @@ class XASMGenerator final : public AsmGenerator, private RegisterAllocator::Call
         
         using OpCodes = TACInst::OpCodes;
         using RegAlloc = RegisterAllocator;
+
+        using ValueInRangeProc = std::function<bool(int value)>;
 
         /* === Functions === */
 
@@ -82,14 +85,21 @@ class XASMGenerator final : public AsmGenerator, private RegisterAllocator::Call
 
         /* --- Conversion --- */
 
+        /**
+        Resolves the specified string, so that it can be written to assembly,
+        e.g. resolves each '\\' character to a "\\\\" character sequence.
+        */
         std::string ResolveStringLiteral(const std::string& str) const;
 
         //! Returns the XASM mnemonic for the specified opcode.
         std::string Mnemonic(const OpCodes opcode, bool negateRelation = false) const;
 
+        //! Returns procedure to determine if an integer value is inside the valid range for the specified instruction opcode.
+        ValueInRangeProc GetValueInRangeProc(const OpCodes opcode) const;
+
         /* --- Register Allocation --- */
 
-        std::string Reg(const TACVar& var);
+        std::string Reg(const TACVar& var, const ValueInRangeProc& inRangeProc = nullptr);
 
         void SaveReg(const RegAlloc::RegIdent& reg, RegAlloc::RegLocation location, RegAlloc::Scopes scope) override;
         void LoadReg(const RegAlloc::RegIdent& reg, RegAlloc::RegLocation location, RegAlloc::Scopes scope) override;

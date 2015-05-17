@@ -285,20 +285,105 @@ std::string XASMGenerator::Mnemonic(const OpCodes opcode, bool negateRelation) c
     return "nop";
 }
 
+static bool ValueInRangeAlways(int value)
+{
+    return true;
+}
+
+static bool ValueInRangeNever(int value)
+{
+    return true;
+}
+
+static bool ValueInRange16(int value)
+{
+    return Instruction::InRange<16>(value);
+}
+
+static bool ValueInRange21(int value)
+{
+    return Instruction::InRange<21>(value);
+}
+
+static bool ValueInRange26(int value)
+{
+    return Instruction::InRange<26>(value);
+}
+
+XASMGenerator::ValueInRangeProc XASMGenerator::GetValueInRangeProc(const OpCodes opcode) const
+{
+    switch (opcode)
+    {
+        case OpCodes::AND:
+        case OpCodes::OR:
+        case OpCodes::XOR:
+        case OpCodes::ADD:
+        case OpCodes::SUB:
+        case OpCodes::MUL:
+        case OpCodes::DIV:
+        case OpCodes::MOD:
+        case OpCodes::SLL:
+        case OpCodes::SLR:
+        case OpCodes::FADD:
+        case OpCodes::FSUB:
+        case OpCodes::FMUL:
+        case OpCodes::FDIV:
+        case OpCodes::FMOD:
+        case OpCodes::LDB:
+        case OpCodes::STB:
+        case OpCodes::LDH:
+        case OpCodes::STH:
+        case OpCodes::LDW:
+        case OpCodes::STW:
+            return ValueInRange16;
+
+        case OpCodes::LDADDR:
+        case OpCodes::CMPE:
+        case OpCodes::FCMPE:
+        case OpCodes::CMPNE:
+        case OpCodes::FCMPNE:
+        case OpCodes::CMPL:
+        case OpCodes::FCMPL:
+        case OpCodes::CMPLE:
+        case OpCodes::FCMPLE:
+        case OpCodes::CMPG:
+        case OpCodes::FCMPG:
+        case OpCodes::CMPGE:
+        case OpCodes::FCMPGE:
+        case OpCodes::DIRCALL:
+        case OpCodes::INDCALL:
+            return ValueInRange21;
+
+        case OpCodes::PUSH:
+            return ValueInRange26;
+
+        default:
+            break;
+    }
+
+    /* Return dummy function */
+    return ValueInRangeNever;
+}
+
 /* --- Register Allocation --- */
 
-std::string XASMGenerator::Reg(const TACVar& var)
+std::string XASMGenerator::Reg(const TACVar& var, const ValueInRangeProc& inRangeProc)
 {
     switch (var.type)
     {
         /* Constant literal */
         case TACVar::Types::Literal:
-            if (var.value.find('.') != std::string::npos || !Instruction::InRange<26>(var.Int())) // <-- !TODO! don't check only for InRange<26> !!!
+            if (inRangeProc)
             {
-                /* Store float- or large integer literal in temporary register */
-                Line("mov " + tempReg + ", " + var.value);
-                return tempReg;
+                if (var.value.find('.') != std::string::npos || !inRangeProc(var.Int()))
+                {
+                    /* Store float- or large integer literal in temporary register */
+                    Line("mov " + tempReg + ", " + var.value);
+                    return tempReg;
+                }
             }
+            else
+                ErrorIntern("instruction with invalid immediate value '" + var.value + "'");
             return var.value;
 
         /* Label */
@@ -610,8 +695,8 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& proc
         {
             ++itNext;
 
-            currentBlock_ = it;
-            nextBlock_ = (itNext != basicBlocks_.end() ? *itNext : nullptr);
+            currentBlock_   = it;
+            nextBlock_      = (itNext != basicBlocks_.end() ? *itNext : nullptr);
 
             GenerateBlock(*BB());
         }
@@ -674,14 +759,14 @@ void XASMGenerator::GenerateCopyInst(const TACCopyInst& inst)
     {
         Line("push " + std::to_string(inst.dynCastK));
         Line("push " + std::to_string(inst.dynCastID));
-        Line("push " + Reg(inst.src));
+        Line("push " + Reg(inst.src, GetValueInRangeProc(OpCodes::PUSH)));
         Line("call dynamic_cast");
         Line("mov " + Reg(inst.dest) + ", $ar");
     }
     else
     {
         auto reg0 = Reg(inst.dest);
-        auto reg1 = Reg(inst.src);
+        auto reg1 = Reg(inst.src, GetValueInRangeProc(inst.opcode));
 
         Line(Mnemonic(inst.opcode) + ' ' + reg0 + ", " + reg1);
     }
@@ -714,8 +799,8 @@ void XASMGenerator::GenerateModifyInst(const TACModifyInst& inst)
 
     /* Allocate registers */
     auto reg0 = Reg(inst.dest);
-    auto reg1 = Reg(inst.srcLhs);
-    auto reg2 = Reg(inst.srcRhs);
+    auto reg1 = Reg(inst.srcLhs, ValueInRangeAlways);
+    auto reg2 = Reg(inst.srcRhs, GetValueInRangeProc(inst.opcode));
 
     /* Check if left sub-expression must be stored in a temporary register */
     if (inst.srcLhs.IsConst())
@@ -744,11 +829,11 @@ void XASMGenerator::GenerateRelationInst(const TACRelationInst& inst)
             Line("mov $cf, " + std::to_string(inst.srcLhs.Int() - inst.srcRhs.Int()));
     }
     else if (!inst.IsFloatOp() && inst.srcRhs.IsConst() && inst.srcRhs.Int() == 0)
-        Line("mov $cf, " + Reg(inst.srcLhs));
+        Line("mov $cf, " + Reg(inst.srcLhs, ValueInRangeAlways));
     else
     {
         auto reg0 = Reg(inst.srcLhs);
-        auto reg1 = Reg(inst.srcRhs);
+        auto reg1 = Reg(inst.srcRhs, GetValueInRangeProc(OpCodes::SUB));
 
         StartLn();
         {
@@ -774,7 +859,7 @@ void XASMGenerator::GenerateReturnInst(const TACReturnInst& inst)
     regAlloc_.SpillAllMemberAndGlobals();
 
     if (inst.hasVar)
-        Line("mov $ar, " + Reg(inst.src));
+        Line("mov $ar, " + Reg(inst.src, ValueInRangeAlways));
 
     StartLn();
     {
@@ -806,13 +891,13 @@ void XASMGenerator::GenerateIndirectCallInst(const TACIndirectCallInst& inst)
 
 void XASMGenerator::GenerateStackInst(const TACStackInst& inst)
 {
-    Line(Mnemonic(inst.opcode) + ' ' + Reg(inst.var));
+    Line(Mnemonic(inst.opcode) + ' ' + Reg(inst.var, GetValueInRangeProc(inst.opcode)));
 }
 
 void XASMGenerator::GenerateHeapInst(const TACHeapInst& inst)
 {
     /* Allocate registers */
-    auto reg0 = Reg(inst.var);
+    auto reg0 = Reg(inst.var, ValueInRangeAlways);
     auto reg1 = Reg(inst.baseVar);
 
     /* Check if base must be stored in a temporary register */
