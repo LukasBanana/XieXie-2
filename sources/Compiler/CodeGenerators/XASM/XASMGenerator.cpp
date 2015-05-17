@@ -171,6 +171,9 @@ std::string XASMGenerator::ResolveStringLiteral(const std::string& str) const
             case '\"':
                 result.replace(i, 1, "\\\"");
                 break;
+            case '\\':
+                result.replace(i, 1, "\\\\");
+                break;
         }
     }
 
