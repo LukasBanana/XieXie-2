@@ -12,25 +12,28 @@ static void shell_print_help()
 {
     xvm_log_println("usage:");
     #ifdef _ENABLE_RUNTIME_DEBUGGER_
-    xvm_log_println("  xvm-rtd [options] FILE ... executes the specified virtual program");
+    xvm_log_println("  xvmD [options] FILE ... executes the specified virtual program in a run-time debugging environment");
     #else
-    xvm_log_println("  xvm [options] FILE ....... executes the specified virtual program");
+    xvm_log_println("  xvm [options] FILE .... executes the specified virtual program");
     #endif
     xvm_log_println("options:");
-    xvm_log_println("  help ..................... prints the help information");
-    xvm_log_println("  version .................. prints the version and license note");
-    xvm_log_println("  -D, --debug .............. enables the run-time debugger");
-    xvm_log_println("  -V, --verbose ............ prints additional output before and after program execution");
-    xvm_log_println("  -S, --stack SIZE ......... sets the stack size (by default 256)");
-    xvm_log_println("  -M, --module FILE ........ loads the module, specified by FILE");
-    xvm_log_println("  -E, --entry LABEL ........ sets the main entry point, specified by LABEL");
+    xvm_log_println("  help .................. prints the help information");
+    xvm_log_println("  version ............... prints the version and license note");
+    xvm_log_println("  -V, --verbose ......... prints additional output before and after program execution");
+    xvm_log_println("  -S, --stack SIZE ...... sets the stack size (by default 256)");
+    xvm_log_println("  -M, --module FILE ..... loads the module, specified by FILE");
+    xvm_log_println("  -E, --entry LABEL ..... sets the main entry point, specified by LABEL");
+    #ifdef _ENABLE_RUNTIME_DEBUGGER_
+    xvm_log_println("  -D, --debug ........... enables the run-time debugger");
+    xvm_log_println("  -B, --break INDEX ..... appends a break point for an instruction, specified by INDEX");
+    #endif
 }
 
 static void shell_print_version()
 {
     xvm_log_println("");
     #ifdef _ENABLE_RUNTIME_DEBUGGER_
-    xvm_log_println("  XieXie Virtual Machine (XVM) with Run-Time Debugger (RTD)");
+    xvm_log_println("  XieXie Virtual Machine (XVM) with Run-Time Debugger");
     #else
     xvm_log_println("  XieXie Virtual Machine (XVM)");
     #endif

@@ -542,6 +542,32 @@ int xvm_import_address_setup(xvm_import_address* import_address, unsigned int nu
 int xvm_import_address_free(xvm_import_address* import_address);
 
 
+/* ----- Runtime Debugging ----- */
+
+#ifdef _ENABLE_RUNTIME_DEBUGGER_
+
+//! XVM debug information instruction structure.
+typedef struct
+{
+    unsigned int source_index;  //!< Index to 'xvm_debug_info.source_filenames'.
+    unsigned int source_line;   //!< Line number inside a source file.
+}
+xvm_debug_info_instruction;
+
+//! XVM debug information structure.
+typedef struct
+{
+    unsigned int                num_source_filenames;
+    xvm_string*                 source_filenames;
+    unsigned int                num_break_points;
+    unsigned int*               break_points;           //!< Break point indices. By default NULL.
+    xvm_debug_info_instruction* debug_instructions;     //!< Debug instructions (must be as many as 'xvm_bytecode.instruction'). By default NULL.
+}
+xvm_debug_info;
+
+#endif
+
+
 /* ----- Byte Code ----- */
 
 //! XVM byte code structure.
@@ -562,6 +588,10 @@ typedef struct
 
     unsigned int            num_module_names;       //!< Number of module names. By default 0.
     xvm_string*             module_names;           //!< Module name array. By default NULL.
+
+    #ifdef _ENABLE_RUNTIME_DEBUGGER_
+    xvm_debug_info          debug_info;             //!< Debug information. Only available if '_ENABLE_RUNTIME_DEBUGGER_' is defined.
+    #endif
 }
 xvm_bytecode;
 
@@ -765,6 +795,7 @@ xvm_module_container;
 //! Initializes the specified module container with its default values.
 int xvm_module_container_init(xvm_module_container* container);
 
+//! Adds the specified module to the container.
 int xvm_module_container_add(xvm_module_container* container, xvm_module module);
 
 /**
@@ -773,8 +804,17 @@ Clears the specified container and unloads all modules.
 */
 int xvm_module_container_clear(xvm_module_container* container);
 
+/**
+Starts the iteration of the specified module container.
+\see xvm_module_iteration_next
+*/
 int xvm_module_iteration_start(const xvm_module_container* container);
 
+/**
+Returns the current module, of the current module container iteration, and iterates to the next module.
+If there is no further module, the return value is null.
+\see xvm_module_iteration_start
+*/
 xvm_module* xvm_module_iteration_next();
 
 
