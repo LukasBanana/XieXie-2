@@ -1,14 +1,17 @@
 
 // Temp XieXie Test
 
-import Console
-import ASCII
+import Console, ASCII, Integer
 
 class Test {
 	
 	static void main() {
 		
-		Console.writeLine(new String(char: ASCII.a, count: 5))
+		//Console.writeLine(new String(char: ASCII.a, count: 5))
+		
+		//var s := new String(size: 5)
+		var s := new String()
+		Console.writeLine(s)
 		
 	}
 	
