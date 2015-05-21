@@ -593,8 +593,9 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
         Blank();
     }
 
-    /* Generate vtable */
-    GenerateVtable(*classDecl);
+    /* Generate vtable for non-abstract classes */
+    if (!classDecl->IsAbstract())
+        GenerateVtable(*classDecl);
 
     Blank();
 }
