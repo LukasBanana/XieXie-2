@@ -664,6 +664,7 @@ CArray.Prelease:
 	ldw $r1, ($xr) 20	; load pointer to array buffer
 	
 	; de-reference all objects in array
+	push $r1			; store pointer
 	mov $xr, $r1		; set iterator to pointer: it := this.buffer
 	sll $r0, $r0, 2		; calculate: size := this.size * 4
 	add $r0, $r0, $xr	; determine end iterator: itEnd := it + size
@@ -674,13 +675,11 @@ CArray.Prelease:
 		; store registers
 		push $xr
 		push $r0
-		push $r1
 		
 		; decrement reference counter
 		call dec_ref
 		
 		; restore registers
-		pop $r1
 		pop $r0
 		pop $xr
 		
@@ -690,7 +689,8 @@ CArray.Prelease:
 	.break:
 	
 	; free array buffer
-	push $r1
+	;pop $r1			; restore pointer
+	;push $r1			; push pointer back onto stack
 	insc FreeMem		; delete array buffer
 	ret
 
