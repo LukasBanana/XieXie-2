@@ -557,9 +557,9 @@ xvm_debug_info_instruction;
 //! XVM debug information structure.
 typedef struct
 {
-    unsigned int                num_source_filenames;
-    xvm_string*                 source_filenames;
-    unsigned int                num_break_points;
+    unsigned int                num_source_filenames;   //!< Number of source filenames. By default 0.
+    xvm_string*                 source_filenames;       //!< Array of source filenames. By default NULL.
+    unsigned int                num_break_points;       //!< Number of break points. By default 0.
     unsigned int*               break_points;           //!< Break point indices. By default NULL.
     xvm_debug_info_instruction* debug_instructions;     //!< Debug instructions (must be as many as 'xvm_bytecode.instruction'). By default NULL.
 }
