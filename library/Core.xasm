@@ -527,73 +527,73 @@ CString.Padjust:
 
 ; bool String.empty()
 CString.Pempty:
-	ldw $cf, ($xr) 12	; load this.size
+	ldw $cf, ($xr) %FIELD_SIZE	; load this.size
 	dec $cf
-	jg .not_empty		; compare this.size > 1
-		mov $ar, 1		; return true
+	jg .false					; compare this.size > 1
+		mov $ar, %TRUE			; return true
 		ret
-	.not_empty:
-	mov $ar, 0			; return false
+	.false:
+	mov $ar, %FALSE				; return false
 	ret
 
 ; String String.append(String rhs)
 CString.Pappend,R@String?rhs:
-	ldw $cf, ($lb) -4	; load rhs
-	je .end				; check if rhs = null
-	mov $r0, $cf		; store rhs
+	ldw $cf, ($lb) -4				; load rhs
+	je .end							; check if rhs = null
+	mov $r0, $cf					; store rhs
 	
 	; check if other string is empty
-	ldw $r1, ($r0) 12	; load rhs.size
-	cmp $r1, 1			; check: rhs.size <= 1
+	ldw $r1, ($r0) %FIELD_SIZE		; load rhs.size
+	cmp $r1, 1						; check: rhs.size <= 1
 	jle .end
 	
 	; determine new string size
-	ldw $r2, ($xr) 12	; load this.size
-	add $r1, $r1, $r2	; calculate size := this.size + rhs.size
-	sub $r1, $r1, 2		; subtract 2 from size because of both null terminators
+	ldw $r2, ($xr) %FIELD_SIZE		; load this.size
+	add $r1, $r1, $r2				; calculate size := this.size + rhs.size
+	sub $r1, $r1, 2					; subtract 2 from size because of both null terminators
 	
 	; resize this string
-	push $r2			; store this.size
-	push $r0			; store rhs
+	push $r2						; store this.size
+	push $r0						; store rhs
 	push $r1
 	call CString.Presize,I?size
-	pop $r0				; restore rhs
-	pop $r1				; restore this.size
+	pop $r0							; restore rhs
+	pop $r1							; restore this.size
 	
 	; copy other string into new buffer part
-	ldw $r2, ($xr) 20	; load this.buffer
-	ldw $r3, ($r0) 12	; reload rhs.size
-	ldw $r4, ($r0) 20	; load rhs.buffer
-	dec $r1				; decrement size because of null terminator
-	dec $r3				; decrement size because of null terminator
-	add $r2, $r2, $r1	; add offset to buffer
-	push $r3			; push buffer size
-	push $r4			; push source buffer
-	push $r2			; push destination buffer
-	insc CopyMem		; copy string part
+	ldw $r2, ($xr) %FIELD_BUFFER	; load this.buffer
+	ldw $r3, ($r0) %FIELD_SIZE		; reload rhs.size
+	ldw $r4, ($r0) %FIELD_BUFFER	; load rhs.buffer
+	dec $r1							; decrement size because of null terminator
+	dec $r3							; decrement size because of null terminator
+	add $r2, $r2, $r1				; add offset to buffer
+	push $r3						; push buffer size
+	push $r4						; push source buffer
+	push $r2						; push destination buffer
+	insc CopyMem					; copy string part
 	
 	.end:
-	mov $ar, $xr		; return weak reference of this
+	mov $ar, $xr					; return weak reference of this
 	ret 1
 
 ; String String.append(Object rhs)
 CString.Pappend,R@Object?rhs:
-	ldw $cf, ($lb) -4	; load rhs
-	je .end				; check if rhs = null
+	ldw $cf, ($lb) -4					; load rhs
+	je .end								; check if rhs = null
 	
 	; call rhs.toString()
-	ldw $cf, ($cf) 8	; load rhs.vtable
-	ldw $cf, ($cf) 20	; load rhs.vtable.toString
-	call $cf			; call rhs.vtable.toString()
+	ldw $cf, ($cf) %FIELD_VTABLE		; load rhs.vtable
+	ldw $cf, ($cf) %FIELD_BUFFER		; load rhs.vtable.toString
+	call $cf							; call rhs.vtable.toString()
 	
 	; call this.append(String)
-	push $ar			; store $ar
-	push $ar			; push $ar as argument for this.append($ar)
+	push $ar							; store $ar
+	push $ar							; push $ar as argument for this.append($ar)
 	call CString.Pappend,R@String?rhs
 	
 	; decrement reference of temporary string from rhs.toString call
 	pop $xr
-	call dec_ref		; call rhs.dec_ref
+	call dec_ref						; call rhs.dec_ref
 	
 	.end:
 	ret 1
@@ -675,16 +675,16 @@ String.vtable:
 ; void Array.release()
 CArray.Prelease:
 	; load object members
-	ldw $r0, ($xr) 12	; load this.size
-	ldw $r1, ($xr) 20	; load pointer to array buffer
+	ldw $r0, ($xr) %FIELD_SIZE		; load this.size
+	ldw $r1, ($xr) %FIELD_BUFFER	; load pointer to array buffer
 	
 	; de-reference all objects in array
-	push $r1			; store pointer
-	mov $xr, $r1		; set iterator to pointer: it := this.buffer
-	sll $r0, $r0, 2		; calculate: size := this.size * 4
-	add $r0, $r0, $xr	; determine end iterator: itEnd := it + size
+	push $r1						; store pointer
+	mov $xr, $r1					; set iterator to pointer: it := this.buffer
+	sll $r0, $r0, 2					; calculate: size := this.size * 4
+	add $r0, $r0, $xr				; determine end iterator: itEnd := it + size
 	.loop:
-		cmp $xr, $r0	; compare: it >= itEnd
+		cmp $xr, $r0				; compare: it >= itEnd
 		jge .break
 		
 		; store registers
@@ -699,14 +699,14 @@ CArray.Prelease:
 		pop $xr
 		
 		; next loop iteration
-		add $xr, $xr, 4		; it += 4
+		add $xr, $xr, 4				; it += 4
 		jmp .loop
 	.break:
 	
 	; free array buffer
-	;pop $r1			; restore pointer
-	;push $r1			; push pointer back onto stack
-	insc FreeMem		; delete array buffer
+	;pop $r1						; restore pointer
+	;push $r1						; push pointer back onto stack
+	insc FreeMem					; delete array buffer
 	ret
 
 ; void Array.init()
@@ -717,16 +717,16 @@ CBoolArray.Pinit:
 CBuffer.Pinit:
 	; this.size := 0
 	mov $r0, 0
-	stw $r0, ($xr) 12
+	stw $r0, ($xr) %FIELD_SIZE		; store this.size
 	
 	; initialize buffer with MIN_BUFSIZE bytes
 	mov $r1, %MIN_BUFSIZE
-	stw $r1, ($xr) 16
+	stw $r1, ($xr) %FIELD_BUFSIZE	; store this.bufSize
 	
 	; allocate buffer
 	push %MIN_BUFSIZE
-	insc AllocMem		; allocate MIN_BUFSIZE bytes
-	stw $ar, ($xr) 20	; store pointer to buffer in array instance
+	insc AllocMem					; allocate MIN_BUFSIZE bytes
+	stw $ar, ($xr) %FIELD_BUFFER	; store pointer to buffer in array instance
 	ret
 
 ; void Array.init(int size)
@@ -734,27 +734,27 @@ CArray.Pinit,I?size:
 CIntArray.Pinit,I?size:
 CFloatArray.Pinit,I?size:
 	; this.size := size
-	ldw $r0, ($lb) -4			; load size
-	sll $r0, $r0, 2				; set this.size := size * 4
-	stw $r0, ($xr) 12			; store this.size
+	ldw $r0, ($lb) -4				; load size
+	sll $r0, $r0, 2					; set this.size := size * 4
+	stw $r0, ($xr) %FIELD_SIZE		; store this.size
 	
 	; initialize buffer with at least MIN_BUFSIZE bytes
-	cmp $r0, %MIN_BUFSIZE		; compare size >= MIN_BUFSIZE
+	cmp $r0, %MIN_BUFSIZE			; compare size >= MIN_BUFSIZE
 	jge .gt_min
-		mov $r0, %MIN_BUFSIZE	; clamp this.bufSize to MIN_BUFSIZE
+		mov $r0, %MIN_BUFSIZE		; clamp this.bufSize to MIN_BUFSIZE
 	.gt_min:
-	stw $r0, ($xr) 16			; store this.bufSize
+	stw $r0, ($xr) %FIELD_BUFSIZE	; store this.bufSize
 	
 	; allocate buffer
 	push $r0
-	insc AllocMem				; allocate MIN_BUFSIZE bytes
-	stw $ar, ($xr) 20			; store pointer to buffer in array instance
+	insc AllocMem					; allocate MIN_BUFSIZE bytes
+	stw $ar, ($xr) %FIELD_BUFFER	; store pointer to buffer in array instance
 	
 	; initialize buffer
-	push 0						; push fill
-	push $r0					; push bufSize
-	push $ar					; push buffer
-	insc FillMem				; call FillMem(buffer, bufSize, 0)
+	push 0							; push fill
+	push $r0						; push bufSize
+	push $ar						; push buffer
+	insc FillMem					; call FillMem(buffer, bufSize, 0)
 	
 	ret 1
 
@@ -779,24 +779,24 @@ CFloatArray.Pcopy:
 CArray.Psize:
 CIntArray.Psize:
 CFloatArray.Psize:
-	ldw $ar, ($xr) 12	; load this.size
-	slr $ar, $ar, 2		; return this.size/4
+	ldw $ar, ($xr) %FIELD_SIZE	; load this.size
+	slr $ar, $ar, 2				; return this.size/4
 	ret
 
 ; void Array.resize(int size)
 CArray.Presize,I?size:
 CIntArray.Presize,I?size:
 CFloatArray.Presize,I?size:
-	ldw $cf, ($lb) -4		; load size
-	jge .else				; check: size >= 0
-		mov $cf, 0			; clamp size to 0
+	ldw $cf, ($lb) -4			; load size
+	jge .else					; check: size >= 0
+		mov $cf, 0				; clamp size to 0
 	.else:
-	sll $tr, $cf, 2			; set tr := size*4
-	ldw $cf, ($xr) 12		; load this.size
-	cmp $cf, $tr			; compare this.size = size
+	sll $tr, $cf, 2				; set tr := size*4
+	ldw $cf, ($xr) %FIELD_SIZE	; load this.size
+	cmp $cf, $tr				; compare this.size = size
 	je .end
 		push $tr
-		call resize_buffer	; resize array buffer
+		call resize_buffer		; resize array buffer
 	.end:
 	ret 1
 
@@ -804,12 +804,12 @@ CFloatArray.Presize,I?size:
 CArray.Pempty:
 CIntArray.Pempty:
 CFloatArray.Pempty:
-	ldw $cf, ($xr) 12	; load this.size
-	jg .not_empty		; compare this.size > 0
-		mov $ar, 1		; return true
+	ldw $cf, ($xr) %FIELD_SIZE	; load this.size
+	jg .false					; compare this.size > 0
+		mov $ar, %TRUE			; return true
 		ret
-	.not_empty:
-	mov $ar, 0			; return false
+	.false:
+	mov $ar, %FALSE				; return false
 	ret
 
 ; void Array.append(Object entry)
@@ -817,18 +817,18 @@ CArray.Pappend,R@Object?entry:
 CIntArray.Pappend,I?entry:
 CFloatArray.Pappend,F?entry:
 	; resize array by one entry
-	ldw $r0, ($xr) 12	; load this.size
-	push $r0			; store previous size
-	add $r0, $r0, 4		; increment size += 4
+	ldw $r0, ($xr) %FIELD_SIZE		; load this.size
+	push $r0						; store previous size
+	add $r0, $r0, 4					; increment size += 4
 	push $r0
-	call resize_buffer	; call resize_buffer(this, size)
+	call resize_buffer				; call resize_buffer(this, size)
 	
 	; store new entry at the end of the buffer
-	pop $r0				; restore previous size
-	ldw $r1, ($xr) 20	; load this.buffer
-	add $r1, $r1, $r0	; get buffer end pointer
-	ldw $r0, ($lb) -4	; load entry
-	stw $r0, ($r1) 0	; store buffer[size] := entry
+	pop $r0							; restore previous size
+	ldw $r1, ($xr) %FIELD_BUFFER	; load this.buffer
+	add $r1, $r1, $r0				; get buffer end pointer
+	ldw $r0, ($lb) -4				; load entry
+	stw $r0, ($r1) 0				; store buffer[size] := entry
 	
 	ret 1
 
@@ -889,9 +889,9 @@ CFloatArray.Prelease:
 CBoolArray.Prelease:
 CBuffer.Prelease:
 	; free buffer
-	ldw $r0, ($xr) 20	; load this.buffer
+	ldw $r0, ($xr) %FIELD_BUFFER	; load this.buffer
 	push $r0
-	insc FreeMem		; FreeMem(this.buffer)
+	insc FreeMem					; FreeMem(this.buffer)
 	ret
 
 ; bool IntArray.equals(Object rhs)
@@ -1005,9 +1005,9 @@ FloatArray.vtable:
 ; void BoolArray.init(int size)
 CBoolArray.Pinit,I?size:
 	; initialize array members
-	ldw $cf, ($lb) -8		; load 'size'
-	stw $cf, ($xr) 12		; write: this.size := size
-	stw $cf, ($xr) 16		; write: this.bufSize := size
+	ldw $cf, ($lb) -8				; load 'size'
+	stw $cf, ($xr) %FIELD_SIZE		; write: this.size := size
+	stw $cf, ($xr) %FIELD_BUFSIZE	; write: this.bufSize := size
 	
 	; determine buffer size (in bytes): numBytes := (size + 7) >> 3
 	add $cf, $cf, 7
@@ -1015,16 +1015,16 @@ CBoolArray.Pinit,I?size:
 	
 	; allocate array buffer
 	push $cf
-	insc AllocMem			; allocate buffer
-	stw $ar, ($xr) 20		; store pointer to buffer in array instance
+	insc AllocMem					; allocate buffer
+	stw $ar, ($xr) %FIELD_BUFFER	; store pointer to buffer in array instance
 	
 	; initialize buffer with zeros
 	mov $r0, 0
 	.loop:
-		jle .break			; compare: numBytes <= 0
-		stw $r0, ($ar) 0	; store zero at (*buffer)
-		inc $ar				; buffer++
-		dec $cf				; numBytes--
+		jle .break					; compare: numBytes <= 0
+		stw $r0, ($ar) 0			; store zero at (*buffer)
+		inc $ar						; buffer++
+		dec $cf						; numBytes--
 		jmp .loop
 	.break:
 	ret 1
@@ -1054,24 +1054,24 @@ CBuffer.Pequals,R@Object?rhs:
 ; void Buffer.init(int size, int fill)
 CBuffer.Pinit,I?size,I?fill:
 	; setup size
-	ldw $cf, ($lb) -4			; load size
-	jge .gt_zero				; check: size >= 0
-		mov $cf, 0				; clamp size to 0
+	ldw $cf, ($lb) -4				; load size
+	jge .gt_zero					; check: size >= 0
+		mov $cf, 0					; clamp size to 0
 	.gt_zero:
-	stw $cf, ($xr) 12			; this.size := size
+	stw $cf, ($xr) %FIELD_SIZE		; this.size := size
 	
 	; setup actual buffer size
-	mov $r0, $cf				; set bufSize := size
-	cmp $r0, %MIN_BUFSIZE		; check: bufSize >= MIN_BUFSIZE
+	mov $r0, $cf					; set bufSize := size
+	cmp $r0, %MIN_BUFSIZE			; check: bufSize >= MIN_BUFSIZE
 	jge .gt_min
-		mov $r0, %MIN_BUFSIZE	; clamp bufSize to MIN_BUFSIZE
+		mov $r0, %MIN_BUFSIZE		; clamp bufSize to MIN_BUFSIZE
 	.gt_min:
-	stw $r0, ($xr) 16			; this.bufSize := bufSize
+	stw $r0, ($xr) %FIELD_BUFSIZE	; this.bufSize := bufSize
 	
 	; allocate buffer
 	push $r0
-	insc AllocMem				; allocate buffer
-	stw $ar, ($xr) 20			; store pointer to buffer in array instance
+	insc AllocMem					; allocate buffer
+	stw $ar, ($xr) %FIELD_BUFFER	; store pointer to buffer in array instance
 	
 	; initialize buffer
 	ldw $r1, ($lb) -8			; load fill
@@ -1088,21 +1088,21 @@ CBuffer.Pcopy:
 
 ; int Buffer.size()
 CBuffer.Psize:
-	ldw $ar, ($xr) 12	; load and return this.size
+	ldw $ar, ($xr) %FIELD_SIZE	; load and return this.size
 	ret
 
 ; void Buffer.resize(int size)
 CBuffer.Presize,I?size:
-	ldw $cf, ($lb) -4		; load size
-	jge .else				; check: size >= 0
-		mov $cf, 0			; clamp size to 0
+	ldw $cf, ($lb) -4			; load size
+	jge .else					; check: size >= 0
+		mov $cf, 0				; clamp size to 0
 	.else:
-	mov $tr, $cf			; set tr := size
-	ldw $cf, ($xr) 12		; load this.size
-	cmp $cf, $tr			; compare this.size = size
+	mov $tr, $cf				; set tr := size
+	ldw $cf, ($xr) %FIELD_SIZE	; load this.size
+	cmp $cf, $tr				; compare this.size = size
 	je .end
 		push $tr
-		call resize_buffer	; resize array buffer
+		call resize_buffer		; resize array buffer
 	.end:
 	ret 1
 
