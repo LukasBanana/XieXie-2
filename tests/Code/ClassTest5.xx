@@ -5,10 +5,18 @@
 /// Test for vtable generation
 class Test {
 	
+	static int x
+	int y
+	String name
+	
 	static void main() {}
 	
 	static void test1() {}
-	static void test2() {}
+	static void test2() {
+		for i : 1 .. 10 {
+			Intrinsics.printInt(i)
+		}
+	}
 	
 	void test3(int x) {}
 	int test4(String[] s) { return 0 }
