@@ -42,10 +42,10 @@ class ClassDeclStmnt : public ScopedStmnt
         //! Structure for a class virtual-table (vtable).
         struct Vtable
         {
-            unsigned int Size() const
-            {
-                return static_cast<unsigned int>(procs.size());
-            }
+            //! Returns the size of vtable, i.e. the number of procedures.
+            unsigned int Size() const;
+
+            //! List of all procedures in the vtable.
             std::vector<ProcDeclStmnt*> procs;
         };
 
@@ -56,7 +56,9 @@ class ClassDeclStmnt : public ScopedStmnt
 
         const TypeDenoter* GetTypeDenoter() const override;
 
+        //! Converts the visibility spelling ("public", "protected", or "private") into the respective enumeration entry.
         static Visibilities GetVisibility(const std::string& spell);
+        //! Converts the visibility enumeration entry into the respective spelling.
         static std::string GetVisibilitySpell(const Visibilities vis);
 
         //! Binds the base class reference and the fallback symbol table.

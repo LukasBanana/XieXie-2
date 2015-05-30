@@ -21,6 +21,20 @@ namespace AbstractSyntaxTrees
 {
 
 
+/*
+ * Vtable structure
+ */
+
+unsigned int ClassDeclStmnt::Vtable::Size() const
+{
+    return static_cast<unsigned int>(procs.size());
+}
+
+
+/*
+ * ClassDeclStmnt class
+ */
+
 ClassDeclStmnt::ClassDeclStmnt(const SourceCodePtr& source) :
     source_{ source }
 {
@@ -348,61 +362,62 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
             for (auto attr : procDecl->attribPrefix->FindInvalidAttribs(validAttribs))
                 Error(errorReporter, "invalid attribute '" + attr->ident + "' for procedure \"" + procSig->ident + "\"", attr);
         }
+
+        /* Static procedures are not virtual --> so don't add it to the vtable */
+        if (isStatic)
+            continue;
         
         /* Check if this procedure overrides a procedure from its base class */
         bool hasOverridden = false;
 
-        if (!isStatic)
+        for (unsigned int i = 0; i < setupVtableSize; ++i)
         {
-            for (unsigned int i = 0; i < setupVtableSize; ++i)
+            auto baseProc = vtable_.procs[i];
+            if (ProcSignature::AreSimilar(*(procDecl->procSignature), *(baseProc->procSignature)))
             {
-                auto baseProc = vtable_.procs[i];
-                if (ProcSignature::AreSimilar(*(procDecl->procSignature), *(baseProc->procSignature)))
+                /* Omit attribute check for constructors and destructors */
+                if (!procDecl->procSignature->isCtor && !procDecl->procSignature->isDtor)
                 {
-                    /* Omit attribute check for constructors and destructors */
-                    if (!procDecl->procSignature->isCtor && !procDecl->procSignature->isDtor)
+                    /* Check if procedure can be overridden */
+                    if (baseProc->HasAttribFinal())
                     {
-                        /* Check if procedure can be overridden */
-                        if (baseProc->HasAttribFinal())
-                        {
-                            Error(
-                                errorReporter,
-                                "can not override procedure with 'final' attribute at (" +
-                                baseProc->sourceArea.ToString() + ")", procDecl
-                            );
-                        }
-                        /* Check if procedure should be overridden */
-                        else if (!baseProc->IsAbstract() && !procDecl->HasAttribOverride())
-                        {
-                            Warning(
-                                errorReporter,
-                                "hidden procedure override from its base class at (" +
-                                baseProc->sourceArea.ToString() + ")", procDecl
-                            );
-                        }
-                        /* Check if procedure does not need to be overridden */
-                        else if (baseProc->IsAbstract() && procDecl->HasAttribOverride())
-                        {
-                            Warning(
-                                errorReporter,
-                                "unnecessary override of abstract procedure from its base class at (" +
-                                baseProc->sourceArea.ToString() + ")", procDecl
-                            );
-                        }
+                        Error(
+                            errorReporter,
+                            "can not override procedure with 'final' attribute at (" +
+                            baseProc->sourceArea.ToString() + ")", procDecl
+                        );
                     }
-
-                    /* Override base procedure in vtable */
-                    hasOverridden           = true;
-                    procDecl->vtableOffset  = i;
-                    vtable_.procs[i]        = procDecl;
-                    break;
+                    /* Check if procedure should be overridden */
+                    else if (!baseProc->IsAbstract() && !procDecl->HasAttribOverride())
+                    {
+                        Warning(
+                            errorReporter,
+                            "hidden procedure override from its base class at (" +
+                            baseProc->sourceArea.ToString() + ")", procDecl
+                        );
+                    }
+                    /* Check if procedure does not need to be overridden */
+                    else if (baseProc->IsAbstract() && procDecl->HasAttribOverride())
+                    {
+                        Warning(
+                            errorReporter,
+                            "unnecessary override of abstract procedure from its base class at (" +
+                            baseProc->sourceArea.ToString() + ")", procDecl
+                        );
+                    }
                 }
+
+                /* Override base procedure in vtable */
+                hasOverridden           = true;
+                procDecl->vtableOffset  = i;
+                vtable_.procs[i]        = procDecl;
+                break;
             }
         }
 
         if (!hasOverridden)
         {
-            if (!isStatic && procDecl->HasAttribOverride())
+            if (procDecl->HasAttribOverride())
                 Error(errorReporter, "procedure does not override a procedure from its base class", procDecl);
 
             /* Append new procedure to vtable */

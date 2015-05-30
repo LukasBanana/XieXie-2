@@ -16,6 +16,14 @@ namespace AbstractSyntaxTrees
 {
 
 
+/**
+Procedure signature AST node class.
+\code
+// Grammar
+proc_signature:     storage_modifier? return_type_denoter IDENT '(' param_list? ')';
+storage_modifier:   'static';
+\endcode
+*/
 class ProcSignature : public AST
 {
     
