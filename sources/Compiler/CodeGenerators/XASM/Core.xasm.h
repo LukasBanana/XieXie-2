@@ -61,7 +61,7 @@
 "jg .end\n"
 "ret 3\n"
 ".end:\n"
-"mov $ar, 0\n"
+"mov $ar, %NULL\n"
 "ret 3\n"
 "resize_buffer:\n"
 "ldw $r0, ($lb) -4\n"

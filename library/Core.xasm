@@ -116,7 +116,7 @@ dynamic_cast:
 			
 	; class-cast exception
 	.end:
-	mov $ar, 0				; return null pointer
+	mov $ar, %NULL			; return null pointer
 	ret 3
 
 ; void resize_buffer({Object this} int size)
