@@ -1316,6 +1316,103 @@ int xvm_import_address_free(xvm_import_address* import_address)
 }
 
 
+/* ----- Runtime Debugging ----- */
+
+#ifdef _ENABLE_RUNTIME_DEBUGGER_
+
+static int _xvm_debug_info_init(xvm_debug_info* debug_info)
+{
+    if (debug_info != NULL)
+    {
+        // Initialize debug information data
+        debug_info->flags                   = 0;
+        
+        debug_info->num_source_filenames    = 0;
+        debug_info->source_filenames        = NULL;
+
+        debug_info->num_break_points        = 0;
+        debug_info->break_points            = NULL;
+
+        debug_info->debug_instructions      = NULL;
+
+        return 1;
+    }
+    return 0;
+}
+
+static int _xvm_debug_info_free(xvm_debug_info* debug_info)
+{
+    if (debug_info != NULL)
+    {
+        if (debug_info->source_filenames != NULL)
+        {
+            // Free source filename list
+            XVM_FREE(debug_info->source_filenames);
+            debug_info->source_filenames        = NULL;
+            debug_info->num_source_filenames    = 0;
+        }
+
+        if (debug_info->break_points != NULL)
+        {
+            // Free break points list
+            XVM_FREE(debug_info->break_points);
+            debug_info->break_points        = NULL;
+            debug_info->num_break_points    = 0;
+        }
+
+        if (debug_info->debug_instructions != NULL)
+        {
+            // Free debug instruction list
+            XVM_FREE(debug_info->debug_instructions);
+            debug_info->debug_instructions = NULL;
+        }
+
+        return 1;
+    }
+    return 0;
+}
+
+int xvm_debug_info_create_break_points(xvm_debug_info* debug_info, unsigned int num_break_points)
+{
+    if (debug_info != NULL)
+    {
+        // Free previous break points
+        if (debug_info->break_points != NULL)
+            XVM_FREE(debug_info->break_points);
+
+        if (num_break_points > 0)
+        {
+            // Allocate new break points
+            debug_info->num_break_points    = num_break_points;
+            debug_info->break_points        = (unsigned int*)XVM_MALLOC(sizeof(unsigned int)*num_break_points);
+        }
+        else
+        {
+            // Reset break points
+            debug_info->num_break_points    = 0;
+            debug_info->break_points        = NULL;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+int xvm_debug_info_has_break_point(const xvm_debug_info* debug_info, unsigned int break_point)
+{
+    if (debug_info != NULL)
+    {
+        for (unsigned int i = 0; i < debug_info->num_break_points; ++i)
+        {
+            if (debug_info->break_points[i] == break_point)
+                return 1;
+        }
+    }
+    return 0;
+}
+
+#endif
+
+
 /* ----- Byte Code ----- */
 
 int xvm_bytecode_init(xvm_bytecode* byte_code)
@@ -1338,6 +1435,11 @@ int xvm_bytecode_init(xvm_bytecode* byte_code)
 
         byte_code->num_module_names     = 0;
         byte_code->module_names         = NULL;
+        
+        #ifdef _ENABLE_RUNTIME_DEBUGGER_
+        _xvm_debug_info_init(&(byte_code->debug_info));
+        #endif
+
         return 1;
     }
     return 0;
@@ -1537,6 +1639,11 @@ int xvm_bytecode_free(xvm_bytecode* byte_code)
             byte_code->module_names     = NULL;
             byte_code->num_module_names = 0;
         }
+        
+        #ifdef _ENABLE_RUNTIME_DEBUGGER_
+        _xvm_debug_info_free(&(byte_code->debug_info));
+        #endif
+
         return 1;
     }
     return 0;
@@ -1586,27 +1693,35 @@ int xvm_bytecode_datafield_ascii(instr_t* instr_ptr, const char* text, size_t* n
 /*
 
 WORD: 32-bit unsigned integer
-STR:
+STRING:
     WORD:           length
     Byte[length]:   data
 
---- XBC file format spec (Version 1.34): ---
+--- XBC file format spec (Version 1.35): ---
 
 WORD: magic number (Must be *(int*)"XBCF")
-WORD: version number (Must be 134 for "1.34")
+WORD: version number (Must be 135 for "1.35")
 WORD: number of instructions (n1)
 n1 times:
     WORD: instruction
-WORD: number of export addresses (n2)
-n2 times:
-    WORD: address
-    STR: name
-WORD: number of invoke identifiers (n3)
+WORD: has debug info? (1 = true, 0 = false)
+if has debug info:
+    WORD: number of source filenames (n2)
+    n2 times:
+        STRING: filename
+    n1 times:
+        WORD: filename index
+        WORD: source line
+WORD: number of export addresses (n3)
 n3 times:
-    STR: identifier
-WORD: number of module names (n4)
+    WORD: address
+    STRING: name
+WORD: number of invoke identifiers (n4)
 n4 times:
-    STR: name
+    STRING: identifier
+WORD: number of module names (n5)
+n5 times:
+    STRING: name
 
 */
 
@@ -1773,6 +1888,36 @@ int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filena
     xvm_file_write_uint(file, num_instr);
 
     fwrite(byte_code->instructions, sizeof(instr_t), num_instr, file);
+
+    // Write debug instructions
+    if (version >= XBC_FORMAT_VERSION_1_35)
+    {
+        #ifdef _ENABLE_RUNTIME_DEBUGGER_
+        
+        if (byte_code->debug_info.flags != 0)
+        {
+            // Write enable-flag
+            xvm_file_write_uint(file, byte_code->debug_info.flags);
+
+            // Write source filenames
+            unsigned int num_sources = byte_code->debug_info.num_source_filenames;
+            xvm_file_write_uint(file, num_sources);
+
+            for (unsigned int i = 0; i < num_sources; ++i)
+                xvm_string_write_to_file(byte_code->debug_info.source_filenames[i], file);
+
+            // Write debug instructions
+            fwrite(byte_code->debug_info.debug_instructions, sizeof(xvm_debug_info_instruction), num_instr, file);
+        }
+        else
+        
+        #endif
+
+        {
+            // Write disable-flag
+            xvm_file_write_uint(file, 0);
+        }
+    }
 
     // Write export addresses
     if (version >= XBC_FORMAT_VERSION_1_32)

@@ -546,24 +546,40 @@ int xvm_import_address_free(xvm_import_address* import_address);
 
 #ifdef _ENABLE_RUNTIME_DEBUGGER_
 
+#define XVM_DEBUG_FLAG_ENABLED (1 << 0) //!< Enables the debug information.
+
 //! XVM debug information instruction structure.
 typedef struct
 {
-    unsigned int source_index;  //!< Index to 'xvm_debug_info.source_filenames'.
-    unsigned int source_line;   //!< Line number inside a source file.
+    unsigned int filename_index;    //!< Index to 'xvm_debug_info.source_filenames'.
+    unsigned int source_line;       //!< Line number inside a source file.
 }
 xvm_debug_info_instruction;
 
 //! XVM debug information structure.
 typedef struct
 {
+    unsigned int                flags;                  //!< Specifies the debug flags. Must be a bitwise combination of 'XVM_DEBUG_FLAG_...' values.
     unsigned int                num_source_filenames;   //!< Number of source filenames. By default 0.
     xvm_string*                 source_filenames;       //!< Array of source filenames. By default NULL.
     unsigned int                num_break_points;       //!< Number of break points. By default 0.
     unsigned int*               break_points;           //!< Break point indices. By default NULL.
-    xvm_debug_info_instruction* debug_instructions;     //!< Debug instructions (must be as many as 'xvm_bytecode.instruction'). By default NULL.
+    xvm_debug_info_instruction* debug_instructions;     //!< Debug instructions (must be as many as 'xvm_bytecode.instructions'). By default NULL.
 }
 xvm_debug_info;
+
+/**
+Allocates memory for the specified amount of break points.
+\param[in,out] debug_info Pointer to the debug information object.
+\param[in] num_break_points Specifies the number of break points
+to allocate for the debug information. This may also be zero.
+\remarks This function can be called multiple times consecutively.
+\note All break points are uninitialized!
+*/
+int xvm_debug_info_create_break_points(xvm_debug_info* debug_info, unsigned int num_break_points);
+
+//! Returns non-zero if the specifid break point is contained inside the debug information, otherwise zero.
+int xvm_debug_info_has_break_point(const xvm_debug_info* debug_info, unsigned int break_point);
 
 #endif
 
@@ -710,12 +726,13 @@ xvm_bytecode_datafield_ascii(byte_code.instructions + current_instr_offset, "Hel
 */
 int xvm_bytecode_datafield_ascii(instr_t* instr_ptr, const char* text, size_t* num_instructions);
 
-#define XBC_FORMAT_MAGIC            (*((int*)("XBCF")))
-#define XBC_FORMAT_VERSION_1_31     131
-#define XBC_FORMAT_VERSION_1_32     132
-#define XBC_FORMAT_VERSION_1_33     133
-#define XBC_FORMAT_VERSION_1_34     134
-#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_34
+#define XBC_FORMAT_MAGIC            (*((int*)("XBCF")))     //!< XBC file format magic number.
+#define XBC_FORMAT_VERSION_1_31     131                     //!< XBC file format version 1.31
+#define XBC_FORMAT_VERSION_1_32     132                     //!< XBC file format version 1.32
+#define XBC_FORMAT_VERSION_1_33     133                     //!< XBC file format version 1.33
+#define XBC_FORMAT_VERSION_1_34     134                     //!< XBC file format version 1.34
+#define XBC_FORMAT_VERSION_1_35     135                     //!< XBC file format version 1.35 (appends debug information).
+#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_35 //!< Latest XBC file format version.
 
 /**
 Reads a byte code form file.
@@ -730,7 +747,12 @@ Writes the specified byte code to file.
 \param[in] byte_code specifies the byte code which is to be written to file.
 \param[in] filename Specifies the filename which is to be used to create the file.
 \param[in] version Specifies the format version. Must be one of the following values:
-XBC_FORMAT_VERSION_1_11, XBC_FORMAT_VERSION_1_12, XBC_FORMAT_VERSION_1_13, or XBC_FORMAT_VERSION_LATEST.
+- XBC_FORMAT_VERSION_1_31
+- XBC_FORMAT_VERSION_1_32
+- XBC_FORMAT_VERSION_1_33
+- XBC_FORMAT_VERSION_1_34
+- XBC_FORMAT_VERSION_1_35
+- XBC_FORMAT_VERSION_LATEST.
 \return Zero on failure and non-zero otherwise.
 */
 int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filename, unsigned int version);
