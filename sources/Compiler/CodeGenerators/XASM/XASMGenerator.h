@@ -83,6 +83,11 @@ class XASMGenerator final : public AsmGenerator, private RegisterAllocator::Call
         //! Writes the assembly file header.
         void WriteHeader();
 
+        /* --- Instruction writing --- */
+
+        //! Writes a 'RET' instruction.
+        void WriteInstRET(unsigned int numParams = 0);
+
         /* --- Conversion --- */
 
         /**

@@ -861,10 +861,6 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
     /* Create procedure CFG */
     auto root = CT()->CreateRootBasicBlock(*ast, procDisplay);
 
-    #if 0//!!!DEBUGGING!!!
-    root->MakeInst<TACModifyInst>(OpCodes::ADD, TACVar::varStackPtr, TACVar::varStackPtr, "100");
-    #endif
-
     /* Register CFG root in procedure reference map */
     program_->procedures.Register(procSig.label, root);
 
@@ -884,21 +880,8 @@ DEF_VISIT_PROC(GraphGenerator, ProcDeclStmnt)
         root->AddSucc(*graph.in);
 
     /* Verify procedure return statements */
-    if (procSig.returnTypeDenoter->IsVoid())
-    {
-        /* Insert return statement if there is none */
-        if (graph.out && !graph.out->flags(BasicBlock::Flags::HasReturnStmnt))
-        {
-            auto bb = MakeBlock();
-            bb->MakeInst<TACReturnInst>(numProcParams_);
-            graph.out->AddSucc(*bb, "Return");
-        }
-    }
-    else
-    {
-        if (!root->VerifyProcReturn())
-            Error("not all execution paths in \"" + procSig.ident + "\" end with a valid procedure return", ast);
-    }
+    if (!procSig.returnTypeDenoter->IsVoid() && !root->VerifyProcReturn())
+        Error("not all execution paths in \"" + procSig.ident + "\" end with a valid procedure return", ast);
     
     /* Add instruction to allocate enough space on local stack */
     auto localStackSize = varMngr_.LocalStackSize();

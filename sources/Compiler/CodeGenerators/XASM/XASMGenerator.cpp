@@ -148,6 +148,19 @@ void XASMGenerator::WriteHeader()
     Blank();
 }
 
+/* --- Instruction writing --- */
+
+void XASMGenerator::WriteInstRET(unsigned int numParams)
+{
+    StartLn();
+    {
+        Ln("ret");
+        if (numParams > 0)
+            Ln(' ' + std::to_string(numParams));
+    }
+    EndLn();
+}
+
 /* --- Conversion --- */
 
 std::string XASMGenerator::ResolveStringLiteral(const std::string& str) const
@@ -684,6 +697,7 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& proc
     GlobalLabel(label);
     IncIndent();
     {
+        /* Collect basic blocks in depth-first-search order */
         CFGTopDownCollector collector;
         basicBlocks_ = collector.CollectOrderedCFG(cfg);
 
@@ -693,16 +707,32 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& proc
             bb->id = id++;
 
         /* Generate code for each block */
+        bool hasFinalRET = false;
+
         for (auto it = basicBlocks_.begin(), itNext = it; it != basicBlocks_.end(); it = itNext)
         {
+            /* Store information about next block, to avoid unnecessary jump instructions */
             ++itNext;
 
             currentBlock_   = it;
             nextBlock_      = (itNext != basicBlocks_.end() ? *itNext : nullptr);
 
+            /* Generate instructions for current block */
             GenerateBlock(*BB());
+
+            /* Check for final 'RET' instruction */
+            auto& insts = (*currentBlock_)->insts;
+            if (!insts.empty())
+            {
+                auto& lastInst = *insts.back();
+                hasFinalRET = (lastInst.Type() == TACInst::Types::Return);
+            }
         }
         nextBlock_ = nullptr;
+
+        /* Check if a final 'RET' instruction must be added */
+        if (!hasFinalRET)
+            WriteInstRET(static_cast<unsigned int>(procSig.params.size()));
     }
     DecIndent();
 }
@@ -863,13 +893,7 @@ void XASMGenerator::GenerateReturnInst(const TACReturnInst& inst)
     if (inst.hasVar)
         Line("mov $ar, " + Reg(inst.src, ValueInRangeAlways));
 
-    StartLn();
-    {
-        Ln("ret");
-        if (inst.numProcParams > 0)
-            Ln(' ' + std::to_string(inst.numProcParams));
-    }
-    EndLn();
+    WriteInstRET(inst.numProcParams);
 }
 
 void XASMGenerator::GenerateDirectCallInst(const TACDirectCallInst& inst)
