@@ -404,6 +404,7 @@ Assembler::Token Assembler::NextToken()
         case ')': return std::move(MakeToken( Token::Types::RBracket,   true ));
         case '@': return std::move(MakeToken( Token::Types::At,         true ));
         case '*': return std::move(MakeToken( Token::Types::Pointer,    true ));
+        case '%': return std::move(MakeToken( Token::Types::Percent,    true ));
     }
 
     /* Error -> unknwon character */
@@ -486,6 +487,8 @@ Assembler::Token Assembler::ScanIdentifier()
         return std::move(Token(Token::Types::Pragma, spell));
     if (spell == ".module")
         return std::move(Token(Token::Types::Module, spell));
+    if (spell == ".define")
+        return std::move(Token(Token::Types::Define, spell));
 
     /* Check for mnemonics */
     auto it = mnemonicTable_.find(spell);
@@ -658,6 +661,9 @@ void Assembler::ParseLine()
         case Token::Types::Module:
             ParseModuleField();
             break;
+        case Token::Types::Define:
+            ParseDefineField();
+            break;
         default:
             ErrorUnexpectedToken();
             break;
@@ -728,6 +734,21 @@ void Assembler::ParseModuleField()
 {
     Accept(Token::Types::Module);
     byteCode_->AddModuleName(ParseStringLiteral());
+}
+
+void Assembler::ParseDefineField()
+{
+    /* Parse '.define' field */
+    Accept(Token::Types::Define);
+    auto name = Accept(Token::Types::Ident).spell;
+    auto value = ParseIntLiteral();
+
+    /* Check if macro already exists */
+    if (definedMacros_.find(name) != definedMacros_.end())
+        Error("macro \"" + name + "\" already defined");
+
+    /* Append macro */
+    definedMacros_[name] = value;
 }
 
 void Assembler::ParseDataField()
@@ -1086,6 +1107,8 @@ int Assembler::ParseOperand(bool isDataField)
             return ParseGlobalAddress(isDataField);
         case Token::Types::Pointer:
             return ParseAddressPointer(isDataField);
+        case Token::Types::Percent:
+            return ParseMacro();
         default:
             ErrorUnexpectedToken("expected operand");
             break;
@@ -1153,6 +1176,21 @@ int Assembler::ParseAddressPointer(bool isDataField)
     Accept(Token::Types::Pointer);
     auto label = ParseIdent();
     return AddressValue(label, BackPatchAddr::InstrUse::Types::Pointer, isDataField);
+}
+
+int Assembler::ParseMacro()
+{
+    /* Parse macro name */
+    Accept(Token::Types::Percent);
+    auto ident = ParseIdent();
+
+    /* Find macro in map */
+    auto it = definedMacros_.find(ident);
+    if (it == definedMacros_.end())
+        Error("undefined macro \"" + ident + "\"");
+
+    /* Return macro value */
+    return it->second;
 }
 
 std::pair<std::string, unsigned int> Assembler::ParseExportAddress()

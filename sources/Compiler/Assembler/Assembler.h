@@ -107,11 +107,13 @@ class Assembler
                 RBracket,       //!< ')'
                 At,             //!< '@'
                 Pointer,        //!< '*'
+                Percent,        //!< '%'
                 Data,           //!< ( '.ascii' | '.word' | '.float' )
                 Export,         //!< '.export'
                 Import,         //!< '.import'
                 Pragma,         //!< '.pragma'
                 Module,         //!< '.module'
+                Define,         //!< '.define'
                 Mnemonic,       //!< ( 'mov' | 'call' | ... )
             };
 
@@ -200,6 +202,9 @@ class Assembler
         Token ScanIdentifier();
         Token ScanNumber();
         Token ScanRegister();
+        Token ScanMacro();
+
+        std::string ScanIdentifierSpell();
 
         /* ------- Parser ------- */
 
@@ -215,6 +220,7 @@ class Assembler
         void ParseImportField();
         void ParsePragmaField();
         void ParseModuleField();
+        void ParseDefineField();
 
         void ParseDataField();
         void ParseDataFieldWord();
@@ -248,6 +254,7 @@ class Assembler
         int ParseLocalAddress(bool isDataField);
         int ParseGlobalAddress(bool isDataField);
         int ParseAddressPointer(bool isDataField);
+        int ParseMacro();
         std::pair<std::string, unsigned int> ParseExportAddress();
         unsigned int ParseIntrinsicID();
 
@@ -273,37 +280,40 @@ class Assembler
 
         /* === Members === */
 
-        std::string                             line_;                  //!< Current source line.
-        std::string::iterator                   lineIt_;                //!< Source line iterator.
+        std::string                                 line_;                  //!< Current source line.
+        std::string::iterator                       lineIt_;                //!< Source line iterator.
 
-        char                                    chr_                = 0;
-        Token                                   tkn_;
+        char                                        chr_                = 0;
+        Token                                       tkn_;
 
-        SyntaxAnalyzer::SourceArea              sourceArea_;
+        SyntaxAnalyzer::SourceArea                  sourceArea_;
 
         // (Can not be unique_ptr because of unknown type)
-        VirtualMachine::ByteCodePtr             byteCode_;
-        VirtualMachine::IntrinsicsPtr           intrinsics_;
+        VirtualMachine::ByteCodePtr                 byteCode_;
+        VirtualMachine::IntrinsicsPtr               intrinsics_;
 
         /**
         Parent label will be pre-appended to all sub labels
         (e.g. parent is "Main", sub label is ".end" -> ".Main.end").
         */
-        std::string                             globalLabel_;
+        std::string                                 globalLabel_;
 
         //! [ label name | instruction index ].
-        std::map<std::string, size_t>           labelAddresses_;
+        std::map<std::string, size_t>               labelAddresses_;
         //! [ label name | back patch address ].
-        std::map<std::string, BackPatchAddr>    backPatchAddresses_;
+        std::map<std::string, BackPatchAddr>        backPatchAddresses_;
+
+        //! [ macro name | value ].
+        std::map<std::string, int>                  definedMacros_;
 
         //! Only used if '.init(export)' was defined.
-        Pragma                                  pragma_;
+        Pragma                                      pragma_;
         std::vector<std::pair<std::string, size_t>> globalAddresses_;
 
-        std::map<std::string, InstrCategory>    mnemonicTable_;
+        std::map<std::string, InstrCategory>        mnemonicTable_;
 
-        unsigned int                            invokeIDCounter_    = 0;
-        std::map<std::string, unsigned int>     invokeIdents_;
+        unsigned int                                invokeIDCounter_    = 0;
+        std::map<std::string, unsigned int>         invokeIdents_;
 
 };
 
