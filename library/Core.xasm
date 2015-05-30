@@ -8,6 +8,9 @@
 ; Export all global addresses
 ;.pragma("export all")
 
+; Minimal buffer size (in bytes)
+.define MIN_BUFSIZE 64
+
 ; ------- Common -------
 
 ; void exit(void)
@@ -375,9 +378,9 @@ CString.Pinit,I?char,I?count:
 	; setup string buffer size
 	add $r2, $r1, 1			; set this.size := count + 1
 	cmp $r2, 16
-	jge .size_g64			; compare this.size >= 16
+	jge .size_g16			; compare this.size >= 16
 		mov $r2, 16
-	.size_g64:
+	.size_g16:
 	stw $r2, ($xr) 12		; store this.size
 	stw $r2, ($xr) 16		; store this.bufSize
 	
@@ -704,13 +707,13 @@ CBuffer.Pinit:
 	mov $r0, 0
 	stw $r0, ($xr) 12
 	
-	; initialize buffer with 64 bytes
-	mov $r1, 64
+	; initialize buffer with MIN_BUFSIZE bytes
+	mov $r1, %MIN_BUFSIZE
 	stw $r1, ($xr) 16
 	
 	; allocate buffer
-	push 64
-	insc AllocMem		; allocate 64 bytes
+	push %MIN_BUFSIZE
+	insc AllocMem		; allocate MIN_BUFSIZE bytes
 	stw $ar, ($xr) 20	; store pointer to buffer in array instance
 	ret
 
@@ -719,27 +722,27 @@ CArray.Pinit,I?size:
 CIntArray.Pinit,I?size:
 CFloatArray.Pinit,I?size:
 	; this.size := size
-	ldw $r0, ($lb) -4	; load size
-	sll $r0, $r0, 2		; set this.size := size * 4
-	stw $r0, ($xr) 12	; store this.size
+	ldw $r0, ($lb) -4			; load size
+	sll $r0, $r0, 2				; set this.size := size * 4
+	stw $r0, ($xr) 12			; store this.size
 	
-	; initialize buffer with at least 64 bytes
-	cmp $r0, 64			; compare size >= 64
-	jge .false
-		mov $r0, 64		; clamp this.bufSize to 64
-	.false:
-	stw $r0, ($xr) 16	; store this.bufSize
+	; initialize buffer with at least MIN_BUFSIZE bytes
+	cmp $r0, %MIN_BUFSIZE		; compare size >= MIN_BUFSIZE
+	jge .gt_min
+		mov $r0, %MIN_BUFSIZE	; clamp this.bufSize to MIN_BUFSIZE
+	.gt_min:
+	stw $r0, ($xr) 16			; store this.bufSize
 	
 	; allocate buffer
 	push $r0
-	insc AllocMem		; allocate 64 bytes
-	stw $ar, ($xr) 20	; store pointer to buffer in array instance
+	insc AllocMem				; allocate MIN_BUFSIZE bytes
+	stw $ar, ($xr) 20			; store pointer to buffer in array instance
 	
 	; initialize buffer
-	push 0				; push fill
-	push $r0			; push bufSize
-	push $ar			; push buffer
-	insc FillMem		; call FillMem(buffer, bufSize, 0)
+	push 0						; push fill
+	push $r0					; push bufSize
+	push $ar					; push buffer
+	insc FillMem				; call FillMem(buffer, bufSize, 0)
 	
 	ret 1
 
@@ -1039,31 +1042,31 @@ CBuffer.Pequals,R@Object?rhs:
 ; void Buffer.init(int size, int fill)
 CBuffer.Pinit,I?size,I?fill:
 	; setup size
-	ldw $cf, ($lb) -4	; load size
-	jge .gt_zero		; check: size >= 0
-		mov $cf, 0		; clamp size to 0
+	ldw $cf, ($lb) -4			; load size
+	jge .gt_zero				; check: size >= 0
+		mov $cf, 0				; clamp size to 0
 	.gt_zero:
-	stw $cf, ($xr) 12	; this.size := size
+	stw $cf, ($xr) 12			; this.size := size
 	
 	; setup actual buffer size
-	mov $r0, $cf		; set bufSize := size
-	cmp $r0, 64			; check: bufSize >= 64
-	jge .gt_64
-		mov $r0, 64		; clamp bufSize to 64
-	.gt_64:
-	stw $r0, ($xr) 16	; this.bufSize := bufSize
+	mov $r0, $cf				; set bufSize := size
+	cmp $r0, %MIN_BUFSIZE		; check: bufSize >= MIN_BUFSIZE
+	jge .gt_min
+		mov $r0, %MIN_BUFSIZE	; clamp bufSize to MIN_BUFSIZE
+	.gt_min:
+	stw $r0, ($xr) 16			; this.bufSize := bufSize
 	
 	; allocate buffer
 	push $r0
-	insc AllocMem		; allocate buffer
-	stw $ar, ($xr) 20	; store pointer to buffer in array instance
+	insc AllocMem				; allocate buffer
+	stw $ar, ($xr) 20			; store pointer to buffer in array instance
 	
 	; initialize buffer
-	ldw $r1, ($lb) -8	; load fill
-	push $r1			; push fill
-	push $r0			; push bufSize
-	push $ar			; push buffer
-	insc FillMem		; call FillMem(buffer, bufSize, fill)
+	ldw $r1, ($lb) -8			; load fill
+	push $r1					; push fill
+	push $r0					; push bufSize
+	push $ar					; push buffer
+	insc FillMem				; call FillMem(buffer, bufSize, fill)
 	ret 2
 
 ; Buffer Buffer.copy()
