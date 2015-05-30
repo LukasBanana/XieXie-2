@@ -8,8 +8,20 @@
 ; Export all global addresses
 ;.pragma("export all")
 
-; Minimal buffer size (in bytes)
-.define MIN_BUFSIZE 64
+.define TRUE			1	; True boolean value
+.define FALSE			0	; False boolean value
+
+.define NULL			0	; Null pointer value
+
+.define FIELD_REFCOUNT	0	; Class field "refCount"
+.define FIELD_TYPEID	4	; Class field "typeID"
+.define FIELD_VTABLE	8	; Class field "vtableAddr"
+
+.define FIELD_SIZE		12	; Class field "size"
+.define FIELD_BUFSIZE	16	; Class field "bufSize"
+.define FIELD_BUFFER	20	; Class field "buffer"
+
+.define MIN_BUFSIZE		64	; Minimal buffer size (in bytes)
 
 ; ------- Common -------
 
@@ -212,37 +224,37 @@ CObject.Pinit:
 
 ; int Object.refCount()
 CObject.PrefCount:
-	ldw $ar, ($xr) 0	; load and return reference counter of 'this'
+	ldw $ar, ($xr) %FIELD_REFCOUNT	; load and return reference counter of 'this'
 	ret
 
 ; int Object.typeID()
 CObject.PtypeID:
-	ldw $ar, ($xr) 4	; load and return type-id of 'this'
+	ldw $ar, ($xr) %FIELD_TYPEID	; load and return type-id of 'this'
 	ret
 
 ; bool Object.equals(Object rhs)
 CObject.Pequals,R@Object?rhs:
 	; check for null pointer
-	ldw $cf, ($lb) -4	; load object reference 'rhs' and compare: rhs = null
+	ldw $cf, ($lb) -4				; load object reference 'rhs' and compare: rhs = null
 	je .false
 	
 	; load type ids
-	ldw $r0, ($xr) 4	; load type-id of 'this'
-	ldw $r1, ($cf) 4	; load type-id of 'rhs'
+	ldw $r0, ($xr) %FIELD_TYPEID	; load type-id of 'this'
+	ldw $r1, ($cf) %FIELD_TYPEID	; load type-id of 'rhs'
 	
 	; check: this.typeID = rhs.typeID
-	cmp $r0, $r1		; compare type-id of both object references
+	cmp $r0, $r1					; compare type-id of both object references
 	jne .false
-		mov $ar, 1		; return true
+		mov $ar, %TRUE				; return true
 		ret 1
 	.false:
-	mov $ar, 0			; return false
+	mov $ar, %FALSE					; return false
 	ret 1
 
 ; TODO: currently returns null pointer !!!
 ; String Object.toString()
 CObject.PtoString:
-	mov $ar, 0	; return null pointer
+	mov $ar, %NULL	; return null pointer
 	ret
 
 ; int Object.pointer()
@@ -271,9 +283,9 @@ Object.vtable:
 ; void String.release()
 CString.Prelease:
 	; free string buffer
-	ldw $r0, ($xr) 20	; load pointer to string buffer
+	ldw $r0, ($xr) %FIELD_BUFFER	; load pointer to string buffer
 	push $r0
-	insc FreeMem		; delete string buffer
+	insc FreeMem					; delete string buffer
 	ret
 
 ; void String.init()
@@ -282,17 +294,17 @@ CString.Pinit:
 	mov $r0, 1
 	stw $r0, ($xr) 12
 	
-	; initialize string buffer of 16 bytes
-	mov $r1, 16
-	stw $r1, ($xr) 16
+	; initialize string buffer of MIN_BUFSIZE bytes
+	mov $r1, %MIN_BUFSIZE
+	stw $r1, ($xr) %MIN_BUFSIZE
 	
 	; allocate string buffer
-	push 16
-	insc AllocMem		; allocate 16 bytes
-	stw $ar, ($xr) 20	; store pointer to buffer in string instance
+	push %MIN_BUFSIZE
+	insc AllocMem					; allocate MIN_BUFSIZE bytes
+	stw $ar, ($xr) %FIELD_BUFFER	; store pointer to buffer in string instance
 	
 	; initialize string buffer with null terminator
-	stw $r0, ($ar) 0	; this.pointer[0] := 0
+	stw $r0, ($ar) 0				; this.pointer[0] := 0
 	ret
 
 ; bool String.equals(Object rhs)
@@ -303,45 +315,45 @@ CString.Pequals,R@Object?rhs:
 	
 	; compare type-id of both object references
 	mov $tr, $cf
-	ldw $r0, ($xr) 4		; load type-id of 'this'
-	ldw $r1, ($tr) 4		; load type-id of 'rhs'
-	cmp $r0, $r1			; check: this.typeID != rhs.typeID	
+	ldw $r0, ($xr) %FIELD_TYPEID	; load type-id of 'this'
+	ldw $r1, ($tr) %FIELD_TYPEID	; load type-id of 'rhs'
+	cmp $r0, $r1					; check: this.typeID != rhs.typeID	
 	jne .false
 	
 	; compare size of both object references
-	ldw $r0, ($xr) 12		; load this.size
-	ldw $r1, ($tr) 12		; load rhs.size
-	cmp $r0, $r1			; check: this.size != rhs.size
+	ldw $r0, ($xr) %FIELD_SIZE		; load this.size
+	ldw $r1, ($tr) %FIELD_SIZE		; load rhs.size
+	cmp $r0, $r1					; check: this.size != rhs.size
 	jne .false
 	
 	; compare characters of both string
-	ldw $r2, ($xr) 20		; set ptrA := this.buffer
-	ldw $r3, ($tr) 20		; set ptrB := rhs.buffer
+	ldw $r2, ($xr) %FIELD_BUFFER	; set ptrA := this.buffer
+	ldw $r3, ($tr) %FIELD_BUFFER	; set ptrB := rhs.buffer
 	.loop:
 		; loop break condition
 		mov $cf, $r0
-		jle .break			; check if size <= 0
+		jle .break					; check if size <= 0
 		
 		; compare current two characters on equality
-		ldw $r4, ($r2) 0	; chrA := load ptrA[i]
-		ldw $r5, ($r3) 0	; chrB := load ptrB[i]
-		cmp $r4, $r5		; check chrA != chrB
+		ldw $r4, ($r2) 0			; chrA := load ptrA[i]
+		ldw $r5, ($r3) 0			; chrB := load ptrB[i]
+		cmp $r4, $r5				; check chrA != chrB
 		jne .false
 		
 		; next iteration
-		inc $r2				; ptrA++
-		inc $r3				; ptrB++
-		dec $r0				; size--
+		inc $r2						; ptrA++
+		inc $r3						; ptrB++
+		dec $r0						; size--
 		jmp .loop
 	.break:
 	
 	; return true
-	mov $ar, 1
+	mov $ar, %TRUE
 	ret 1
 	
 	; return false
 	.false:
-	mov $ar, 0
+	mov $ar, %FALSE
 	ret 1
 
 ; void String.init(int size)
@@ -355,18 +367,18 @@ CString.Pinit,I?size:
 ; void String.init(int char, int count)
 CString.Pinit,I?char,I?count:
 	; load arguments
-	ldw $r0, ($lb) -4		; load char
-	ldw $r1, ($lb) -8		; load count
+	ldw $r0, ($lb) -4				; load char
+	ldw $r1, ($lb) -8				; load count
 	
 	; clamp char to [0 .. 127]
 	mov $cf, $r0
-	jge .char_gz			; compare char >= 0
-		mov $r0, 0			; set: char := 0
+	jge .char_gz					; compare char >= 0
+		mov $r0, 0					; set: char := 0
 		jmp .clamped_char
 	.char_gz:
 	cmp $r0, 127
-	jle .clamped_char		; compare char <= 127
-		mov $r0, 0			; set: char := 0 (out of range always to zero!)
+	jle .clamped_char				; compare char <= 127
+		mov $r0, 0					; set: char := 0 (out of range always to zero!)
 	.clamped_char:
 	
 	; clamp count to 0+
@@ -376,57 +388,57 @@ CString.Pinit,I?char,I?count:
 	.clamped_count:
 	
 	; setup string buffer size
-	add $r2, $r1, 1			; set this.size := count + 1
-	cmp $r2, 16
-	jge .size_g16			; compare this.size >= 16
-		mov $r2, 16
-	.size_g16:
-	stw $r2, ($xr) 12		; store this.size
-	stw $r2, ($xr) 16		; store this.bufSize
+	add $r2, $r1, 1					; set this.size := count + 1
+	cmp $r2, %MIN_BUFSIZE
+	jge .gt_min						; compare this.size >= 16
+		mov $r2, %MIN_BUFSIZE
+	.gt_min:
+	stw $r1, ($xr) %FIELD_SIZE		; store this.size
+	stw $r2, ($xr) %FIELD_BUFSIZE	; store this.bufSize
 	
 	; allocate string buffer
 	push $r2
-	insc AllocMem			; allocate 16 bytes
-	mov $r3, $ar			; store buffer
-	stw $r3, ($xr) 20		; store this.buffer
+	insc AllocMem					; allocate 16 bytes
+	mov $r3, $ar					; store buffer
+	stw $r3, ($xr) %FIELD_BUFFER	; store this.buffer
 	
 	; initialize string buffer with characters
 	.loop:
 		mov $cf, $r1
-		jge .end			; compare count >= 0
-		stb $r0, ($r3) 0	; store *buffer := char
-		inc $r3				; buffer++
-		dec $r1				; count--
+		jge .end					; compare count >= 0
+		stb $r0, ($r3) 0			; store *buffer := char
+		inc $r3						; buffer++
+		dec $r1						; count--
 		jmp .loop
 	.end:
 	
 	; store null terminator
-	mov $tr, 0				; tmp := 0
-	stw $tr, ($r3) 0		; this.buffer[this.size] := tmp
+	mov $tr, 0						; tmp := 0
+	stw $tr, ($r3) 0				; this.buffer[this.size] := tmp
 	
 	ret 2
 
 ; void String.init(String source)
 CString.Pinit,R@String?source:
 	; copy first 20 bytes from literal
-	ldw $r0, ($lb) -4	; load address of string literal
-	push 20				; push size of 20 bytes (excluding the '.buffer' address)
-	push $r0			; push source address of original string literal
-	push $xr			; push this pointer as destination address
+	ldw $r0, ($lb) -4				; load address of string literal
+	push 20							; push size of 20 bytes (excluding the '.buffer' address)
+	push $r0						; push source address of original string literal
+	push $xr						; push this pointer as destination address
 	insc CopyMem
 	
 	; allocate buffer for new string
-	ldw $r1, ($r0) 12	; load 'String.size'
-	inc $r1				; increase size for null terminator
+	ldw $r1, ($r0) %FIELD_SIZE		; load 'String.size'
+	inc $r1							; increase size for null terminator
 	push $r1
-	insc AllocMem		; allocate buffer
-	stw $ar, ($xr) 20	; write buffer address to new string object
+	insc AllocMem					; allocate buffer
+	stw $ar, ($xr) %FIELD_BUFFER	; write buffer address to new string object
 	
 	; copy string buffer from literal
-	ldw $r0, ($r0) 20	; load buffer address from literal
-	push $r1			; push buffer size
-	push $r0			; push buffer address of literal
-	push $ar			; push buffer address of new string
+	ldw $r0, ($r0) %FIELD_BUFFER	; load buffer address from literal
+	push $r1						; push buffer size
+	push $r0						; push buffer address of literal
+	push $ar						; push buffer address of new string
 	insc CopyMem
 	ret 1
 
@@ -443,7 +455,7 @@ CIntArray.Ppointer:
 CFloatArray.Ppointer:
 CBoolArray.Ppointer:
 CBuffer.Ppointer:
-	ldw $ar, ($xr) 20	; load and return member this.buffer
+	ldw $ar, ($xr) %FIELD_BUFFER	; load and return member this.buffer
 	ret
 
 ; String String.copy()
@@ -468,8 +480,8 @@ CString.Pcopy:
 
 ; int String.size()
 CString.Psize:
-	ldw $ar, ($xr) 12	; load and return member this.size
-	dec $ar				; remove null terminator from character counter
+	ldw $ar, ($xr) %FIELD_SIZE	; load and return member this.size
+	dec $ar						; remove null terminator from character counter
 	ret
 
 ; void String.resize(int size)
@@ -493,18 +505,18 @@ CString.Presize,I?size:
 
 ; void String.adjust()
 CString.Padjust:
-	ldw $r0, ($xr) 12			; load this.size
-	ldw $r1, ($xr) 20			; load this.buffer
+	ldw $r0, ($xr) %FIELD_SIZE		; load this.size
+	ldw $r1, ($xr) %FIELD_BUFFER	; load this.buffer
 	
 	; iterate over string buffer until null terminator is found
-	mov $r2, 0					; set i := 0
+	mov $r2, 0						; set i := 0
 	.loop:
-		cmp $r2, $r0			; compare i >= this.size
+		cmp $r2, $r0				; compare i >= this.size
 		jge .break
-		ldw $cf, ($r1) 0		; load character from buffer
-		je .break				; break loop if null terminator is found
-		inc $r2					; i++
-		inc $r1					; buffer++
+		ldw $cf, ($r1) 0			; load character from buffer
+		je .break					; break loop if null terminator is found
+		inc $r2						; i++
+		inc $r1						; buffer++
 		jmp .loop
 	.break:
 	
