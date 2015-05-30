@@ -22,13 +22,19 @@ const TypeDenoter* ProcSignature::GetTypeDenoter() const
     return returnTypeDenoter.get();
 }
 
-std::string ProcSignature::ToString() const
+std::string ProcSignature::ToString(const std::string& className) const
 {
     std::string str;
 
     if (returnTypeDenoter)
         str += returnTypeDenoter->ToString() + ' ';
     
+    if (!className.empty())
+    {
+        str += className;
+        str += '.';
+    }
+
     str += ident;
     str += '(';
 

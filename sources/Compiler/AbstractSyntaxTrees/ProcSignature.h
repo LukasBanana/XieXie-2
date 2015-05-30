@@ -25,8 +25,12 @@ class ProcSignature : public AST
 
         const TypeDenoter* GetTypeDenoter() const override;
 
-        //! Returns a string representation of this procedure signature.
-        std::string ToString() const;
+        /**
+        Returns a string representation of this procedure signature.
+        \param[in] className Specifies the name of the class for this procedure.
+        If this string is empty, no class name is inserted. By default "".
+        */
+        std::string ToString(const std::string& className = "") const;
 
         //! Returns the parameter with the specified identifier.
         Param* FindParam(const std::string& ident) const;

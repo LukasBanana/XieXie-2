@@ -663,7 +663,8 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& proc
 
     const auto& procSig = *procDecl.procSignature;
     const auto& label = procSig.label;
-    Comment(NameMangling::DisplayLabel(label));
+
+    Comment(procSig.ToString(procDecl.parentRef->ident));
 
     /* Check if label for main entry must be added */
     if (procSig.isEntryPoint)
