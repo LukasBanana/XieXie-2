@@ -1,0 +1,15 @@
+
+; XASM Macro Test 1
+; 30/05/2015
+
+.define NUM -12
+
+push %NUM
+insc PrintInt
+lda $r0, @str0
+push $r0
+insc PrintLn
+stop
+
+str0: .ascii "Hello, World!\n"
+
