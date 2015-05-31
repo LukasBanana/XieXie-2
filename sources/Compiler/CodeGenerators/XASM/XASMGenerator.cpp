@@ -27,9 +27,8 @@ namespace CodeGenerator
 using namespace std::placeholders;
 using namespace XieXie::VirtualMachine;
 
-static const std::string mainProcIdent          = "main_entry";
-static const std::string placeHolderProcIdent   = "place_holder";
-static const std::string tempReg                = "$tr";
+static const std::string mainProcIdent  = "main_entry";
+static const std::string tempReg        = "$tr";
 
 static RegisterAllocator::RegList XASMRegList()
 {
@@ -594,7 +593,11 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
 {
     /* Add commentary for this class */
     auto classDecl = classTree.GetClassDeclAST();
-    CommentHeadline("CLASS \"" + classDecl->ident + "\"");
+
+    CommentHeadline(
+        std::string(classDecl->IsAbstract() ? "ABSTRACT CLASS" : "CLASS") +
+        " \"" + classDecl->ident + "\""
+    );
 
     /* Generate commentary docu for member variables */
     GenerateClassStorageCommentary(*classDecl);
@@ -954,12 +957,7 @@ void XASMGenerator::GenerateVtable(const ClassDeclStmnt& classDecl)
     IncIndent();
     {
         for (const auto procDecl : vtable.procs)
-        {
-            if (procDecl->IsAbstract())
-                WORDAddress(placeHolderProcIdent);
-            else
-                WORDAddress(NameMangling::UniqueLabel(*procDecl));
-        }
+            WORDAddress(NameMangling::UniqueLabel(*procDecl));
     }
     DecIndent();
     Blank();

@@ -9,7 +9,6 @@
 ".define FIELD_BUFFER	20\n"
 ".define MIN_BUFSIZE		64\n"
 "exit:\n"
-"place_holder:\n"
 "stop\n"
 "new:\n"
 "ldw $r0, ($lb) -4\n"
