@@ -2357,7 +2357,7 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         // float InputFloat()
         case INSC_INPUT_FLOAT:
         {
-            scanf("%f", reg_ar);
+            scanf("%f", (float*)reg_ar);
         }
         break;
 
