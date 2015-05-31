@@ -35,117 +35,117 @@ place_holder:
 ;    - $r0 is invalidated
 ;    - $ar contains the new allocated object
 new:
-	ldw $r0, ($lb) -4	; load argument 'size' (must include 12 bytes for reference counter, type-id, and vtable)
+	ldw $r0, ($lb) -4				; load argument 'size' (must include 12 bytes for reference counter, type-id, and vtable)
 	push $r0
-	insc AllocMem		; allocate memory for object and get object reference (ar)
+	insc AllocMem					; allocate memory for object and get object reference (ar)
 	
-	mov $r0, 1			; initialize reference counter to 1
-	stw $r0, ($ar) 0	; write reference counter to object
+	mov $r0, 1						; initialize reference counter to 1
+	stw $r0, ($ar) %FIELD_REFCOUNT	; write reference counter to object
 	
-	ldw $r0, ($lb) -8	; load argument 'typeID'
-	stw $r0, ($ar) 4	; write type-id to object
+	ldw $r0, ($lb) -8				; load argument 'typeID'
+	stw $r0, ($ar) %FIELD_TYPEID	; write type-id to object
 	
-	ldw $r0, ($lb) -12	; load argument 'vtableAddr' (address to vtable for the object)
-	stw $r0, ($ar) 8	; write vtable address to object
+	ldw $r0, ($lb) -12				; load argument 'vtableAddr' (address to vtable for the object)
+	stw $r0, ($ar) %FIELD_VTABLE	; write vtable address to object
 	
-	ret 3				; return object reference (ar)
+	ret 3							; return object reference (ar)
 
 ; void inc_ref({Object this})
 inc_ref:
 	; check for null pointer
-	mov $cf, $xr			; compare: this = null
+	mov $cf, $xr						; compare: this = null
 	je .end
 		; increment reference
-		ldw $r0, ($xr) 0	; load reference counter from object
-		inc $r0				; increment reference counter
-		stw $r0, ($xr) 0	; write reference counter back to object
+		ldw $r0, ($xr) %FIELD_VTABLE	; load reference counter from object
+		inc $r0							; increment reference counter
+		stw $r0, ($xr) %FIELD_VTABLE	; write reference counter back to object
 	.end:
 	ret
 
 ; void dec_ref({Object this})
 dec_ref:
 	; check for null pointer
-	mov $cf, $xr			; compare: this = null
+	mov $cf, $xr						; compare: this = null
 	je .end
 	
 	; check: ref-count = 1
-	ldw $r0, ($xr) 0		; load reference counter from object
-	sub $cf, $r0, 1			; check if reference is 1
-	je .rel					; release object
-		dec $r0				; decrement reference counter
-		stw $r0, ($xr) 0	; write reference counter back to object
+	ldw $r0, ($xr) %FIELD_REFCOUNT		; load reference counter from object
+	cmp $r0, 1							; check if reference is 1
+	je .rel								; release object
+		dec $r0							; decrement reference counter
+		stw $r0, ($xr) %FIELD_VTABLE	; write reference counter back to object
 		ret
 	.rel:
 	
 	; load d'tor address
-	ldw $r0, ($xr) 8		; load vtable address
-	ldw $r0, ($r0) 0		; load release procedure address
+	ldw $r0, ($xr) %FIELD_VTABLE		; load vtable address
+	ldw $r0, ($r0) 0					; load release procedure address
 	
 	; call d'tor
-	push $xr				; store $xr
-	call $r0				; call d'tor 'release(this)'
-	;pop $xr				; restore $xr
+	push $xr							; store $xr
+	call $r0							; call d'tor 'release(this)'
+	;pop $xr							; restore $xr
 	
 	; free memory
-	;push $xr				; push this pointer again as argument onto stack
-	insc FreeMem			; delete object 'FreeMem(this)'
+	;push $xr							; push this pointer again as argument onto stack
+	insc FreeMem						; delete object 'FreeMem(this)'
 	
 	.end:
 	ret
 
 ; Object dynamic_cast(Object obj, int baseTypeID, int castNumSubClasses)
 dynamic_cast:
-	ldw $cf, ($lb) -4		; load object reference 'obj'
+	ldw $cf, ($lb) -4				; load object reference 'obj'
 	
 	; check for null pointer
-	je .end					; compare: obj = null
+	je .end							; compare: obj = null
 	
 	; load type ids
 	mov $ar, $cf
-	ldw $r1, ($ar) 4		; load type-id of 'obj'
-	ldw $r2, ($lb) -8		; load type-id 'baseTypeID'
-	ldw $r3, ($lb) -12		; load number of sub classes 'castNumSubClasses'
-	add $r3, $r3, $r2		; calculate: baseTypeID + castNumSubClasses
+	ldw $r1, ($ar) %FIELD_TYPEID	; load type-id of 'obj'
+	ldw $r2, ($lb) -8				; load 'baseTypeID'
+	ldw $r3, ($lb) -12				; load number of sub classes 'castNumSubClasses'
+	add $r3, $r3, $r2				; calculate: baseTypeID + castNumSubClasses
 	
 	; compare type-ids
-	cmp $r2, $r1			; compare: baseTypeID > obj.typeID
+	cmp $r2, $r1					; compare: baseTypeID > obj.typeID
 	jg .end
-		cmp $r1, $r3		; compare: obj.typeID > (baseTypeID + castNumSubClasses)
+		cmp $r1, $r3				; compare: obj.typeID > (baseTypeID + castNumSubClasses)
 		jg .end
-			ret 3			; return object reference (ar)
+			ret 3					; return object reference (ar)
 			
 	; class-cast exception
 	.end:
-	mov $ar, %NULL			; return null pointer
+	mov $ar, %NULL					; return null pointer
 	ret 3
 
 ; void resize_buffer({Object this} int size)
 ;   after return:
 ;    - $r0 will contain the argument of 'size'
 resize_buffer:
-	ldw $r0, ($lb) -4		; load size
-	ldw $r1, ($xr) 16		; load this.bufSize
+	ldw $r0, ($lb) -4					; load size
+	ldw $r1, ($xr) %FIELD_BUFSIZE		; load this.bufSize
 	
 	; check if buffer must be increased (size > this.bufSize)
 	cmp $r0, $r1
 	jle .else
 		; get further member variables
-		ldw $r2, ($xr) 12	; load this.size
-		ldw $r3, ($xr) 20	; load this.buffer
+		ldw $r2, ($xr) %FIELD_SIZE		; load this.size
+		ldw $r3, ($xr) %FIELD_BUFFER	; load this.buffer
 		
 		; increase buffer (2x size pre-allocated storage)
-		sll $r4, $r0, 1		; set newSize := size*2
+		sll $r4, $r0, 1					; set newSize := size*2
 		push $r4
-		insc AllocMem		; allocate memory for 'newSize' bytes
+		insc AllocMem					; allocate memory for 'newSize' bytes
 		
 		; store new values in object
-		stw $ar, ($xr) 20	; store: this.buffer := newBuffer
-		stw $r4, ($xr) 16	; store: this.bufSize := newSize
+		stw $ar, ($xr) %FIELD_BUFFER	; store: this.buffer := newBuffer
+		stw $r4, ($xr) %FIELD_BUFSIZE	; store: this.bufSize := newSize
 		
 		; copy previous buffer into new one
-		push $r2			; push previous buffer size
-		push $r3			; push original buffer as source address
-		push $ar			; push new buffer as destination address
+		push $r2						; push previous buffer size
+		push $r3						; push original buffer as source address
+		push $ar						; push new buffer as destination address
 		insc CopyMem
 		
 		; free previous buffer
@@ -153,10 +153,10 @@ resize_buffer:
 		insc FreeMem
 		
 		; fill new elements with zeros
-		push 0				; fill with zeros
-		sub $r3, $r0, $r2	; fillSize := size - prevSize
+		push 0							; fill with zeros
+		sub $r3, $r0, $r2				; fillSize := size - prevSize
 		push $r3
-		add $r3, $ar, $r2	; get address: newBuffer + prevSize
+		add $r3, $ar, $r2				; get address: newBuffer + prevSize
 		push $r3
 		insc FillMem
 	jmp .end
@@ -169,21 +169,21 @@ resize_buffer:
 	cmp $r0, $r1
 	jge .end
 		; get further member variables
-		ldw $r2, ($xr) 12	; load this.size
-		ldw $r3, ($xr) 20	; load this.buffer
+		ldw $r2, ($xr) %FIELD_SIZE		; load this.size
+		ldw $r3, ($xr) %FIELD_BUFFER	; load this.buffer
 		
 		; decrease buffer
 		push $r0
-		insc AllocMem		; allocate memory for 'size' bytes
+		insc AllocMem					; allocate memory for 'size' bytes
 		
 		; store new values in object
-		stw $ar, ($xr) 20	; store: this.buffer := newBuffer
-		stw $r4, ($xr) 16	; store: this.bufSize := newSize
+		stw $ar, ($xr) %FIELD_BUFFER	; store: this.buffer := newBuffer
+		stw $r4, ($xr) %FIELD_BUFSIZE	; store: this.bufSize := newSize
 		
 		; copy previous buffer into new one
-		push $r0			; push new buffer size
-		push $r3			; push original buffer as source address
-		push $ar			; push new buffer as destination address
+		push $r0						; push new buffer size
+		push $r3						; push original buffer as source address
+		push $ar						; push new buffer as destination address
 		insc CopyMem
 		
 		; free previous buffer
@@ -191,7 +191,7 @@ resize_buffer:
 		insc FreeMem
 	.end:
 	
-	stw $r0, ($xr) 12		; store: this.size := size
+	stw $r0, ($xr) %FIELD_SIZE			; store: this.size := size
 	
 	ret 1
 
