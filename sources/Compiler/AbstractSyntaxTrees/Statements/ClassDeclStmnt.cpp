@@ -46,6 +46,14 @@ ClassDeclStmnt::ClassDeclStmnt(const SourceArea& area, const SourceCodePtr& sour
 {
     thisTypeDenoter_.declRef = this;
 }
+ClassDeclStmnt::ClassDeclStmnt(const BuiltinClasses::ClassRTTI& classRTTI) :
+    ident           { classRTTI.name         },
+    isBuiltin       { true                   },
+    isExtern        { true                   },
+    instanceSize_   { classRTTI.instanceSize }
+{
+    thisTypeDenoter_.declRef = this;
+}
 
 const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const
 {
@@ -154,9 +162,10 @@ std::string ClassDeclStmnt::HierarchyString(const std::string& separator) const
 void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
 {
     /* Initialize RTTI for root class "Object" */
-    typeID_             = 0;
-    numSubClasses_      = 0;
-    instanceSize_       = 12; // 3 * (4 bytes): refCount, typeID, vtableAddr
+    typeID_         = 0;
+    numSubClasses_  = 0;
+
+    SetInstanceSize(12); // 3 * (4 bytes): refCount, typeID, vtableAddr
 
     /* Generate vtable */
     GenerateVtable(nullptr, errorReporter);
@@ -234,9 +243,10 @@ void ClassDeclStmnt::GenerateRTTI(
     const Vtable& setupVtable, ErrorReporter* errorReporter)
 {
     /* Initialize RTTI for this class */
-    typeID_             = ++typeID;
-    numSubClasses_      = 0;
-    instanceSize_       = superInstanceSize;
+    typeID_         = ++typeID;
+    numSubClasses_  = 0;
+
+    SetInstanceSize(superInstanceSize);
 
     /* Increase instance size by (non-static) member variables */
     AssignAllMemberVariableLocations();
@@ -284,7 +294,7 @@ void ClassDeclStmnt::AssignAllMemberVariableLocations()
 void ClassDeclStmnt::AssignMemberVariableLocation(VarDecl& varDecl)
 {
     varDecl.memoryOffset = instanceSize_;
-    instanceSize_ += varDecl.MemorySize();
+    SetInstanceSize(instanceSize_ + varDecl.MemorySize());
     memberVars_.push_back(&varDecl);
 }
 
@@ -470,6 +480,12 @@ void ClassDeclStmnt::ProcessClassAttributes(ErrorReporter* errorReporter)
             }
         }
     }
+}
+
+void ClassDeclStmnt::SetInstanceSize(unsigned int instanceSize)
+{
+    if (!isBuiltin)
+        instanceSize_ = instanceSize;
 }
 
 

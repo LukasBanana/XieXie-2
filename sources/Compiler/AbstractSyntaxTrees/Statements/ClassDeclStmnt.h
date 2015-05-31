@@ -14,6 +14,7 @@
 #include "Attrib.h"
 #include "SourceCode.h"
 #include "ErrorReporter.h"
+#include "BuiltinClasses.h"
 
 #include <set>
 
@@ -53,6 +54,7 @@ class ClassDeclStmnt : public ScopedStmnt
 
         ClassDeclStmnt(const SourceCodePtr& source = nullptr);
         ClassDeclStmnt(const SourceArea& area, const SourceCodePtr& source);
+        ClassDeclStmnt(const BuiltinClasses::ClassRTTI& classRTTI);
 
         const TypeDenoter* GetTypeDenoter() const override;
 
@@ -194,6 +196,12 @@ class ClassDeclStmnt : public ScopedStmnt
         void AssignAllProceduresToVtable(ErrorReporter* errorReporter);
 
         void ProcessClassAttributes(ErrorReporter* errorReporter);
+
+        /**
+        Sets the instance size if this is not a built-in class.
+        \see isBuiltin
+        */
+        void SetInstanceSize(unsigned int instanceSize);
 
         /* === Members === */
 

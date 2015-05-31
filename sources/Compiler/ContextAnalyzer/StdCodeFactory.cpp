@@ -23,6 +23,7 @@
 #include "ReturnStmnt.h"
 #include "VarAccessExpr.h"
 #include "CopyAssignStmnt.h"
+#include "BuiltinClasses.h"
 
 
 namespace ContextAnalyzer
@@ -31,6 +32,8 @@ namespace ContextAnalyzer
 namespace StdCodeFactory
 {
 
+
+using namespace AbstractSyntaxTrees;
 
 /*
  * Type denoter generation functions
@@ -344,14 +347,11 @@ static void GenReleaseProc(ClassDeclStmnt& classDecl)
 }
 
 // Generate class declaration statement AST
-static std::unique_ptr<ClassDeclStmnt> GenClass(const std::string& ident, const AttribPrefixPtr& attribPrfix = nullptr)
+static std::unique_ptr<ClassDeclStmnt> GenClass(const BuiltinClasses::ClassRTTI& classRTTI, const AttribPrefixPtr& attribPrfix = nullptr)
 {
-    auto ast = MakeUnique<ClassDeclStmnt>();
+    auto ast = MakeUnique<ClassDeclStmnt>(classRTTI);
     {
-        ast->isBuiltin      = true;
-        ast->isExtern       = true;
-        ast->ident          = ident;
-        ast->attribPrefix   = attribPrfix;
+        ast->attribPrefix = attribPrfix;
     }
     return ast;
 }
@@ -372,7 +372,7 @@ extern class Object {
 */
 static std::unique_ptr<ClassDeclStmnt> GenObjectClass()
 {
-    auto ast = GenClass("Object");
+    auto ast = GenClass(BuiltinClasses::Object);
 
     GenReleaseProc(*ast);
     GenInitProc(*ast);
@@ -419,7 +419,7 @@ extern class String {
 */
 static std::unique_ptr<ClassDeclStmnt> GenStringClass()
 {
-    auto ast = GenClass("String", AttrFinal());
+    auto ast = GenClass(BuiltinClasses::String, AttrFinal());
 
     GenStaticConst(*ast, "end", GenIntExpr("-1"));
 
@@ -450,9 +450,9 @@ static std::unique_ptr<ClassDeclStmnt> GenStringClass()
     return ast;
 }
 
-static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& ident, const TypeDenoterPtr& entryType)
+static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const BuiltinClasses::ClassRTTI& classRTTI, const TypeDenoterPtr& entryType)
 {
-    auto ast = GenClass(ident, AttrFinal());
+    auto ast = GenClass(classRTTI, AttrFinal());
 
     GenReleaseProc(*ast);
     GenInitProc(*ast);
@@ -460,7 +460,7 @@ static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& i
 
     GenMemberProc(*ast, Bool(), "equals", GenParam(Object(), "rhs"), AttrOverride());
     GenMemberProc(*ast, String(), "toString", ParamList(), AttrOverride());
-    GenMemberProc(*ast, GenPointerType(ident), "copy");
+    GenMemberProc(*ast, GenPointerType(classRTTI.name), "copy");
     GenMemberProc(*ast, Int(), "size");
     GenMemberProc(*ast, Int(), "resize", GenParam(Int(), "size"));
     GenMemberProc(*ast, Bool(), "empty");
@@ -476,27 +476,27 @@ static std::unique_ptr<ClassDeclStmnt> GenGenericArrayClass(const std::string& i
 
 static std::unique_ptr<ClassDeclStmnt> GenArrayClass()
 {
-    return GenGenericArrayClass("Array", Object());
+    return GenGenericArrayClass(BuiltinClasses::Array, Object());
 }
 
 static std::unique_ptr<ClassDeclStmnt> GenIntArrayClass()
 {
-    return GenGenericArrayClass("IntArray", Int());
+    return GenGenericArrayClass(BuiltinClasses::IntArray, Int());
 }
 
 static std::unique_ptr<ClassDeclStmnt> GenFloatArrayClass()
 {
-    return GenGenericArrayClass("FloatArray", Float());
+    return GenGenericArrayClass(BuiltinClasses::FloatArray, Float());
 }
 
 static std::unique_ptr<ClassDeclStmnt> GenBoolArrayClass()
 {
-    return GenGenericArrayClass("BoolArray", Bool());
+    return GenGenericArrayClass(BuiltinClasses::BoolArray, Bool());
 }
 
 static std::unique_ptr<ClassDeclStmnt> GenBufferClass()
 {
-    auto ast = GenClass("Buffer", AttrFinal());
+    auto ast = GenClass(BuiltinClasses::Buffer, AttrFinal());
 
     auto voidType   = Void();
     auto intType    = Int();
@@ -524,7 +524,7 @@ static std::unique_ptr<ClassDeclStmnt> GenBufferClass()
 
 static std::unique_ptr<ClassDeclStmnt> GenIntrinsicsClass()
 {
-    auto ast = GenClass("Intrinsics", AttrFinal());
+    auto ast = GenClass(BuiltinClasses::Intrinsics, AttrFinal());
 
     auto voidType   = Void();
     auto intType    = Int();
@@ -567,7 +567,7 @@ static std::unique_ptr<ClassDeclStmnt> GenIntrinsicsClass()
 
 static std::unique_ptr<ClassDeclStmnt> GenMathClass()
 {
-    auto ast = GenClass("Math", AttrFinal());
+    auto ast = GenClass(BuiltinClasses::Math, AttrFinal());
 
     auto floatType = Float();
 
