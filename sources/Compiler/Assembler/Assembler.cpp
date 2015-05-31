@@ -730,12 +730,14 @@ void Assembler::ParsePragmaField()
     Accept(Token::Types::RBracket);
 }
 
+// '.module' STRING_LITERAL
 void Assembler::ParseModuleField()
 {
     Accept(Token::Types::Module);
     byteCode_->AddModuleName(ParseStringLiteral());
 }
 
+// '.define' IDENT INT_LITERAL
 void Assembler::ParseDefineField()
 {
     /* Parse '.define' field */
