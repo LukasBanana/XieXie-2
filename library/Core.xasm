@@ -388,11 +388,11 @@ CString.Pinit,I?char,I?count:
 	
 	; setup string buffer size
 	add $r2, $r1, 1					; set this.size := count + 1
+	stw $r2, ($xr) %FIELD_SIZE		; store this.size
 	cmp $r2, %MIN_BUFSIZE
-	jge .gt_min						; compare this.size >= 16
+	jge .gt_min						; compare this.size >= MIN_BUFSIZE
 		mov $r2, %MIN_BUFSIZE
 	.gt_min:
-	stw $r1, ($xr) %FIELD_SIZE		; store this.size
 	stw $r2, ($xr) %FIELD_BUFSIZE	; store this.bufSize
 	
 	; allocate string buffer
@@ -402,12 +402,12 @@ CString.Pinit,I?char,I?count:
 	stw $r3, ($xr) %FIELD_BUFFER	; store this.buffer
 	
 	; initialize string buffer with characters
+	mov $cf, $r1
 	.loop:
-		mov $cf, $r1
-		jge .end					; compare count >= 0
+		jle .end					; compare count <= 0
 		stb $r0, ($r3) 0			; store *buffer := char
 		inc $r3						; buffer++
-		dec $r1						; count--
+		dec $cf						; count--
 		jmp .loop
 	.end:
 	
