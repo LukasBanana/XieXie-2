@@ -1757,8 +1757,8 @@ int xvm_bytecode_read_from_file(xvm_bytecode* byte_code, const char* filename)
 
     // Read version number
     unsigned int version = xvm_file_read_uint(file);
-    if (version < XBC_FORMAT_VERSION_1_31 || version > XBC_FORMAT_VERSION_1_34)
-        return _xvm_close_file_with_error(file, "invalid version number (must be 1.31, 1.32, 1.33, or 1.34)");
+    if (version < XBC_FORMAT_VERSION_1_31 || version > XBC_FORMAT_VERSION_1_35)
+        return _xvm_close_file_with_error(file, "invalid version number (must be 1.31, 1.32, 1.33, 1.34, or 1.35)");
 
     // Read instructions
     unsigned int num_instr = xvm_file_read_uint(file);
@@ -1863,9 +1863,9 @@ int xvm_bytecode_write_to_file(const xvm_bytecode* byte_code, const char* filena
         xvm_log_error("invalid arguments to write byte code");
         return 0;
     }
-    if (version < XBC_FORMAT_VERSION_1_31 || version > XBC_FORMAT_VERSION_1_34)
+    if (version < XBC_FORMAT_VERSION_1_31 || version > XBC_FORMAT_VERSION_1_35)
     {
-        xvm_log_error("invalid version number (must be 1.31, 1.32, 1.33, or 1.34)");
+        xvm_log_error("invalid version number (must be 1.31, 1.32, 1.33, 1.34, or 1.35)");
         return 0;
     }
 
