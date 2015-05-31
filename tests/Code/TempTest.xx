@@ -1,17 +1,35 @@
 
 // Temp XieXie Test
 
-import Console, ASCII, Integer
+import Console, ASCII
 
 class Test {
 	
+	static void headline(String s, int chr := ASCII.equal) {
+		var l := s.size()
+		var t := new String(char: chr, count: l + 2)
+		
+		Console.writeLine(t)
+		Console.writeLine(" \(s)")
+		Console.writeLine(t)
+	}
+	
 	static void main() {
 		
-		//Console.writeLine(new String(char: ASCII.a, count: 5))
+		Console.write("Enter number of prints: ")
+		
+		int i := Intrinsics.inputInt()
+		
+		Console.writeLine(null)
+		
+		while i > 0 {
+			Test.headline("Hello, World!")
+			i--
+		}
 		
 		//var s := new String(size: 5)
-		var s := new String()
-		Console.writeLine(s)
+		//var s := new String()
+		//Console.writeLine(s)
 		
 	}
 	
