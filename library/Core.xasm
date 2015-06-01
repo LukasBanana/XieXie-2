@@ -21,7 +21,7 @@
 .define FIELD_BUFSIZE	16	; Class field "bufSize"
 .define FIELD_BUFFER	20	; Class field "buffer"
 
-.define MIN_BUFSIZE		64	; Minimal buffer size (in bytes)
+.define MIN_BUFSIZE		32	; Minimal buffer size (in bytes)
 
 ; ------- Common -------
 
@@ -55,9 +55,9 @@ inc_ref:
 	mov $cf, $xr						; compare: this = null
 	je .end
 		; increment reference
-		ldw $r0, ($xr) %FIELD_VTABLE	; load reference counter from object
+		ldw $r0, ($xr) %FIELD_REFCOUNT	; load reference counter from object
 		inc $r0							; increment reference counter
-		stw $r0, ($xr) %FIELD_VTABLE	; write reference counter back to object
+		stw $r0, ($xr) %FIELD_REFCOUNT	; write reference counter back to object
 	.end:
 	ret
 
@@ -72,7 +72,7 @@ dec_ref:
 	cmp $r0, 1							; check if reference is 1
 	je .rel								; release object
 		dec $r0							; decrement reference counter
-		stw $r0, ($xr) %FIELD_VTABLE	; write reference counter back to object
+		stw $r0, ($xr) %FIELD_REFCOUNT	; write reference counter back to object
 		ret
 	.rel:
 	
@@ -161,9 +161,7 @@ resize_buffer:
 	jmp .end
 	.else:
 	
-	; check if buffer should be decreased (this.bufSize > 16 AND size < this.bufSize/2)
-	cmp $r1, 16
-	jle .end
+	; check if buffer should be decreased (size < this.bufSize/2)
 	slr $r1, $r1, 1
 	cmp $r0, $r1
 	jge .end
@@ -171,13 +169,20 @@ resize_buffer:
 		ldw $r2, ($xr) %FIELD_SIZE		; load this.size
 		ldw $r3, ($xr) %FIELD_BUFFER	; load this.buffer
 		
+		; clamp newSize to MIN_BUFSIZE
+		mov $r1, $r0
+		cmp $r1, %MIN_BUFSIZE
+		jl .gt_min
+			mov $r1, %MIN_BUFSIZE
+		.gt_min:
+		
 		; decrease buffer
-		push $r0
+		push $r1						; push new buffer size
 		insc AllocMem					; allocate memory for 'size' bytes
 		
 		; store new values in object
 		stw $ar, ($xr) %FIELD_BUFFER	; store: this.buffer := newBuffer
-		stw $r4, ($xr) %FIELD_BUFSIZE	; store: this.bufSize := newSize
+		stw $r1, ($xr) %FIELD_BUFSIZE	; store: this.bufSize := newSize
 		
 		; copy previous buffer into new one
 		push $r0						; push new buffer size
@@ -291,11 +296,11 @@ CString.Prelease:
 CString.Pinit:
 	; this.size := 1 (null character)
 	mov $r0, 1
-	stw $r0, ($xr) 12
+	stw $r0, ($xr) %FIELD_SIZE		; store this.size
 	
 	; initialize string buffer of MIN_BUFSIZE bytes
 	mov $r1, %MIN_BUFSIZE
-	stw $r1, ($xr) %MIN_BUFSIZE
+	stw $r1, ($xr) %FIELD_BUFSIZE	; store this.bufSize
 	
 	; allocate string buffer
 	push %MIN_BUFSIZE
@@ -427,8 +432,7 @@ CString.Pinit,R@String?source:
 	insc CopyMem
 	
 	; allocate buffer for new string
-	ldw $r1, ($r0) %FIELD_SIZE		; load 'String.size'
-	inc $r1							; increase size for null terminator
+	ldw $r1, ($r0) %FIELD_SIZE		; load 'source.size'
 	push $r1
 	insc AllocMem					; allocate buffer
 	stw $ar, ($xr) %FIELD_BUFFER	; write buffer address to new string object
@@ -485,20 +489,20 @@ CString.Psize:
 
 ; void String.resize(int size)
 CString.Presize,I?size:
-	ldw $cf, ($lb) -4		; load size
-	jge .else				; check: size >= 0
-		mov $cf, 0			; clamp size to 0
+	ldw $cf, ($lb) -4					; load size
+	jge .else							; check: size >= 0
+		mov $cf, 0						; clamp size to 0
 	.else:
-	add $tr, $cf, 1			; set tr := size + 1 (null terminator)
-	ldw $cf, ($xr) 12		; load this.size
-	cmp $cf, $tr			; compare this.size = size
+	add $tr, $cf, 1						; set tr := size + 1 (null terminator)
+	ldw $cf, ($xr) %FIELD_SIZE			; load this.size
+	cmp $cf, $tr						; compare this.size = size
 	je .end
 		push $tr
-		call resize_buffer	; resize string buffer
-		ldw $r0, ($xr) 20	; load this.buffer
-		add $r0, $r0, $tr	; add offset to buffer ($tr is not modified by "resize_buffer")
+		call resize_buffer				; resize string buffer
+		ldw $r0, ($xr) %FIELD_BUFFER	; load this.buffer
+		add $r0, $r0, $tr				; add offset to buffer ($tr is not modified by "resize_buffer")
 		mov $tr, 0
-		stw $tr, ($r0) -1	; store null terminator at this.buffer[tr - 1]
+		stw $tr, ($r0) -1				; store null terminator at this.buffer[tr - 1]
 	.end:
 	ret 1
 
@@ -563,8 +567,8 @@ CString.Pappend,R@String?rhs:
 	ldw $r2, ($xr) %FIELD_BUFFER	; load this.buffer
 	ldw $r3, ($r0) %FIELD_SIZE		; reload rhs.size
 	ldw $r4, ($r0) %FIELD_BUFFER	; load rhs.buffer
-	dec $r1							; decrement size because of null terminator
-	dec $r3							; decrement size because of null terminator
+	dec $r1							; decrement this.size because of null terminator
+	dec $r3							; decrement rhs.size because of null terminator
 	add $r2, $r2, $r1				; add offset to buffer
 	push $r3						; push buffer size
 	push $r4						; push source buffer
