@@ -100,6 +100,7 @@ static KeywordMapType GenerateKeywordMap()
         { "throw",       Ty::Reserved       },
         { "throws",      Ty::Reserved       },
         { "finally",     Ty::Reserved       },
+        { "implicit",    Ty::Reserved       },
     };
 }
 
