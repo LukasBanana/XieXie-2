@@ -1,0 +1,20 @@
+
+// String Test 3
+// 04/06/2015
+
+/// Test for string concatenation
+class Test {
+	
+	static void print(String s) {
+		Intrinsics.printLn(s.pointer())
+	}
+	
+	static void main() {
+		
+		var a := "a", b := "b", c := "c"
+		
+		Test.print(a.append("b"))
+		
+	}
+	
+}
