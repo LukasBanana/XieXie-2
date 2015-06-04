@@ -97,14 +97,21 @@ class XASMGenerator final : public AsmGenerator, private RegisterAllocator::Call
         std::string ResolveStringLiteral(const std::string& str) const;
 
         //! Returns the XASM mnemonic for the specified opcode.
-        std::string Mnemonic(const OpCodes opcode, bool negateRelation = false) const;
+        std::string Mnemonic(const OpCodes opcode) const;
+
+        //! Returns the opcode for the negated relation.
+        OpCodes NegateRelation(const OpCodes opcode) const;
+        //! Returns the opcode for the inverted relation.
+        OpCodes InvertRelation(const OpCodes opcode) const;
 
         //! Returns procedure to determine if an integer value is inside the valid range for the specified instruction opcode.
         ValueInRangeProc GetValueInRangeProc(const OpCodes opcode) const;
 
         /* --- Register Allocation --- */
 
-        std::string Reg(const TACVar& var, const ValueInRangeProc& inRangeProc = nullptr);
+        using RegIdent = std::string;
+
+        RegIdent Reg(const TACVar& var, const ValueInRangeProc& inRangeProc = nullptr);
 
         void SaveReg(const RegAlloc::RegIdent& reg, RegAlloc::RegLocation location, RegAlloc::Scopes scope) override;
         void LoadReg(const RegAlloc::RegIdent& reg, RegAlloc::RegLocation location, RegAlloc::Scopes scope) override;

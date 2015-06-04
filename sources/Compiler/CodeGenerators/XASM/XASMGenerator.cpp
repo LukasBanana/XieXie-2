@@ -192,7 +192,7 @@ std::string XASMGenerator::ResolveStringLiteral(const std::string& str) const
     return result;
 }
 
-std::string XASMGenerator::Mnemonic(const OpCodes opcode, bool negateRelation) const
+std::string XASMGenerator::Mnemonic(const OpCodes opcode) const
 {
     switch (opcode)
     {
@@ -245,22 +245,22 @@ std::string XASMGenerator::Mnemonic(const OpCodes opcode, bool negateRelation) c
         /* Relation */
         case OpCodes::CMPE:
         case OpCodes::FCMPE:
-            return negateRelation ? "jne" : "je";
+            return "je";
         case OpCodes::CMPNE:
         case OpCodes::FCMPNE:
-            return negateRelation ? "je" : "jne";
+            return "jne";
         case OpCodes::CMPL:
         case OpCodes::FCMPL:
-            return negateRelation ? "jge" : "jl";
+            return "jl";
         case OpCodes::CMPLE:
         case OpCodes::FCMPLE:
-            return negateRelation ? "jg" : "jle";
+            return "jle";
         case OpCodes::CMPG:
         case OpCodes::FCMPG:
-            return negateRelation ? "jle" : "jg";
+            return "jg";
         case OpCodes::CMPGE:
         case OpCodes::FCMPGE:
-            return negateRelation ? "jl" : "jge";
+            return "jge";
 
         /* Return */
         case OpCodes::RETURN:
@@ -295,6 +295,70 @@ std::string XASMGenerator::Mnemonic(const OpCodes opcode, bool negateRelation) c
             break;
     }
     return "nop";
+}
+
+XASMGenerator::OpCodes XASMGenerator::NegateRelation(const OpCodes opcode) const
+{
+    switch (opcode)
+    {
+        case OpCodes::CMPE:
+            return OpCodes::CMPNE;
+        case OpCodes::FCMPE:
+            return OpCodes::FCMPNE;
+        case OpCodes::CMPNE:
+            return OpCodes::CMPE;
+        case OpCodes::FCMPNE:
+            return OpCodes::FCMPE;
+        case OpCodes::CMPL:
+            return OpCodes::CMPGE;
+        case OpCodes::FCMPL:
+            return OpCodes::FCMPGE;
+        case OpCodes::CMPLE:
+            return OpCodes::CMPG;
+        case OpCodes::FCMPLE:
+            return OpCodes::FCMPG;
+        case OpCodes::CMPG:
+            return OpCodes::CMPLE;
+        case OpCodes::FCMPG:
+            return OpCodes::FCMPLE;
+        case OpCodes::CMPGE:
+            return OpCodes::CMPL;
+        case OpCodes::FCMPGE:
+            return OpCodes::FCMPL;
+    }
+    return OpCodes::NOP;
+}
+
+XASMGenerator::OpCodes XASMGenerator::InvertRelation(const OpCodes opcode) const
+{
+    switch (opcode)
+    {
+        case OpCodes::CMPE:
+            return OpCodes::CMPNE;
+        case OpCodes::FCMPE:
+            return OpCodes::FCMPNE;
+        case OpCodes::CMPNE:
+            return OpCodes::CMPE;
+        case OpCodes::FCMPNE:
+            return OpCodes::FCMPE;
+        case OpCodes::CMPL:
+            return OpCodes::CMPG;
+        case OpCodes::FCMPL:
+            return OpCodes::FCMPG;
+        case OpCodes::CMPLE:
+            return OpCodes::CMPGE;
+        case OpCodes::FCMPLE:
+            return OpCodes::FCMPGE;
+        case OpCodes::CMPG:
+            return OpCodes::CMPL;
+        case OpCodes::FCMPG:
+            return OpCodes::FCMPL;
+        case OpCodes::CMPGE:
+            return OpCodes::CMPLE;
+        case OpCodes::FCMPGE:
+            return OpCodes::FCMPLE;
+    }
+    return OpCodes::NOP;
 }
 
 static bool ValueInRangeAlways(int value)
@@ -852,23 +916,47 @@ void XASMGenerator::GenerateRelationInst(const TACRelationInst& inst)
 {
     AssertSucc(2, "conditional jump instructions");
 
+    auto opcode = inst.opcode;
+
     if (inst.srcLhs.IsConst() && inst.srcRhs.IsConst())
     {
+        /* Check if condition is unnecessary */
         if (inst.IsAlwaysTrue())
+        {
             GenerateDirectJump(Succ(0));
+            return;
+        }
         else if (inst.IsAlwaysFalse())
+        {
             GenerateDirectJump(Succ(1));
+            return;
+        }
         else if (inst.IsFloatOp())
             Line("mov $cf, " + std::to_string(inst.srcLhs.Float() - inst.srcRhs.Float()));
         else
             Line("mov $cf, " + std::to_string(inst.srcLhs.Int() - inst.srcRhs.Int()));
     }
     else if (!inst.IsFloatOp() && inst.srcRhs.IsConst() && inst.srcRhs.Int() == 0)
+    {
+        /* Set conditional-flag register directly */
         Line("mov $cf, " + Reg(inst.srcLhs, ValueInRangeAlways));
+    }
     else
     {
-        auto reg0 = Reg(inst.srcLhs);
-        auto reg1 = Reg(inst.srcRhs, GetValueInRangeProc(OpCodes::SUB));
+        RegIdent reg0, reg1;
+
+        if (inst.srcLhs.IsConst())
+        {
+            /* Invert condition, because 'CMP <CONST>, <VAR>' instruction is not supported, but 'CMP <VAR>, <CONST>' */
+            opcode = InvertRelation(opcode);
+            reg0 = Reg(inst.srcRhs);
+            reg1 = Reg(inst.srcLhs, GetValueInRangeProc(OpCodes::SUB));
+        }
+        else
+        {
+            reg0 = Reg(inst.srcLhs);
+            reg1 = Reg(inst.srcRhs, GetValueInRangeProc(OpCodes::SUB));
+        }
 
         StartLn();
         {
@@ -882,7 +970,7 @@ void XASMGenerator::GenerateRelationInst(const TACRelationInst& inst)
     }
 
     /* Negate condition to jump only on false-branch */
-    Line(Mnemonic(inst.opcode, true) + ' ' + Label(Succ(1)));
+    Line(Mnemonic(NegateRelation(opcode)) + ' ' + Label(Succ(1)));
 
     PushIndentBlock(Succ(1));
 
