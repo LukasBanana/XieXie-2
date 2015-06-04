@@ -1,7 +1,7 @@
 
 // Temp XieXie Test
 
-import Console, ASCII, Algo
+import Console
 
 class Test {
 	
@@ -16,27 +16,18 @@ class Test {
 			s.append(s)
 		}*/
 		
-		var list := { 42.5, -9.2, 3.99, 12.58 }
+		var t := new Test()
+		var s := "four"
+		t.print(t.add(s.size(), 2))
 		
-		Console.writeLine("list:")
-		foreach x : list {
-			Console.write("  ")
-			Console.writeLine(x)
-		}
-		
-		Console.write("min: ")
-		Console.writeLine(Algo.min(list))
-		
-		Console.write("max: ")
-		Console.writeLine(Algo.max(list))
-		
-		var x := 7
-		if 5 < x and x < 10 {
-			Console.writeLine("true")
-		} else {
-			Console.writeLine("false")
-		}
-		
+	}
+	
+	int add(int a, int b) {
+		return a + b
+	}
+	
+	void print(int i) {
+		Console.writeLine(i)
 	}
 	
 }
