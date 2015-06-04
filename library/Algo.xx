@@ -1,0 +1,84 @@
+/*
+ * Algo.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+import Integer, Float
+
+/**
+Class of basic math algortihms.
+\author Lukas Hermanns
+*/
+class Algo {
+	
+	/* --- "min": Computing the minimum --- */
+	
+	static int min(int a, int b) {
+		return a < b ? a : b
+	}
+	
+	static float min(float a, float b) {
+		return a < b ? a : b
+	}
+	
+	static int min(int[] list) {
+		int result := Integer.max
+		
+		foreach x : list {
+			if x < result {
+				result := x
+			}
+		}
+		
+		return result
+	}
+	
+	static float min(float[] list) {
+		float result := Float.max
+		
+		foreach x : list {
+			if x < result {
+				result := x
+			}
+		}
+		
+		return result
+	}
+	
+	/* --- "max": Computing the maximum --- */
+	
+	static int max(int a, int b) {
+		return a > b ? a : b
+	}
+	
+	static float max(float a, float b) {
+		return a > b ? a : b
+	}
+	
+	static int max(int[] list) {
+		int result := Integer.min
+		
+		foreach x : list {
+			if x > result {
+				result := x
+			}
+		}
+		
+		return result
+	}
+	
+	static float max(float[] list) {
+		float result := Float.min
+		
+		foreach x : list {
+			if x > result {
+				result := x
+			}
+		}
+		
+		return result
+	}
+	
+}
