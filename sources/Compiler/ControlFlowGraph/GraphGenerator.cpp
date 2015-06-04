@@ -213,13 +213,16 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     if (!ast->declStmntRef)
         ErrorIntern("missing reference for procedure declaration", ast);
 
-    auto procDecl = ast->declStmntRef;
-    auto procSig = procDecl->procSignature.get();
-    auto procClass = procDecl->parentRef;
+    auto procDecl   = ast->declStmntRef;
+    auto procSig    = procDecl->procSignature.get();
+    auto procClass  = procDecl->parentRef;
 
     /* Preliminaries for call instruction */
     bool isMemberCall = !procSig->isStatic;
     bool isDirectCall = (!isMemberCall || ast->IsBaseCall() || procDecl->IsFinal());
+
+    bool hasObjVar = false;
+    TACVar objVar;
 
     if (isMemberCall)
     {
@@ -229,18 +232,27 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
         else
             GenerateVarNameRValue(*ast->procName, reinterpret_cast<const TACVar*>(args));
 
-        auto objVar = PopVar();
+        objVar = Var();
         if (objVar != ThisPtr())
         {
             /* Replace current 'this' pointer */
             StoreThisPtr(*BB());
-            BB()->MakeInst<TACCopyInst>(ThisPtr(), objVar);
+            hasObjVar = true;
         }
+        else
+            PopVar();
     }
     
     /* Make instructions to push arguments */
     for (auto it = ast->argExprs.rbegin(); it != ast->argExprs.rend(); ++it)
         GenerateArgumentExpr(**it);
+
+    /* Check if 'this' pointer must be updated this procedure call */
+    if (hasObjVar)
+    {
+        BB()->MakeInst<TACCopyInst>(ThisPtr(), objVar);
+        PopVar();
+    }
 
     /* Store- and restore local variables around call instruction */
     StoreLocalVars(*BB());
