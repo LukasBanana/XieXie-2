@@ -1,35 +1,41 @@
 
 // Temp XieXie Test
 
-import Console, ASCII
+import Console, ASCII, Algo
 
 class Test {
 	
-	static void headline(String s, int chr := ASCII.equal) {
-		var l := s.size()
-		var t := new String(char: chr, count: l + 2)
-		
-		Console.writeLine(t)
-		Console.writeLine(" \(s)")
-		Console.writeLine(t)
-	}
-	
 	static void main() {
 		
-		Console.write("Enter number of prints: ")
+		/*var s := "a"
 		
-		int i := Intrinsics.inputInt()
+		repeat 15 {
+			var l := s.size()
+			Console.writeLine(l)
+			Console.writeLine(s)
+			s.append(s)
+		}*/
 		
-		Console.writeLine(null)
+		var list := { 42.5, -9.2, 3.99, 12.58 }
 		
-		while i > 0 {
-			Test.headline("Hello, World!")
-			i--
+		Console.writeLine("list:")
+		foreach x : list {
+			Console.write("  ")
+			Console.writeLine(x)
 		}
 		
-		//var s := new String(size: 5)
-		//var s := new String()
-		//Console.writeLine(s)
+		Console.write("min: ")
+		Console.writeLine(Algo.min(list))
+		
+		Console.write("max: ")
+		Console.writeLine(Algo.max(list))
+		
+		var x := 7
+		if 5 < x and x < 10 {
+			Console.writeLine("true")
+		} else {
+			Console.writeLine("false")
+		}
 		
 	}
 	
