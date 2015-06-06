@@ -173,6 +173,8 @@ class TACInst
 
         //! Returns true if this is a floating-point operation.
         bool IsFloatOp() const;
+        //! Returns true if this is a (direct or indirect) call instruction.
+        bool IsCallInst() const;
 
         /* === Members === */
 

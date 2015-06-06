@@ -182,6 +182,11 @@ bool TACInst::IsFloatOp() const
     return false;
 }
 
+bool TACInst::IsCallInst() const
+{
+    return (Type() == Types::DirectCall || Type() == Types::IndirectCall);
+}
+
 
 } // /namespace ThreeAddressCodes
 
