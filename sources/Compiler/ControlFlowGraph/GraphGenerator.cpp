@@ -1199,7 +1199,10 @@ DEF_VISIT_PROC(GraphGenerator, LiteralExpr)
         RestoreLocalVars(*BB());
         RestoreThisPtr(*BB());
 
-        PushVar(ResultVar());
+        /* Store result in temporary variable */
+        auto var = TempVar();
+        BB()->MakeInst<TACCopyInst>(var, ResultVar());
+        PushVar(var);
     }
     else
     {
@@ -1275,8 +1278,6 @@ DEF_VISIT_PROC(GraphGenerator, PostfixValueExpr)
     }
     else if (ast->varName)
         GenerateVarNameRValue(*ast->varName);
-
-    PopVar();
 }
 
 DEF_VISIT_PROC(GraphGenerator, InstanceOfExpr)
@@ -1852,27 +1853,26 @@ void GraphGenerator::CopyAndPushResultVar(const TACVar& destVar)
 void GraphGenerator::GenerateVarNameRValue(VarName& ast, const TACVar* baseVar)
 {
     /* Check if this comes from a post-fix expression */
-    if (baseVar)
+    if (!baseVar)
     {
-        GenerateVarNameRValueDynamic(&ast, baseVar);
-        return;
-    }
-
-    /* Check if variable name refers to a static variable */
-    auto varDecl = AST::Cast<VarDecl>(ast.GetLast().declRef);
-    if (varDecl && varDecl->IsStatic())
-    {
-        /* Check if variable is static-const */
-        auto varType = varDecl->GetTypeDenoter();
-        if (varType && varType->IsConst())
+        /* Check if variable name refers to a static variable */
+        auto varDecl = AST::Cast<VarDecl>(ast.GetLast().declRef);
+        if (varDecl && varDecl->IsStatic())
         {
-            /* Try to evaluate the expression at compile-time */
-            TACVar var;
-            if (EvaluateExpr(*varDecl->initExpr, var, true))
-                PushVar(var);
+            /* Check if variable is static-const */
+            auto varType = varDecl->GetTypeDenoter();
+            if (varType && varType->IsConst())
+            {
+                /* Try to evaluate the expression at compile-time */
+                TACVar var;
+                if (EvaluateExpr(*varDecl->initExpr, var, true))
+                    PushVar(var);
+            }
+            else
+                GenerateVarNameRValueStatic(varDecl);
         }
         else
-            GenerateVarNameRValueStatic(varDecl);
+            GenerateVarNameRValueDynamic(&ast);
     }
     else
         GenerateVarNameRValueDynamic(&ast, baseVar);
