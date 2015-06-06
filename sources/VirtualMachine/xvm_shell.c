@@ -96,6 +96,11 @@ static int shell_parse_args(const char* app_path, int argc, char* argv[])
     if (argc <= 0)
     {
         xvm_log_println("no input: enter \"help\" for information");
+        
+        // Clean up shell
+        xvm_module_container_clear(&module_cont);
+        xvm_string_free(&module_path);
+
         return 0;
     }
 
