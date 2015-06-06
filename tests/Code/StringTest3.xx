@@ -12,12 +12,13 @@ class Test {
 	}
 	
 	static void main() {
-		//Test.test1()
-		//Test.test2()
-		//Test.test3()
-		//Test.test4()
-		//Test.test5()
-		Test.test6()
+		/*Test.test1()
+		Test.test2()
+		Test.test3()
+		Test.test4()
+		Test.test5()
+		Test.test6()*/
+		Test.test7()
 	}
 	
 	static void test1() {
@@ -33,7 +34,10 @@ class Test {
 	
 	static void test2() {
 		
-		Console.writeLine(new String(char: ASCII.hyphen, count: Test.getString().size()))
+		Console.writeLine(new String(
+			char: ASCII.hyphen,
+			count: Test.getString().size()
+		))
 		
 	}
 	
@@ -92,15 +96,37 @@ class Test {
 	static void test6() {
 		
 		//Console.writeLine("Hello, World".subString(0, 5))
-		var s := "Hello, World!"
-		
-		for int i := 0 ; i < s.size() ; i++ {
-			Console.writeLine(
-				//Test.subString(s, i, 5)
-				Test.rightString(s, i + 1)
-			)
+		foreach s : { "Hello", "World", "Lol" } {
+			for int i := 0, n := s.size() ; i < n ; i++ {
+				Console.writeLine(
+					//Test.subString(s, i, 5)
+					Test.rightString(s, i + 1)
+				)
+			}
 		}
 		
+	}
+	
+	static void test7() {
+		
+		new Test().test7This()
+		
+	}
+	
+	void printLn(String s) {
+		Console.writeLine(s)
+	}
+	
+	//!BUG HERE! -> only "Hello" is encoded!!!
+	private void test7This() {
+		const key := 24
+		foreach s : { "Hello", "World", "Foo", "bar" } {
+			var c := s.copy()
+			for int i := 0, n := c.size() ; i < n ; i++ {
+				c.setChar(i, c.getChar(i) ^ key)
+			}
+			printLn(c)
+		}
 	}
 	
 }
