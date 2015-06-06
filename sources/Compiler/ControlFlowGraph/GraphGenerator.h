@@ -127,6 +127,7 @@ class GraphGenerator final : private Visitor
         void StoreLocalVars(BasicBlock& bb);
         void RestoreLocalVars(BasicBlock& bb);
 
+        bool IsThisPtrRequired() const;
         void StoreThisPtr(BasicBlock& bb);
         void RestoreThisPtr(BasicBlock& bb);
 
@@ -214,7 +215,6 @@ class GraphGenerator final : private Visitor
         \see StoreLocalVars
         */
         std::vector<LocalVar>       localVars_;
-        bool                        replaceThisPtr_ = false;
 
         TACVarManager               varMngr_;
 

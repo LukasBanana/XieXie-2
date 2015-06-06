@@ -221,34 +221,34 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     bool isMemberCall = !procSig->isStatic;
     bool isDirectCall = (!isMemberCall || ast->IsBaseCall() || procDecl->IsFinal());
 
-    bool hasObjVar = false;
     TACVar objVar;
 
     if (isMemberCall)
     {
-        /* Generate instructions for variable-name, to acquire 'this' pointer */
         if (ast->IsInitProc())
-            PushVar(ResultVar());
-        else
-            GenerateVarNameRValue(*ast->procName, reinterpret_cast<const TACVar*>(args));
-
-        objVar = Var();
-        if (objVar != ThisPtr())
         {
-            /* Replace current 'this' pointer */
-            StoreThisPtr(*BB());
-            hasObjVar = true;
+            /* Load 'out' variable from top of the stack */
+            objVar = TempVar();
+            BB()->MakeInst<TACHeapInst>(OpCodes::LDW, objVar, StackPtr(), -4);
+            PushVar(objVar);
         }
         else
-            PopVar();
+        {
+            /* Generate instructions for variable-name, to acquire 'this' pointer */
+            GenerateVarNameRValue(*ast->procName, reinterpret_cast<const TACVar*>(args));
+            objVar = Var();
+        }
+
+        /* Replace current 'this' pointer */
+        StoreThisPtr(*BB());
     }
     
     /* Make instructions to push arguments */
     for (auto it = ast->argExprs.rbegin(); it != ast->argExprs.rend(); ++it)
         GenerateArgumentExpr(**it);
 
-    /* Check if 'this' pointer must be updated this procedure call */
-    if (hasObjVar)
+    /* Check if 'this' pointer must be updated for this procedure call */
+    if (isMemberCall)
     {
         BB()->MakeInst<TACCopyInst>(ThisPtr(), objVar);
         PopVar();
@@ -272,8 +272,11 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     }
     RestoreLocalVars(*BB());
 
-    /* Restore previous 'this' pointer */
-    RestoreThisPtr(*BB());
+    if (isMemberCall)
+    {
+        /* Restore previous 'this' pointer */
+        RestoreThisPtr(*BB());
+    }
 
     /* Store procedure result in temporary variable */
     if (procSig->returnTypeDenoter && !procSig->returnTypeDenoter->IsVoid())
@@ -1884,7 +1887,7 @@ void GraphGenerator::GenerateVarNameRValueDynamic(VarName* ast, const TACVar* ba
     /* Check if this is an immediate call of a member procedure */
     if (ast->declRef->Type() == AST::Types::ProcOverloadSwitch)
     {
-        PushVar(TACVar::varThisPtr);
+        PushVar(baseVar != nullptr ? *baseVar : TACVar::varThisPtr);
         return;
     }
 
@@ -2014,22 +2017,21 @@ void GraphGenerator::RestoreLocalVars(BasicBlock& bb)
     localVars_.clear();
 }
 
+bool GraphGenerator::IsThisPtrRequired() const
+{
+    return (procedure_ && !procedure_->procSignature->isStatic);
+}
+
 void GraphGenerator::StoreThisPtr(BasicBlock& bb)
 {
-    if (procedure_ && !procedure_->procSignature->isStatic)
-    {
+    if (IsThisPtrRequired())
         bb.MakeInst<TACStackInst>(OpCodes::PUSH, ThisPtr());
-        replaceThisPtr_ = true;
-    }
 }
 
 void GraphGenerator::RestoreThisPtr(BasicBlock& bb)
 {
-    if (replaceThisPtr_)
-    {
+    if (IsThisPtrRequired())
         bb.MakeInst<TACStackInst>(OpCodes::POP, ThisPtr());
-        replaceThisPtr_ = false;
-    }
 }
 
 #undef RETURN_BLOCK_REF
