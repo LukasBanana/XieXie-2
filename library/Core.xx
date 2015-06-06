@@ -45,8 +45,10 @@ extern class String {
 	init(int size)
 	/// Initializes a string 'count' times with the character 'char'.
 	init(int char, int count)
-	/// Initailizes a string from the specified source.
+	/// Initializes a string from the specified source.
 	init(String source)
+	/// Initializes a string from the specified source with delimiters.
+	init(String source, int from, int length := String.end)
 	
 	/// Returns true if this string is equal to the specified string instance.
 	[[override]]

@@ -21,6 +21,14 @@
 .define FIELD_BUFSIZE	16	; Class field "bufSize"
 .define FIELD_BUFFER	20	; Class field "buffer"
 
+.define TYPEID_OBJECT	0	; Object.typeID
+.define TYPEID_STRING	1	; String.typeID
+.define TYPEID_ARRAY	2	; Array.typeID
+; ...
+
+.define SIZEOF_STRING	24	; sizeof(String)
+; ...
+
 .define MIN_BUFSIZE		32	; Minimal buffer size (in bytes)
 
 ; ------- Common -------
@@ -263,7 +271,7 @@ CObject.PtoString:
 
 ; int Object.pointer()
 CObject.Ppointer:
-	add $ar, $xr, 12	; return pointer to first member variables of derived class
+	add $ar, $xr, 12	; return pointer to first member variable of derived class
 	ret
 
 Object.vtable:
@@ -294,7 +302,7 @@ CString.Prelease:
 
 ; void String.init()
 CString.Pinit:
-	; this.size := 1 (null character)
+	; this.size := 1 (for null character)
 	mov $r0, 1
 	stw $r0, ($xr) %FIELD_SIZE		; store this.size
 	
@@ -445,6 +453,11 @@ CString.Pinit,R@String?source:
 	insc CopyMem
 	ret 1
 
+; void String.init(String source, int from, int length)
+CString.Pinit,R@String?source,I?from,I?length:
+	; ...
+	ret 3
+
 ; String String.toString()
 CString.PtoString:
 	call inc_ref	; increment reference of this (return strong this)
@@ -465,8 +478,8 @@ CBuffer.Ppointer:
 CString.Pcopy:
 	; allocate new String instance
 	push @String.vtable					; push String vtable
-	push 1								; push String type-id
-	push 24								; push String size
+	push %TYPEID_STRING					; push String type-id
+	push %SIZEOF_STRING					; push String size
 	call new							; allocate new String
 	
 	; call String's copy c'tor
@@ -680,6 +693,7 @@ String.vtable:
 	.word @CString.Pinit,I?size
 	.word @CString.Pinit,I?char,I?count
 	.word @CString.Pinit,R@String?source
+	.word @CString.Pinit,R@String?source,I?from,I?length
 	.word @CString.Pcopy
 	.word @CString.Psize
 	.word @CString.Presize,I?size
