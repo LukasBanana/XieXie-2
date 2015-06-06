@@ -2,7 +2,7 @@
 // String Test 3
 // 04/06/2015
 
-import Console, ASCII
+import Console, ASCII, Algo
 
 /// Test for string concatenation
 class Test {
@@ -16,7 +16,8 @@ class Test {
 		//Test.test2()
 		//Test.test3()
 		//Test.test4()
-		Test.test5()
+		//Test.test5()
+		Test.test6()
 	}
 	
 	static void test1() {
@@ -68,7 +69,7 @@ class Test {
 	}
 	
 	// Encrypts/ decrypts the specified string
-	static String test5Cypher(String message, int key) {
+	private static String test5Cypher(String message, int key) {
 		
 		String coded := message.copy()
 		
@@ -77,6 +78,28 @@ class Test {
 		}
 		
 		return coded
+		
+	}
+	
+	private static String subString(String s, int from, int length := String.end) {
+		return s.subString(from, Algo.min(length, s.size() - from))
+	}
+	
+	private static String rightString(String s, int length) {
+		return s.subString(s.size() - length)
+	}
+	
+	static void test6() {
+		
+		//Console.writeLine("Hello, World".subString(0, 5))
+		var s := "Hello, World!"
+		
+		for int i := 0 ; i < s.size() ; i++ {
+			Console.writeLine(
+				//Test.subString(s, i, 5)
+				Test.rightString(s, i + 1)
+			)
+		}
 		
 	}
 	

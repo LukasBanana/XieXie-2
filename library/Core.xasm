@@ -432,30 +432,93 @@ CString.Pinit,I?char,I?count:
 
 ; void String.init(String source)
 CString.Pinit,R@String?source:
+	; validate argument
+	ldw $cf, ($lb) -4				; load source
+	je .end							; check: source = null
+	
 	; copy first 20 bytes from literal
-	ldw $r0, ($lb) -4				; load address of string literal
 	push 20							; push size of 20 bytes (excluding the '.buffer' address)
-	push $r0						; push source address of original string literal
+	push $cf						; push source address of original string literal
 	push $xr						; push this pointer as destination address
 	insc CopyMem
 	
 	; allocate buffer for new string
-	ldw $r1, ($r0) %FIELD_SIZE		; load 'source.size'
+	ldw $r1, ($cf) %FIELD_SIZE		; load 'source.size'
 	push $r1
 	insc AllocMem					; allocate buffer
 	stw $ar, ($xr) %FIELD_BUFFER	; write buffer address to new string object
 	
 	; copy string buffer from literal
-	ldw $r0, ($r0) %FIELD_BUFFER	; load buffer address from literal
+	ldw $cf, ($cf) %FIELD_BUFFER	; load buffer address from literal
 	push $r1						; push buffer size
-	push $r0						; push buffer address of literal
+	push $cf						; push buffer address of literal
 	push $ar						; push buffer address of new string
 	insc CopyMem
+	
+	.end:
 	ret 1
 
 ; void String.init(String source, int from, int length)
 CString.Pinit,R@String?source,I?from,I?length:
-	; ...
+	; validate arguments
+	ldw $cf, ($lb) -4				; load source
+	je .return_empty_string			; check: source = null
+	mov $r0, $cf
+	ldw $cf, ($lb) -8				; load from
+	jl .return_empty_string			; check: from < 0
+	mov $r1, $cf
+	ldw $cf, ($lb) -12				; load length
+	jge .not_neg					; check: length >= 0
+		ldw $cf, ($r0) %FIELD_SIZE	; set: length := source.size
+		dec $cf						; length--
+		sub $cf, $cf, $r1			; length -= from
+	.not_neg:
+	mov $r2, $cf
+	ldw $r3, ($r0) %FIELD_SIZE		; load source.size
+	add $r4, $r1, $r2				; compute: t := from + length
+	inc $r4							; t++
+	cmp $r4, $r3					; check: t > source.size
+	jg .return_empty_string
+	
+	; store member variables for new string
+	add $r4, $r2, 1					; set: t := length + 1
+	stw $r4, ($xr) %FIELD_SIZE		; store this.size := t
+	cmp $r4, %MIN_BUFSIZE			; check: this.bufSize >= MIN_BUFSIZE
+	jge .gt_min
+		mov $r4, %MIN_BUFSIZE		; clamp this.bufSize to MIN_BUFSIZE
+	.gt_min:
+	stw $r4, ($xr) %FIELD_BUFSIZE	; store this.bufSize
+	
+	; allocate buffer for new string
+	push $r4
+	insc AllocMem					; allocate buffer
+	stw $ar, ($xr) %FIELD_BUFFER	; write buffer address to new string object
+	
+	; copy string buffer from literal
+	ldw $r0, ($r0) %FIELD_BUFFER	; load buffer address from literal
+	add $r0, $r0, $r1				; add offset 'from' to buffer
+	push $r2						; push buffer size
+	push $r0						; push buffer address of literal
+	push $ar						; push buffer address of new string
+	insc CopyMem
+	
+	; store null terminator
+	mov $r0, 0
+	add $r1, $ar, $r2				; get offset t := this.buffer + length
+	stb $r0, ($r1) 0				; store *t := 0
+	ret 3
+	
+	; initialize empty string
+	.return_empty_string:
+	mov $r0, 1
+	stw $r0, ($xr) %FIELD_SIZE		; store this.size
+	mov $r0, %MIN_BUFSIZE
+	stw $r0, ($xr) %FIELD_BUFSIZE	; store this.bufSize
+	push $r0
+	insc AllocMem					; allocate buffer
+	stw $ar, ($xr) %FIELD_BUFFER	; store this.buffer
+	mov $r0, 0
+	stb $r0, ($ar) 0				; store null terminator
 	ret 3
 
 ; String String.toString()
@@ -632,8 +695,24 @@ CString.Pappend,F?rhs:
 
 ; String String.subString(int from, int length)
 CString.PsubString,I?from,I?length:
-	; ...
-	mov $ar, 0 ; !!!
+	; allocate new String instance
+	push @String.vtable									; push String vtable
+	push %TYPEID_STRING									; push String type-id
+	push %SIZEOF_STRING									; push String size
+	call new											; allocate new String
+	
+	; call String's copy c'tor
+	ldw $r0, ($lb) -4									; load from
+	ldw $r1, ($lb) -8									; load length
+	push $ar											; store $ar
+	push $r1											; push length
+	push $r0											; push from
+	push $xr											; push this pointer as argument 'source'
+	mov $xr, $ar										; override this pointer with reference to new String instance
+	call CString.Pinit,R@String?source,I?from,I?length	; call String copy constructor
+	
+	; return new String instance
+	pop $ar												; restore $ar
 	ret 2
 
 ; int String.find(String search, int from)
