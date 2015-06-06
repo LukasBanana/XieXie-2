@@ -468,17 +468,15 @@ CString.Pcopy:
 	push 1								; push String type-id
 	push 24								; push String size
 	call new							; allocate new String
-	pop $r1
 	
 	; call String's copy c'tor
-	ldw $r0, ($lb) -4					; load this pointer
-	push $r1							; push first as back-up
-	push $r1							; push second as argument
-	mov $xr, $r0						; override this pointer with reference to new String instance
+	push $ar							; store $ar
+	push $xr							; push this pointer as argument 'source'
+	mov $xr, $ar						; override this pointer with reference to new String instance
 	call CString.Pinit,R@String?source	; call String copy constructor
 	
 	; return new String instance
-	pop $ar								; get return value from back-up $r0 on stack
+	pop $ar								; restore $ar
 	ret
 
 ; int String.size()
