@@ -81,4 +81,14 @@ class Algo {
 		return result
 	}
 	
+	/* --- "abs": Computing the absolute value --- */
+	
+	static int abs(int x) {
+		return x < 0 ? -x : x
+	}
+	
+	static float abs(float x) {
+		return x < 0.0 ? -x : x
+	}
+	
 }
