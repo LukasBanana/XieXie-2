@@ -13,7 +13,9 @@ class Test {
 	
 	static void main() {
 		//Test.test1()
-		Test.test2()
+		//Test.test2()
+		//Test.test3()
+		Test.test4()
 	}
 	
 	static void test1() {
@@ -28,9 +30,25 @@ class Test {
 	}
 	
 	static void test2() {
-	
+		
 		Console.writeLine(new String(char: ASCII.hyphen, count: Test.getString().size()))
-		//Console.writeLine(Test.getString().size())
+		
+	}
+	
+	static void test3() {
+		
+		var s := "a"
+		repeat 28 {
+			s.append(s.copy())
+			Console.writeLine(s.size())
+		}
+		
+	}
+	
+	static void test4() {
+		
+		//Console.writeLine("foo".append("bar").append("test").append("lol"))
+		Console.writeLine("\("a")\("b")\("c")\("d")\("e")\("f")")
 		
 	}
 	
