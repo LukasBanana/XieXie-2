@@ -539,9 +539,12 @@ CString.Pempty:
 
 ; String String.append(String rhs)
 CString.Pappend,R@String?rhs:
+	; validate argument
 	ldw $cf, ($lb) -4				; load rhs
 	je .end							; check if rhs = null
 	mov $r0, $cf					; store rhs
+	cmp $xr, $r0					; check if rhs = this
+	je .end
 	
 	; check if other string is empty
 	ldw $r1, ($r0) %FIELD_SIZE		; load rhs.size

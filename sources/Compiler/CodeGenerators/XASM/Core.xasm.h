@@ -334,6 +334,8 @@
 "ldw $cf, ($lb) -4\n"
 "je .end\n"
 "mov $r0, $cf\n"
+"cmp $xr, $r0\n"
+"je .end\n"
 "ldw $r1, ($r0) %FIELD_SIZE\n"
 "cmp $r1, 1\n"
 "jle .end\n"

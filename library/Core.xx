@@ -74,6 +74,8 @@ extern class String {
 	
 	/**
 	Appends the specified string at the end of this string.
+	@param rhs Specifies the string which is to be appended to this string.
+	This must not be the same instance as this string!
 	@return Weak reference to this string.
 	*/
 	String@ append(String rhs)
