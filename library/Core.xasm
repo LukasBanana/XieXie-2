@@ -631,13 +631,42 @@ CString.Pfind,R@String?search,I?from:
 
 ; void String.setChar(int pos, int char)
 CString.PsetChar,I?pos,I?char:
-	; ...
+	; validate argument
+	ldw $cf, ($lb) -4				; load pos
+	jl .end							; check: pos < 0
+	mov $r0, $cf					; store pos in $r0
+	ldw $r1, ($xr) %FIELD_SIZE		; load this.size
+	cmp $r0, $r1					; check: pos >= this.size
+	jge .end
+	ldw $r1, ($lb) -8				; load char
+	
+	; store character at position 'pos'
+	ldw $r2, ($xr) %FIELD_BUFFER	; load this.buffer
+	add $r2, $r2, $r0				; add offset to buffer
+	stb $r1, ($r2) 0				; store character to buffer
+	
+	.end:
 	ret 2
 
 ; int String.getChar(int pos)
 CString.PgetChar,I?pos:
-	; ...
-	mov $ar, 0 ; !!!
+	; validate argument
+	ldw $cf, ($lb) -4				; load pos
+	jl .end							; check: pos < 0
+	mov $r0, $cf					; store pos in $r0
+	ldw $r1, ($xr) %FIELD_SIZE		; load this.size
+	cmp $r0, $r1					; check: pos >= this.size
+	jge .end
+	
+	; load character at position 'pos'
+	ldw $r2, ($xr) %FIELD_BUFFER	; load this.buffer
+	add $r2, $r2, $r0				; add offset to buffer
+	ldb $ar, ($r2) 0				; load character from buffer
+	ret 1
+	
+	; return invalid character
+	.end:
+	mov $ar, 0
 	ret 1
 
 String.vtable:

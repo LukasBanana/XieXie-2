@@ -15,7 +15,8 @@ class Test {
 		//Test.test1()
 		//Test.test2()
 		//Test.test3()
-		Test.test4()
+		//Test.test4()
+		Test.test5()
 	}
 	
 	static void test1() {
@@ -47,8 +48,35 @@ class Test {
 	
 	static void test4() {
 		
-		//Console.writeLine("foo".append("bar").append("test").append("lol"))
+		Console.writeLine("foo".append("bar").append("test").append("lol").size())
 		Console.writeLine("\("a")\("b")\("c")\("d")\("e")\("f")")
+		
+	}
+	
+	static void test5() {
+		
+		var msg := "Hello, World!"
+		const key := 25
+		
+		var enc := Test.test5Cypher(msg, key)
+		var dec := Test.test5Cypher(enc, key)
+		
+		Console.writeLine("message:   \(msg)")
+		Console.writeLine("encrypted: \(enc)")
+		Console.writeLine("decrypted: \(dec)")
+		
+	}
+	
+	// Encrypts/ decrypts the specified string
+	static String test5Cypher(String message, int key) {
+		
+		String coded := message.copy()
+		
+		for int i := 0 ; i < coded.size() ; i++ {
+			coded.setChar(i, coded.getChar(i) ^ key)
+		}
+		
+		return coded
 		
 	}
 	
