@@ -2,6 +2,8 @@
 // String Test 3
 // 04/06/2015
 
+import Console, ASCII
+
 /// Test for string concatenation
 class Test {
 	
@@ -10,10 +12,22 @@ class Test {
 	}
 	
 	static void main() {
+		Test.test1()
+		Test.test2()
+	}
+	
+	static void test1() {
 		
 		var a := "a", b := "b", c := "c"
-		
 		Test.print(a.append("b"))
+		
+	}
+	
+	static void test2() {
+	
+		var name := "Hello"
+		
+		Console.writeLine(new String(char: ASCII.hyphen, count: name.size()))
 		
 	}
 	
