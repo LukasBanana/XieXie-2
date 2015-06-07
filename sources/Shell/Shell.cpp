@@ -65,11 +65,13 @@ void Shell::Execute(StreamParser parser)
 static void AppendDefaultScript(std::stringstream& sstr)
 {
     sstr
-        << "import MsgBox" << std::endl
+        << "import MsgBox, Console, Integer, ASCII" << std::endl
         << "class S { " << std::endl
+        << "void print(bool val) { print(val ? \"true\" : \"false\") }" << std::endl
         << "void print(int val) { Intrinsics.printInt(val) }" << std::endl
         << "void print(float val) { Intrinsics.printFloat(val) }" << std::endl
         << "void print(String val) { Intrinsics.print(val.pointer()) }" << std::endl
+        << "void printLn(bool val) { printLn(val ? \"true\" : \"false\") }" << std::endl
         << "void printLn(int val) { Intrinsics.printInt(val) Intrinsics.printLn(0) }" << std::endl
         << "void printLn(float val) { Intrinsics.printFloat(val) Intrinsics.printLn(0) }" << std::endl
         << "void printLn(String val) { Intrinsics.printLn(val.pointer()) }" << std::endl
