@@ -287,7 +287,7 @@ Object.vtable:
 ; ------- String Class -------
 
 ; String:
-;	Object	super	( 0)
+;	Object	base	( 0)
 ;	int		size	(12)
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
@@ -785,7 +785,7 @@ String.vtable:
 ; built-in array for objects
 
 ; Array:
-;	Object	super	( 0)
+;	Object	base	( 0)
 ;	int		size	(12)
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
@@ -996,7 +996,7 @@ Array.vtable:
 ; built-in array for built-in type 'int'
 
 ; IntArray:
-;	Object	super	( 0)
+;	Object	base	( 0)
 ;	int		size	(12)
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
@@ -1061,7 +1061,7 @@ IntArray.vtable:
 ; built-in array for built-in type 'float'
 
 ; FloatArray:
-;	Object	super	( 0)
+;	Object	base	( 0)
 ;	int		size	(12)
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
@@ -1115,7 +1115,7 @@ FloatArray.vtable:
 ; built-in array for 'bool'
 
 ; BoolArray:
-;	Object	super	( 0)
+;	Object	base	( 0)
 ;	int		size	(12)
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
@@ -1159,7 +1159,7 @@ BoolArray.vtable:
 ; built-in class as general purpose buffer
 
 ; Buffer:
-;	Object	super	( 0)
+;	Object	base	( 0)
 ;	int		size	(12)
 ;	int		bufSize	(16)
 ;	int		buffer	(20)
