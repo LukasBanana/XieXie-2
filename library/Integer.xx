@@ -23,12 +23,21 @@ class Integer {
 		this.value := value
 	}
 	/// @see Integer.parseFrom
-	init(String s, ExceptionHandler@ e := null) {
+	init(String s, ExceptionHandler e := null) {
 		value := Integer.parseFrom(s, e)
 	}
 	
 	[[override]]
 	String toString() {	
+		return Integer.asString(value)
+	}
+	
+	/**
+	Generates a String instance from the specified integer value.
+	@param value Specifies the value which is to be converted to a string.
+	@return The new String instance.
+	*/
+	static String asString(int value) {
 		// Determine string length
 		int len, firstDigit, v := value
 		
@@ -57,7 +66,7 @@ class Integer {
 		
 		// Append digits to string
 		for int i := len - 1 ; i >= firstDigit ; i-- {
-			s.setChar(i, ASCII.digit0 + (v & 9))
+			s.setChar(i, ASCII.digit0 + (v % 10))
 			v /= 10
 		}
 		
@@ -68,8 +77,9 @@ class Integer {
 	Parses an integer from the specified string
 	@param s Specifies the string from which the integer value is to be parsed.
 	@param e Optional exception handler.
+	@return The parsed integer value or zero if the parsing failed.
 	*/
-	static int parseFrom(String@ s, ExceptionHandler@ e := null) {
+	static int parseFrom(String s, ExceptionHandler e := null) {
 		if s = null {
 			// Invalid argument
 			ExceptionHandler.notifySafe(e, "\(__CLASS__).\(__PROC__): invalid argument")
