@@ -250,7 +250,8 @@ DEF_VISIT_PROC(GraphGenerator, ProcCall)
     /* Check if 'this' pointer must be updated for this procedure call */
     if (isMemberCall)
     {
-        BB()->MakeInst<TACCopyInst>(ThisPtr(), objVar);
+        if (objVar != ThisPtr())
+            BB()->MakeInst<TACCopyInst>(ThisPtr(), objVar);
         PopVar();
     }
 
@@ -2194,6 +2195,7 @@ void GraphGenerator::PopRefScope(BasicBlock& bb)
     if (!refs.empty())
     {
         //!TODO! -> don't store local variables, inside the current basic block 'bb'!!!
+        StoreThisPtr(bb);
         StoreLocalVars(bb);
         {
             auto numRefs = refs.size();
@@ -2214,6 +2216,7 @@ void GraphGenerator::PopRefScope(BasicBlock& bb)
             }
         }
         RestoreLocalVars(bb);
+        RestoreThisPtr(bb);
     }
 
     refScopeStack_.Pop();

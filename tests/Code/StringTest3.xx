@@ -117,7 +117,6 @@ class Test {
 		Console.writeLine(s)
 	}
 	
-	//!BUG HERE! -> only "Hello" is encoded!!!
 	private void test7This() {
 		const key := 24
 		foreach s : { "Hello", "World", "Foo", "bar" } {
@@ -125,7 +124,7 @@ class Test {
 			for int i := 0, n := c.size() ; i < n ; i++ {
 				c.setChar(i, c.getChar(i) ^ key)
 			}
-			printLn(c)
+			printLn("\"\(s)\" -> \"\(c)\"")
 		}
 	}
 	
