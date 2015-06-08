@@ -1,0 +1,27 @@
+
+// Loop Test 2
+// 08/06/2015
+
+import Console
+
+/// Test for nested expressions in for-each loop
+class Test {
+	
+	static void main() {
+		
+		foreach x : new int[][](3) {
+			x := new int[](2)
+			x.append(999)
+			foreach y : x {
+				Console.writeLine(y)
+			}
+		}
+		
+		foreach x : new Object() { int[] getArray() { return { 1, 2, 3 } } }.getArray() {
+			Console.writeLine(x)
+		}
+		
+	}
+	
+}
+

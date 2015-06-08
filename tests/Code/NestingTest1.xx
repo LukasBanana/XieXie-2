@@ -1,0 +1,41 @@
+
+// Nesting Test 1
+// 08/06/2015
+
+import Console
+
+class Test {
+
+	static void main() {
+		
+		/*
+		Iterate over list, which is returned by "getArray",
+		from an anonymous class, which is derived from "Object"
+		*/
+		foreach x :
+			new Object() {
+				int[] getArray() {
+					return { 42, 3, -12 }
+				}
+			}.getArray()
+		{
+			Console.writeLine(x)
+		}
+		
+		//!BUG HERE!
+		Console.writeLine(
+			new Object() {
+				int sum(int[] list) {
+					int s
+					foreach x : list {
+						s += x
+					}
+					return s
+				}
+			}.sum({ 1, 2, 3 })
+		)
+		
+	}
+	
+}
+
