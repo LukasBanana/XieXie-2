@@ -1924,7 +1924,7 @@ AllocExprPtr Parser::ParseAllocExpr()
             /* Append anonymous class declaration to the 'Program'-AST root node */
             program_->classDeclStmnts.push_back(anonymousClassDecl);
         }
-        else
+        else if (!ast->typeDenoter->IsArray())
             Error("anonymous class can not inherit from non-pointer type", false);
     }
 
