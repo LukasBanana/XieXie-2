@@ -1357,8 +1357,9 @@ DEF_VISIT_PROC(GraphGenerator, AllocExpr)
     Visit(&(ast->procCall));
 
     /* Restore variable to allocated object */
-    BB()->MakeInst<TACStackInst>(OpCodes::POP, ResultVar());
-    PushVar(ResultVar());
+    auto var = TempVar();
+    BB()->MakeInst<TACStackInst>(OpCodes::POP, var);
+    PushVar(var);
 }
 
 DEF_VISIT_PROC(GraphGenerator, VarAccessExpr)
