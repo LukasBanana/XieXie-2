@@ -2180,7 +2180,7 @@ ExprPtr Parser::ParseSwitchCaseItemExpr()
 
 /* --- Type denoters --- */
 
-// type_denoter : builtin_type_denoter | nullable_type_denoter;
+// type_denoter: builtin_type_denoter | nullable_type_denoter;
 TypeDenoterPtr Parser::ParseTypeDenoter(const TokenPtr& identTkn, bool hasArrayType)
 {
     TypeDenoterPtr ast;

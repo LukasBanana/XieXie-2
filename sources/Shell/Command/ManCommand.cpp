@@ -9,6 +9,7 @@
 #include "Keywords.h"
 #include "ConsoleManip.h"
 #include "MakeUnique.h"
+#include "Attrib.h"
 
 #include <set>
 #include <algorithm>
@@ -16,6 +17,7 @@
 
 using namespace Platform::ConsoleManip;
 using Tokens = SyntaxAnalyzer::Token::Types;
+using AbstractSyntaxTrees::Attrib;
 
 static const char* KeywordHint(const Tokens type)
 {
@@ -71,6 +73,23 @@ static void PrintKeywords(Log& output)
         PrintKeywordInfo(output, key, maxLen);
 }
 
+static void PrintAttribs(Log& output)
+{
+    /* Print attributes */
+    output.Headline("attributes:");
+
+    for (const std::string& attr : { Attrib::idDeprecated,
+                                     Attrib::idFinal,
+                                     Attrib::idOverride,
+                                     Attrib::idExport,
+                                     Attrib::idBind,
+                                     Attrib::idSet,
+                                     Attrib::idGet })
+    {
+        output.Message(attr);
+    }
+}
+
 void ManCommand::Execute(StreamParser& input, Log& output)
 {
     while (true)
@@ -79,6 +98,11 @@ void ManCommand::Execute(StreamParser& input, Log& output)
         {
             input.Accept();
             PrintKeywords(output);
+        }
+        else if (input.Get() == "-A" || input.Get() == "--attribs")
+        {
+            input.Accept();
+            PrintAttribs(output);
         }
         else
             break;
@@ -89,6 +113,7 @@ void ManCommand::Help(HelpPrinter& printer) const
 {
     printer.Command("man [OPT+]", "prints the compiler's manual pages");
     printer.Flag("-K, --keywords", "prints the list of all keywords");
+    printer.Flag("-A, --attribs", "prints the list of all attributes");
 }
 
 

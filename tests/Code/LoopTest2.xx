@@ -9,6 +9,8 @@ class Test {
 	
 	static void main() {
 		
+		Console.writeLine(__FILE__)
+		
 		foreach x : new int[][](3) {
 			x := new int[](2)
 			x.append(999)
