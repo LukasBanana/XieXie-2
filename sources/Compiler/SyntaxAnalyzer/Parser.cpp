@@ -682,6 +682,7 @@ StmntPtr Parser::ParseStmnt()
             return ParseVarDeclStmnt();
         case Tokens::New:
         case Tokens::LBracket:
+        case Tokens::LCurly:
             return ParseExprStmnt();
     }
     return ParseVarNameStmnt();
