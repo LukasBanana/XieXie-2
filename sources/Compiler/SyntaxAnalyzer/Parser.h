@@ -276,6 +276,11 @@ class Parser
         //! Converts the specified expression AST node to a signed integer literal. If this is not possible, the return value is false.
         bool ConvertExprToSignedIntLiteral(const Expr& ast, int& value) const;
 
+        //! Pushes the current state container onto a stack.
+        void PushState();
+        //! Pops the previoujs state container from a stack.
+        void PopState();
+
         inline Tokens TknType() const
         {
             return tkn_->Type();
@@ -295,22 +300,23 @@ class Parser
 
         /* === Members === */
 
-        Scanner             scanner_;
-        SourceCodePtr       source_;
-        TokenPtr            tkn_;
-        ErrorReporter*      errorReporter_          = nullptr;
+        Scanner                     scanner_;
+        SourceCodePtr               source_;
+        TokenPtr                    tkn_;
+        ErrorReporter*              errorReporter_          = nullptr;
 
-        Program*            program_                = nullptr; //!< Reference to the current program AST node.
+        Program*                    program_                = nullptr; //!< Reference to the current program AST node.
 
         /**
         This stack stores the information, if the current procedure has a return type or not ('void' type).
         If the procedure has no return type, every "return" statement must not parse an expression!
         */
-        std::stack<bool>    procHasReturnTypeStack_;
+        std::stack<bool>            procHasReturnTypeStack_;
 
-        StateContainer      state_;
+        SafeStack<StateContainer>   stateStack_;
+        StateContainer              state_;
 
-        size_t              anonymousClassCounter_  = 0;
+        size_t                      anonymousClassCounter_  = 0;
 
 };
 

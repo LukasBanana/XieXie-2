@@ -1264,19 +1264,27 @@ ClassDeclStmntPtr Parser::ParseAnonymousClass(const std::string& baseClassIdent)
 {
     auto ast = Make<ClassDeclStmnt>(source_);
 
-    state_.classDecl = ast.get();
+    /*
+    Push current state (reference to current class-, and procedure declarations etc.)
+    -> This is because an anonymous class opens a new class declaration.
+    */
+    PushState();
+    {
+        state_.classDecl = ast.get();
 
-    ast->isAnonymous    = true;
-    ast->ident          = GenAnonymousClassIdent();
-    ast->baseClassIdent = baseClassIdent;
+        ast->isAnonymous    = true;
+        ast->ident          = GenAnonymousClassIdent();
+        ast->baseClassIdent = baseClassIdent;
 
-    /* Parse class body segments */
-    auto vis = ClassDeclStmnt::Visibilities::Public;
+        /* Parse class body segments */
+        auto vis = ClassDeclStmnt::Visibilities::Public;
 
-    Accept(Tokens::LCurly);
-    while (!Is(Tokens::RCurly))
-        ParseClassBodySegment(*ast, vis);
-    Accept(Tokens::RCurly);
+        Accept(Tokens::LCurly);
+        while (!Is(Tokens::RCurly))
+            ParseClassBodySegment(*ast, vis);
+        Accept(Tokens::RCurly);
+    }
+    PopState();
 
     return ast;
 }
@@ -2546,6 +2554,17 @@ bool Parser::ConvertExprToSignedIntLiteral(const Expr& ast, int& value) const
         }
     }
     return false;
+}
+
+void Parser::PushState()
+{
+    stateStack_.Push(state_);
+}
+
+void Parser::PopState()
+{
+    state_ = stateStack_.Top();
+    stateStack_.Pop();
 }
 
 
