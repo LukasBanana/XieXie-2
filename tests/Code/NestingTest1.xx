@@ -4,6 +4,8 @@
 
 import Console
 
+class Printer { void print() }
+
 class Test {
 
 	static void main() {
@@ -22,7 +24,18 @@ class Test {
 			Console.writeLine(x)
 		}
 		
-		//!BUG HERE!
+		// Array access and anonymous class
+		{
+			null,
+			new Printer() {
+				void print() {
+					Console.writeLine("\(__CLASS__).\(__PROC__)")
+				}
+			},
+			null
+		}[1].print()
+		
+		// Call procedure with array, immediately after object instantiation
 		Console.writeLine(
 			new Object() {
 				int sum(int[] list) {
