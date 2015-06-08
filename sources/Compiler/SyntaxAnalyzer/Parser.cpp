@@ -37,7 +37,12 @@ bool Parser::ParseSource(Program& program, const SourceCodePtr& source, ErrorRep
         /* Initialize parser */
         errorReporter_ = &errorReporter;
 
+        if (!source)
+            Error("invalid input stream");
+
+        state_.filename = source->Name();
         source_ = source;
+
         scanner_.ScanSource(source, errorReporter);
         AcceptIt();
 
