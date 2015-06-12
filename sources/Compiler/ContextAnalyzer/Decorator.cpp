@@ -621,6 +621,7 @@ DEF_VISIT_PROC(Decorator, ProcCallExpr)
 DEF_VISIT_PROC(Decorator, PostfixValueExpr)
 {
     Visit(ast->primaryValueExpr);
+    Visit(ast->arrayAccess);
 
     if (ast->procCall)
     {
