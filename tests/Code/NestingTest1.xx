@@ -24,9 +24,8 @@ class Test {
 			Console.writeLine(x)
 		}
 		
-		// !BUG HERE! -> with "[idx]"
 		var idx := 0
-		var a := new Printer() { void print() {} }, b := null, c := null
+		var a := new Printer() { void print() { Console.writeLine("ok") } }, b := null, c := null
 		{ a, b, c }[idx].print()
 		
 		// Array access and anonymous class

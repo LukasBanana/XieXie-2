@@ -9,7 +9,7 @@ class Show { void show() }
 class Test {
 	
 	static void headline(String s) {
-		Console.write("--- \(s): ---")
+		Console.writeLine("--- \(s): ---")
 	}
 	
 	static void main() {
@@ -58,7 +58,6 @@ class Test {
 			idx := Console.readInt()
 		}
 		
-		// !BUG HERE! -> with "[idx"]
 		Show a := new Show() { void show() { Console.writeLine("idx is 0") } }
 		Show b := new Show() { void show() { Console.writeLine("idx is 1") } }
 		Show c := new Show() { void show() { Console.writeLine("idx is 2") } }
