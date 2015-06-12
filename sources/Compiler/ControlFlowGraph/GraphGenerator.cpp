@@ -2030,7 +2030,7 @@ void GraphGenerator::RestoreLocalVars(BasicBlock& bb)
 
 bool GraphGenerator::IsThisPtrRequired() const
 {
-    return (procedure_ && !procedure_->procSignature->isStatic);
+    return true;//(procedure_ && !procedure_->procSignature->isStatic);
 }
 
 void GraphGenerator::StoreThisPtr(BasicBlock& bb)
