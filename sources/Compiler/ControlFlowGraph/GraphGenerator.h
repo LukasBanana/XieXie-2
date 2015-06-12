@@ -83,6 +83,8 @@ class GraphGenerator final : private Visitor
         void ErrorIntern(const std::string& msg, const AST* ast = nullptr);
         void Error(const std::string& msg, const AST* ast = nullptr);
 
+        void AssertPointer(const void* ptr, const std::string& ptrName, const AST* ast = nullptr);
+
         /* --- AST Interface --- */
 
         DECL_VISITOR_INTERFACE;

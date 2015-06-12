@@ -106,6 +106,12 @@ void GraphGenerator::Error(const std::string& msg, const AST* ast)
         errorReporter_->Add(CodeGenError(msg));
 }
 
+void GraphGenerator::AssertPointer(const void* ptr, const std::string& ptrName, const AST* ast)
+{
+    if (!ptr)
+        ErrorIntern("<" + ptrName + "> must not be null", ast);
+}
+
 /* --- Common AST nodes --- */
 
 DEF_VISIT_PROC(GraphGenerator, Program)
@@ -1885,6 +1891,9 @@ void GraphGenerator::GenerateVarNameRValueDynamic(VarName* ast, const TACVar* ba
 {
     if (!ast)
         return;
+
+    /* Check for internal error */
+    AssertPointer(ast->declRef, "VarName::declRef", ast);
 
     /* Check if this is an immediate call of a member procedure */
     if (ast->declRef->Type() == AST::Types::ProcOverloadSwitch)
