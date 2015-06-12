@@ -1,6 +1,6 @@
 // XieXie Quine (02/05/2015)
 import ASCII
-import System
+import Console
 class Quine {
     static void main() {
         var quoteStr := new String(char: ASCII.doubleQuotes, count: 1)
@@ -8,47 +8,43 @@ class Quine {
         var l := { // Array of source code
             "// XieXie Quine (02/05/2015)",
             "import ASCII",
-            "import System",
+            "import Console",
             "class Quine {",
             "    static void main() {",
             "        var quoteStr := new String(char: ASCII.doubleQuotes, count: 1)",
             "        var commaStr := new String(char: ASCII.comma, count: 1)",
             "        var l := { // Array of source code",
-            "        ",
+            "            ",
             "        }",
             "        for int i ; i < 8 ; i++ { // Print opening code",
-            "            System.out.writeLine(l[i])",
+            "            Console.writeLine(l[i])",
             "        }",
             "        for int i ; i < l.size() ; i++ { // Print string array",
-            "            System.out.writeLine(",
-            "                new String(l[8])",
-            "                    .append(quoteStr)",
-            "                    .append(l[i])",
-            "                    .append(quoteStr)",
-            "                    .append(commaStr)",
-            "            )",
+            "            var s := l[8].copy().append(quoteStr).append(l[i]).append(quoteStr)",
+            "            if i + 1 < l.size() {",
+            "                s.append(commaStr)",
+            "            }",
+            "            Console.writeLine(s)",
             "        }",
             "        for int i := 9 ; i < l.size() ; i++ { // Print this code",
-            "            System.out.writeLine(l[i])",
+            "            Console.writeLine(l[i])",
             "        }",
             "    }",
             "}",
             ""
         }
         for int i ; i < 8 ; i++ { // Print opening code
-            System.out.writeLine(l[i])
+            Console.writeLine(l[i])
         }
         for int i ; i < l.size() ; i++ { // Print string array
-            System.out.writeLine(
-                new String(l[8])
-                    .append(quoteStr)
-                    .append(l[i])
-                    .append(quoteStr)
-                    .append(commaStr)
-            )
+            var s := l[8].copy().append(quoteStr).append(l[i]).append(quoteStr)
+            if i + 1 < l.size() {
+                s.append(commaStr)
+            }
+            Console.writeLine(s)
         }
         for int i := 9 ; i < l.size() ; i++ { // Print this code
-            System.out.writeLine(l[i])
+            Console.writeLine(l[i])
         }
     }
 }

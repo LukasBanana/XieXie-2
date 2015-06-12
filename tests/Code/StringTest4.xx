@@ -2,7 +2,7 @@
 // String Test 4
 // 09/06/2015
 
-import Console
+import Console, ASCII
 
 class Test {
 	
@@ -16,7 +16,8 @@ class Test {
 	
 	init() {
 		
-		// !BUG HERE! -> with "printLn"
+		printLn(ASCII.toLower("Foo Bar"))
+		
 		var s := Console.readString()
 		while s.size() > 0 {
 			printLn(s)
