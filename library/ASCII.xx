@@ -157,5 +157,39 @@ class ASCII {
 	static const tilde				:= 0x7e ///< Tilde/ Equivalence Sign '~'
 	static const delete				:= 0x7f ///< Delete
 	
+	/// Returns the lower-case character of 'c'.
+	static int toLower(int c) {
+		if c >= ASCII.A and c <= ASCII.Z {
+			c += (ASCII.a - ASCII.A)
+		}
+		return c
+	}
+	
+	/// Returns a new instance of the string 's' in lower-case.
+	static String toLower(String s) {
+		var r := s.copy()
+		for int i, n := r.size() ; i < n ; i++ {
+			r.setChar(i, ASCII.toLower(r.getChar(i)))
+		}
+		return r
+	}
+	
+	/// Returns the upper-case character of 'c'.
+	static int toUpper(int c) {
+		if c >= ASCII.a and c <= ASCII.z {
+			c -= (ASCII.a - ASCII.A)
+		}
+		return c
+	}
+	
+	/// Returns a new instance of the string 's' in upper-case.
+	static String toUpper(String s) {
+		var r := s.copy()
+		for int i, n := r.size() ; i < n ; i++ {
+			r.setChar(i, ASCII.toUpper(r.getChar(i)))
+		}
+		return r
+	}
+	
 }
 
