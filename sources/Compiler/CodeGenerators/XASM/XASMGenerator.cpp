@@ -741,6 +741,8 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& proc
 {
     regAlloc_.Reset();
 
+    procedure_ = &procDecl;
+
     const auto& procSig = *procDecl.procSignature;
     const auto& label = procSig.label;
 
@@ -774,8 +776,6 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& proc
             bb->id = id++;
 
         /* Generate code for each block */
-        bool hasFinalRET = false;
-
         for (auto it = basicBlocks_.begin(), itNext = it; it != basicBlocks_.end(); it = itNext)
         {
             /* Store information about next block, to avoid unnecessary jump instructions */
@@ -786,22 +786,12 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& proc
 
             /* Generate instructions for current block */
             GenerateBlock(*BB());
-
-            /* Check for final 'RET' instruction */
-            auto& insts = (*currentBlock_)->insts;
-            if (!insts.empty())
-            {
-                auto& lastInst = *insts.back();
-                hasFinalRET = (lastInst.Type() == TACInst::Types::Return);
-            }
         }
         nextBlock_ = nullptr;
-
-        /* Check if a final 'RET' instruction must be added */
-        if (!hasFinalRET)
-            WriteInstRET(static_cast<unsigned int>(procSig.params.size()));
     }
     DecIndent();
+
+    procedure_ = nullptr;
 }
 
 void XASMGenerator::GenerateBlock(const BasicBlock& bb)
@@ -819,6 +809,9 @@ void XASMGenerator::GenerateBlock(const BasicBlock& bb)
     /* Generate direct jump to next block */
     if (Succ().size() == 1)
         GenerateDirectJump(Succ(0));
+    /* Generate return instruction */
+    else if ( Succ().empty() && procedure_ && ( bb.insts.empty() || bb.insts.back()->Type() != TACInst::Types::Return ) )
+        WriteInstRET(static_cast<unsigned int>(procedure_->procSignature->params.size()));
 }
 
 void XASMGenerator::GenerateInst(const TACInst& inst)

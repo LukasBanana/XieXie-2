@@ -200,10 +200,12 @@ class XASMGenerator final : public AsmGenerator, private RegisterAllocator::Call
         BasicBlock::BlockList                   basicBlocks_;
 
         BasicBlock::BlockList::const_iterator   currentBlock_;
-        const BasicBlock*                       nextBlock_    = nullptr;
+        const BasicBlock*                       nextBlock_          = nullptr;
 
         std::stack<const BasicBlock*>           blockIndentStack_;
         std::vector<std::string>                exportLabels_;
+
+        const ProcDeclStmnt*                    procedure_          = nullptr; //!< Reference to the current procedure.
 
 };
 
