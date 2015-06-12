@@ -1,0 +1,28 @@
+
+// String Test 4
+// 09/06/2015
+
+import Console
+
+class Test {
+	
+	static void main() {
+		new Test()
+	}
+	
+	void printLn(String s) {
+		Console.writeLine(s)
+	}
+	
+	init() {
+		
+		// !BUG HERE! -> with "printLn"
+		var s := Console.readString()
+		while s.size() > 0 {
+			printLn(s)
+			s.resize(s.size() - 1)
+		}
+		
+	}
+	
+}

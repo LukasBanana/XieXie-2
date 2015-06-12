@@ -1,0 +1,70 @@
+
+// Nesting Test 2
+// 08/06/2015
+
+import Console
+
+class Show { void show() }
+
+class Test {
+	
+	static void headline(String s) {
+		Console.write("--- \(s): ---")
+	}
+	
+	static void main() {
+		
+		Test.headline("Test 1")
+		
+		/*
+		Iterate over list, which is returned by "getArray",
+		from an anonymous class, which is derived from "Object"
+		*/
+		foreach x :
+			new Object() {
+				int[] getArray() {
+					return { 42, 3, -12 }
+				}
+			}.getArray()
+		{
+			Console.writeLine(x)
+		}
+		
+		Test.headline("Test 2")
+		
+		Console.writeLine(
+			new Object() {
+				int sum(int[] list) {
+					int s
+					foreach x : list {
+						s += x
+					}
+					return s
+				}
+			}.sum({ 1, 2, 3 })
+		)
+		
+		Test.headline("Test 3")
+		
+		foreach x : { new Object() { int[] getArray() { return { 3, 4, 5 } } } }[0].getArray() {
+			Console.writeLine(x*x)
+		}
+		
+		Test.headline("Test 4")
+		
+		int idx := -1
+		while idx < 0 or idx > 2 {
+			Console.write("Enter Index in [0 .. 2]: ")
+			idx := Console.readInt()
+		}
+		
+		// !BUG HERE! -> with "[idx"]
+		Show a := new Show() { void show() { Console.writeLine("idx is 0") } }
+		Show b := new Show() { void show() { Console.writeLine("idx is 1") } }
+		Show c := new Show() { void show() { Console.writeLine("idx is 2") } }
+		
+		{ a, b, c }[idx].show()
+		
+	}
+	
+}
