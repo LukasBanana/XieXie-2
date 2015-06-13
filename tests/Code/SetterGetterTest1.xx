@@ -2,6 +2,8 @@
 // Setter/Getter Test 1
 // 19/04/2015
 
+//import Console
+
 class Widget {
 public:
 	init(String name) {
@@ -21,6 +23,7 @@ class Test {
 		var w := new Widget("Test")
 		var name := w.getName()
 		w.setName(name: name)
+		//Console.writeLine(w.getName())
 	}
 	
 }

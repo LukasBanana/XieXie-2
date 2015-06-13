@@ -19,6 +19,10 @@ private module SocketAPI {
 /// Network socket class.
 class Socket {
 	
+	static const invalid := -1
+	
+	/* --- domain --- */
+	
 	static const AF_UNSPEC			:= 0
 	static const AF_INET			:= 2
 	static const AF_IPX				:= 6
@@ -28,11 +32,15 @@ class Socket {
 	static const AF_IRDA			:= 26
 	static const AF_BTH				:= 32
 	
+	/* --- type --- */
+	
 	static const SOCK_STREAM		:= 1
 	static const SOCK_DGRAM			:= 2
 	static const SOCK_RAW			:= 3
 	static const SOCK_RDM			:= 4
 	static const SOCK_SEQPACKET		:= 5
+	
+	/* --- protocol --- */
 	
 	static const IPPROTO_ICMP		:= 1
 	static const IPPROTO_IGMP		:= 2
@@ -46,7 +54,7 @@ class Socket {
 		this.domain		:= domain
 		this.type		:= type
 		this.protocol	:= protocol
-		socket			:= SocketAPI.open(domain, type, protocol)
+		this.socket		:= SocketAPI.open(domain, type, protocol)
 	}
 	release {
 		SocketAPI.close(socket)
