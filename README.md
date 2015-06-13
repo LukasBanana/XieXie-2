@@ -30,22 +30,22 @@ Code Examples
 
 This is a small *Hello World* example:
 ```java
-import System
+import Console
 class HelloWorld {
 	static void main() {
-		System.out.writeLine("Hello, World!")
+		Console.writeLine("Hello, World!")
 	}
 }
 ```
 
 And this computes the fibonacci series:
 ```java
-import System
+import Console
 class Fibonacci {
 	static void fib(int n) {
 		int a, b := 1
 		while a < n {
-			System.out.writeLine(a)
+			Console.writeLine(a)
 			a, b := b, a + b
 		}
 	}
