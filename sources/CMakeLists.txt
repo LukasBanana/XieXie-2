@@ -89,12 +89,16 @@ else()
 endif()
 
 set(
-	FilesAll
+	FilesXXC
 	${FilesBaseAll}
 	${FilesCompilerAll}
-	${FilesShellAll}
 	${FilesPlatform}
 	${FilesPlatformDependent}
+)
+
+set(
+	FilesXXCShell
+	${FilesShellAll}
 )
 
 set(
@@ -218,9 +222,10 @@ include_directories("${PROJECT_SOURCE_DIR}/Shell/Command")
 
 # === Binaries ===
 
-add_executable(xxc ${FilesAll})
+add_executable(xxc ${FilesXXCShell})
 add_executable(xvm ${FilesXVMShell})
 
+add_library(xxclib STATIC ${FilesXXC})
 add_library(xvmlib STATIC ${FilesXVM})
 add_library(xvm_wrapper STATIC ${FilesXVMWrapper})
 add_library(xvm_module STATIC ${FilesXVMModule})
@@ -233,6 +238,7 @@ add_library(Module_BigNum SHARED ${FilesModuleBigNum})
 SETUP_CPP_MODULE(BigNum)
 
 SETUP_LIB_OUTPUT(xxc CXX)
+SETUP_LIB_OUTPUT(xxclib CXX)
 SETUP_LIB_OUTPUT(xvmlib C)
 SETUP_LIB_OUTPUT(xvm C)
 SETUP_LIB_OUTPUT(xvm_wrapper CXX)
@@ -249,9 +255,10 @@ set_target_properties(
 	DEBUG_POSTFIX "D"
 )
 
-target_link_libraries(xvm xvmlib)
 target_link_libraries(xvm_wrapper xvmlib)
-target_link_libraries(xxc xvm_wrapper)
+target_link_libraries(xxclib xvm_wrapper)
+target_link_libraries(xvm xvmlib)
+target_link_libraries(xxc xxclib)
 
 if(WIN32)
 	target_link_libraries(Module_Socket wsock32 ws2_32)
@@ -259,6 +266,7 @@ endif()
 
 if(UNIX)
 	target_link_libraries(xxc dl m)
+	target_link_libraries(xxclib dl m)
 	target_link_libraries(xvm dl m)
 	target_link_libraries(xvmlib dl m)
 	target_link_libraries(xvm_wrapper dl m)
