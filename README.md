@@ -22,8 +22,8 @@ Status
 Programming Guide
 -----------------
 
-There is also a programming guide, which will be available for free,
-as soon as the first compiler version is released.
+Take a look at the [XièXie Programming Guide](https://github.com/LukasBanana/XieXie-2/releases/tag/guide)
+to get started with the XièXie programming language.
 
 Code Examples
 -------------
