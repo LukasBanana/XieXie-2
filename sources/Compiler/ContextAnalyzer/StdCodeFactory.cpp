@@ -581,11 +581,18 @@ static std::unique_ptr<ClassDeclStmnt> GenMathClass()
     GenStaticProc(*ast, floatType, "asin", GenParam(floatType, "x"));
     GenStaticProc(*ast, floatType, "acos", GenParam(floatType, "x"));
     GenStaticProc(*ast, floatType, "atan", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "sinh", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "cosh", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "tanh", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "exp", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "exp2", GenParam(floatType, "x"));
     GenStaticProc(*ast, floatType, "pow", ( GenParam(floatType, "b"), GenParam(floatType, "e") ));
     GenStaticProc(*ast, floatType, "log", GenParam(floatType, "x"));
     GenStaticProc(*ast, floatType, "log2", GenParam(floatType, "x"));
     GenStaticProc(*ast, floatType, "log10", GenParam(floatType, "x"));
     GenStaticProc(*ast, floatType, "sqrt", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "ceil", GenParam(floatType, "x"));
+    GenStaticProc(*ast, floatType, "floor", GenParam(floatType, "x"));
 
     GenStaticProc(*ast, Int(), "randInt");
     GenStaticProc(*ast, floatType, "randFloat");

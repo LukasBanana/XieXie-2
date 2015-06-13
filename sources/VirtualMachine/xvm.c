@@ -543,11 +543,18 @@ const char* xvm_intrinsic_get_ident(const xvm_intrinsic_id addr)
         case INSC_ASIN:         return "ASin";
         case INSC_ACOS:         return "ACos";
         case INSC_ATAN:         return "ATan";
+        case INSC_SINH:         return "SinH";
+        case INSC_COSH:         return "CosH";
+        case INSC_TANH:         return "TanH";
+        case INSC_EXP:          return "Exp";
+        case INSC_EXP2:         return "Exp2";
         case INSC_POW:          return "Pow";
         case INSC_LOG:          return "Log";
         case INSC_LOG2:         return "Log2";
         case INSC_LOG10:        return "Log10";
         case INSC_SQRT:         return "Sqrt";
+        case INSC_CEIL:         return "Ceil";
+        case INSC_FLOOR:        return "Floor";
 
         /* --- Other intrinsics --- */
 
@@ -2539,6 +2546,51 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         }
         break;
 
+        // float SinH(float x)
+        case INSC_SINH:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            float result = sinhf(INT_TO_FLT_REINTERPRET(arg0));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
+        }
+        break;
+
+        // float CosH(float x)
+        case INSC_COSH:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            float result = coshf(INT_TO_FLT_REINTERPRET(arg0));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
+        }
+        break;
+
+        // float TanH(float x)
+        case INSC_TANH:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            float result = tanhf(INT_TO_FLT_REINTERPRET(arg0));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
+        }
+        break;
+
+        // float Exp(float x)
+        case INSC_EXP:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            float result = expf(INT_TO_FLT_REINTERPRET(arg0));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
+        }
+        break;
+
+        // float Exp2(float x)
+        case INSC_EXP2:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            float result = exp2f(INT_TO_FLT_REINTERPRET(arg0));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
+        }
+        break;
+
         // float Pow(float base, float exp)
         case INSC_POW:
         {
@@ -2581,6 +2633,24 @@ static void _xvm_call_intrinsic(unsigned int intrsc_id, xvm_stack* const stack, 
         {
             int arg0 = _xvm_stack_pop(stack, reg_sp);
             float result = sqrtf(INT_TO_FLT_REINTERPRET(arg0));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
+        }
+        break;
+
+        // float Ceil(float x)
+        case INSC_CEIL:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            float result = ceilf(INT_TO_FLT_REINTERPRET(arg0));
+            *reg_ar = FLT_TO_INT_REINTERPRET(result);
+        }
+        break;
+
+        // float Floor(float x)
+        case INSC_FLOOR:
+        {
+            int arg0 = _xvm_stack_pop(stack, reg_sp);
+            float result = floorf(INT_TO_FLT_REINTERPRET(arg0));
             *reg_ar = FLT_TO_INT_REINTERPRET(result);
         }
         break;

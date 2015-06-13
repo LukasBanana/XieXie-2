@@ -325,11 +325,18 @@ typedef enum
     INSC_ASIN,          // float ASin(float x)
     INSC_ACOS,          // float ACos(float x)
     INSC_ATAN,          // float ATan(float x)
+    INSC_SINH,          // float SinH(float x)
+    INSC_COSH,          // float CosH(float x)
+    INSC_TANH,          // float TanH(float x)
+    INSC_EXP,           // float Exp(float x)
+    INSC_EXP2,          // float Exp2(float x)
     INSC_POW,           // float Pow(float base, float exp)
     INSC_LOG,           // float Log(float x)
     INSC_LOG2,          // float Log2(float x)
     INSC_LOG10,         // float Log10(float x)
     INSC_SQRT,          // float Sqrt(float x)
+    INSC_CEIL,          // float Ceil(float x)
+    INSC_FLOOR,         // float Floor(float x)
 
     /* --- Other intrinsics --- */
     INSC_RAND_INT,      // int RandInt() -> In range [0 .. MAX_INT]

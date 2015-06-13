@@ -1551,6 +1551,41 @@ CMath.Patan,F?x:
 	insc ATan
 	ret 1
 
+; float Math.sinh(float x)
+CMath.Psinh,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc SinH
+	ret 1
+
+; float Math.cosh(float x)
+CMath.Pcosh,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc CosH
+	ret 1
+
+; float Math.tanh(float x)
+CMath.Ptanh,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc TanH
+	ret 1
+
+; float Math.exp(float x)
+CMath.Pexp,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Exp
+	ret 1
+
+; float Math.exp2(float x)
+CMath.Pexp2,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Exp2
+	ret 1
+
 ; float Math.pow(float b, float e)
 CMath.Ppow,F?b,F?e:
 	ldw $tr, ($lb) -8
@@ -1586,6 +1621,20 @@ CMath.Psqrt,F?x:
 	ldw $tr, ($lb) -4
 	push $tr
 	insc Sqrt
+	ret 1
+
+; float Math.ceil(float x)
+CMath.Pceil,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Ceil
+	ret 1
+
+; float Math.floor(float x)
+CMath.Pfloor,F?x:
+	ldw $tr, ($lb) -4
+	push $tr
+	insc Floor
 	ret 1
 
 ; int Math.randInt()
