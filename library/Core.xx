@@ -80,31 +80,31 @@ extern class String {
 	This must not be the same instance as this string!
 	@return Weak reference to this string.
 	*/
-	String@ append(String rhs)
+	weak String append(String rhs)
 	/**
 	Appends the string representation of the specified object at the end of this string.
 	@return Weak reference to this string.
 	@see Object.toString
 	*/
-	String@ append(Object rhs)
+	weak String append(Object rhs)
 	/**
 	Appends the specified value as string at the end of this string.
 	@param rhs Specifies the boolean value which is to be appended. If true, "true" is appended, otherwise "false".
 	@return Weak reference to this string.
 	*/
-	String@ append(bool rhs)
+	weak String append(bool rhs)
 	/**
 	Appends the specified value as string at the end of this string.
 	@param rhs Specifies the integer value which is to be appended.
 	@return Weak reference to this string.
 	*/
-	String@ append(int rhs)
+	weak String append(int rhs)
 	/**
 	Appends the specified value as string at the end of this string.
 	@param rhs Specifies the floating-point value which is to be appended.
 	@return Weak reference to this string.
 	*/
-	String@ append(float rhs)
+	weak String append(float rhs)
 	
 	/**
 	Returns a sub-string of this string.
@@ -188,6 +188,12 @@ extern class Array {
 	[[override]]
 	int pointer()
 	
+}
+
+/// Array class for weak pointers.
+[[final]]
+extern class WeakArray {
+	//...
 }
 
 /// Array class for built-in integer data type.

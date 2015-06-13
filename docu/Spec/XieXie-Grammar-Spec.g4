@@ -257,7 +257,8 @@ return_type_denoter		: VOID_TYPE_DENOTER
 array_type_denoter:		type_denoter LR_PAREN;
 LR_PAREN:				'[]';
 
-pointer_type_denoter:	IDENT ('@')?;
+pointer_type_denoter:	WEAK_POINTER_FLAG? IDENT;
+WEAK_POINTER_FLAG:		'weak';
 
 auto_type_denoter		: 'var'
 						| 'const';
