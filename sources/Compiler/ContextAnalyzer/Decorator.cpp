@@ -545,7 +545,16 @@ DEF_VISIT_PROC(Decorator, CopyAssignStmnt)
         }
     }
     else
-        Error("number of expressions in copy-assignment must be 1 or " + std::to_string(ast->varNames.size()), ast);
+    {
+        /* Print error with information how many sub-expressions are allowed here */
+        std::string msg = "number of expressions in copy-assignment must be 1";
+
+        auto numVars = ast->varNames.size();
+        if (numVars != 1)
+            msg += " or " + std::to_string(numVars);
+
+        Error(msg, ast);
+    }
 }
 
 DEF_VISIT_PROC(Decorator, ModifyAssignStmnt)
