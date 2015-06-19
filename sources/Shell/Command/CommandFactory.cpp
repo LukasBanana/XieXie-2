@@ -76,6 +76,7 @@ void CommandFactory::EstablishCommands()
     RegisterCommand({ "reply"         }, MakeUnique< ReplyCommand    >());
     RegisterCommand({ "color"         }, MakeUnique< ColorCommand    >());
     RegisterCommand({ "man"           }, MakeUnique< ManCommand      >());
+    RegisterCommand({ "calc"          }, MakeUnique< CalcCommand     >());
 }
 
 

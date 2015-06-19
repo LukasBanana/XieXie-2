@@ -78,6 +78,7 @@ DECL_COMMAND_IMPL( Help     );
 DECL_COMMAND_IMPL( Verbose  );
 DECL_COMMAND_IMPL( Color    );
 DECL_COMMAND_IMPL( Run      );
+DECL_COMMAND_IMPL( Calc     );
 DECL_COMMAND_IMPL( Verify   );
 DECL_COMMAND_IMPL( Man      );
 
