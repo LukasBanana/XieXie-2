@@ -1,0 +1,104 @@
+/*
+ * Color.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/**
+Color class with 32-bit RGBA encoding.
+\author Lukas Hermanns
+*/
+[[final]]
+class Color {
+	
+	/**
+	@brief Encodes the specified color components into a 32-bit RGBA color code
+	@param r Specifies the red color component.
+	@param g Specifies the green color component.
+	@param b Specifies the blue color component.
+	@param a Specifies the alpha color component.
+	*/
+	static int encode(int r, int g, int b, int a) {
+		return (r << 24) | ((g & 0xff) << 16) | ((b & 0xff) << 8) | (a & 0xff)
+	}
+	
+	/** @brief Returns the red component of the specified 32-bit RGBA color code . */
+	static int decodeRed(int code) {
+		return code >> 24
+	}
+	
+	/** @brief Returns the green component of the specified 32-bit RGBA color code . */
+	static int decodeGreen(int code) {
+		return (code >> 16) & 0xff
+	}
+	
+	/** @brief Returns the blue component of the specified 32-bit RGBA color code . */
+	static int decodeBlue(int code) {
+		return (code >> 8) & 0xff
+	}
+	
+	/** @brief Returns the alpha component of the specified 32-bit RGBA color code . */
+	static int decodeAlpha(int code) {
+		return code & 0xff
+	}
+	
+	/** @brief Initializes this color with zero for all components. */
+	init() {
+		code := 0
+	}
+	
+	/** @brief Initializes this color with the specified bit code. */
+	init(int code) {
+		this.code := code
+	}
+	
+	/** @brief Initializes this color with the specified color components. */
+	init(int r, int g, int b, int a := 255) {
+		code := Color.encode(r, g, b, a)
+	}
+	
+	/** @brief Returns the red component of this color. */
+	int red() {
+		return Color.decodeRed(code)
+	}
+	
+	/** @brief Sets the new value for the red component of this color. */
+	void red(int value) {
+		code := (code & 0x00ffffff) | (value << 24)
+	}
+	
+	/** @brief Returns the green component of this color. */
+	int green() {
+		return Color.decodeGreen(code)
+	}
+	
+	/** @brief Sets the new value for the green component of this color. */
+	void green(int value) {
+		code := (code & 0xff00ffff) | ((value & 0xff) << 16)
+	}
+	
+	/** @brief Returns the blue component of this color. */
+	int blue() {
+		return Color.decodeBlue(code)
+	}
+	
+	/** @brief Sets the new value for the blue component of this color. */
+	void blue(int value) {
+		code := (code & 0xffff00ff) | ((value & 0xff) << 8)
+	}
+	
+	/** @brief Returns the alpha component of this color. */
+	int alpha() {
+		return Color.decodeAlpha(code)
+	}
+	
+	/** @brief Sets the new value for the alpha component of this color. */
+	void alpha(int value) {
+		code := (code & 0xffffff00) | (value & 0xff)
+	}
+	
+	/** @brief The 32-bit RGBA color code. */
+	int code
+	
+}

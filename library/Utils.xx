@@ -1,0 +1,85 @@
+/*
+ * Utils.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+import ASCII
+
+/**
+Class of basic utilies.
+\author Lukas Hermanns
+*/
+[[final]]
+class Utils {
+	
+	/* --- String uitils --- */
+	
+	/**
+	@brief Returns a string with characters 'char' and the size of the specified string.
+	@param string Specifies the string for which an underline is to be generated.
+	@param char Specifies the character. By default ASCII.hyphen.
+	@param extent Specifies the extended amount of characters. By default 0.
+	@return New instance of a string with (string.size() + extent) characters of 'char'.
+	*/
+	static String underline(String string, int char := ASCII.hyphen, int extent := 0) {
+		return string != null ? new String(char: char, count: string.size() + extent) : null
+	}
+	
+	/* --- Hexa-decimal uitils --- */
+	
+	/**
+	@brief Converts the specified 8-bit unsigned value into hexa-decimal characters.
+	@return New instance of a string with two characters containing the lower-case hex digits.
+	*/
+	static String ubyteToHex(int value) {
+		var s := new String(size: 2)
+		
+		s.setChar(0, Utils.getHexChar(value >> 4))
+		s.setChar(1, Utils.getHexChar(value))
+		
+		return s
+	}
+	
+	/**
+	@brief Converts the specified 16-bit unsigned value into hexa-decimal characters.
+	@return New instance of a string with four characters containing the lower-case hex digits.
+	*/
+	static String ushortToHex(int value) {
+		var s := new String(size: 4)
+		
+		for i : 3 .. 0 {
+			s.setChar(i, Utils.getHexChar(value))
+			value >>= 4
+		}
+		
+		return s
+	}
+	
+	/**
+	@brief Converts the specified 32-bit unsigned value into hexa-decimal characters.
+	@return New instance of a string with eight characters containing the lower-case hex digits.
+	*/
+	static String uintToHex(int value) {
+		var s := new String(size: 8)
+		
+		for i : 7 .. 0 {
+			s.setChar(i, Utils.getHexChar(value))
+			value >>= 4
+		}
+		
+		return s
+	}
+	
+	/**
+	@brief Returns the lower-case hexa-decimal digit for the specified value. Only (value & 0xf) is evaluated!
+	@see ASCII.digit0
+	@see ASCII.a
+	*/
+	static int getHexChar(int value) {
+		value &= 0xf
+		return value < 10 ? (ASCII.digit0 + value) : (ASCII.a + value - 10)
+	}
+	
+}
