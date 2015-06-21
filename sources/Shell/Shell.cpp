@@ -65,7 +65,7 @@ void Shell::Execute(StreamParser parser)
 static void AppendDefaultScript(std::stringstream& sstr)
 {
     sstr
-        << "import MsgBox, Console, Integer, ASCII, Algo" << std::endl
+        << "import MsgBox, Console, Integer, ASCII, Algo, Utils" << std::endl
         << "class Script { " << std::endl
         << "void print(bool val) { print(val ? \"true\" : \"false\") }" << std::endl
         << "void print(int val) { Intrinsics.printInt(val) }" << std::endl
@@ -75,9 +75,12 @@ static void AppendDefaultScript(std::stringstream& sstr)
         << "void printLn(int val) { Intrinsics.printInt(val) Intrinsics.printLn(0) }" << std::endl
         << "void printLn(float val) { Intrinsics.printFloat(val) Intrinsics.printLn(0) }" << std::endl
         << "void printLn(String val) { Intrinsics.printLn(val.pointer()) }" << std::endl
-        //<< "void print(int[] val) { foreach v : val { print(v) } }" << std::endl
-        //<< "void print(float[] val) { foreach v : val { print(v) } }" << std::endl
-        //<< "void print(String[] val) { foreach v : val { print(v) } }" << std::endl
+        << "void print(int[] val) { foreach v : val { print(v) print(\" \") } }" << std::endl
+        << "void print(float[] val) { foreach v : val { print(v) print(\" \") } }" << std::endl
+        << "void print(String[] val) { foreach v : val { print(v) print(\" \") } }" << std::endl
+        << "void printLn(int[] val) { foreach v : val { printLn(v) } }" << std::endl
+        << "void printLn(float[] val) { foreach v : val { printLn(v) } }" << std::endl
+        << "void printLn(String[] val) { foreach v : val { printLn(v) } }" << std::endl
         << "static void main() {" << std::endl
         << "    var script := new Script()" << std::endl
         << "}" << std::endl

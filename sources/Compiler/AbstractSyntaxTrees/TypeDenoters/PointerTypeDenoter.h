@@ -23,52 +23,23 @@ class PointerTypeDenoter : public TypeDenoter
         
         AST_INTERFACE_EXT(PointerTypeDenoter, TypeDenoter);
 
-        bool IsPointer() const override
-        {
-            return true;
-        }
-        bool IsPointer(const std::string& ident) const override
-        {
-            return declIdent.empty() || declIdent == ident;
-        }
-        bool IsStrongRef() const override
-        {
-            return !isWeakRef;
-        }
-        bool IsWeakRef() const override
-        {
-            return isWeakRef;
-        }
+        bool IsPointer() const override;
+        bool IsPointer(const std::string& ident) const override;
+        bool IsStrongRef() const override;
+        bool IsWeakRef() const override;
 
-        bool IsNull() const override
-        {
-            return declIdent.empty(); 
-        }
+        bool IsNull() const override;
 
-        std::string ToString() const override
-        {
-            return !declIdent.empty() ? declIdent : "???";
-        }
+        std::string ToString() const override;
 
-        //! Points always require a size of 4 bytes.
-        unsigned int MemorySize() const override
-        {
-            return 4;
-        }
+        //! Pointers always require a size of 4 bytes.
+        unsigned int MemorySize() const override;
 
-        ClassDeclStmnt* GetDeclRef() const override
-        {
-            return declRef;
-        }
+        ClassDeclStmnt* GetDeclRef() const override;
 
-        TypeDenoterPtr CopyRef() const override
-        {
-            auto copy = std::make_shared<PointerTypeDenoter>();
-            copy->declIdent = declIdent;
-            copy->isWeakRef = isWeakRef;
-            copy->declRef   = declRef;
-            return copy;
-        }
+        TypeDenoterPtr CopyRef() const override;
+
+        /* === Members === */
 
         std::string     declIdent;              // may be empty (for null pointer literal)
         bool            isWeakRef   = false;    // is this pointer a weak reference?

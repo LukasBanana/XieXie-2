@@ -244,7 +244,7 @@ static void ShowCFG(const CompileConfig& config, CompileState& state)
         const auto classDecl = ct->GetClassDeclAST();
         if (!classDecl->isBuiltin && !classDecl->isExtern && !classDecl->isModule)
         {
-            LogMessage(state, "dump CFG class tree \"" + classDecl->ident + "\"");
+            LogMessage(state, "dump CFG class tree \"" + classDecl->GetIdent() + "\"");
             viewer.ViewGraph(*ct, config.cfgDumpPath);
         }
     }

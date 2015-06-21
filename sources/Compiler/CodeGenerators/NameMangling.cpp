@@ -115,14 +115,14 @@ std::string UniqueLabel(const AbstractSyntaxTrees::ProcDeclStmnt& procDecl, bool
             if (procDecl.parentRef->isModule)
             {
                 /* Return simple label for module procedures */
-                return procDecl.parentRef->ident + "." + procDecl.procSignature->ident;
+                return procDecl.parentRef->GetIdent() + "." + procDecl.procSignature->ident;
             }
             else
             {
                 /* Return label with name-mangling for standard class procedures */
                 const auto& procSig = *procDecl.procSignature;
                 return (
-                    "C" + procDecl.parentRef->ident + "." +
+                    "C" + procDecl.parentRef->GetIdent() + "." +
                     UniqueLabel(procSig)//, procSig.isStatic ? nullptr : &(procDecl.parentRef->ident))
                 );
             }
@@ -339,7 +339,7 @@ std::string DisplayLabel(const std::string& label)
 
 std::string Vtable(const AbstractSyntaxTrees::ClassDeclStmnt& classDecl)
 {
-    return classDecl.ident + ".vtable";
+    return classDecl.GetIdent() + ".vtable";
 }
 
 

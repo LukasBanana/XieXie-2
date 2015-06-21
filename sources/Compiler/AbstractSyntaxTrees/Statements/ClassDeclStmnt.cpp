@@ -47,12 +47,13 @@ ClassDeclStmnt::ClassDeclStmnt(const SourceArea& area, const SourceCodePtr& sour
     thisTypeDenoter_.declRef = this;
 }
 ClassDeclStmnt::ClassDeclStmnt(const BuiltinClasses::ClassRTTI& classRTTI) :
-    ident           { classRTTI.name         },
+    ident_          { classRTTI.name         },
     isBuiltin       { true                   },
     isExtern        { true                   },
     instanceSize_   { classRTTI.instanceSize }
 {
-    thisTypeDenoter_.declRef = this;
+    thisTypeDenoter_.declIdent  = GetIdent();
+    thisTypeDenoter_.declRef    = this;
 }
 
 const TypeDenoter* ClassDeclStmnt::GetTypeDenoter() const
@@ -155,8 +156,8 @@ ClassDeclStmnt::Visibilities ClassDeclStmnt::Friendship(const ClassDeclStmnt& cl
 std::string ClassDeclStmnt::HierarchyString(const std::string& separator) const
 {
     if (baseClassRef_)
-        return ident + separator + baseClassRef_->HierarchyString(separator, this);
-    return ident;
+        return GetIdent() + separator + baseClassRef_->HierarchyString(separator, this);
+    return GetIdent();
 }
 
 void ClassDeclStmnt::GenerateRTTI(ErrorReporter* errorReporter)
@@ -196,8 +197,19 @@ bool ClassDeclStmnt::HasAttribBind(std::string* name) const
     return HasAttrib(Attrib::idBind, name);
 }
 
+void ClassDeclStmnt::SetIdent(const std::string& ident)
+{
+    /* Set identifier for this class declaration and its type denoter */
+    ident_ = ident;
+    thisTypeDenoter_.declIdent = ident;
+}
+
 ClassDeclStmnt& ClassDeclStmnt::FindCommonDenominator(ClassDeclStmnt& a, ClassDeclStmnt& b)
 {
+    /* Check if classes are equal */
+    if (&a == &b)
+        return a;
+
     /* Traverse inheritance hierarchy of class 'a' to find the common denominator */
     auto classDecl = &a;
 
@@ -234,8 +246,8 @@ bool ClassDeclStmnt::HasAttrib(const std::string& attribIdent, std::string* arg)
 std::string ClassDeclStmnt::HierarchyString(const std::string& separator, const ClassDeclStmnt* rootClass) const
 {
     if (rootClass != this && baseClassRef_)
-        return ident + separator + baseClassRef_->HierarchyString(separator, rootClass);
-    return ident;
+        return GetIdent() + separator + baseClassRef_->HierarchyString(separator, rootClass);
+    return GetIdent();
 }
 
 void ClassDeclStmnt::GenerateRTTI(
@@ -473,7 +485,7 @@ void ClassDeclStmnt::ProcessClassAttributes(ErrorReporter* errorReporter)
             std::string hint;
             if (baseClassRef_->HasAttribDeprecated(&hint))
             {
-                std::string info = "class declaration \"" + ident + "\" with deprecated base class";
+                std::string info = "class declaration \"" + GetIdent() + "\" with deprecated base class";
                 if (!hint.empty())
                     info += ": " + hint;
                 Warning(errorReporter, info, this);

@@ -25,7 +25,16 @@ bool ArrayTypeDenoter::IsStrongRef() const
 
 std::string ArrayTypeDenoter::ToString() const
 {
-    return (lowerTypeDenoter != nullptr ? lowerTypeDenoter->ToString() : "???") + "[]";
+    std::string str;
+    
+    if (lowerTypeDenoter != nullptr)
+        str += lowerTypeDenoter->ToString();
+    else
+        str += TypeDenoter::ToString();
+
+    str += "[]";
+
+    return str;
 }
 
 unsigned int ArrayTypeDenoter::MemorySize() const

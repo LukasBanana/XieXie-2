@@ -155,6 +155,15 @@ class ClassDeclStmnt : public ScopedStmnt
             return isAbstract_;
         }
 
+        //! Sets the identifier of this class declaration.
+        void SetIdent(const std::string& ident);
+
+        //! Returns the identifier of this class declaration.
+        const std::string& GetIdent() const
+        {
+            return ident_;
+        }
+
         /**
         Finds the common denominator class for the two class declaration statements,
         e.g. if 'a' is from type "Buffer" and 'b' is from type "String", the common denominator is "Object".
@@ -164,7 +173,6 @@ class ClassDeclStmnt : public ScopedStmnt
         /* === Members === */
 
         AttribPrefixPtr         attribPrefix;               // may be null
-        std::string             ident;
         std::string             baseClassIdent;             // may be empty
         std::vector<StmntPtr>   declStmnts;
 
@@ -207,7 +215,8 @@ class ClassDeclStmnt : public ScopedStmnt
 
         SourceCodePtr                                   source_;                        // Reference to the source where this class is declared.
 
-        PointerTypeDenoter                              thisTypeDenoter_;               // type denoter for this class declaration
+        std::string                                     ident_;                         // identifier of this class.
+        PointerTypeDenoter                              thisTypeDenoter_;               // type denoter for this class declaration.
         
         ClassDeclStmnt*                                 baseClassRef_       = nullptr;  // reference to base class (or null if the base class is "Object").
         std::vector<ClassDeclStmnt*>                    subClassesRef_;                 // reference to all sub classes.

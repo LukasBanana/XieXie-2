@@ -2104,7 +2104,7 @@ void GraphGenerator::AppendModuleName(ClassDeclStmnt& ast)
     if (ast.HasAttribBind(&name))
     {
         if (name.empty())
-            name = ast.ident + "/" + ast.ident;
+            name = ast.GetIdent() + "/" + ast.GetIdent();
         program_->boundModuleNames.push_back(name);
     }
 }

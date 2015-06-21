@@ -217,7 +217,7 @@ TokenPtr Parser::InlineMacro(const Token& macro)
     if (spell == "__FILE__")
         return MakeString(state_.filename);
     else if (spell == "__CLASS__")
-        return MakeString(state_.classDecl != nullptr ? state_.classDecl->ident : "");
+        return MakeString(state_.classDecl != nullptr ? state_.classDecl->GetIdent() : "");
     else if (spell == "__PROC__")
         return MakeString(state_.procDecl != nullptr ? state_.procDecl->procSignature->ident : "");
     else if (spell == "__LINE__")
@@ -1184,7 +1184,7 @@ ClassDeclStmntPtr Parser::ParseInternClassDeclStmnt(const AttribPrefixPtr& attri
 
     /* Parse class signature */
     auto identTkn = Accept(Tokens::Ident);
-    ast->ident = identTkn->Spell();
+    ast->SetIdent(identTkn->Spell());
     ast->sourceArea.end = identTkn->Area().end;
 
     if (Is(Tokens::Colon))
@@ -1217,7 +1217,7 @@ ClassDeclStmntPtr Parser::ParseExternClassDeclStmnt(const AttribPrefixPtr& attri
 
     Accept(Tokens::Class);
 
-    ast->ident = AcceptIdent();
+    ast->SetIdent(AcceptIdent());
 
     if (Is(Tokens::Colon))
         ast->baseClassIdent = AcceptBaseClassIdent();
@@ -1249,7 +1249,7 @@ ClassDeclStmntPtr Parser::ParseModuleDeclStmnt(AttribPrefixPtr attribPrefix, boo
 
     Accept(Tokens::Module);
 
-    ast->ident = AcceptIdent();
+    ast->SetIdent(AcceptIdent());
 
     Accept(Tokens::LCurly);
     if (!Is(Tokens::RCurly))
@@ -1272,8 +1272,8 @@ ClassDeclStmntPtr Parser::ParseAnonymousClass(const std::string& baseClassIdent)
     {
         state_.classDecl = ast.get();
 
-        ast->isAnonymous    = true;
-        ast->ident          = GenAnonymousClassIdent();
+        ast->isAnonymous = true;
+        ast->SetIdent(GenAnonymousClassIdent());
         ast->baseClassIdent = baseClassIdent;
 
         /* Parse class body segments */
@@ -1540,7 +1540,7 @@ ProcDeclStmntPtr Parser::ParseInitDeclStmnt(bool isExtern)
             auto baseIdentSpecifier = Accept(Tokens::ObjectIdent)->Spell();
 
             /* Make procedure call */
-            auto baseIdent = (baseIdentSpecifier == "base" ? state_.classDecl->baseClassIdent : state_.classDecl->ident);
+            auto baseIdent = (baseIdentSpecifier == "base" ? state_.classDecl->baseClassIdent : state_.classDecl->GetIdent());
 
             auto callExpr = Make<ProcCallExpr>();
             callExpr->procCall = ParseProcCall(Make<VarName>(std::vector<std::string>{ baseIdent, "init" }));
@@ -1933,7 +1933,7 @@ AllocExprPtr Parser::ParseAllocExpr()
             auto anonymousClassDecl = ParseAnonymousClass(pointerType->declIdent);
 
             /* Change type identifier "declIdent" from the 'new'-expression to the identifier of the anonymous class */
-            pointerType->declIdent = anonymousClassDecl->ident;
+            pointerType->declIdent = anonymousClassDecl->GetIdent();
 
             /* Append anonymous class declaration to the 'Program'-AST root node */
             program_->classDeclStmnts.push_back(anonymousClassDecl);

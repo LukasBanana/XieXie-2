@@ -15,6 +15,8 @@ namespace AbstractSyntaxTrees
 {
 
 
+const std::string TypeDenoter::unknownType = "???";
+
 bool TypeDenoter::AreEqual(const TypeDenoter& lhs, const TypeDenoter& rhs)
 {
     if (lhs.Type() != rhs.Type())

@@ -672,7 +672,7 @@ void GenerateSetter(const VarDecl& memberVar, const VarDecl::Vis visibility)
     /* Generate copy assign statmenet */
     auto assignStmnt = std::make_shared<CopyAssignStmnt>();
 
-    auto destVarBase = (memberVar.IsStatic() ? classDecl.ident : "this");
+    auto destVarBase = (memberVar.IsStatic() ? classDecl.GetIdent() : "this");
     auto destVarName = GenVarNameList({ destVarBase, varIdent });
 
     assignStmnt->varNames.push_back(destVarName);
@@ -706,7 +706,7 @@ void GenerateGetter(const VarDecl& memberVar, const VarDecl::Vis visibility)
     /* Generate return statement */
     auto returnStmnt = std::make_shared<ReturnStmnt>();
 
-    auto sourceVarName = (memberVar.IsStatic() ? GenVarNameList({ classDecl.ident, varIdent }) : GenVarName(varIdent));
+    auto sourceVarName = (memberVar.IsStatic() ? GenVarNameList({ classDecl.GetIdent(), varIdent }) : GenVarName(varIdent));
     returnStmnt->expr = GenVarAccessExpr(sourceVarName);
 
     /* Generate single statement and append to class declaration */

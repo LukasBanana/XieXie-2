@@ -660,7 +660,7 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
 
     CommentHeadline(
         std::string(classDecl->IsAbstract() ? "ABSTRACT CLASS" : "CLASS") +
-        " \"" + classDecl->ident + "\""
+        " \"" + classDecl->GetIdent() + "\""
     );
 
     /* Generate commentary docu for member variables */
@@ -746,7 +746,7 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& proc
     const auto& procSig = *procDecl.procSignature;
     const auto& label = procSig.label;
 
-    Comment(procSig.ToString(procDecl.parentRef->ident));
+    Comment(procSig.ToString(procDecl.parentRef->GetIdent()));
 
     /* Check if label for main entry must be added */
     if (procSig.isEntryPoint)
@@ -757,7 +757,7 @@ void XASMGenerator::GenerateProcedure(BasicBlock& cfg, const ProcDeclStmnt& proc
     if (procDecl.HasAttribExport(&expLabel))
     {
         if (expLabel.empty())
-            expLabel = procDecl.parentRef->ident + '.' + procSig.ident;
+            expLabel = procDecl.parentRef->GetIdent() + '.' + procSig.ident;
         GlobalLabel(expLabel);
         exportLabels_.push_back(expLabel);
     }

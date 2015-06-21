@@ -387,7 +387,7 @@ DEF_VISIT_PROC(Decorator, ClassDeclStmnt)
     {
         case States::RegisterClassSymbols:
             class_ = ast;
-            RegisterSymbol(ast->ident, ast, (ast->isPrivate ? ast->GetSource() : nullptr));
+            RegisterSymbol(ast->GetIdent(), ast, (ast->isPrivate ? ast->GetSource() : nullptr));
             Visit(ast->attribPrefix);
             break;
 
@@ -676,7 +676,7 @@ DEF_VISIT_PROC(Decorator, AllocExpr)
             /* Check if pointer is not an abstract class */
             if (classDecl->IsAbstract())
             {
-                Error("can not instantiate abstract class \"" + classDecl->ident + "\"", ast);
+                Error("can not instantiate abstract class \"" + classDecl->GetIdent() + "\"", ast);
 
                 /* List all abstract procedures */
                 Suggestion("abstract procedures are: ");
@@ -690,7 +690,7 @@ DEF_VISIT_PROC(Decorator, AllocExpr)
             /* Check if class is marked as deprecated */
             else if (classDecl->HasAttribDeprecated(&hint))
             {
-                std::string info = "allocation of deprecated class \"" + classDecl->ident + "\"";
+                std::string info = "allocation of deprecated class \"" + classDecl->GetIdent() + "\"";
                 if (!hint.empty())
                     info += ": " + hint;
                 Warning(info, ast);
@@ -786,11 +786,11 @@ DEF_VISIT_PROC(Decorator, PointerTypeDenoter)
 void Decorator::DecorateClassBaseClass(ClassDeclStmnt& ast)
 {
     /* The root base class is always the "Object" class */
-    if (ast.ident == BuiltinClasses::Object.name)
+    if (ast.GetIdent() == BuiltinClasses::Object.name)
     {
         if (!ast.baseClassIdent.empty())
         {
-            Error("class \"" + ast.ident + "\" must not have a base class", &ast);
+            Error("class \"" + ast.GetIdent() + "\" must not have a base class", &ast);
             return;
         }
     }
@@ -801,7 +801,7 @@ void Decorator::DecorateClassBaseClass(ClassDeclStmnt& ast)
     if (!ast.baseClassIdent.empty())
     {
         /* Check if base class has the same identifier as this class */
-        if (ast.ident != ast.baseClassIdent)
+        if (ast.GetIdent() != ast.baseClassIdent)
         {
             /* Find base class symbol */
             auto baseClassDecl = AST::Cast<ClassDeclStmnt>(FetchSymbolFromScope(ast.baseClassIdent, program_->symTab, &ast));
@@ -811,7 +811,7 @@ void Decorator::DecorateClassBaseClass(ClassDeclStmnt& ast)
                 Error("identifier \"" + ast.baseClassIdent + "\" does not refer to a class declaration", &ast);
         }
         else
-            Error("class \"" + ast.ident + "\" can not be the base class of itself", &ast);
+            Error("class \"" + ast.GetIdent() + "\" can not be the base class of itself", &ast);
     }
 }
 
@@ -828,7 +828,7 @@ void Decorator::VerifyClassInheritance(ClassDeclStmnt& ast)
             /* Unbind base class reference and cancel inheritance verification */
             Error(
                 "inheritance cycle detected in class declaration \"" +
-                ast.ident + "\" (" + ast.HierarchyString() + ")", &ast
+                ast.GetIdent() + "\" (" + ast.HierarchyString() + ")", &ast
             );
             ast.BindBaseClassRef(nullptr);
             break;

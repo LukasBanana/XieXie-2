@@ -21,6 +21,9 @@ class TypeDenoter : public AST
 {
     
     public:
+        
+        //! String for an unknown type: "???"
+        static const std::string unknownType;
 
         //! Returns true if this is an automatic type. By default false.
         virtual bool IsAutoType() const
@@ -134,7 +137,10 @@ class TypeDenoter : public AST
         virtual TypeDenoterPtr CopyRef() const = 0;
 
         //! Returns a declarative string for this type.
-        virtual std::string ToString() const = 0;
+        virtual std::string ToString() const
+        {
+            return TypeDenoter::unknownType;
+        }
 
         //! Returns the size (in bytes) for this type denoter.
         virtual unsigned int MemorySize() const = 0;

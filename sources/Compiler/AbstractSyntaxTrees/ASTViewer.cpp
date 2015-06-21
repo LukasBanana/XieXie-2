@@ -226,7 +226,7 @@ DEF_VISIT_PROC(ASTViewer, ClassDeclStmnt)
     {
         AST_INFO_COLOR("ClassDeclStmnt", colorStmnt);
         Visit(ast->attribPrefix);
-        AST_STRING(ident);
+        String("ident", ast->GetIdent());
         AST_STRING(baseClassIdent);
         Visit(ast->declStmnts);
     }

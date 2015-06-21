@@ -26,6 +26,8 @@ std::string Arg::ToString() const
     auto exprType = GetTypeDenoter();
     if (exprType)
         str += exprType->ToString();
+    else
+        str += TypeDenoter::unknownType;
 
     if (!paramIdent.empty())
         str += ' ' + paramIdent;

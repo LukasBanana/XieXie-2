@@ -57,7 +57,7 @@ std::string BuiltinTypeDenoter::ToString() const
         case TypeNames::Float:
             return "float";
     }
-    return "<unknown>";
+    return TypeDenoter::ToString();
 }
 
 unsigned int BuiltinTypeDenoter::MemorySize() const
