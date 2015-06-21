@@ -1,0 +1,63 @@
+/*
+ * Widget.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+import Color
+
+/// UI widget module.
+[[bind("Widget/Widget")]]
+private module WidgetAPI {
+	
+	static int openWindow(String title, int x, int y, int width, int height, int bitFlags)
+	static void closeWindow(int handle)
+	
+	static void beginDrawing(int handle)
+	static void endDrawing(int handle)
+	
+	static void drawPoint(int handle, int x, int y, int color)
+	static void drawLine(int handle, int x1, int y1, int x2, int y2, int color)
+	
+}
+
+/// UI widget class with very basic drawing functionality.
+class Widget {
+	
+	static const SIZE_BOX		:= (1 << 0)
+	static const MAXIMIZE_BOX	:= (1 << 1)
+	static const MINIMIZE_BOX	:= (1 << 2)
+	
+	static Widget open(String title, int x, int y, int width, int height, int bitFlags := 0) {
+		return new Widget(WidgetAPI.openWindow(title, x, y, width, height, bitFlags))
+	}
+	
+	void beginDrawing() {
+		WidgetAPI.beginDrawing(handle)
+	}
+	
+	void endDrawing() {
+		WidgetAPI.endDrawing(handle)
+	}
+	
+	void drawPoint(int x, int y, int color) {
+		WidgetAPI.drawPoint(handle, x, y, color)
+	}
+	
+	void drawLine(int x1, int y1, int x2, int y2, int color) {
+		WidgetAPI.drawLine(handle, x1, y1, x2, y2, color)
+	}
+	
+	private init(int handle) {
+		this.handle := handle
+	}
+	
+	release {
+		WidgetAPI.closeWindow(handle)
+	}
+	
+	private int handle
+	
+}
+
