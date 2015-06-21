@@ -82,4 +82,48 @@ class Utils {
 		return value < 10 ? (ASCII.digit0 + value) : (ASCII.a + value - 10)
 	}
 	
+	/* --- List utils --- */
+	
+	/** @brief Reverses all entries in the specified list. */
+	static int[] reverse(int[] list) {
+		if list = null {
+			return null
+		}
+		
+		var n := list.size()
+		/*var r := new int[](n)
+		
+		for int i ; i < n ; i++ {
+			r[i] := list[n - 1 - i]
+		}*/
+		var r := new int[]()
+		
+		for int i ; i < n ; i++ {
+			r.append(list[n - 1 - i])
+		}
+		
+		return r
+	}
+	
+	/** @brief Reverses all entries in the specified list. */
+	static float[] reverse(float[] list) {
+		if list = null {
+			return null
+		}
+		
+		var n := list.size()
+		/*var r := new float[](n)
+		
+		for int i ; i < n ; i++ {
+			r[i] := list[n - 1 - i]
+		}*/
+		var r := new float[]()
+		
+		for int i ; i < n ; i++ {
+			r.append(list[n - 1 - i])
+		}
+		
+		return r
+	}
+	
 }
