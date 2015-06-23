@@ -1,0 +1,66 @@
+/*
+ * Number.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/**
+Number base class.
+@see Integer
+@see Float
+@since 2.00
+@author Lukas Hermanns
+*/
+class Number {
+	
+	static const uncomparable := 666
+	
+	/**
+	@return -1 if this number is less than 'rhs',
+	0 if this number is equal to 'rhs', or 1 if this number is greater than 'rhs'.
+	*/
+	int compareTo(Number rhs)
+	
+	/// @return This number as integer.
+	int toInteger()
+	/// @return This number as floating-point.
+	float toFloat()
+	
+	/// @return True if this number is equal to 'rhs'.
+	[[override]]
+	bool equals(Object rhs) {
+		return compareTo(rhs) = 0
+	}
+	
+	/// @return True if this number is greater than 'rhs'.
+	bool greater(Number rhs) {
+		return compareTo(rhs) > 0
+	}
+	
+	/// @return True if this number is greater than or equal to 'rhs'.
+	bool greaterOrEqual(Number rhs) {
+		return compareTo(rhs) >= 0
+	}
+	
+	/// @return True if this number is less than 'rhs'.
+	bool less(Number rhs) {
+		return compareTo(rhs) < 0
+	}
+	
+	/// @return True if this number is less than or equal to 'rhs'.
+	bool lessOrEqual(Number rhs) {
+		return compareTo(rhs) <= 0
+	}
+	
+	/**
+	Computes the signum function for the specified value.
+	@return -1 if value is less than zero, 0 if value is equal to zero, or 1 if value is greater than zero.
+	*/
+	static int signum(int value) {
+		return value < 0 ? -1 :
+			   value > 0 ?  1 :
+							0
+	}
+	
+}

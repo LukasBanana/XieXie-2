@@ -5,15 +5,14 @@
  * See "LICENSE.txt" for license information.
  */
 
-import ASCII
-import ExceptionHandler
+import ASCII, Number, ExceptionHandler
 
 /**
 Integer class.
 @since 2.00
 @author Lukas Hermanns
 */
-class Integer {
+class Integer : Number {
 	
 	static const max := 2147483647	///< Maximal possible integer value.
 	static const min := -2147483648	///< Minimal possible integer value.
@@ -30,6 +29,21 @@ class Integer {
 	[[override]]
 	String toString() {	
 		return Integer.asString(value)
+	}
+	
+	int compareTo(Number rhs) {
+		if rhs is Integer {
+			return Number.signum(value - ((Integer)rhs).value)
+		}
+		return Number.uncomparable
+	}
+	
+	int toInteger() {
+		return value
+	}
+	
+	float toFloat() {
+		return (float)value
 	}
 	
 	/**
