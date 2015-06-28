@@ -27,9 +27,18 @@ class Number {
 	/// @return This number as floating-point.
 	float toFloat()
 	
-	/// @return True if this number is equal to 'rhs'.
+	/**
+	@return True if this number is equal to 'rhs'.
+	@remarks This overrides the Object.equals procedure, but actually only uses the Number.equal procedure.
+	@see equal
+	*/
 	[[override]]
 	bool equals(Object rhs) {
+		return rhs is Number ? equal((Number)rhs) : false
+	}
+	
+	/// @return True if this number is equal to 'rhs'.
+	bool equal(Number rhs) {
 		return compareTo(rhs) = 0
 	}
 	
