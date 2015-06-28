@@ -12,10 +12,12 @@ Integer class.
 @since 2.00
 @author Lukas Hermanns
 */
+[[final]]
 class Integer : Number {
 	
-	static const max := 2147483647	///< Maximal possible integer value.
-	static const min := -2147483648	///< Minimal possible integer value.
+	static const max		:= 2147483647	///< Maximal possible integer value.
+	static const min		:= -2147483648	///< Minimal possible integer value.
+	static const epsilon	:= 1			///< Minimal integer increase/decrease stride.
 	
 	init() {}
 	init(int value) {

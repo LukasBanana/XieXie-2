@@ -63,13 +63,21 @@ class Number {
 	}
 	
 	/**
-	Computes the signum function for the specified value.
+	Computes the signum function for the specified integer value.
 	@return -1 if value is less than zero, 0 if value is equal to zero, or 1 if value is greater than zero.
 	*/
 	static int signum(int value) {
 		return value < 0 ? -1 :
-			   value > 0 ?  1 :
-							0
+			   value > 0 ?  1 : 0
+	}
+	
+	/**
+	Computes the signum function for the specified floating-point value.
+	@return -1 if value is less than zero, 0 if value is equal to zero, or 1 if value is greater than zero.
+	*/
+	static int signum(float value) {
+		return value < 0.0 ? -1 :
+			   value > 0.0 ?  1 : 0
 	}
 	
 }

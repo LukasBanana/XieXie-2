@@ -12,17 +12,20 @@ Floating-point class.
 @since 2.00
 @author Lukas Hermanns
 */
+[[final]]
 class Float : Number {
 
-	static const max := 999999.0	///< Maximal possible floating-point value (INCOMPLETE!).
-	static const min := -999999.0	///< Minimal possible floating-point value (INCOMPLETE!).
+	static const max		:= 999999.0		///< Maximal possible floating-point value (INCOMPLETE!).
+	static const min		:= -999999.0	///< Minimal possible floating-point value (INCOMPLETE!).
+	static const epsilon	:= 0.0001		///< Minimal floating-point increase/decrease stride (INCOMPLETE!).
 	
 	init() {}
 	init(float value) {
 		this.value := value
 	}
-	init(String s) {
-		value := Float.parseFrom(s)
+	/// @see Float.parseFrom
+	init(String s, ExceptionHandler e := null) {
+		value := Float.parseFrom(s, e)
 	}
 	
 	[[override]]
@@ -33,9 +36,7 @@ class Float : Number {
 	
 	int compareTo(Number rhs) {
 		if rhs is Float {
-			const diff := value - ((Float)rhs).value
-			return (diff < 0.0 ? -1 :
-					diff > 0.0 ?  1 : 0)
+			return Number.signum(value - ((Float)rhs).value)
 		}
 		return Number.uncomparable
 	}
@@ -48,7 +49,7 @@ class Float : Number {
 		return value
 	}
 	
-	static float parseFrom(String s) {
+	static float parseFrom(String s, ExceptionHandler e := null) {
 		//todo: convert to float ...
 		return 0.0
 	}
