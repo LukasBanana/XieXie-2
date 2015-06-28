@@ -190,6 +190,7 @@ source_group(
 	${PROJECT_MODULES_DIR}/Socket/Socket.c
 	${PROJECT_MODULES_DIR}/SysInfo/SysInfo.c
 	${PROJECT_MODULES_DIR}/BigNum/BigNum.cpp
+	${PROJECT_MODULES_DIR}/Audio/Audio.cpp
 )
 
 source_group(
@@ -233,6 +234,7 @@ add_library(xvm_module STATIC ${FilesXVMModule})
 SETUP_STD_C_MODULE(MsgBox)
 SETUP_STD_C_MODULE(Socket)
 SETUP_STD_C_MODULE(SysInfo)
+SETUP_STD_C_MODULE(Audio)
 
 add_library(Module_BigNum SHARED ${FilesModuleBigNum})
 SETUP_CPP_MODULE(BigNum)
@@ -262,6 +264,7 @@ target_link_libraries(xxc xxclib)
 
 if(WIN32)
 	target_link_libraries(Module_Socket wsock32 ws2_32)
+	target_link_libraries(Module_Audio winmm)
 endif()
 
 if(UNIX)

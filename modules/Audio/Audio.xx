@@ -1,0 +1,23 @@
+/*
+ * Audio.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/// Module for basic audio output.
+[[bind]]
+module Audio {
+	
+	/**
+	Plays a sound file directly from file.
+	@param filename Specifies the filename of the sound file, which is to be played.
+	@return True if the sound could be loaded successful.
+	*/
+	static bool playSound(String filename)
+	
+	/// Stops all current played sounds.
+	static void stopAll()
+	
+}
+

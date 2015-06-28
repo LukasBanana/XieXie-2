@@ -1,0 +1,26 @@
+
+// Audio Test 1
+// 28/06/2015
+
+import Console, Audio
+
+class Test {
+	
+	static void play(String filename) {
+		Console.writeLine("load sound: \"\(filename)\"")
+		Audio.playSound(filename)
+	}
+	
+	static void main() {
+		
+		var path := @"D:\SoftwareEntwicklung\SoundSammlung\Musik"
+		
+		Test.play("\(path)\\Musik_09_Matrix1.wav")
+		//Test.play("\(path)\\Musik_37_AdventureMusic5.mp3")
+		
+		Console.writeLine("press enter to quit ...")
+		var wait := Console.readString()
+		
+	}
+	
+}
