@@ -65,7 +65,7 @@ void Shell::Execute(StreamParser parser)
 static void AppendDefaultScript(std::stringstream& sstr)
 {
     sstr
-        << "import MsgBox, Console, Integer, ASCII, Algo, Utils" << std::endl
+        << "import MsgBox, Console, Integer, ASCII, Algo, Utils, Audio" << std::endl
         << "class Script { " << std::endl
         << "void print(bool val) { print(val ? \"true\" : \"false\") }" << std::endl
         << "void print(int val) { Intrinsics.printInt(val) }" << std::endl
