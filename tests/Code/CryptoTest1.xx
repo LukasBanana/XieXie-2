@@ -1,0 +1,32 @@
+
+// Crypto Test 1
+// 20/07/2015
+
+import Console, Crypto
+
+class Test {
+	
+	static void main() {
+		
+		Console.writeLine("=== crypto test ===")
+		
+		Console.write("enter base: ")
+		int b := Console.readInt()
+		
+		Console.write("enter exponent: ")
+		int e := Console.readInt()
+		
+		Console.write("enter modulus: ")
+		int m := Console.readInt()
+		
+		Console.write(b)
+		Console.write(" ^ ")
+		Console.write(e)
+		Console.write(" mod ")
+		Console.write(m)
+		Console.write(" = ")
+		Console.writeLine(Crypto.modPow(b, e, m))
+		
+	}
+	
+}

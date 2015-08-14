@@ -1428,7 +1428,7 @@ void Decorator::DecorateOverloadedProcCall(ProcCall& ast, const ProcOverloadSwit
     {
         /*
         If the procedure call remains ambiguous, 'procDecls' will be empty, because of explicit type matching.
-        So store a backup and restore is after the second deduction pass, to enhance the compiler error outputs!
+        So store a backup and restore it after the second deduction pass, to enhance the compiler error outputs!
         */
         auto prevProcDecls = procDecls;
 

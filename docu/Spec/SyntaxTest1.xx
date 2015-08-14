@@ -1,0 +1,32 @@
+
+// Syntax Test 1
+// 08/07/2015
+
+import Console
+
+class Foo {
+	
+	void print() {
+		Console.writeLine("\(__CLASS__).\(__PROC__)")
+	}
+	
+}
+
+class Test {
+	
+	static void main() {
+		
+		int i
+		var x := i
+		// next statement must not begin with '(' token!
+		// otherwise 'i' in "var x := i" is interpreted as a procedure call.
+		{ new Foo() }[0].print()
+		
+		var y := new Foo()
+		// next statement must begin with '(' token!
+		// otherwise "Foo" in "var y := new Foo()" is interpreted as an anonymous class declaration.
+		({ new Foo() }[0].print())
+		
+	}
+	
+}

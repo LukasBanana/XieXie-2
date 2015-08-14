@@ -193,6 +193,14 @@ bool VerifyTypeCompatibility(const TypeDenoter& lhs, const TypeDenoter& rhs, std
         if (lhs.IsNullable() && rhs.IsNull())
             return true;
 
+        #if 1//!INCOMPLETE! -> required to support conversion from "int[] -> Object" for instance !!!
+        if ( ( lhs.IsArray() && rhs.IsPointer(BuiltinClasses::Object.name) ) ||
+             ( rhs.IsArray() && lhs.IsPointer(BuiltinClasses::Object.name) ) )
+        {
+            return true;
+        }
+        #endif
+
         AssertTypeEquality(lhs, rhs);
 
         switch (lhs.Type())

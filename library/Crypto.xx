@@ -1,0 +1,38 @@
+/*
+ * Crypto.xx
+ * 
+ * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+/**
+Class of basic cryptographic procedures.
+\author Lukas Hermanns
+*/
+[[final]]
+class Crypto {
+	
+	/**
+	Efficient modular-power function.
+	@param b Specifies the base.
+	@param e Specifies the exponent.
+	@param m Specifies the modulus.
+	@return (b^e) mod m
+	*/
+	static int modPow(int b, int e, int m) {
+		int n := 1
+		
+		while e > 0 {
+			if e % 2 = 1 {
+				n *= b
+				n %= m
+			}
+			e >>= 1
+			b *= b
+			b %= m
+		}
+		
+		return n
+	}
+	
+}
