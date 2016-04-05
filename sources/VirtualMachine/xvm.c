@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <setjmp.h>
 #include <string.h>
 #include <math.h>
