@@ -145,7 +145,7 @@ void Assembler::QueryByteCodeInformation(Log& log, const std::string& filename, 
             size_t maxNum = 0;
             for (size_t i = 0, n = addresses.size(); i < n; ++i)
             {
-                maxNum = std::max(maxNum, addresses[i].address);
+                maxNum = std::max(maxNum, static_cast<std::size_t>(addresses[i].address));
                 lines[i] = i;
             }
 
@@ -202,55 +202,55 @@ void Assembler::EstablishMnemonicTable()
 {
     mnemonicTable_ = std::move(std::map<std::string, InstrCategory>
     {
-        { "and",  { InstrCategory::Categories::Reg3,      OPCODE_AND3, OPCODE_AND2  } },
-        { "or",   { InstrCategory::Categories::Reg3,      OPCODE_OR3,  OPCODE_OR2   } },
-        { "xor",  { InstrCategory::Categories::Reg3,      OPCODE_XOR3, OPCODE_XOR2  } },
-        { "add",  { InstrCategory::Categories::Reg3,      OPCODE_ADD3, OPCODE_ADD2  } },
-        { "sub",  { InstrCategory::Categories::Reg3,      OPCODE_SUB3, OPCODE_SUB2  } },
-        { "mul",  { InstrCategory::Categories::Reg3,      OPCODE_MUL3, OPCODE_MUL2  } },
-        { "div",  { InstrCategory::Categories::Reg3,      OPCODE_DIV3, OPCODE_DIV2  } },
-        { "mod",  { InstrCategory::Categories::Reg3,      OPCODE_MOD3, OPCODE_MOD2  } },
-        { "sll",  { InstrCategory::Categories::Reg3,      OPCODE_SLL3, OPCODE_SLL2  } },
-        { "slr",  { InstrCategory::Categories::Reg3,      OPCODE_SLR3, OPCODE_SLR2  } },
-        { "addf", { InstrCategory::Categories::Reg3,      OPCODE_ADDF, 0u           } },
-        { "subf", { InstrCategory::Categories::Reg3,      OPCODE_SUBF, 0u           } },
-        { "mulf", { InstrCategory::Categories::Reg3,      OPCODE_MULF, 0u           } },
-        { "divf", { InstrCategory::Categories::Reg3,      OPCODE_DIVF, 0u           } },
+        { "and",  { InstrCategory::Categories::Reg3,      OPCODE_AND3, OPCODE_AND2   } },
+        { "or",   { InstrCategory::Categories::Reg3,      OPCODE_OR3,  OPCODE_OR2    } },
+        { "xor",  { InstrCategory::Categories::Reg3,      OPCODE_XOR3, OPCODE_XOR2   } },
+        { "add",  { InstrCategory::Categories::Reg3,      OPCODE_ADD3, OPCODE_ADD2   } },
+        { "sub",  { InstrCategory::Categories::Reg3,      OPCODE_SUB3, OPCODE_SUB2   } },
+        { "mul",  { InstrCategory::Categories::Reg3,      OPCODE_MUL3, OPCODE_MUL2   } },
+        { "div",  { InstrCategory::Categories::Reg3,      OPCODE_DIV3, OPCODE_DIV2   } },
+        { "mod",  { InstrCategory::Categories::Reg3,      OPCODE_MOD3, OPCODE_MOD2   } },
+        { "sll",  { InstrCategory::Categories::Reg3,      OPCODE_SLL3, OPCODE_SLL2   } },
+        { "slr",  { InstrCategory::Categories::Reg3,      OPCODE_SLR3, OPCODE_SLR2   } },
+        { "addf", { InstrCategory::Categories::Reg3,      OPCODE_ADDF, xvm_opcode(0) } },
+        { "subf", { InstrCategory::Categories::Reg3,      OPCODE_SUBF, xvm_opcode(0) } },
+        { "mulf", { InstrCategory::Categories::Reg3,      OPCODE_MULF, xvm_opcode(0) } },
+        { "divf", { InstrCategory::Categories::Reg3,      OPCODE_DIVF, xvm_opcode(0) } },
 
-        { "mov",  { InstrCategory::Categories::Reg2,      OPCODE_MOV2, OPCODE_MOV1  } },
-        { "not",  { InstrCategory::Categories::Reg2,      OPCODE_NOT,  0u           } },
-        { "cmp",  { InstrCategory::Categories::Reg2,      OPCODE_CMP,  0u           } },
-        { "cmpf", { InstrCategory::Categories::Reg2,      OPCODE_CMPF, 0u           } },
-        { "fti",  { InstrCategory::Categories::Reg2,      OPCODE_FTI,  0u           } },
-        { "itf",  { InstrCategory::Categories::Reg2,      OPCODE_ITF,  0u           } },
+        { "mov",  { InstrCategory::Categories::Reg2,      OPCODE_MOV2, OPCODE_MOV1   } },
+        { "not",  { InstrCategory::Categories::Reg2,      OPCODE_NOT,  xvm_opcode(0) } },
+        { "cmp",  { InstrCategory::Categories::Reg2,      OPCODE_CMP,  xvm_opcode(0) } },
+        { "cmpf", { InstrCategory::Categories::Reg2,      OPCODE_CMPF, xvm_opcode(0) } },
+        { "fti",  { InstrCategory::Categories::Reg2,      OPCODE_FTI,  xvm_opcode(0) } },
+        { "itf",  { InstrCategory::Categories::Reg2,      OPCODE_ITF,  xvm_opcode(0) } },
 
-        { "pop",  { InstrCategory::Categories::Reg1,      OPCODE_POP,  0u           } },
-        { "inc",  { InstrCategory::Categories::Reg1,      OPCODE_INC,  0u           } },
-        { "dec",  { InstrCategory::Categories::Reg1,      OPCODE_DEC,  0u           } },
+        { "pop",  { InstrCategory::Categories::Reg1,      OPCODE_POP,  xvm_opcode(0) } },
+        { "inc",  { InstrCategory::Categories::Reg1,      OPCODE_INC,  xvm_opcode(0) } },
+        { "dec",  { InstrCategory::Categories::Reg1,      OPCODE_DEC,  xvm_opcode(0) } },
 
-        { "lda",  { InstrCategory::Categories::Reg1LDA,   OPCODE_LDA,  0u           } },
+        { "lda",  { InstrCategory::Categories::Reg1LDA,   OPCODE_LDA,  xvm_opcode(0) } },
 
-        { "jmp",  { InstrCategory::Categories::Jump,      OPCODE_JMP,  0u           } },
-        { "je",   { InstrCategory::Categories::Jump,      OPCODE_JE,   0u           } },
-        { "jne",  { InstrCategory::Categories::Jump,      OPCODE_JNE,  0u           } },
-        { "jg",   { InstrCategory::Categories::Jump,      OPCODE_JG,   0u           } },
-        { "jl",   { InstrCategory::Categories::Jump,      OPCODE_JL,   0u           } },
-        { "jge",  { InstrCategory::Categories::Jump,      OPCODE_JGE,  0u           } },
-        { "jle",  { InstrCategory::Categories::Jump,      OPCODE_JLE,  0u           } },
-        { "call", { InstrCategory::Categories::Jump,      OPCODE_CALL, 0u           } },
+        { "jmp",  { InstrCategory::Categories::Jump,      OPCODE_JMP,  xvm_opcode(0) } },
+        { "je",   { InstrCategory::Categories::Jump,      OPCODE_JE,   xvm_opcode(0) } },
+        { "jne",  { InstrCategory::Categories::Jump,      OPCODE_JNE,  xvm_opcode(0) } },
+        { "jg",   { InstrCategory::Categories::Jump,      OPCODE_JG,   xvm_opcode(0) } },
+        { "jl",   { InstrCategory::Categories::Jump,      OPCODE_JL,   xvm_opcode(0) } },
+        { "jge",  { InstrCategory::Categories::Jump,      OPCODE_JGE,  xvm_opcode(0) } },
+        { "jle",  { InstrCategory::Categories::Jump,      OPCODE_JLE,  xvm_opcode(0) } },
+        { "call", { InstrCategory::Categories::Jump,      OPCODE_CALL, xvm_opcode(0) } },
 
-        { "ldb",  { InstrCategory::Categories::LoadStore, OPCODE_LDB,  0u           } },
-        { "stb",  { InstrCategory::Categories::LoadStore, OPCODE_STB,  0u           } },
-        { "ldh",  { InstrCategory::Categories::LoadStore, OPCODE_LDH,  0u           } },
-        { "sth",  { InstrCategory::Categories::LoadStore, OPCODE_STH,  0u           } },
-        { "ldw",  { InstrCategory::Categories::LoadStore, OPCODE_LDW,  0u           } },
-        { "stw",  { InstrCategory::Categories::LoadStore, OPCODE_STW,  0u           } },
-
-        { "push", { InstrCategory::Categories::Special,   OPCODE_PUSH, OPCODE_PUSHC } },
-        { "stop", { InstrCategory::Categories::Special,   OPCODE_STOP, 0u           } },
-        { "invk", { InstrCategory::Categories::Special,   OPCODE_INVK, 0u           } },
-        { "insc", { InstrCategory::Categories::Special,   OPCODE_INSC, 0u           } },
-        { "ret",  { InstrCategory::Categories::Special,   OPCODE_RET,  0u           } },
+        { "ldb",  { InstrCategory::Categories::LoadStore, OPCODE_LDB,  xvm_opcode(0) } },
+        { "stb",  { InstrCategory::Categories::LoadStore, OPCODE_STB,  xvm_opcode(0) } },
+        { "ldh",  { InstrCategory::Categories::LoadStore, OPCODE_LDH,  xvm_opcode(0) } },
+        { "sth",  { InstrCategory::Categories::LoadStore, OPCODE_STH,  xvm_opcode(0) } },
+        { "ldw",  { InstrCategory::Categories::LoadStore, OPCODE_LDW,  xvm_opcode(0) } },
+        { "stw",  { InstrCategory::Categories::LoadStore, OPCODE_STW,  xvm_opcode(0) } },
+ 
+        { "push", { InstrCategory::Categories::Special,   OPCODE_PUSH, OPCODE_PUSHC  } },
+        { "stop", { InstrCategory::Categories::Special,   OPCODE_STOP, xvm_opcode(0) } },
+        { "invk", { InstrCategory::Categories::Special,   OPCODE_INVK, xvm_opcode(0) } },
+        { "insc", { InstrCategory::Categories::Special,   OPCODE_INSC, xvm_opcode(0) } },
+        { "ret",  { InstrCategory::Categories::Special,   OPCODE_RET,  xvm_opcode(0) } },
     });
 }
 
@@ -831,7 +831,7 @@ void Assembler::ParseInstrReg3(const InstrCategory& instr)
             const auto& reg2 = ParseRegister();
 
             /* Add instruction */
-            byteCode_->AddInstr(Instr::MakeReg3(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, reg2));
+            byteCode_->AddInstr(Instr::MakeReg3(instr.opcodePrimary, reg0, reg1, reg2));
         }
         else if (instr.opcodeSecondary != 0)
         {
@@ -839,7 +839,7 @@ void Assembler::ParseInstrReg3(const InstrCategory& instr)
             auto value = ParseOperand();
             
             /* Add instruction */
-            byteCode_->AddInstr(Instr::MakeReg2(static_cast<xvm_opcode>(instr.opcodeSecondary), reg0, reg1, value));
+            byteCode_->AddInstr(Instr::MakeReg2(instr.opcodeSecondary, reg0, reg1, value));
         }
         else
             Error("invalid third operand for 3-register instruction (expected register)");
@@ -863,7 +863,7 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
             const auto& reg1 = ParseRegister();
 
             /* Add instruction */
-            byteCode_->AddInstr(Instr::MakeReg2(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, 0));
+            byteCode_->AddInstr(Instr::MakeReg2(instr.opcodePrimary, reg0, reg1, 0));
         }
         else if (instr.opcodeSecondary != 0)
         {
@@ -903,7 +903,7 @@ void Assembler::ParseInstrReg2(const InstrCategory& instr)
                 auto value = ParseOperand();
                 
                 /* Add instruction */
-                byteCode_->AddInstr(Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodeSecondary), reg0, value));
+                byteCode_->AddInstr(Instr::MakeReg1(instr.opcodeSecondary, reg0, value));
             }
         }
         else if (instr.opcodePrimary == OPCODE_CMP)
@@ -937,9 +937,7 @@ void Assembler::ParseInstrReg1(const InstrCategory& instr)
     const auto& reg = ParseRegister();
 
     /* Add instruction */
-    byteCode_->AddInstr(
-        Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodePrimary), reg, 0)
-    );
+    byteCode_->AddInstr(Instr::MakeReg1(instr.opcodePrimary, reg, 0));
 }
 
 void Assembler::ParseInstrReg1LDA(const InstrCategory& instr)
@@ -952,7 +950,7 @@ void Assembler::ParseInstrReg1LDA(const InstrCategory& instr)
     auto address = ParseOperand();
 
     /* Add instruction */
-    byteCode_->AddInstr(Instr::MakeReg1(static_cast<xvm_opcode>(instr.opcodePrimary), reg, address));
+    byteCode_->AddInstr(Instr::MakeReg1(instr.opcodePrimary, reg, address));
 }
 
 void Assembler::ParseInstrJump(const InstrCategory& instr)
@@ -982,7 +980,7 @@ void Assembler::ParseInstrJump(const InstrCategory& instr)
     }
 
     /* Add instruction */
-    byteCode_->AddInstr(Instr::MakeJump(static_cast<xvm_opcode>(instr.opcodePrimary), *reg, offset));
+    byteCode_->AddInstr(Instr::MakeJump(instr.opcodePrimary, *reg, offset));
 }
 
 void Assembler::ParseInstrLoadStore(const InstrCategory& instr)
@@ -1000,7 +998,7 @@ void Assembler::ParseInstrLoadStore(const InstrCategory& instr)
     auto offset = ParseOperand();
 
     /* Add instruction */
-    byteCode_->AddInstr(Instr::MakeLoadStore(static_cast<xvm_opcode>(instr.opcodePrimary), reg0, reg1, offset));
+    byteCode_->AddInstr(Instr::MakeLoadStore(instr.opcodePrimary, reg0, reg1, offset));
 }
 
 void Assembler::ParseInstrSpecial(const InstrCategory& instr)
@@ -1269,7 +1267,7 @@ int Assembler::AddressValue(std::string label, const BackPatchAddr::InstrUse::Ty
     {
         return BackPatchAddressValue(
             static_cast<int>(it->second),
-            { type, byteCode_->NextInstrIndex(), false }
+            { type, static_cast<int>(byteCode_->NextInstrIndex()), false }
         );
     }
 

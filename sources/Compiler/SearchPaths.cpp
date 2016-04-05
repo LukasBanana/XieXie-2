@@ -17,7 +17,7 @@ static std::string appPath, libraryPath, modulesPath;
 
 void Setup(const std::string& appFilename)
 {
-    #ifndef XIEXIE_RELEASE_VERSION
+    #if !defined(XIEXIE_RELEASE_VERSION) && !defined(__clang__)
     static const std::string libBasePath = "/../repository/";
     #else
     static const std::string libBasePath = "/../";

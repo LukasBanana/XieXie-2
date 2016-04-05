@@ -62,6 +62,11 @@ std::string ToStr(unsigned int val)
     return ToStrTmpl(val);
 }
 
+std::string ToStr(std::size_t val)
+{
+    return ToStrTmpl(val);
+}
+
 std::string ToStr(float val)
 {
     return ToStrTmplPrec(val);
@@ -132,7 +137,7 @@ std::string ExtractFileIdent(const std::string& filename)
 void RemoveFileExtension(std::string& filename)
 {
     /* Remove file extension */
-    for (size_t i = filename.size(); i + 1 >= 0; --i)
+    for (size_t i = filename.size(); i > 0; --i)
     {
         auto chr = filename[i - 1];
         if (chr == '/' || chr == '\\')
@@ -262,7 +267,7 @@ size_t StringSimilarities(const std::string& lhs, const std::string& rhs)
     auto lhsSize = lhs.size();
     auto rhsSize = rhs.size();
 
-    auto maxSizeDiff = std::max(1u, lhsSize/3);
+    auto maxSizeDiff = std::max(std::size_t(1u), lhsSize/3);
 
     if (lhsSize > rhsSize + maxSizeDiff || lhsSize + maxSizeDiff < rhsSize)
         return 0;

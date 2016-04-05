@@ -199,12 +199,14 @@ TokenPtr Scanner::Make(const Tokens& type, std::string& spell, const SourceArea&
 
 TokenPtr Scanner::Make(const Tokens& type, const char* spell, bool takeChr)
 {
-    return Make(type, std::string(spell), takeChr);
+    std::string s(spell);
+    return Make(type, s, takeChr);
 }
 
 TokenPtr Scanner::Make(const Tokens& type, const char* spell, const SourceArea& area, bool takeChr)
 {
-    return Make(type, std::string(spell), area, takeChr);
+    std::string s(spell);
+    return Make(type, s, area, takeChr);
 }
 
 TokenPtr Scanner::Scan()

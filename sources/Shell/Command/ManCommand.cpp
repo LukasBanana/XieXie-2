@@ -10,6 +10,7 @@
 #include "ConsoleManip.h"
 #include "MakeUnique.h"
 #include "Attrib.h"
+#include "SearchPaths.h"
 
 #include <set>
 #include <algorithm>
@@ -90,6 +91,13 @@ static void PrintAttribs(Log& output)
     }
 }
 
+static void PrintSearchPaths(Log& output)
+{
+    output.Headline("search paths:");
+    output.Message("library path: \"" + SearchPaths::LibraryPath());
+    output.Message("module path: \"" + SearchPaths::ModulesPath());
+}
+
 void ManCommand::Execute(StreamParser& input, Log& output)
 {
     while (true)
@@ -104,6 +112,11 @@ void ManCommand::Execute(StreamParser& input, Log& output)
             input.Accept();
             PrintAttribs(output);
         }
+        else if (input.Get() == "-S" || input.Get() == "--spaths")
+        {
+            input.Accept();
+            PrintSearchPaths(output);
+        }
         else
             break;
     }
@@ -114,6 +127,7 @@ void ManCommand::Help(HelpPrinter& printer) const
     printer.Command("man [OPT+]", "prints the compiler's manual pages");
     printer.Flag("-K, --keywords", "prints the list of all keywords");
     printer.Flag("-A, --attribs", "prints the list of all attributes");
+    printer.Flag("-S, --spaths", "prints the search paths");
 }
 
 

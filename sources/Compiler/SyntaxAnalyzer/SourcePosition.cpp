@@ -13,7 +13,7 @@ namespace SyntaxAnalyzer
 {
 
 
-const SourcePosition SourcePosition::ignore;
+const SourcePosition SourcePosition::ignore{};
 
 SourcePosition::SourcePosition(unsigned int row, unsigned int column) :
     row_   { row    },

@@ -159,9 +159,9 @@ class Assembler
                 Special,
             };
 
-            Categories      category;
-            unsigned int    opcodePrimary;
-            unsigned int    opcodeSecondary;
+            Categories category;
+            xvm_opcode opcodePrimary;
+            xvm_opcode opcodeSecondary;
         };
 
         struct Pragma

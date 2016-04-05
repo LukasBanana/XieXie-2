@@ -30,6 +30,8 @@ std::string ToStr(unsigned short val);
 std::string ToStr(int val);
 std::string ToStr(unsigned int val);
 
+std::string ToStr(std::size_t val);
+
 std::string ToStr(float val);
 std::string ToStr(double val);
 

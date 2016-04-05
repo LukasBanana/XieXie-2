@@ -232,6 +232,8 @@ static int shell_parse_args(const char* app_path, int argc, char* argv[])
 
             #if defined(_WIN32)
             xvm_string_append(&filename, ".dll");
+            #elif defined(__APPLE__)
+            xvm_string_append(&filename, ".dylib");
             #elif defined(__linux__)
             xvm_string_append(&filename, ".so");
             #endif

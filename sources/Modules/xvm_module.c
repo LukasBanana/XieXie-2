@@ -72,7 +72,11 @@ _XVM_Env;
 #define ENV_REG(env, reg)   (ENV(env)->regRef[reg])
 #define ENV_STACK_PTR(env)  ((XVM_Word*)ENV_REG(env, REG_SP))
 
+#ifdef __clang__
+#define ERROR_INVALID_ARG   _errorCallback("invalid argument for <function???>")
+#else
 #define ERROR_INVALID_ARG   _errorCallback("invalid argument for " __FUNCTION__)
+#endif
 
 
 /* ----- Error Handling ----- */
@@ -405,8 +409,9 @@ XVM_Boolean XVM_ReturnVoid(XVM_Env env, unsigned int argSize)
     if (argSize > 0)
     {
         // Pop arguments from stack
-        ENV_STACK_PTR(env) -= argSize;
-        if (ENV_STACK_PTR(env) < ENV(env)->stackBegin)
+        XVM_Word* stackPtr = ENV_STACK_PTR(env);
+        stackPtr -= argSize;
+        if (stackPtr < ENV(env)->stackBegin)
             return XVM_False;
     }
     return XVM_True;
@@ -422,8 +427,9 @@ XVM_Boolean XVM_ReturnInt(XVM_Env env, unsigned int argSize, int value)
     _XVM_Env* _env = (_XVM_Env*)env;
 
     // Pop arguments from stack
-    ENV_STACK_PTR(env) -= argSize;
-    if (ENV_STACK_PTR(env) < ENV(env)->stackBegin)
+    XVM_Word* stackPtr = ENV_STACK_PTR(env);
+    stackPtr -= argSize;
+    if (stackPtr < ENV(env)->stackBegin)
         return XVM_False;
 
     // Set result into '$ar' register

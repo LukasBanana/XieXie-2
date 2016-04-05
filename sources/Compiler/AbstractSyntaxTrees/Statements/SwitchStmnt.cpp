@@ -19,9 +19,9 @@ namespace AbstractSyntaxTrees
  */
 
 SwitchStmnt::CasesRange::CasesRange(CasesRange&& rhs) :
+    casesRef    { std::move(rhs.casesRef) },
     rangeStart  { rhs.rangeStart          },
-    rangeEnd    { rhs.rangeEnd            },
-    casesRef    { std::move(rhs.casesRef) }
+    rangeEnd    { rhs.rangeEnd            }
 {
 }
 

@@ -218,6 +218,7 @@ class Instruction
             return false;
         }
 
+        #ifndef __clang__
         template <> static bool InRange<26>(int value);
         template <> static bool InRange<21>(int value);
         template <> static bool InRange<16>(int value);
@@ -225,6 +226,7 @@ class Instruction
         template <> static bool InRange<26>(unsigned int value);
         template <> static bool InRange<21>(unsigned int value);
         template <> static bool InRange<16>(unsigned int value);
+        #endif
 
         /* ------- Functions ------- */
 
@@ -344,28 +346,28 @@ class Instruction
 
 };
 
-template <> bool Instruction::InRange<26>(int value)
+template <> inline bool Instruction::InRange<26>(int value)
 {
     return InBitRange<SgnValue26>(value);
 }
-template <> bool Instruction::InRange<21>(int value)
+template <> inline bool Instruction::InRange<21>(int value)
 {
     return InBitRange<SgnValue21>(value);
 }
-template <> bool Instruction::InRange<16>(int value)
+template <> inline bool Instruction::InRange<16>(int value)
 {
     return InBitRange<SgnValue16>(value);
 }
 
-template <> bool Instruction::InRange<26>(unsigned int value)
+template <> inline bool Instruction::InRange<26>(unsigned int value)
 {
     return InBitRange<Value26>(value);
 }
-template <> bool Instruction::InRange<21>(unsigned int value)
+template <> inline bool Instruction::InRange<21>(unsigned int value)
 {
     return InBitRange<Value21>(value);
 }
-template <> bool Instruction::InRange<16>(unsigned int value)
+template <> inline bool Instruction::InRange<16>(unsigned int value)
 {
     return InBitRange<Value16>(value);
 }

@@ -1716,7 +1716,8 @@ void GraphGenerator::GenerateArithmeticBinaryExpr(BinaryExpr* ast, void* args)
     PushVar(inst->dest);
 
     /* Apply constant folding */
-    BB()->ReplaceLastInst( Optimization::ConstantFolding::FoldConstants(*inst) );
+    auto foldedInst = Optimization::ConstantFolding::FoldConstants(*inst);
+    BB()->ReplaceLastInst(foldedInst);
 }
 
 static OpCodes OperatorToOpCode(const UnaryExpr::Operators op, bool isFloat)

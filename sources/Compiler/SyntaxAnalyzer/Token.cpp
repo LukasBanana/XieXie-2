@@ -226,7 +226,7 @@ std::string Token::TypeToString(const Types type)
 
 SourceArea Token::BuildArea(const SourcePosition& pos, const std::string& spell)
 {
-    return { { pos.Row(), pos.Column() - spell.size() }, pos };
+    return { { pos.Row(), pos.Column() - static_cast<unsigned int>(spell.size()) }, pos };
 }
 
 

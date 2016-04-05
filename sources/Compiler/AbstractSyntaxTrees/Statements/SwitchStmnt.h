@@ -30,6 +30,8 @@ class SwitchStmnt : public Stmnt
             CasesRange() = default;
             CasesRange(const CasesRange&) = default;
             CasesRange(CasesRange&& rhs);
+            
+            CasesRange& operator = (const CasesRange&) = default;
 
             //! Returns true if there is an entry in 'casesRef' for each index in the range.
             bool IsIndexable() const;

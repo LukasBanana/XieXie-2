@@ -34,6 +34,8 @@ class CFGViewer
         //! CFG viewer output description structure.
         struct OutputDesc
         {
+            OutputDesc() { /* Can not use default constructor with clang */ }
+            
             //! Specifies the font name for the graph nodes. By default "courier new".
             std::string fontName    = "courier new";
             //! Specifies the font size for the graph nodes. By default 10.
@@ -47,8 +49,8 @@ class CFGViewer
             bool        genPNG      = true;
         };
 
-        void ViewGraph(const BasicBlock& entryPoint, std::ostream& stream, const OutputDesc& desc = {});
-        void ViewGraph(const ClassTree& classTree, const std::string& path = "", const OutputDesc& desc = {});
+        void ViewGraph(const BasicBlock& entryPoint, std::ostream& stream, const OutputDesc& desc = OutputDesc());
+        void ViewGraph(const ClassTree& classTree, const std::string& path = "", const OutputDesc& desc = OutputDesc());
 
     private:
         

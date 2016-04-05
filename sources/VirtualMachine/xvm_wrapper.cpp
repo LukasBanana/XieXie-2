@@ -168,7 +168,7 @@ Instruction::Instruction() :
 {
 }
 Instruction::Instruction(int code) :
-    code_{ code }
+    code_{ static_cast<instr_t>(code) }
 {
 }
 
@@ -513,6 +513,8 @@ bool ByteCode::BindAutomaticModules(const std::string& modulePath)
 
         #if defined(_WIN32)
         filename += ".dll";
+        #elif defined(__APPLE__)
+        filename += ".dylib";
         #elif defined(__linux__)
         filename += ".so";
         #endif
