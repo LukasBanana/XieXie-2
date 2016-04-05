@@ -30,7 +30,9 @@ std::string ToStr(unsigned short val);
 std::string ToStr(int val);
 std::string ToStr(unsigned int val);
 
+#ifdef __clang__
 std::string ToStr(std::size_t val);
+#endif
 
 std::string ToStr(float val);
 std::string ToStr(double val);

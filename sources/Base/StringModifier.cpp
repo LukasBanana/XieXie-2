@@ -62,10 +62,12 @@ std::string ToStr(unsigned int val)
     return ToStrTmpl(val);
 }
 
+#ifdef __clang__
 std::string ToStr(std::size_t val)
 {
     return ToStrTmpl(val);
 }
+#endif
 
 std::string ToStr(float val)
 {
