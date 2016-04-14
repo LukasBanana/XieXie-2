@@ -433,31 +433,39 @@ size_t ByteCode::NumInstr() const
     return instructions_.size();
 }
 
+size_t ByteCode::NumDataFields() const
+{
+    return dataFields_.size();
+}
+
 size_t ByteCode::NextInstrIndex() const
 {
-    return NumInstr();
+    return NumInstr() + NumDataFields();
 }
 
 void ByteCode::AddDataField(int wordDataField)
 {
-    AddInstr(wordDataField);
+    dataFields_.push_back(*reinterpret_cast<unsigned int*>(&wordDataField));
 }
 
 void ByteCode::AddDataField(float floatDataField)
 {
-    AddInstr(*reinterpret_cast<int*>(&floatDataField));
+    AddDataField(*reinterpret_cast<int*>(&floatDataField));
 }
 
 void ByteCode::AddDataField(const std::string& asciiDataField)
 {
-    size_t numInstr = 0;
-    xvm_bytecode_datafield_ascii(NULL, asciiDataField.c_str(), &numInstr);
+    /* Determine number if required data fields for the specified string */
+    size_t numFields = 0;
+    xvm_bytecode_datafield_ascii(NULL, asciiDataField.c_str(), &numFields);
 
-    auto instrIndex = NextInstrIndex();
-    instructions_.resize(instructions_.size() + numInstr);
+    /* Allocate enough data fields */
+    auto offset = dataFields_.size();
+    dataFields_.resize(offset + numFields);
 
+    /* Copy string into data fields */
     xvm_bytecode_datafield_ascii(
-        reinterpret_cast<instr_t*>(&(instructions_[instrIndex])),
+        reinterpret_cast<instr_t*>(&(dataFields_[offset])),
         asciiDataField.c_str(),
         NULL
     );
@@ -535,11 +543,14 @@ bool ByteCode::Finalize()
 {
     /* Copy instructions into XVM byte code */
     auto numInstr = instructions_.size();
-    if (xvm_bytecode_create_instructions(&byteCode_, static_cast<int>(numInstr)) == 0)
+    auto numDataFields = dataFields_.size();
+    if (xvm_bytecode_create_instructions(&byteCode_, static_cast<unsigned int>(numInstr + numDataFields), static_cast<unsigned int>(numInstr)) == 0)
         return false;
-            
+    
     for (size_t i = 0; i < numInstr; ++i)
         byteCode_.instructions[i] = instructions_[i].Code();
+    for (size_t i = 0; i < numDataFields; ++i)
+        byteCode_.instructions[numInstr + i] = static_cast<instr_t>(dataFields_[i]);
 
     /* Copy export-addresses into XVM byte code */
     auto numExportAddr = exportAddresses_.size();

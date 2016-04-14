@@ -513,7 +513,9 @@ class ByteCode
 
         //! Returns the number of instructions.
         size_t NumInstr() const;
-        //! Returns the index for the next instruction.
+        //! Returns the number of data fields.
+        size_t NumDataFields() const;
+        //! Returns the index for the next instruction (including the data fields inside the instruction buffer!).
         size_t NextInstrIndex() const;
 
         //! Adds the specified integer literal word as instruction data field.
@@ -570,6 +572,11 @@ class ByteCode
         {
             return instructions_;
         }
+        //! Returns the 32-bit data fields.
+        const std::vector<unsigned int>& GetDataFields() const
+        {
+            return dataFields_;
+        }
         //! Returns the export addresses.
         const std::vector<ExportAddress>& GetExportAddresses() const
         {
@@ -603,6 +610,9 @@ class ByteCode
 
         //! Array list of all instructions.
         std::vector<Instruction>                instructions_;
+
+        //! Array list of all 32-bit data fields.
+        std::vector<unsigned int>               dataFields_;
 
         //! Array list of all export addresses.
         std::vector<ExportAddress>              exportAddresses_;

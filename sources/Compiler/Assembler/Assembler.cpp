@@ -489,6 +489,10 @@ Assembler::Token Assembler::ScanIdentifier()
         return std::move(Token(Token::Types::Module, spell));
     if (spell == ".define")
         return std::move(Token(Token::Types::Define, spell));
+    if (spell == ".code")
+        return std::move(Token(Token::Types::CodeSegment, spell));
+    if (spell == ".data")
+        return std::move(Token(Token::Types::DataSegment, spell));
 
     /* Check for mnemonics */
     auto it = mnemonicTable_.find(spell);
@@ -664,6 +668,10 @@ void Assembler::ParseLine()
         case Token::Types::Define:
             ParseDefineField();
             break;
+        case Token::Types::CodeSegment:
+        case Token::Types::DataSegment:
+            ParseSegment();
+            break;
         default:
             ErrorUnexpectedToken();
             break;
@@ -672,13 +680,20 @@ void Assembler::ParseLine()
 
 void Assembler::ParseMnemonic()
 {
-    auto ident = Accept(Token::Types::Mnemonic);
+    /* Validate segment */
+    if (segment_ == Segments::Code)
+    {
+        /* Parse mnemnonic and respective instruction */
+        auto ident = Accept(Token::Types::Mnemonic);
 
-    auto it = mnemonicTable_.find(ident.spell);
-    if (it != mnemonicTable_.end())
-        ParseInstr(it->second);
+        auto it = mnemonicTable_.find(ident.spell);
+        if (it != mnemonicTable_.end())
+            ParseInstr(it->second);
+        else
+            Error("unknown mnemonic '" + ident.spell + "'");
+    }
     else
-        Error("unknown mnemonic '" + ident.spell + "'");
+        Error("missing '.code' segment");
 }
 
 void Assembler::ParseLabel()
@@ -753,18 +768,43 @@ void Assembler::ParseDefineField()
     definedMacros_[name] = value;
 }
 
+void Assembler::ParseSegment()
+{
+    switch (segment_)
+    {
+        case Segments::Undefined:
+            Accept(Token::Types::CodeSegment);
+            segment_ = Segments::Code;
+            break;
+        case Segments::Code:
+            Accept(Token::Types::DataSegment);
+            segment_ = Segments::Data;
+            break;
+        default:
+            Error("invalid segment '" + tkn_.spell + "' at this point in the current file");
+            break;
+    }
+}
+
 void Assembler::ParseDataField()
 {
-    auto dataField = Accept(Token::Types::Data).spell;
+    /* Validate segment */
+    if (segment_ == Segments::Data)
+    {
+        /* Parse data field */
+        auto dataField = Accept(Token::Types::Data).spell;
 
-    if (dataField == ".word")
-        ParseDataFieldWord();
-    else if (dataField == ".float")
-        ParseDataFieldFloat();
-    else if (dataField == ".ascii")
-        ParseDataFieldAscii();
+        if (dataField == ".word")
+            ParseDataFieldWord();
+        else if (dataField == ".float")
+            ParseDataFieldFloat();
+        else if (dataField == ".ascii")
+            ParseDataFieldAscii();
+        else
+            Error("invalid data field '" + dataField + "'");
+    }
     else
-        Error("invalid data field '" + dataField + "'");
+        Error("missing '.data' segment");
 }
 
 void Assembler::ParseDataFieldWord()

@@ -598,6 +598,7 @@ typedef struct
 {
     unsigned int            num_instructions;       //!< Number of instructions. By default 0.
     instr_t*                instructions;           //!< Instruction array. By default NULL.
+    unsigned int            datafield_offset;       //!< Offset (in number of instructions) of the data fields inside the instruction buffer.
 
     unsigned int            num_export_addresses;   //!< Number of export addresses. By default 0.
     xvm_export_address*     export_addresses;       //!< Export address array. By default NULL.
@@ -636,10 +637,11 @@ int xvm_bytecode_init(xvm_bytecode* byte_code);
 Allocates memory for the specified amount of byte code instructions.
 \param[in,out] byte_code Pointer to the byte code object.
 \param[in] num_instructions Specifies the number of instruction to allocate for the byte code.
+\param[in] datafield_offset Specifies the offset (in number of instructions) of the data field segment.
 \see xvm_bytecode_init
 \note All instructions are uninitialized!
 */
-int xvm_bytecode_create_instructions(xvm_bytecode* byte_code, unsigned int num_instructions);
+int xvm_bytecode_create_instructions(xvm_bytecode* byte_code, unsigned int num_instructions, unsigned int datafield_offset);
 
 /**
 Allocates memory for the specified amount of byte code export addresses.
@@ -734,12 +736,12 @@ xvm_bytecode_datafield_ascii(byte_code.instructions + current_instr_offset, "Hel
 int xvm_bytecode_datafield_ascii(instr_t* instr_ptr, const char* text, size_t* num_instructions);
 
 #define XBC_FORMAT_MAGIC            (*((int*)("XBCF")))     //!< XBC file format magic number.
-#define XBC_FORMAT_VERSION_1_31     131                     //!< XBC file format version 1.31
-#define XBC_FORMAT_VERSION_1_32     132                     //!< XBC file format version 1.32
-#define XBC_FORMAT_VERSION_1_33     133                     //!< XBC file format version 1.33
-#define XBC_FORMAT_VERSION_1_34     134                     //!< XBC file format version 1.34
-#define XBC_FORMAT_VERSION_1_35     135                     //!< XBC file format version 1.35 (appends debug information).
-#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_35 //!< Latest XBC file format version.
+#define XBC_FORMAT_VERSION_1_41     141                     //!< XBC file format version 1.41
+#define XBC_FORMAT_VERSION_1_42     142                     //!< XBC file format version 1.42
+#define XBC_FORMAT_VERSION_1_43     143                     //!< XBC file format version 1.43
+#define XBC_FORMAT_VERSION_1_44     144                     //!< XBC file format version 1.44
+#define XBC_FORMAT_VERSION_1_45     145                     //!< XBC file format version 1.45 (appends debug information).
+#define XBC_FORMAT_VERSION_LATEST   XBC_FORMAT_VERSION_1_45 //!< Latest XBC file format version.
 
 /**
 Reads a byte code form file.
@@ -754,11 +756,11 @@ Writes the specified byte code to file.
 \param[in] byte_code specifies the byte code which is to be written to file.
 \param[in] filename Specifies the filename which is to be used to create the file.
 \param[in] version Specifies the format version. Must be one of the following values:
-- XBC_FORMAT_VERSION_1_31
-- XBC_FORMAT_VERSION_1_32
-- XBC_FORMAT_VERSION_1_33
-- XBC_FORMAT_VERSION_1_34
-- XBC_FORMAT_VERSION_1_35
+- XBC_FORMAT_VERSION_1_41
+- XBC_FORMAT_VERSION_1_42
+- XBC_FORMAT_VERSION_1_43
+- XBC_FORMAT_VERSION_1_44
+- XBC_FORMAT_VERSION_1_45
 - XBC_FORMAT_VERSION_LATEST.
 \return Zero on failure and non-zero otherwise.
 */

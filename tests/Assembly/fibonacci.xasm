@@ -2,6 +2,8 @@
 ; Fibonacci XASM
 ; 24/03/2015
 
+.code
+
 lda $r0, @str_enter
 push $r0
 insc Print
@@ -74,6 +76,7 @@ fib:
 	mov $ar, 1
 	ret 1
 
+.data
 
 str_enter: .ascii "enter fibonacci number: "
 str_null: .ascii ""

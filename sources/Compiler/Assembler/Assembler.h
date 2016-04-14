@@ -40,7 +40,7 @@ class Assembler
     
     public:
         
-        //! 
+        //! \see QueryByteCodeInformation
         struct QueryFlags
         {
             enum
@@ -114,6 +114,8 @@ class Assembler
                 Pragma,         //!< '.pragma'
                 Module,         //!< '.module'
                 Define,         //!< '.define'
+                CodeSegment,    //!< '.code'
+                DataSegment,    //!< '.data'
                 Mnemonic,       //!< ( 'mov' | 'call' | ... )
             };
 
@@ -169,6 +171,13 @@ class Assembler
             bool exportAll = false;
         };
 
+        enum class Segments
+        {
+            Undefined,
+            Code,
+            Data,
+        };
+
         /* === Functions === */
 
         void EstablishMnemonicTable();
@@ -221,6 +230,7 @@ class Assembler
         void ParsePragmaField();
         void ParseModuleField();
         void ParseDefineField();
+        void ParseSegment();
 
         void ParseDataField();
         void ParseDataFieldWord();
@@ -314,6 +324,8 @@ class Assembler
 
         unsigned int                                invokeIDCounter_    = 0;
         std::map<std::string, unsigned int>         invokeIdents_;
+
+        Segments                                    segment_            = Segments::Undefined;
 
 };
 
