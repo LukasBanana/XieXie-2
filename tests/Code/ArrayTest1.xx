@@ -22,7 +22,7 @@ class Test {
 		
 		var list :=
 		//	new int[](10)
-			{ 1, 2, 3 }
+			{ 1, 2, 3, 4 } // sum: 1+2+3+4 = 10
 		
 		return list
 		

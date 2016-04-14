@@ -66,6 +66,16 @@ bool XASMGenerator::GenerateAsm(const CFGProgram& program, ErrorReporter& errorR
                 GenerateClassTree(*ct);
         }
 
+        /* Generate data fields */
+        GenerateCoreDataAssembly();
+
+        /* Generate assembler data-fields for each class tree */
+        for (const auto& ct : program.classTrees)
+        {
+            if (!ct->GetClassDeclAST()->isExtern)
+                GenerateClassTreeData(*ct);
+        }
+
         /* Generate literals */
         for (const auto& sl : program.stringLiterals)
             GenerateStringLiteral(sl);
@@ -595,6 +605,7 @@ This code must be at the beginning, so the code is over-jumped with the label "_
 void XASMGenerator::GenerateCoreAssembly()
 {
     CommentHeadline("CORE ASSEMBLY");
+    Line(".code");
     Line("jmp __xx__entry");
     
     Ln(
@@ -602,6 +613,18 @@ void XASMGenerator::GenerateCoreAssembly()
     );
 
     GlobalLabel("__xx__entry");
+    Blanks(2);
+}
+
+void XASMGenerator::GenerateCoreDataAssembly()
+{
+    CommentHeadline("CORE DATA ASSEMBLY");
+    Line(".data");
+    
+    Ln(
+        #include "CoreData.xasm.h"
+    );
+
     Blanks(2);
 }
 
@@ -673,11 +696,19 @@ void XASMGenerator::GenerateClassTree(const ClassTree& classTree)
         Blank();
     }
 
-    /* Generate vtable for non-abstract classes */
-    if (!classDecl->IsAbstract())
-        GenerateVtable(*classDecl);
-
     Blank();
+}
+
+void XASMGenerator::GenerateClassTreeData(const ClassTree& classTree)
+{
+    /* Generate vtable for non-abstract classes */
+    auto classDecl = classTree.GetClassDeclAST();
+
+    if (!classDecl->IsAbstract())
+    {
+        GenerateVtable(*classDecl);
+        Blank();
+    }
 }
 
 // Due to MSVC12 bug, the structure must be outside the function definition.
