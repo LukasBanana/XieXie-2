@@ -102,19 +102,13 @@ static void GenerateAssemblyIncludeFile(const std::string& assemblyInput, const 
 
 int main(int argc, char* argv[])
 {
-    if (argc >= 2)
+    if (argc == 5)
     {
-        /* Get assembly I/O filenames */
-        std::string assemblyInput = argv[1];
-        std::string assemblyOutput = assemblyInput + ".h";
-
-        if (argc >= 3)
-            assemblyOutput = argv[2]; 
-
         /* Generate assembly include file */
         try
         {
-            GenerateAssemblyIncludeFile(assemblyInput, assemblyOutput);
+            GenerateAssemblyIncludeFile(argv[1], argv[2]);
+            GenerateAssemblyIncludeFile(argv[3], argv[4]);
             std::cout << infoPrefix << "generation successful" << std::endl;
         }
         catch (const std::exception& err)
@@ -123,7 +117,11 @@ int main(int argc, char* argv[])
         }
     }
     else
-        std::cerr << infoPrefix << "too few arguments" << std::endl;
+        std::cerr << infoPrefix << "too few arguments; 4 required but " << (argc - 1) << " specified" << std::endl;
+
+    #ifdef _DEBUG
+    system("pause");
+    #endif
 
     return 0;
 }

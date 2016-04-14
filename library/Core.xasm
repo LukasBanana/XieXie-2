@@ -274,15 +274,6 @@ CObject.Ppointer:
 	add $ar, $xr, 12	; return pointer to first member variable of derived class
 	ret
 
-Object.vtable:
-	.word @CObject.Prelease
-	.word @CObject.Pinit
-	.word @CObject.PtypeID
-	.word @CObject.PrefCount
-	.word @CObject.Pequals,R@Object?rhs
-	.word @CObject.PtoString
-	.word @CObject.Ppointer
-
 
 ; ------- String Class -------
 
@@ -753,33 +744,6 @@ CString.PgetChar,I?pos:
 	mov $ar, 0
 	ret 1
 
-String.vtable:
-	.word @CString.Prelease
-	.word @CString.Pinit
-	.word @CObject.PtypeID
-	.word @CObject.PrefCount
-	.word @CString.Pequals,R@Object?rhs
-	.word @CString.PtoString
-	.word @CString.Ppointer
-	.word @CString.Pinit,I?size
-	.word @CString.Pinit,I?char,I?count
-	.word @CString.Pinit,R@String?source
-	.word @CString.Pinit,R@String?source,I?from,I?length
-	.word @CString.Pcopy
-	.word @CString.Psize
-	.word @CString.Presize,I?size
-	.word @CString.Padjust
-	.word @CString.Pempty
-	.word @CString.Pappend,R@String?rhs
-	.word @CString.Pappend,R@Object?rhs
-	.word @CString.Pappend,B?rhs
-	.word @CString.Pappend,I?rhs
-	.word @CString.Pappend,F?rhs
-	.word @CString.PsubString,I?from,I?length
-	.word @CString.Pfind,R@String?search,I?from
-	.word @CString.PsetChar,I?pos,I?char
-	.word @CString.PgetChar,I?pos
-
 
 ; ------- Array Class -------
 ; built-in array for objects
@@ -972,25 +936,6 @@ CArray.Pcontains,R@Object?entry:
 	; ...
 	ret 1
 
-Array.vtable:
-	.word @CArray.Prelease
-	.word @CArray.Pinit
-	.word @CObject.PtypeID
-	.word @CObject.PrefCount
-	.word @CArray.Pequals,R@Object?rhs
-	.word @CArray.PtoString
-	.word @CArray.Ppointer
-	.word @CArray.Pinit,I?size
-	.word @CArray.Pcopy
-	.word @CArray.Psize
-	.word @CArray.Presize,I?size
-	.word @CArray.Pempty
-	.word @CArray.Pappend,R@Object?entry
-	.word @CArray.Pinsert,R@Object?entry,I?pos
-	.word @CArray.Premove,I?pos
-	.word @CArray.Pfind,R@Object?entry,I?from
-	.word @CArray.Pcontains,R@Object?entry
-
 
 ; ------- IntArray Class -------
 ; built-in array for built-in type 'int'
@@ -1037,25 +982,6 @@ CIntArray.Pcontains,I?entry:
 	; ...
 	ret 1
 
-IntArray.vtable:
-	.word @CIntArray.Prelease
-	.word @CIntArray.Pinit
-	.word @CObject.PtypeID
-	.word @CObject.PrefCount
-	.word @CIntArray.Pequals,R@Object?rhs
-	.word @CIntArray.PtoString
-	.word @CIntArray.Ppointer
-	.word @CIntArray.Pinit,I?size
-	.word @CIntArray.Pcopy
-	.word @CIntArray.Psize
-	.word @CIntArray.Presize,I?size
-	.word @CIntArray.Pempty
-	.word @CIntArray.Pappend,I?entry
-	.word @CIntArray.Pinsert,I?entry,I?pos
-	.word @CIntArray.Premove,I?pos
-	.word @CIntArray.Pfind,I?entry,I?from
-	.word @CIntArray.Pcontains,I?entry
-
 
 ; ------- FloatArray Class -------
 ; built-in array for built-in type 'float'
@@ -1090,25 +1016,6 @@ CFloatArray.Pfind,F?entry,I?from:
 CFloatArray.Pcontains,F?entry:
 	; ...
 	ret 1
-
-FloatArray.vtable:
-	.word @CFloatArray.Prelease
-	.word @CFloatArray.Pinit
-	.word @CObject.PtypeID
-	.word @CObject.PrefCount
-	.word @CFloatArray.Pequals,R@Object?rhs
-	.word @CFloatArray.PtoString
-	.word @CFloatArray.Ppointer
-	.word @CFloatArray.Pinit,I?size
-	.word @CFloatArray.Pcopy
-	.word @CFloatArray.Psize
-	.word @CFloatArray.Presize,I?size
-	.word @CFloatArray.Pempty
-	.word @CFloatArray.Pappend,F?entry
-	.word @CFloatArray.Pinsert,F?entry,I?pos
-	.word @CFloatArray.Premove,I?pos
-	.word @CFloatArray.Pfind,F?entry,I?from
-	.word @CFloatArray.Pcontains,F?entry
 
 
 ; ------- BoolArray Class -------
@@ -1146,13 +1053,6 @@ CBoolArray.Pinit,I?size:
 		jmp .loop
 	.break:
 	ret 1
-
-BoolArray.vtable:
-	.word @CBoolArray.Prelease
-	.word @CBoolArray.Pinit
-	.word @CObject.PtoString
-	.word @CBoolArray.Pinit,I?size
-	; ...
 
 
 ; ------- Buffer Class -------
@@ -1263,27 +1163,6 @@ CBuffer.PwriteBuffer,I?offset,I?size,R@Buffer?buffer:
 CBuffer.PreadBuffer,I?offset,I?size,R@Buffer?buffer:
 	; ...
 	ret 3
-
-Buffer.vtable:
-	.word @CBuffer.Prelease
-	.word @CBuffer.Pinit
-	.word @CObject.PtypeID
-	.word @CObject.PrefCount
-	.word @CBuffer.Pequals,R@Object?rhs
-	.word @CObject.PtoString
-	.word @CBuffer.Ppointer
-	.word @CBuffer.Pinit,I?size,I?fill
-	.word @CBuffer.Pcopy
-	.word @CBuffer.Psize
-	.word @CBuffer.Presize,I?size
-	.word @CBuffer.PwriteByte,I?offset,I?value
-	.word @CBuffer.PreadByte,I?offset
-	.word @CBuffer.PwriteInt,I?offset,I?value
-	.word @CBuffer.PreadInt,I?offset
-	.word @CBuffer.PwriteFloat,I?offset,F?value
-	.word @CBuffer.PreadFloat,I?offset
-	.word @CBuffer.PwriteBuffer,I?offset,I?size,R@Buffer?buffer
-	.word @CBuffer.PreadBuffer,I?offset,I?size,R@Buffer?buffer
 
 
 ; ------- Intrinsics Class -------
