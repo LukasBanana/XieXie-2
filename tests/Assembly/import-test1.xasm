@@ -1,0 +1,26 @@
+; XASM Import Test 1
+; 14/04/2016
+
+.export func1
+.export func2
+
+.import func3
+
+.code
+
+call func3
+
+stop
+
+func1:
+	push 1
+	insc PrintInt
+	ret
+
+func2:
+	push 2
+	insc PrintInt
+	ret
+
+
+.data

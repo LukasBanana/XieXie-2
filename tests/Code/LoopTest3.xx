@@ -1,0 +1,29 @@
+
+// Loop Test 3
+// 07/06/2016
+
+import Console
+
+/// Test for new "for"-keyword meaning (CONCEPT ONLY!!!)
+class Test {
+	
+	static void main() {
+		
+		for int i while i < 10 {
+			Console.writeLine(i)
+			i++
+		}
+		
+		for int i do {
+			Console.writeLine(i)
+			i++
+		} while i < 10
+		
+		for int i := 0, j := 5 if i < j {
+			Console.writeLine("i < j")
+		}
+		
+	}
+	
+}
+
