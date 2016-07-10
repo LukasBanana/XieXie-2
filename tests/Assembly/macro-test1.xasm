@@ -4,12 +4,16 @@
 
 .define NUM -12
 
+.code
+
 push %NUM
 insc PrintInt
 lda $r0, @str0
 push $r0
 insc PrintLn
 stop
+
+.data
 
 str0: .ascii "Hello, World!\n"
 

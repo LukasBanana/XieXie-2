@@ -2,16 +2,10 @@
 ; Hamming Distance XASM test
 ; 13/07/2014
 
+.code
+
 call main
 stop
-
-str_null: .ascii ""
-str_a: .ascii "enter first value: "
-str_b: .ascii "enter second value: "
-str_1: .ascii "1"
-str_0: .ascii "0"
-str_result: .ascii "hamming distance = "
-str_pause: .ascii "pause"
 
 ; void new_line()
 new_line:
@@ -145,6 +139,16 @@ main:
 	insc SysCall
 	
 	ret
+
+.data
+
+str_null: .ascii ""
+str_a: .ascii "enter first value: "
+str_b: .ascii "enter second value: "
+str_1: .ascii "1"
+str_0: .ascii "0"
+str_result: .ascii "hamming distance = "
+str_pause: .ascii "pause"
 
 
 
