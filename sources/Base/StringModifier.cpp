@@ -61,12 +61,8 @@ std::string ToStr(unsigned int val)
 {
     return ToStrTmpl(val);
 }
-std::string ToStr(size_t val)
-{
-    return ToStrTmpl(val);
-}
 
-#ifdef __clang__
+#if defined(__clang__) || defined(__GNUC__)
 std::string ToStr(std::size_t val)
 {
     return ToStrTmpl(val);

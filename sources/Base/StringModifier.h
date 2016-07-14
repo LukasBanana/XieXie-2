@@ -31,7 +31,7 @@ std::string ToStr(int val);
 std::string ToStr(unsigned int val);
 std::string ToStr(size_t val);
 
-#ifdef __clang__
+#if defined(__clang__) || defined(__GNUC__)
 std::string ToStr(std::size_t val);
 #endif
 
