@@ -1,6 +1,6 @@
 /*
  * String modification file
- * 
+ *
  * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -58,6 +58,10 @@ std::string ToStr(int val)
     return ToStrTmpl(val);
 }
 std::string ToStr(unsigned int val)
+{
+    return ToStrTmpl(val);
+}
+std::string ToStr(size_t val)
 {
     return ToStrTmpl(val);
 }
@@ -190,7 +194,7 @@ std::string RemoveWhiteSpaces(std::string str)
             return chr == ' ' || chr == '\t';
         }
     );
-        
+
     str.erase(it, str.end());
 
     return str;

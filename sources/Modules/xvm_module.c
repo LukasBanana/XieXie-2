@@ -1,6 +1,6 @@
 /*
  * xvm_module.c
- * 
+ *
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -72,7 +72,7 @@ _XVM_Env;
 #define ENV_REG(env, reg)   (ENV(env)->regRef[reg])
 #define ENV_STACK_PTR(env)  ((XVM_Word*)ENV_REG(env, REG_SP))
 
-#ifdef __clang__
+#if defined(__clang__) || defined(__GNUC__)
 #define ERROR_INVALID_ARG   _errorCallback("invalid argument for <function???>")
 #else
 #define ERROR_INVALID_ARG   _errorCallback("invalid argument for " __FUNCTION__)
@@ -156,7 +156,7 @@ static XVM_Boolean _resize_buffer(_XVM_Buffer* obj, int size)
 
     // Replace buffer
     free(obj->buffer);
-    
+
     obj->buffer     = buffer;
     obj->size       = size;
     obj->bufSize    = bufSize;
@@ -254,7 +254,7 @@ void XVM_String_append(XVM_String obj, const char* str)
         return;
 
     _obj = (_XVM_Buffer*)obj;
-    
+
     // Determine string size
     int size = XVM_String_size(obj);
     size_t appendSize = strlen(str);

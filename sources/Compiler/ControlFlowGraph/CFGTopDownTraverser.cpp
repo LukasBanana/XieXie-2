@@ -1,12 +1,13 @@
 /*
  * CFGTopDownTraverser.cpp
- * 
+ *
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "CFGTopDownTraverser.h"
 
+#include <algorithm>
 #include <iostream>//!!!
 
 
@@ -22,7 +23,7 @@ void CFGTopDownTraverser::TraverseCFG(BasicBlock& cfg, const SearchModes searchM
 {
     /* Store configuration */
     searchMode_ = searchMode;
-    
+
     /* Append first basic block to the queue and start traversing the queue */
     AppendToQueue(queue_, cfg);
     TraverseQueue();

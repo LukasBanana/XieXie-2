@@ -1,6 +1,6 @@
 /*
  * ClassDeclStmnt.cpp
- * 
+ *
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -15,6 +15,8 @@
 #include "LiteralExpr.h"
 #include "CompilerMessage.h"
 #include "MapTypeSpell.h"
+
+#include <algorithm>
 
 
 namespace AbstractSyntaxTrees
@@ -262,7 +264,7 @@ void ClassDeclStmnt::GenerateRTTI(
 
     /* Increase instance size by (non-static) member variables */
     AssignAllMemberVariableLocations();
-    
+
     /* Generate vtable */
     GenerateVtable(&setupVtable, errorReporter);
 
@@ -388,7 +390,7 @@ void ClassDeclStmnt::AssignAllProceduresToVtable(ErrorReporter* errorReporter)
         /* Static procedures are not virtual --> so don't add it to the vtable */
         if (isStatic)
             continue;
-        
+
         /* Check if this procedure overrides a procedure from its base class */
         bool hasOverridden = false;
 

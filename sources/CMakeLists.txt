@@ -28,6 +28,10 @@ macro(SETUP_LIB_OUTPUT LIB_NAME COMPILER_IDENT)
 		RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIR}"
 		RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIR}"
 	)
+	target_compile_features(
+		${LIB_NAME} PRIVATE
+		cxx_range_for cxx_lambdas cxx_generic_lambdas
+	)
 endmacro()
 
 macro(SETUP_STD_C_MODULE MODULE_NAME)

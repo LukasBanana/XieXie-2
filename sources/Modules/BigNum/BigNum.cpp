@@ -1,6 +1,6 @@
 /*
  * BigNum.cpp
- * 
+ *
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -26,7 +26,11 @@ static int_precision* BigNum(int bigNumPtr)
 static int BigNumPtr(int_precision* bigNum)
 {
     // Do ugly pointer-to-integer cast, so it can be passed to the XVM
+    #ifdef __GNUC__
+    return (int)reinterpret_cast<long>(bigNum);
+    #else
     return reinterpret_cast<int>(bigNum);
+    #endif
 }
 
 // Shortcut for "BigNum(XVM_ParamInt(...))"
@@ -68,7 +72,7 @@ XVM_DECL_PROC(BigNum, setBigInteger)
     {
         *bigNum = 0;
     }
-    
+
     XVM_ReturnVoid(env, 2);
 }
 

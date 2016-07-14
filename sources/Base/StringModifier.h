@@ -1,6 +1,6 @@
 /*
  * String modification header
- * 
+ *
  * This file is part of the "XieXie-Compiler" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -29,6 +29,7 @@ std::string ToStr(unsigned short val);
 
 std::string ToStr(int val);
 std::string ToStr(unsigned int val);
+std::string ToStr(size_t val);
 
 #ifdef __clang__
 std::string ToStr(std::size_t val);
@@ -91,7 +92,7 @@ template <typename T> std::string NumToHex(T number, const size_t size, const bo
     static const char* hexAlphabet = "0123456789abcdef";
 
     std::string str;
-    
+
     if (prefix)
     {
         for (int i = 2*size - 1; i >= 0; --i)
@@ -122,28 +123,28 @@ template <typename T> std::string NumToHex(const T& number, const bool Prefix = 
 template <typename T> std::string NumToOct(T number)
 {
     std::string str;
-    
+
     do
     {
         str = ToStr("01234567"[number & 0x7]) + str;
         number >>= 3;
     }
     while (number > 0);
-    
+
     return str;
 }
 
 template <typename T> std::string NumToBin(T number)
 {
     std::string str;
-    
+
     do
     {
         str = ((number & 0x1) != 0 ? "1" : "0") + str;
         number >>= 1;
     }
     while (number > 0);
-    
+
     return str;
 }
 
@@ -151,7 +152,7 @@ template <typename T> T HexToNum(const std::string& str)
 {
     T num = T(0);
     std::stringstream sstr;
-    
+
     sstr << std::hex << str;
     sstr >> num;
 

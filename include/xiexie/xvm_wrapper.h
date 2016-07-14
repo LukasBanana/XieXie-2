@@ -1,6 +1,6 @@
 /*
  * XVMWrapper.h
- * 
+ *
  * This file is part of the "XieXie 2.0 Project" (Copyright (c) 2014 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -64,9 +64,9 @@ class Stack;
 //! Virtual register class.
 class Register
 {
-    
+
     public:
-        
+
         static const Register r0;   //!< $r0   ->  General purpose register 0.
         static const Register r1;   //!< $r1   ->  General purpose register 1.
         static const Register r2;   //!< $r2   ->  General purpose register 2.
@@ -133,7 +133,7 @@ class Register
         static const Register& Get(const std::string& name);
 
     private:
-        
+
         Register(register_id reg);
 
         reg_t reg_;
@@ -146,9 +146,9 @@ using Reg = Register;
 //! The instruction class only stores the 32-bit code of a single XVM instruction.
 class Instruction
 {
-    
+
     private:
-        
+
         template <class ValueClass> static bool InBitRange(int value)
         {
             return value >= ValueClass::min && value <= ValueClass::max;
@@ -159,7 +159,7 @@ class Instruction
         }
 
     public:
-        
+
         /* ------- Structures ------- */
 
         //! Unsigned 26-bit value.
@@ -218,7 +218,7 @@ class Instruction
             return false;
         }
 
-        #ifndef __clang__
+        #if !defined(__clang__) && !defined(__GNUC__)
         template <> static bool InRange<26>(int value);
         template <> static bool InRange<21>(int value);
         template <> static bool InRange<16>(int value);
@@ -318,7 +318,7 @@ class Instruction
         static Instruction MakeSpecial(xvm_opcode opcode, unsigned int resultSize, unsigned int argSize);
 
     private:
-        
+
         static void RangeAssert(bool inRange, const std::string& err)
         {
             if (!inRange)
@@ -380,9 +380,9 @@ using Instr = Instruction;
 //! Intrinsics helper class.
 class Intrinsics
 {
-    
+
     public:
-        
+
         using AddressMapType = std::map<std::string, unsigned int>;
 
         Intrinsics();
@@ -395,7 +395,7 @@ class Intrinsics
         unsigned int AddressByName(const std::string& name) const;
 
     private:
-        
+
         AddressMapType addresses_;
 
 };
@@ -409,9 +409,9 @@ using IntrinsicsPtr = std::unique_ptr<Intrinsics>;
 //! Module wrapper class. This can be used for external invocations.
 class Module
 {
-    
+
     public:
-        
+
         Module(const Module&) = delete;
         Module& operator = (const Module&) = delete;
 
@@ -429,7 +429,7 @@ class Module
         bool Unload();
 
     private:
-        
+
         friend class ByteCode;
 
         xvm_module module_;
@@ -445,7 +445,7 @@ using ModulePtr = std::unique_ptr<Module>;
 //! The byte code class represents an entire virtual program.
 class ByteCode
 {
-    
+
     public:
 
         /* === Structures/ Classes === */
@@ -472,7 +472,7 @@ class ByteCode
         {
 
             public:
-                
+
                 /**
                 Fetches the exported address 'label' from the specified byte code.
                 \throws std::invalid_argument If 'label' is not an exported address in 'byteCode'.
@@ -599,7 +599,7 @@ class ByteCode
         }
 
     private:
-        
+
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack);
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const std::string& entryPoint);
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const ByteCode::EntryPoint& entryPoint);
@@ -656,7 +656,7 @@ class Stack
         size_t Size() const;
 
     private:
-        
+
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack);
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const std::string& entryPoint);
         friend ExitCodes ExecuteProgram(const ByteCode& byteCode, Stack& stack, const ByteCode::EntryPoint& entryPoint);
